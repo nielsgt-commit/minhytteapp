@@ -1,0 +1,11 @@
+.page {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
+    "title   title   title   title   title   title"
+    "content content content content content content";
+  gap: 0.4rem;
+}
+
+.title   { grid-area: title; }
+.content { grid-area: content; }

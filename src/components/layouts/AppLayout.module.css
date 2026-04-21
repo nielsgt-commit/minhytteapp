@@ -1,0 +1,24 @@
+.shell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
+    "header header header header header header"
+    "main   main   main   main   main   main"
+    "footer footer footer footer footer footer";
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.shell > header {
+  grid-area: header;
+}
+
+.shell > main {
+  grid-area: main;
+}
+
+.shell > footer {
+  grid-area: footer;
+}
