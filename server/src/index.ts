@@ -1,7 +1,10 @@
 import "dotenv/config"
 import express, { type ErrorRequestHandler } from "express"
 import cors from "cors"
-import { usersRouter } from "./routes/users"
+import { createExpressMiddleware } from "@trpc/server/adapters/express"
+import { usersRouter } from "./routes/users.ts"
+import { appRouter } from "./trpc/routers/_app.ts"
+import { createContext } from "./trpc/context.ts"
 
 const app = express()
 
@@ -13,6 +16,10 @@ app.get("/health", (_req, res) => {
 })
 
 app.use("/api/users", usersRouter)
+app.use(
+  "/api/trpc",
+  createExpressMiddleware({ router: appRouter, createContext }),
+)
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err)

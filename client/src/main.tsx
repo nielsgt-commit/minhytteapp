@@ -15,6 +15,8 @@ import {
   selectIsAuthenticated,
   selectUser,
 } from "./features/auth/authSlice"
+import { TRPCProvider } from "./trpc/trpc"
+import { trpcClient } from "./trpc/client"
 import "./index.css"
 
 
@@ -53,7 +55,9 @@ if (container) {
     <StrictMode>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
-          <InnerApp />
+          <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+            <InnerApp />
+          </TRPCProvider>
         </QueryClientProvider>
       </Provider>
     </StrictMode>,

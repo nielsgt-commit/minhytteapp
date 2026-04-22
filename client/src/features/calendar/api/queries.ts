@@ -1,13 +1,7 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
-import { listBookings } from "@server/backend"
-import { bookingKeys } from "./keys"
+import { useQuery } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/trpc"
 
-export const bookingQueries = {
-  list: () =>
-    queryOptions({
-      queryKey: bookingKeys.list(),
-      queryFn: listBookings,
-    }),
+export const useBookings = () => {
+  const trpc = useTRPC()
+  return useQuery(trpc.booking.list.queryOptions())
 }
-
-export const useBookings = () => useQuery(bookingQueries.list())

@@ -12,11 +12,10 @@ export function Calendar() {
     const end = new Date(start)
     end.setDate(end.getDate() + 3)
     createBooking.mutate({
-      userId: "u_anna",
-      userName: "Anna",
-      startDate: start.toISOString().slice(0, 10),
-      endDate: end.toISOString().slice(0, 10),
-      note: "Weekend trip",
+      property_id: 1,
+      booker_id: 1,
+      start_date: start.toISOString().slice(0, 10),
+      end_date: end.toISOString().slice(0, 10),
     })
   }
 
@@ -30,8 +29,7 @@ export function Calendar() {
           <ul>
             {bookings.map(b => (
               <li key={b.id}>
-                {b.startDate} → {b.endDate} — {b.userName}
-                {b.note ? ` (${b.note})` : ""}
+                {b.start_date} → {b.end_date} — {b.booker_name ?? `user #${b.booker_id}`}
               </li>
             ))}
           </ul>
