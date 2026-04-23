@@ -4,7 +4,12 @@ import type { AppRouter } from "@server/trpc/routers/_app.ts"
 import { queryClient } from "@/app/queryClient"
 
 export const trpcClient = createTRPCClient<AppRouter>({
-  links: [httpBatchLink({ url: "/api/trpc" })],
+  links: [
+    httpBatchLink({
+      url: "/api/trpc",
+      headers: () => ({ Authorization: "dev" }),
+    }),
+  ],
 })
 
 export const trpc = createTRPCOptionsProxy<AppRouter>({
