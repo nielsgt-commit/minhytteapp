@@ -1,13 +1,34 @@
-import { useState } from "react"
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import styles from "./Expenses.module.css"
-import { useExpenses } from "./api/queries"
-import { useCreateExpense } from "./api/mutations"
+import { useTRPC } from "@/trpc/trpc"
 
 export function Expenses() {
-  const { data: expenses } = useExpenses()
-  const createExpense = useCreateExpense()
-  const [description, setDescription] = useState("")
-  const [amount, setAmount] = useState("")
+  const trpc = useTRPC()
+  const qc = useQueryClient()
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.list.queryOptions(),
+  )
+  const createExpense = useMutation(
+    trpc.expense.create.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
+      },
+    }),
+  )
+
+  const handleAddDemo = () => {
+    createExpense.mutate({
+      description: "Demo expense",
+      amount: 100,
+      payer_id: 1,
+      timestamp: new Date().toISOString().slice(0, 10),
+      status: "submitted",
+    })
+  }
 
   return (
     <section className={styles.page}>
@@ -16,49 +37,14 @@ export function Expenses() {
         <ul>
           {expenses.map(e => (
             <li key={e.id}>
-              {e.paidAt} — {e.description} ({e.amount} kr, {e.paidBy})
+              {e.timestamp} — {e.description} ({e.amount} kr,{" "}
+              {e.payer_name ?? `user #${String(e.payer_id)}`})
             </li>
           ))}
         </ul>
-        <form
-          onSubmit={e => {
-            e.preventDefault()
-            if (!description || !amount) return
-            createExpense.mutate(
-              {
-                description,
-                amount: Number(amount),
-                paidBy: "Anna",
-                paidAt: new Date().toISOString().slice(0, 10),
-              },
-              {
-                onSuccess: () => {
-                  setDescription("")
-                  setAmount("")
-                },
-              },
-            )
-          }}
-        >
-          <input
-            placeholder="Description"
-            value={description}
-            onChange={e => {
-              setDescription(e.target.value)
-            }}
-          />
-          <input
-            placeholder="Amount"
-            type="number"
-            value={amount}
-            onChange={e => {
-              setAmount(e.target.value)
-            }}
-          />
-          <button type="submit" disabled={createExpense.isPending}>
-            {createExpense.isPending ? "Adding…" : "Add expense"}
-          </button>
-        </form>
+        <button onClick={handleAddDemo} disabled={createExpense.isPending}>
+          {createExpense.isPending ? "Adding…" : "Add demo expense"}
+        </button>
       </div>
     </section>
   )

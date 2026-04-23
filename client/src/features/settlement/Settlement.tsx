@@ -1,30 +1,52 @@
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import styles from "./Settlement.module.css"
-import { useBalances } from "./api/queries"
-import { useSettleAll } from "./api/mutations"
+import { useTRPC } from "@/trpc/trpc"
 
 export function Settlement() {
-  const { data: balances } = useBalances()
-  const settleAll = useSettleAll()
+  const trpc = useTRPC()
+  const qc = useQueryClient()
+  const { data: settlements } = useSuspenseQuery(
+    trpc.settlement.list.queryOptions(),
+  )
+  const createSettlement = useMutation(
+    trpc.settlement.create.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({
+          queryKey: trpc.settlement.list.queryKey(),
+        })
+      },
+    }),
+  )
+
+  const handleAddDemo = () => {
+    createSettlement.mutate({
+      year: new Date().getFullYear(),
+      status: "open",
+      split_policy: "shares",
+    })
+  }
 
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Settlement</h2>
       <div className={styles.content}>
         <ul>
-          {balances.map(b => (
-            <li key={b.userId}>
-              {b.userName}: {b.balance >= 0 ? "+" : ""}
-              {b.balance} kr
+          {settlements.map(s => (
+            <li key={s.id}>
+              {s.year}
+              {s.season ? ` ${s.season}` : ""} — {s.status} ({s.split_policy})
             </li>
           ))}
         </ul>
         <button
-          onClick={() => {
-            settleAll.mutate()
-          }}
-          disabled={settleAll.isPending}
+          onClick={handleAddDemo}
+          disabled={createSettlement.isPending}
         >
-          {settleAll.isPending ? "Settling…" : "Settle all"}
+          {createSettlement.isPending ? "Adding…" : "Add demo settlement"}
         </button>
       </div>
     </section>

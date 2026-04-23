@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { Dashboard } from "@/features/dashboard/Dashboard"
-import { dashboardQueries } from "@/features/dashboard/api/queries"
+import { trpc } from "@/trpc/client"
 
 export const Route = createFileRoute("/_authed/dashboard")({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(dashboardQueries.summary()),
+    context.queryClient.ensureQueryData(trpc.dashboard.summary.queryOptions()),
   component: Dashboard,
 })
