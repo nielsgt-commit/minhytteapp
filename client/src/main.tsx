@@ -10,21 +10,21 @@ import { createRoot } from "react-dom/client"
 import { Provider } from "react-redux"
 import { store } from "./app/store"
 import { queryClient } from "./app/queryClient"
-import { useAppSelector } from "./app/hooks"
-import {
-  selectIsAuthenticated,
-  selectUser,
-} from "./features/auth/authSlice"
 import { TRPCProvider } from "./trpc/trpc"
 import { trpcClient } from "./trpc/client"
 import "./index.css"
 
 
+// Until `trpc.auth.me` is wired up, fake an authenticated session in dev so the
+// `_authed` route guard doesn't bounce us back to `/`.
+const auth = import.meta.env.DEV
+  ? { isAuthenticated: true, user: { id: "demo", name: "Demo User" } }
+  : { isAuthenticated: false, user: null }
 
 const router = createRouter({
   routeTree,
   context: {
-    auth: { isAuthenticated: false, user: null },
+    auth,
     queryClient,
   },
 })
@@ -33,17 +33,6 @@ declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router
   }
-}
-
-function InnerApp() {
-  const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const user = useAppSelector(selectUser)
-  return (
-    <RouterProvider
-      router={router}
-      context={{ auth: { isAuthenticated, user }, queryClient }}
-    />
-  )
 }
 
 const container = document.getElementById("root")
@@ -56,7 +45,7 @@ if (container) {
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-            <InnerApp />
+            <RouterProvider router={router} />
           </TRPCProvider>
         </QueryClientProvider>
       </Provider>

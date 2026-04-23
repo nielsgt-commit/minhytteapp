@@ -1,21 +1,19 @@
-import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import { logout, selectUser } from "@/features/auth/authSlice"
+import { getRouteApi } from "@tanstack/react-router"
 import UserSwitcher, { type UserAction } from "./UserSwitcher"
 import styles from "./Header.module.css"
 
-export default function UserMenu() {
-  const user = useAppSelector(selectUser)
-  const dispatch = useAppDispatch()
+const rootApi = getRouteApi("__root__")
 
-  const handleAction = (action: UserAction) => {
-    if (action === "log-out") {
-      dispatch(logout())
-    }
+export default function UserMenu() {
+  const { auth } = rootApi.useRouteContext()
+
+  const handleAction = (_action: UserAction) => {
+    // no-op until trpc.auth.{login,logout} is wired up
   }
 
   return (
     <div className={styles.menu}>
-      <span>{user?.name ?? "Guest"}</span>
+      <span>{auth.user?.name ?? "Guest"}</span>
       <UserSwitcher onAction={handleAction} />
     </div>
   )

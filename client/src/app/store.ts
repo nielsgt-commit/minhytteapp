@@ -1,7 +1,6 @@
 import type { Action, ThunkAction } from "@reduxjs/toolkit"
 import { combineSlices, configureStore } from "@reduxjs/toolkit"
 import { setupListeners } from "@reduxjs/toolkit/query"
-import { authSlice } from "@/features/auth/authSlice"
 import { calendarSlice } from "@/features/calendar/calendarSlice"
 import { dashboardSlice } from "@/features/dashboard/dashboardSlice"
 import { expensesSlice } from "@/features/expenses/expensesSlice"
@@ -12,7 +11,6 @@ import { settlementSlice } from "@/features/settlement/settlementSlice"
 // `combineSlices` automatically combines the reducers using
 // their `reducerPath`s, therefore we no longer need to call `combineReducers`.
 const rootReducer = combineSlices(
-  authSlice,
   calendarSlice,
   dashboardSlice,
   expensesSlice,
