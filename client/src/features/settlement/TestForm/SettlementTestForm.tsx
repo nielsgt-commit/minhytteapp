@@ -1,4 +1,4 @@
-import { type FormEvent, useReducer } from "react"
+import { type SyntheticEvent, useReducer } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -124,9 +124,9 @@ export function SettlementTestForm() {
     createMutation.error ?? updateMutation.error ?? deleteMutation.error
 
   const set = (field: EditableField) => (value: string) =>
-    dispatch({ type: "setField", field, value })
+    { dispatch({ type: "setField", field, value }); }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const payload = buildPayload(state)
     if (state.id == null) {
@@ -142,7 +142,7 @@ export function SettlementTestForm() {
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${state.id}` : "New record"}</legend>
+          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
 
           <div>
             <label>
@@ -150,7 +150,7 @@ export function SettlementTestForm() {
               <input
                 type="number"
                 value={state.year}
-                onChange={e => set("year")(e.target.value)}
+                onChange={e => { set("year")(e.target.value); }}
                 required
               />
             </label>
@@ -161,7 +161,7 @@ export function SettlementTestForm() {
               Season
               <select
                 value={state.season}
-                onChange={e => set("season")(e.target.value)}
+                onChange={e => { set("season")(e.target.value); }}
               >
                 <option value="">(none)</option>
                 {SEASONS.map(s => (
@@ -178,7 +178,7 @@ export function SettlementTestForm() {
               Status
               <select
                 value={state.status}
-                onChange={e => set("status")(e.target.value)}
+                onChange={e => { set("status")(e.target.value); }}
               >
                 {STATUSES.map(s => (
                   <option key={s} value={s}>
@@ -194,7 +194,7 @@ export function SettlementTestForm() {
               Split policy
               <select
                 value={state.split_policy}
-                onChange={e => set("split_policy")(e.target.value)}
+                onChange={e => { set("split_policy")(e.target.value); }}
               >
                 {SPLIT_POLICIES.map(p => (
                   <option key={p} value={p}>
@@ -211,7 +211,7 @@ export function SettlementTestForm() {
             </button>
             <button
               type="button"
-              onClick={() => dispatch({ type: "reset" })}
+              onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
               Reset
@@ -243,15 +243,15 @@ export function SettlementTestForm() {
               <td>{s.season ?? ""}</td>
               <td>{s.status}</td>
               <td>{s.split_policy}</td>
-              <td>{s.closed_at ? String(s.closed_at) : ""}</td>
+              <td>{s.closed_at ?? ""}</td>
               <td>
                 <button
                   type="button"
                   onClick={() =>
-                    dispatch({
+                    { dispatch({
                       type: "loadForEdit",
                       record: s as SettlementRecord,
-                    })
+                    }); }
                   }
                   disabled={pending}
                 >
@@ -259,7 +259,7 @@ export function SettlementTestForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteMutation.mutate({ id: s.id })}
+                  onClick={() => { deleteMutation.mutate({ id: s.id }); }}
                   disabled={pending}
                 >
                   Delete

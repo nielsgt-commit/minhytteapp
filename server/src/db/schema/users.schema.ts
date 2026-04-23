@@ -1,10 +1,11 @@
-import { integer, pgTable, unique, varchar } from "drizzle-orm/pg-core"
+import { boolean, integer, pgTable, unique, varchar } from "drizzle-orm/pg-core"
 
 export const usersTable = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   date_of_birth: integer("date_of_birth").notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  is_admin: boolean("is_admin").notNull().default(true),
 })
 
 export const relationshipsTable = pgTable("relationships", {

@@ -55,6 +55,14 @@ const eslintConfig = defineConfig(
     },
     rules: {
       "no-undef": [0],
+      "@typescript-eslint/no-unused-vars": [
+        2,
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "@typescript-eslint/consistent-type-definitions": [2, "type"],
       "@typescript-eslint/consistent-type-imports": [
         2,

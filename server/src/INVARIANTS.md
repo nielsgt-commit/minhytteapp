@@ -65,3 +65,9 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 - Cost of a maintenance task is derived, not stored: `SUM(expenses.amount WHERE expenses.maintenance_id = task.id)`. No denormalized `cost` column — the expenses ledger is the single source of truth.
 - `severity` (major/minor/patch), `status` (todo/doing/done), and `category` are independent; any combination is legal.
 - `maintenance_updates` and `maintenance_attachments` cascade on delete of the parent `maintenance` row.
+
+## Deleting property / building / room
+- No `ON DELETE CASCADE` on `buildings.property_id` or `rooms.building_id`. Deleting a parent while children exist fails with a Postgres FK violation — this is intentional: it prevents a misclick from wiping bookings, maintenance, and expenses transitively.
+- `propertyTable` is also referenced by `places`, `property_owners`, `bookings`, and (via `buildings` → `maintenance`) maintenance. `buildingsTable` is referenced by `maintenance` and `building_adjacencies`. `roomTable` is referenced by `booking_rooms` and `room_adjacencies`. A successful delete needs *all* of those cleared.
+- If the UI ever needs a "delete this property and everything under it" action, implement it as a **transactional cascade in the tRPC router** (`ctx.db.transaction(...)`) deleting children before the parent — do **not** add DB-level `onDelete: "cascade"` on these FKs. Router-level cascade keeps the blast radius explicit (we pick which children to wipe); DB-level cascade would silently also take bookings/maintenance/expenses with it.
+- Minimum chain for a property cascade: rooms → buildings → property. Bookings/owners/places still block — that's the desired safety net; surface the FK error to the user rather than expanding the cascade.

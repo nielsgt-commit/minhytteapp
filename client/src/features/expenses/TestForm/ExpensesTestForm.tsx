@@ -1,4 +1,4 @@
-import { type FormEvent, useReducer } from "react"
+import { type SyntheticEvent, useReducer } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -150,11 +150,11 @@ export function ExpensesTestForm() {
     createMutation.error ?? updateMutation.error ?? deleteMutation.error
 
   const set = (field: EditableField) => (value: string) =>
-    dispatch({ type: "setField", field, value })
+    { dispatch({ type: "setField", field, value }); }
 
   const reimbursedRequired = state.status === "reimbursed"
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const payload = buildPayload(state)
     if (state.id == null) {
@@ -170,7 +170,7 @@ export function ExpensesTestForm() {
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${state.id}` : "New record"}</legend>
+          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
 
           <div>
             <label>
@@ -178,7 +178,7 @@ export function ExpensesTestForm() {
               <input
                 type="text"
                 value={state.description}
-                onChange={e => set("description")(e.target.value)}
+                onChange={e => { set("description")(e.target.value); }}
                 required
               />
             </label>
@@ -191,7 +191,7 @@ export function ExpensesTestForm() {
                 type="number"
                 step={1}
                 value={state.amount}
-                onChange={e => set("amount")(e.target.value)}
+                onChange={e => { set("amount")(e.target.value); }}
                 required
               />
             </label>
@@ -204,7 +204,7 @@ export function ExpensesTestForm() {
                 type="number"
                 min={1}
                 value={state.payer_id}
-                onChange={e => set("payer_id")(e.target.value)}
+                onChange={e => { set("payer_id")(e.target.value); }}
                 required
               />
             </label>
@@ -215,7 +215,7 @@ export function ExpensesTestForm() {
               Status
               <select
                 value={state.status}
-                onChange={e => set("status")(e.target.value)}
+                onChange={e => { set("status")(e.target.value); }}
               >
                 {STATUSES.map(s => (
                   <option key={s} value={s}>
@@ -234,7 +234,7 @@ export function ExpensesTestForm() {
                 type="number"
                 min={1}
                 value={state.reimbursed_by_id}
-                onChange={e => set("reimbursed_by_id")(e.target.value)}
+                onChange={e => { set("reimbursed_by_id")(e.target.value); }}
                 required={reimbursedRequired}
               />
             </label>
@@ -247,7 +247,7 @@ export function ExpensesTestForm() {
                 type="number"
                 min={1}
                 value={state.booking_id}
-                onChange={e => set("booking_id")(e.target.value)}
+                onChange={e => { set("booking_id")(e.target.value); }}
               />
             </label>
           </div>
@@ -259,7 +259,7 @@ export function ExpensesTestForm() {
                 type="number"
                 min={1}
                 value={state.maintenance_id}
-                onChange={e => set("maintenance_id")(e.target.value)}
+                onChange={e => { set("maintenance_id")(e.target.value); }}
               />
             </label>
           </div>
@@ -271,7 +271,7 @@ export function ExpensesTestForm() {
                 type="number"
                 min={1}
                 value={state.settlement_id}
-                onChange={e => set("settlement_id")(e.target.value)}
+                onChange={e => { set("settlement_id")(e.target.value); }}
               />
             </label>
           </div>
@@ -282,7 +282,7 @@ export function ExpensesTestForm() {
               <input
                 type="text"
                 value={state.timestamp}
-                onChange={e => set("timestamp")(e.target.value)}
+                onChange={e => { set("timestamp")(e.target.value); }}
                 required
               />
             </label>
@@ -294,7 +294,7 @@ export function ExpensesTestForm() {
             </button>
             <button
               type="button"
-              onClick={() => dispatch({ type: "reset" })}
+              onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
               Reset
@@ -333,10 +333,10 @@ export function ExpensesTestForm() {
                 <button
                   type="button"
                   onClick={() =>
-                    dispatch({
+                    { dispatch({
                       type: "loadForEdit",
                       record: e as ExpenseRecord,
-                    })
+                    }); }
                   }
                   disabled={pending}
                 >
@@ -344,7 +344,7 @@ export function ExpensesTestForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteMutation.mutate({ id: e.id })}
+                  onClick={() => { deleteMutation.mutate({ id: e.id }); }}
                   disabled={pending}
                 >
                   Delete

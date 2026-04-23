@@ -6,35 +6,32 @@ import {
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 
-type BookingRecord = {
+type UserRecord = {
   id: number
-  property_id: number
-  booker_id: number
-  start_date: string
-  end_date: string
+  name: string
+  date_of_birth: number
+  email: string
 }
 
 type FormState = {
   id: number | null
-  property_id: string
-  booker_id: string
-  start_date: string
-  end_date: string
+  name: string
+  date_of_birth: string
+  email: string
 }
 
 const initialFormState: FormState = {
   id: null,
-  property_id: "1",
-  booker_id: "1",
-  start_date: "",
-  end_date: "",
+  name: "",
+  date_of_birth: "",
+  email: "",
 }
 
 type EditableField = Exclude<keyof FormState, "id">
 
 type FormAction =
   | { type: "setField"; field: EditableField; value: string }
-  | { type: "loadForEdit"; record: BookingRecord }
+  | { type: "loadForEdit"; record: UserRecord }
   | { type: "reset" }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -45,10 +42,9 @@ function formReducer(state: FormState, action: FormAction): FormState {
       const r = action.record
       return {
         id: r.id,
-        property_id: String(r.property_id),
-        booker_id: String(r.booker_id),
-        start_date: r.start_date,
-        end_date: r.end_date,
+        name: r.name,
+        date_of_birth: String(r.date_of_birth),
+        email: r.email,
       }
     }
     case "reset":
@@ -58,27 +54,24 @@ function formReducer(state: FormState, action: FormAction): FormState {
 
 function buildPayload(state: FormState) {
   return {
-    property_id: Number(state.property_id),
-    booker_id: Number(state.booker_id),
-    start_date: state.start_date,
-    end_date: state.end_date,
+    name: state.name,
+    date_of_birth: Number(state.date_of_birth),
+    email: state.email,
   }
 }
 
-export function CalendarTestForm() {
+export function UsersTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
 
-  const { data: bookings } = useSuspenseQuery(
-    trpc.booking.list.queryOptions(),
-  )
+  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
 
   const createMutation = useMutation(
-    trpc.booking.create.mutationOptions({
+    trpc.user.create.mutationOptions({
       onSuccess: () => {
         dispatch({ type: "reset" })
         void invalidate()
@@ -87,7 +80,7 @@ export function CalendarTestForm() {
   )
 
   const updateMutation = useMutation(
-    trpc.booking.update.mutationOptions({
+    trpc.user.update.mutationOptions({
       onSuccess: () => {
         dispatch({ type: "reset" })
         void invalidate()
@@ -96,7 +89,7 @@ export function CalendarTestForm() {
   )
 
   const deleteMutation = useMutation(
-    trpc.booking.delete.mutationOptions({
+    trpc.user.delete.mutationOptions({
       onSuccess: () => {
         void invalidate()
       },
@@ -126,20 +119,31 @@ export function CalendarTestForm() {
 
   return (
     <section>
-      <h3>Calendar Test Form</h3>
+      <h3>Users Test Form</h3>
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New booking"}</legend>
+          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
 
           <div>
             <label>
-              Property id
+              Name
+              <input
+                type="text"
+                value={state.name}
+                onChange={e => { set("name")(e.target.value); }}
+                required
+              />
+            </label>
+          </div>
+
+          <div>
+            <label>
+              Date of birth (year)
               <input
                 type="number"
-                min={1}
-                value={state.property_id}
-                onChange={e => { set("property_id")(e.target.value); }}
+                value={state.date_of_birth}
+                onChange={e => { set("date_of_birth")(e.target.value); }}
                 required
               />
             </label>
@@ -147,37 +151,11 @@ export function CalendarTestForm() {
 
           <div>
             <label>
-              Booker id
+              Email
               <input
-                type="number"
-                min={1}
-                value={state.booker_id}
-                onChange={e => { set("booker_id")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Start date
-              <input
-                type="date"
-                value={state.start_date}
-                onChange={e => { set("start_date")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              End date
-              <input
-                type="date"
-                value={state.end_date}
-                min={state.start_date || undefined}
-                onChange={e => { set("end_date")(e.target.value); }}
+                type="email"
+                value={state.email}
+                onChange={e => { set("email")(e.target.value); }}
                 required
               />
             </label>
@@ -200,42 +178,31 @@ export function CalendarTestForm() {
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
-      <h4>Bookings</h4>
+      <h4>Records</h4>
       <table>
         <thead>
           <tr>
             <th>id</th>
-            <th>property</th>
-            <th>booker</th>
-            <th>start</th>
-            <th>end</th>
+            <th>name</th>
+            <th>date_of_birth</th>
+            <th>email</th>
             <th>actions</th>
           </tr>
         </thead>
         <tbody>
-          {bookings.map(b => (
-            <tr key={b.id}>
-              <td>{b.id}</td>
-              <td>{b.property_id}</td>
-              <td>
-                {b.booker_id}
-                {b.booker_name ? ` (${b.booker_name})` : ""}
-              </td>
-              <td>{b.start_date}</td>
-              <td>{b.end_date}</td>
+          {users.map(u => (
+            <tr key={u.id}>
+              <td>{u.id}</td>
+              <td>{u.name}</td>
+              <td>{u.date_of_birth}</td>
+              <td>{u.email}</td>
               <td>
                 <button
                   type="button"
                   onClick={() =>
                     { dispatch({
                       type: "loadForEdit",
-                      record: {
-                        id: b.id,
-                        property_id: b.property_id,
-                        booker_id: b.booker_id,
-                        start_date: b.start_date,
-                        end_date: b.end_date,
-                      },
+                      record: u as UserRecord,
                     }); }
                   }
                   disabled={pending}
@@ -244,7 +211,7 @@ export function CalendarTestForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { deleteMutation.mutate({ id: b.id }); }}
+                  onClick={() => { deleteMutation.mutate({ id: u.id }); }}
                   disabled={pending}
                 >
                   Delete

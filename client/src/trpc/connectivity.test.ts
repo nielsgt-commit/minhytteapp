@@ -15,9 +15,9 @@ const client = createTRPCClient<AppRouter>({
 describe("front end ↔ back end reachability", () => {
   beforeAll(async () => {
     const res = await fetch(HEALTH_URL)
+    if (!res.ok) throw new Error("health endpoint returned non-ok status")
     const body = (await res.json()) as { ok: boolean }
-    expect(res.ok).toBe(true)
-    expect(body.ok).toBe(true)
+    if (!body.ok) throw new Error("health body returned { ok: false }")
   })
 
   test("booking.list", async () => {
@@ -47,13 +47,9 @@ describe("front end ↔ back end reachability", () => {
   test("dashboard.summary", async () => {
     const summary = await client.dashboard.summary.query()
     console.log("dashboard.summary ->", summary)
-    expect(summary).toEqual(
-      expect.objectContaining({
-        expenseCount: expect.any(Number),
-        totalSpent: expect.any(Number),
-        upcomingBookings: expect.any(Number),
-        openMaintenance: expect.any(Number),
-      }),
-    )
+    expect(summary.expenseCount).toEqual(expect.any(Number))
+    expect(summary.totalSpent).toEqual(expect.any(Number))
+    expect(summary.upcomingBookings).toEqual(expect.any(Number))
+    expect(summary.openMaintenance).toEqual(expect.any(Number))
   })
 })

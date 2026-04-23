@@ -6,35 +6,33 @@ import {
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 
-type BookingRecord = {
+type BuildingRecord = {
   id: number
+  name: string
+  address: string
   property_id: number
-  booker_id: number
-  start_date: string
-  end_date: string
+  property_name: string | null
 }
 
 type FormState = {
   id: number | null
+  name: string
+  address: string
   property_id: string
-  booker_id: string
-  start_date: string
-  end_date: string
 }
 
 const initialFormState: FormState = {
   id: null,
-  property_id: "1",
-  booker_id: "1",
-  start_date: "",
-  end_date: "",
+  name: "",
+  address: "",
+  property_id: "",
 }
 
 type EditableField = Exclude<keyof FormState, "id">
 
 type FormAction =
   | { type: "setField"; field: EditableField; value: string }
-  | { type: "loadForEdit"; record: BookingRecord }
+  | { type: "loadForEdit"; record: BuildingRecord }
   | { type: "reset" }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -45,10 +43,9 @@ function formReducer(state: FormState, action: FormAction): FormState {
       const r = action.record
       return {
         id: r.id,
+        name: r.name,
+        address: r.address,
         property_id: String(r.property_id),
-        booker_id: String(r.booker_id),
-        start_date: r.start_date,
-        end_date: r.end_date,
       }
     }
     case "reset":
@@ -58,27 +55,29 @@ function formReducer(state: FormState, action: FormAction): FormState {
 
 function buildPayload(state: FormState) {
   return {
+    name: state.name,
+    address: state.address,
     property_id: Number(state.property_id),
-    booker_id: Number(state.booker_id),
-    start_date: state.start_date,
-    end_date: state.end_date,
   }
 }
 
-export function CalendarTestForm() {
+export function BuildingsTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
 
-  const { data: bookings } = useSuspenseQuery(
-    trpc.booking.list.queryOptions(),
+  const { data: buildings } = useSuspenseQuery(
+    trpc.building.list.queryOptions(),
+  )
+  const { data: properties } = useSuspenseQuery(
+    trpc.property.list.queryOptions(),
   )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.building.list.queryKey() })
 
   const createMutation = useMutation(
-    trpc.booking.create.mutationOptions({
+    trpc.building.create.mutationOptions({
       onSuccess: () => {
         dispatch({ type: "reset" })
         void invalidate()
@@ -87,7 +86,7 @@ export function CalendarTestForm() {
   )
 
   const updateMutation = useMutation(
-    trpc.booking.update.mutationOptions({
+    trpc.building.update.mutationOptions({
       onSuccess: () => {
         dispatch({ type: "reset" })
         void invalidate()
@@ -96,7 +95,7 @@ export function CalendarTestForm() {
   )
 
   const deleteMutation = useMutation(
-    trpc.booking.delete.mutationOptions({
+    trpc.building.delete.mutationOptions({
       onSuccess: () => {
         void invalidate()
       },
@@ -126,60 +125,51 @@ export function CalendarTestForm() {
 
   return (
     <section>
-      <h3>Calendar Test Form</h3>
+      <h3>Buildings Test Form</h3>
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New booking"}</legend>
+          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
 
           <div>
             <label>
-              Property id
+              Name
               <input
-                type="number"
-                min={1}
+                type="text"
+                value={state.name}
+                onChange={e => { set("name")(e.target.value); }}
+                required
+              />
+            </label>
+          </div>
+
+          <div>
+            <label>
+              Address
+              <input
+                type="text"
+                value={state.address}
+                onChange={e => { set("address")(e.target.value); }}
+                required
+              />
+            </label>
+          </div>
+
+          <div>
+            <label>
+              Property
+              <select
                 value={state.property_id}
                 onChange={e => { set("property_id")(e.target.value); }}
                 required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Booker id
-              <input
-                type="number"
-                min={1}
-                value={state.booker_id}
-                onChange={e => { set("booker_id")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Start date
-              <input
-                type="date"
-                value={state.start_date}
-                onChange={e => { set("start_date")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              End date
-              <input
-                type="date"
-                value={state.end_date}
-                min={state.start_date || undefined}
-                onChange={e => { set("end_date")(e.target.value); }}
-                required
-              />
+              >
+                <option value="">(select property)</option>
+                {properties.map(p => (
+                  <option key={p.id} value={p.id}>
+                    #{p.id} {p.name}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
@@ -200,42 +190,33 @@ export function CalendarTestForm() {
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
-      <h4>Bookings</h4>
+      <h4>Records</h4>
       <table>
         <thead>
           <tr>
             <th>id</th>
-            <th>property</th>
-            <th>booker</th>
-            <th>start</th>
-            <th>end</th>
+            <th>name</th>
+            <th>address</th>
+            <th>property_id</th>
+            <th>property_name</th>
             <th>actions</th>
           </tr>
         </thead>
         <tbody>
-          {bookings.map(b => (
+          {buildings.map(b => (
             <tr key={b.id}>
               <td>{b.id}</td>
+              <td>{b.name}</td>
+              <td>{b.address}</td>
               <td>{b.property_id}</td>
-              <td>
-                {b.booker_id}
-                {b.booker_name ? ` (${b.booker_name})` : ""}
-              </td>
-              <td>{b.start_date}</td>
-              <td>{b.end_date}</td>
+              <td>{b.property_name ?? ""}</td>
               <td>
                 <button
                   type="button"
                   onClick={() =>
                     { dispatch({
                       type: "loadForEdit",
-                      record: {
-                        id: b.id,
-                        property_id: b.property_id,
-                        booker_id: b.booker_id,
-                        start_date: b.start_date,
-                        end_date: b.end_date,
-                      },
+                      record: b as BuildingRecord,
                     }); }
                   }
                   disabled={pending}
