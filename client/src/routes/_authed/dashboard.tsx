@@ -4,6 +4,14 @@ import { trpc } from "@/trpc/client"
 
 export const Route = createFileRoute("/_authed/dashboard")({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(trpc.dashboard.summary.queryOptions()),
+    Promise.all([
+      context.queryClient.ensureQueryData(
+        trpc.dashboard.summary.queryOptions(),
+      ),
+      context.queryClient.ensureQueryData(trpc.user.list.queryOptions()),
+      context.queryClient.ensureQueryData(trpc.property.list.queryOptions()),
+      context.queryClient.ensureQueryData(trpc.building.list.queryOptions()),
+      context.queryClient.ensureQueryData(trpc.room.list.queryOptions()),
+    ]),
   component: Dashboard,
 })
