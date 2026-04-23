@@ -1,4 +1,4 @@
-import { type FormEvent, useReducer } from "react"
+import { useReducer } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -188,26 +188,29 @@ export function MaintenanceTestForm() {
   const lastError =
     createMutation.error ?? updateMutation.error ?? deleteMutation.error
 
-  const set = (field: EditableField) => (value: string) =>
+  const set = (field: EditableField) => (value: string) => {
     dispatch({ type: "setField", field, value })
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const payload = buildPayload(state)
-    if (state.id == null) {
-      createMutation.mutate(payload)
-    } else {
-      updateMutation.mutate({ id: state.id, ...payload })
-    }
   }
 
   return (
     <section>
       <h3>Maintenance Test Form</h3>
 
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={e => {
+          e.preventDefault()
+          const payload = buildPayload(state)
+          if (state.id == null) {
+            createMutation.mutate(payload)
+          } else {
+            updateMutation.mutate({ id: state.id, ...payload })
+          }
+        }}
+      >
         <fieldset>
-          <legend>{isEditing ? `Editing #${state.id}` : "New record"}</legend>
+          <legend>
+            {isEditing ? `Editing #${String(state.id)}` : "New record"}
+          </legend>
 
           <div>
             <label>
@@ -215,7 +218,9 @@ export function MaintenanceTestForm() {
               <input
                 type="text"
                 value={state.description}
-                onChange={e => set("description")(e.target.value)}
+                onChange={e => {
+                  set("description")(e.target.value)
+                }}
                 required
               />
             </label>
@@ -227,7 +232,9 @@ export function MaintenanceTestForm() {
               <input
                 type="text"
                 value={state.summary}
-                onChange={e => set("summary")(e.target.value)}
+                onChange={e => {
+                  set("summary")(e.target.value)
+                }}
               />
             </label>
           </div>
@@ -239,7 +246,9 @@ export function MaintenanceTestForm() {
                 type="number"
                 min={1}
                 value={state.added_by}
-                onChange={e => set("added_by")(e.target.value)}
+                onChange={e => {
+                  set("added_by")(e.target.value)
+                }}
                 required
               />
             </label>
@@ -252,7 +261,9 @@ export function MaintenanceTestForm() {
                 type="number"
                 min={1}
                 value={state.assigned_to_id}
-                onChange={e => set("assigned_to_id")(e.target.value)}
+                onChange={e => {
+                  set("assigned_to_id")(e.target.value)
+                }}
               />
             </label>
           </div>
@@ -266,7 +277,9 @@ export function MaintenanceTestForm() {
                   name="locationType"
                   value="building"
                   checked={state.locationType === "building"}
-                  onChange={() => set("locationType")("building")}
+                  onChange={() => {
+                    set("locationType")("building")
+                  }}
                 />
                 Building
               </label>
@@ -276,7 +289,9 @@ export function MaintenanceTestForm() {
                   name="locationType"
                   value="place"
                   checked={state.locationType === "place"}
-                  onChange={() => set("locationType")("place")}
+                  onChange={() => {
+                    set("locationType")("place")
+                  }}
                 />
                 Place
               </label>
@@ -287,7 +302,9 @@ export function MaintenanceTestForm() {
                     type="number"
                     min={1}
                     value={state.building_id}
-                    onChange={e => set("building_id")(e.target.value)}
+                    onChange={e => {
+                      set("building_id")(e.target.value)
+                    }}
                     required
                   />
                 </label>
@@ -298,7 +315,9 @@ export function MaintenanceTestForm() {
                     type="number"
                     min={1}
                     value={state.place_id}
-                    onChange={e => set("place_id")(e.target.value)}
+                    onChange={e => {
+                      set("place_id")(e.target.value)
+                    }}
                     required
                   />
                 </label>
@@ -311,7 +330,9 @@ export function MaintenanceTestForm() {
               Category
               <select
                 value={state.category}
-                onChange={e => set("category")(e.target.value)}
+                onChange={e => {
+                  set("category")(e.target.value)
+                }}
               >
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>
@@ -327,7 +348,9 @@ export function MaintenanceTestForm() {
               Severity
               <select
                 value={state.severity}
-                onChange={e => set("severity")(e.target.value)}
+                onChange={e => {
+                  set("severity")(e.target.value)
+                }}
               >
                 {SEVERITIES.map(s => (
                   <option key={s} value={s}>
@@ -343,7 +366,9 @@ export function MaintenanceTestForm() {
               Status
               <select
                 value={state.status}
-                onChange={e => set("status")(e.target.value)}
+                onChange={e => {
+                  set("status")(e.target.value)
+                }}
               >
                 {STATUSES.map(s => (
                   <option key={s} value={s}>
@@ -359,7 +384,9 @@ export function MaintenanceTestForm() {
               Recurrence
               <select
                 value={state.recurrence}
-                onChange={e => set("recurrence")(e.target.value)}
+                onChange={e => {
+                  set("recurrence")(e.target.value)
+                }}
               >
                 {RECURRENCES.map(r => (
                   <option key={r} value={r}>
@@ -378,9 +405,9 @@ export function MaintenanceTestForm() {
                   type="number"
                   min={1}
                   value={state.recurrence_interval_days}
-                  onChange={e =>
+                  onChange={e => {
                     set("recurrence_interval_days")(e.target.value)
-                  }
+                  }}
                   required
                 />
               </label>
@@ -393,7 +420,9 @@ export function MaintenanceTestForm() {
             </button>
             <button
               type="button"
-              onClick={() => dispatch({ type: "reset" })}
+              onClick={() => {
+                dispatch({ type: "reset" })
+              }}
               disabled={pending}
             >
               Reset
@@ -428,31 +457,33 @@ export function MaintenanceTestForm() {
               <td>{t.category}</td>
               <td>
                 {t.recurrence}
-                {t.recurrence_interval_days
-                  ? ` (${t.recurrence_interval_days}d)`
+                {t.recurrence_interval_days != null
+                  ? ` (${String(t.recurrence_interval_days)}d)`
                   : ""}
               </td>
               <td>
                 {t.building_id != null
-                  ? `b#${t.building_id}`
-                  : `p#${t.place_id}`}
+                  ? `b#${String(t.building_id)}`
+                  : `p#${String(t.place_id)}`}
               </td>
               <td>
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     dispatch({
                       type: "loadForEdit",
                       record: t as MaintenanceRecord,
                     })
-                  }
+                  }}
                   disabled={pending}
                 >
                   Edit
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteMutation.mutate({ id: t.id })}
+                  onClick={() => {
+                    deleteMutation.mutate({ id: t.id })
+                  }}
                   disabled={pending}
                 >
                   Delete
