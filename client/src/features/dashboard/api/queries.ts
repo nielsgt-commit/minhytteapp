@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query"
 import { getDashboardSummary } from "@server/backend"
 import { dashboardKeys } from "./keys"
 
@@ -10,4 +10,5 @@ export const dashboardQueries = {
     }),
 }
 
-export const useDashboardSummary = () => useQuery(dashboardQueries.summary())
+export const useDashboardSummary = () =>
+  useSuspenseQuery(dashboardQueries.summary())

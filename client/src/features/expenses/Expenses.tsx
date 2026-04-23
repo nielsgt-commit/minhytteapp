@@ -4,7 +4,7 @@ import { useExpenses } from "./api/queries"
 import { useCreateExpense } from "./api/mutations"
 
 export function Expenses() {
-  const { data: expenses = [], isPending } = useExpenses()
+  const { data: expenses } = useExpenses()
   const createExpense = useCreateExpense()
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
@@ -13,17 +13,13 @@ export function Expenses() {
     <section className={styles.page}>
       <h2 className={styles.title}>Expenses</h2>
       <div className={styles.content}>
-        {isPending ? (
-          <p>Loading…</p>
-        ) : (
-          <ul>
-            {expenses.map(e => (
-              <li key={e.id}>
-                {e.paidAt} — {e.description} ({e.amount} kr, {e.paidBy})
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul>
+          {expenses.map(e => (
+            <li key={e.id}>
+              {e.paidAt} — {e.description} ({e.amount} kr, {e.paidBy})
+            </li>
+          ))}
+        </ul>
         <form
           onSubmit={e => {
             e.preventDefault()

@@ -1,10 +1,22 @@
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import styles from "./Calendar.module.css"
-import { useBookings } from "./api/queries"
-import { useCreateBooking } from "./api/mutations"
+import { useTRPC } from "@/trpc/trpc"
 
 export function Calendar() {
-  const { data: bookings = [], isPending } = useBookings()
-  const createBooking = useCreateBooking()
+  const trpc = useTRPC()
+  const qc = useQueryClient()
+  const { data: bookings } = useSuspenseQuery(trpc.booking.list.queryOptions())
+  const createBooking = useMutation(
+    trpc.booking.create.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+      },
+    }),
+  )
 
   const handleAddDemo = () => {
     const start = new Date()
@@ -23,17 +35,13 @@ export function Calendar() {
     <section className={styles.page}>
       <h2 className={styles.title}>Calendar</h2>
       <div className={styles.content}>
-        {isPending ? (
-          <p>Loading…</p>
-        ) : (
-          <ul>
-            {bookings.map(b => (
-              <li key={b.id}>
-                {b.start_date} → {b.end_date} — {b.booker_name ?? `user #${b.booker_id}`}
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul>
+          {bookings.map(b => (
+            <li key={b.id}>
+              {b.start_date} → {b.end_date} — {b.booker_name ?? `user #${b.booker_id}`}
+            </li>
+          ))}
+        </ul>
         <button onClick={handleAddDemo} disabled={createBooking.isPending}>
           {createBooking.isPending ? "Booking…" : "Add demo booking"}
         </button>

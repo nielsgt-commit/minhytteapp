@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query"
 import { listMaintenance } from "@server/backend"
 import { maintenanceKeys } from "./keys"
 
@@ -10,4 +10,5 @@ export const maintenanceQueries = {
     }),
 }
 
-export const useMaintenanceTasks = () => useQuery(maintenanceQueries.list())
+export const useMaintenanceTasks = () =>
+  useSuspenseQuery(maintenanceQueries.list())

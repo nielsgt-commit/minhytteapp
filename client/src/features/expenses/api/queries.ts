@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { getExpense, listExpenses } from "@server/backend"
 import { expenseKeys } from "./keys"
 
@@ -15,6 +15,6 @@ export const expenseQueries = {
     }),
 }
 
-export const useExpenses = () => useQuery(expenseQueries.list())
+export const useExpenses = () => useSuspenseQuery(expenseQueries.list())
 
 export const useExpense = (id: string) => useQuery(expenseQueries.detail(id))

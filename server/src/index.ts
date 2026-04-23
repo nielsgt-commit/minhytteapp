@@ -2,7 +2,6 @@ import "dotenv/config"
 import express, { type ErrorRequestHandler } from "express"
 import cors from "cors"
 import { createExpressMiddleware } from "@trpc/server/adapters/express"
-import { usersRouter } from "./routes/users.ts"
 import { appRouter } from "./trpc/routers/_app.ts"
 import { createContext } from "./trpc/context.ts"
 
@@ -15,10 +14,19 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true })
 })
 
-app.use("/api/users", usersRouter)
+const isDev = process.env.NODE_ENV !== "production"
+
 app.use(
   "/api/trpc",
-  createExpressMiddleware({ router: appRouter, createContext }),
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+    onError: isDev
+      ? ({ error, path, type }) => {
+          console.error(`[trpc] ${type} ${path ?? "<unknown>"} →`, error.cause ?? error)
+        }
+      : undefined,
+  }),
 )
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {

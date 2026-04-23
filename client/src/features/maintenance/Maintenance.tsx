@@ -10,36 +10,32 @@ const nextStatus: Record<MaintenanceStatus, MaintenanceStatus> = {
 }
 
 export function Maintenance() {
-  const { data: tasks = [], isPending } = useMaintenanceTasks()
+  const { data: tasks } = useMaintenanceTasks()
   const setStatus = useSetMaintenanceStatus()
 
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Maintenance</h2>
       <div className={styles.content}>
-        {isPending ? (
-          <p>Loading…</p>
-        ) : (
-          <ul>
-            {tasks.map(t => (
-              <li key={t.id}>
-                [{t.status}] {t.title}
-                {t.dueDate ? ` — due ${t.dueDate}` : ""}{" "}
-                <button
-                  onClick={() => {
-                    setStatus.mutate({
-                      id: t.id,
-                      status: nextStatus[t.status],
-                    })
-                  }}
-                  disabled={setStatus.isPending}
-                >
-                  advance
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul>
+          {tasks.map(t => (
+            <li key={t.id}>
+              [{t.status}] {t.title}
+              {t.dueDate ? ` — due ${t.dueDate}` : ""}{" "}
+              <button
+                onClick={() => {
+                  setStatus.mutate({
+                    id: t.id,
+                    status: nextStatus[t.status],
+                  })
+                }}
+                disabled={setStatus.isPending}
+              >
+                advance
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )

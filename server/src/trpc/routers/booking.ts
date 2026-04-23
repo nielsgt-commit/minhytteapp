@@ -4,7 +4,9 @@ import { bookingTable } from "../../db/schema/booking.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
-const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected YYYY-MM-DD")
+const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+  error: "expected YYYY-MM-DD",
+})
 
 export const bookingRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
@@ -33,7 +35,7 @@ export const bookingRouter = router({
           end_date: dateString,
         })
         .refine((v) => v.start_date <= v.end_date, {
-          message: "start_date must be on or before end_date",
+          error: "start_date must be on or before end_date",
           path: ["end_date"],
         }),
     )
