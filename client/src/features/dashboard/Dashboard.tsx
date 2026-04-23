@@ -1,5 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import styles from "./Dashboard.module.css"
+import { BuildingsTestForm } from "./TestForm/BuildingsTestForm"
+import { PropertyTestForm } from "./TestForm/PropertyTestForm"
+import { RoomsTestForm } from "./TestForm/RoomsTestForm"
+import { UsersTestForm } from "./TestForm/UsersTestForm"
 import { useTRPC } from "@/trpc/trpc"
 
 export function Dashboard() {
@@ -16,6 +20,10 @@ export function Dashboard() {
           <li>Upcoming bookings: {data.upcomingBookings}</li>
           <li>Open maintenance tasks: {data.openMaintenance}</li>
         </ul>
+        <UsersTestForm />
+        <PropertyTestForm />
+        <BuildingsTestForm />
+        <RoomsTestForm />
       </div>
     </section>
   )

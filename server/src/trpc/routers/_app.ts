@@ -1,16 +1,24 @@
 import { router } from "../init.ts"
 import { bookingRouter } from "./booking.ts"
+import { buildingRouter } from "./building.ts"
 import { dashboardRouter } from "./dashboard.ts"
 import { expenseRouter } from "./expense.ts"
 import { maintenanceRouter } from "./maintenance.ts"
+import { propertyRouter } from "./property.ts"
+import { roomRouter } from "./room.ts"
 import { settlementRouter } from "./settlement.ts"
+import { userRouter } from "./user.ts"
 
 export const appRouter = router({
   booking: bookingRouter,
+  building: buildingRouter,
   dashboard: dashboardRouter,
   expense: expenseRouter,
   maintenance: maintenanceRouter,
+  property: propertyRouter,
+  room: roomRouter,
   settlement: settlementRouter,
+  user: userRouter,
 })
 
 export type AppRouter = typeof appRouter
