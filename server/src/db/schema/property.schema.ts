@@ -32,6 +32,7 @@ export const roomTable = pgTable("rooms", {
   building_id: integer("building_id")
     .notNull()
     .references(() => buildingsTable.id),
+
   beds_sm: integer("beds_sm").notNull().default(0),
   beds_lg: integer("beds_lg").notNull().default(0),
   beds_double: integer("beds_double").notNull().default(0),
