@@ -6,6 +6,7 @@ import { dashboardSlice } from "@/features/dashboard/dashboardSlice"
 import { expensesSlice } from "@/features/expenses/expensesSlice"
 import { homeSlice } from "@/features/home/homeSlice"
 import { maintenanceSlice } from "@/features/maintenance/maintenanceSlice"
+import { propertySlice } from "@/features/property/propertySlice"
 import { settlementSlice } from "@/features/settlement/settlementSlice"
 
 // `combineSlices` automatically combines the reducers using
@@ -16,6 +17,7 @@ const rootReducer = combineSlices(
   expensesSlice,
   homeSlice,
   maintenanceSlice,
+  propertySlice,
   settlementSlice,
 )
 // Infer the `RootState` type from the root reducer

@@ -17,6 +17,7 @@ type RoomRecord = {
   beds_lg: number
   beds_double: number
   mattresses: number
+  travel_cot: number
   room_type: RoomType
 }
 
@@ -28,6 +29,7 @@ type FormState = {
   beds_lg: string
   beds_double: string
   mattresses: string
+  travel_cot: string
   room_type: RoomType
 }
 
@@ -41,6 +43,7 @@ const initialFormState: FormState = {
   beds_lg: "0",
   beds_double: "0",
   mattresses: "0",
+  travel_cot: "0",
   room_type: "single",
 }
 
@@ -65,6 +68,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
         beds_lg: String(r.beds_lg),
         beds_double: String(r.beds_double),
         mattresses: String(r.mattresses),
+        travel_cot: String(r.travel_cot),
         room_type: r.room_type,
       }
     }
@@ -81,6 +85,7 @@ function buildPayload(state: FormState) {
     beds_lg: Number(state.beds_lg),
     beds_double: Number(state.beds_double),
     mattresses: Number(state.mattresses),
+    travel_cot: Number(state.travel_cot),
     room_type: state.room_type,
   }
 }
@@ -252,6 +257,19 @@ export function RoomsTestForm() {
           </div>
 
           <div>
+            <label>
+              Travel cot
+              <input
+                type="number"
+                min={0}
+                value={state.travel_cot}
+                onChange={e => { set("travel_cot")(e.target.value); }}
+                required
+              />
+            </label>
+          </div>
+
+          <div>
             <button type="submit" disabled={pending}>
               {isEditing ? "Update" : "Create"}
             </button>
@@ -280,6 +298,7 @@ export function RoomsTestForm() {
             <th>beds_lg</th>
             <th>beds_double</th>
             <th>mattresses</th>
+            <th>travel_cot</th>
             <th>actions</th>
           </tr>
         </thead>
@@ -296,6 +315,7 @@ export function RoomsTestForm() {
               <td>{r.beds_lg}</td>
               <td>{r.beds_double}</td>
               <td>{r.mattresses}</td>
+              <td>{r.travel_cot}</td>
               <td>
                 <button
                   type="button"

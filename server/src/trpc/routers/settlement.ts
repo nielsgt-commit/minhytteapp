@@ -9,7 +9,7 @@ const settlementFields = {
     .enum(["winter", "spring", "summer", "autumn"])
     .optional(),
   status: z.enum(["open", "closed"]),
-  split_policy: z.enum(["shares", "families_equal", "occupancy_days"]),
+  split_policy: z.enum(["shares", "groups_equal", "occupancy_days"]),
 }
 
 const createInput = z.object(settlementFields)

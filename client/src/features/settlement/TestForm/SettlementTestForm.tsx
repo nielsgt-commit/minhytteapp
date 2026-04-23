@@ -8,7 +8,7 @@ import { useTRPC } from "@/trpc/trpc"
 
 type Season = "winter" | "spring" | "summer" | "autumn"
 type Status = "open" | "closed"
-type SplitPolicy = "shares" | "families_equal" | "occupancy_days"
+type SplitPolicy = "shares" | "groups_equal" | "occupancy_days"
 
 type SettlementRecord = {
   id: number
@@ -30,7 +30,7 @@ const SEASONS: Season[] = ["winter", "spring", "summer", "autumn"]
 const STATUSES: Status[] = ["open", "closed"]
 const SPLIT_POLICIES: SplitPolicy[] = [
   "shares",
-  "families_equal",
+  "groups_equal",
   "occupancy_days",
 ]
 

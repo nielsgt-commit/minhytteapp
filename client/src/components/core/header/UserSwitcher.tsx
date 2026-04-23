@@ -1,27 +1,40 @@
 import type { ChangeEvent } from "react"
 
-export type UserAction = "switch-user" | "log-out"
-
-type Props = {
-  onAction: (action: UserAction) => void
+export type User = {
+  id: number
+  name: string
 }
 
-export default function UserSwitcher({ onAction }: Props) {
+type Props = {
+  users: User[]
+  value: number | null
+  onChange: (userId: number) => void
+}
+
+export default function UserSwitcher({ users, value, onChange }: Props) {
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.target
-    if (value === "switch-user" || value === "log-out") {
-      onAction(value)
-    }
-    event.target.selectedIndex = 0
+    onChange(Number(event.target.value))
+  }
+
+  if (users.length === 0) {
+    return (
+      <select aria-label="Switch user" disabled>
+        <option value="">No users</option>
+      </select>
+    )
   }
 
   return (
-    <select aria-label="User menu" defaultValue="" onChange={handleChange}>
-      <option value="" disabled>
-        Account
-      </option>
-      <option value="switch-user">Switch user</option>
-      <option value="log-out">Log out</option>
+    <select
+      aria-label="Switch user"
+      value={value ?? ""}
+      onChange={handleChange}
+    >
+      {users.map(u => (
+        <option key={u.id} value={u.id}>
+          {u.name}
+        </option>
+      ))}
     </select>
   )
 }

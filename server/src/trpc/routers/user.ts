@@ -5,9 +5,9 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const userFields = {
   name: z.string().min(1, { error: "name is required" }),
-  date_of_birth: z.number().int(),
   email: z.email(),
   is_admin: z.boolean().optional(),
+  is_child: z.boolean().optional(),
 }
 
 const createInput = z.object(userFields)

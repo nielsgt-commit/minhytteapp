@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1776884170107,
-      "tag": "0000_supreme_prowler",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1776951103577,
-      "tag": "0001_left_dragon_lord",
+      "when": 1776972258814,
+      "tag": "0000_tranquil_thunderbolts",
       "breakpoints": true
     }
   ]

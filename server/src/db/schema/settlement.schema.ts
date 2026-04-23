@@ -9,7 +9,7 @@ import {
   unique,
   varchar,
 } from "drizzle-orm/pg-core"
-import { usersTable, familiesTable } from "./users.schema.ts"
+import { usersTable, userGroupsTable } from "./users.schema.ts"
 import { bookingTable } from "./booking.schema.ts"
 import { maintenanceTable } from "./maintenance.schema.ts"
 
@@ -28,7 +28,7 @@ export const settlementsTable = pgTable(
     }).notNull(),
     split_policy: varchar("split_policy", {
       length: 15,
-      enum: ["shares", "families_equal", "occupancy_days"],
+      enum: ["shares", "groups_equal", "occupancy_days"],
     }).notNull(),
     opened_at: timestamp("opened_at").notNull().defaultNow(),
     closed_at: timestamp("closed_at"),
@@ -87,20 +87,20 @@ export const expenseSharesTable = pgTable(
   (t) => [primaryKey({ columns: [t.expense_id, t.user_id] })],
 )
 
-export const settlementFamilyTotalsTable = pgTable(
-  "settlement_family_totals",
+export const settlementUserGroupTotalsTable = pgTable(
+  "settlement_user_group_totals",
   {
     settlement_id: integer("settlement_id")
       .notNull()
       .references(() => settlementsTable.id, { onDelete: "cascade" }),
-    family_id: integer("family_id")
+    user_group_id: integer("user_group_id")
       .notNull()
-      .references(() => familiesTable.id),
+      .references(() => userGroupsTable.id),
     total_paid: integer("total_paid").notNull(),
     total_share: integer("total_share").notNull(),
     net: integer("net").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.settlement_id, t.family_id] })],
+  (t) => [primaryKey({ columns: [t.settlement_id, t.user_group_id] })],
 )
 
 export const settlementTransfersTable = pgTable(
@@ -110,12 +110,12 @@ export const settlementTransfersTable = pgTable(
     settlement_id: integer("settlement_id")
       .notNull()
       .references(() => settlementsTable.id, { onDelete: "cascade" }),
-    from_family_id: integer("from_family_id")
+    from_user_group_id: integer("from_user_group_id")
       .notNull()
-      .references(() => familiesTable.id),
-    to_family_id: integer("to_family_id")
+      .references(() => userGroupsTable.id),
+    to_user_group_id: integer("to_user_group_id")
       .notNull()
-      .references(() => familiesTable.id),
+      .references(() => userGroupsTable.id),
     amount: integer("amount").notNull(),
     status: varchar("status", {
       length: 7,
@@ -126,7 +126,7 @@ export const settlementTransfersTable = pgTable(
   (t) => [
     check(
       "transfer_distinct_parties",
-      sql`${t.from_family_id} <> ${t.to_family_id}`,
+      sql`${t.from_user_group_id} <> ${t.to_user_group_id}`,
     ),
     check("transfer_amount_positive", sql`${t.amount} > 0`),
     check(

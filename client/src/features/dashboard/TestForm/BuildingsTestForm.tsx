@@ -9,7 +9,6 @@ import { useTRPC } from "@/trpc/trpc"
 type BuildingRecord = {
   id: number
   name: string
-  address: string
   property_id: number
   property_name: string | null
 }
@@ -17,14 +16,12 @@ type BuildingRecord = {
 type FormState = {
   id: number | null
   name: string
-  address: string
   property_id: string
 }
 
 const initialFormState: FormState = {
   id: null,
   name: "",
-  address: "",
   property_id: "",
 }
 
@@ -44,7 +41,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
       return {
         id: r.id,
         name: r.name,
-        address: r.address,
         property_id: String(r.property_id),
       }
     }
@@ -56,7 +52,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
 function buildPayload(state: FormState) {
   return {
     name: state.name,
-    address: state.address,
     property_id: Number(state.property_id),
   }
 }
@@ -145,18 +140,6 @@ export function BuildingsTestForm() {
 
           <div>
             <label>
-              Address
-              <input
-                type="text"
-                value={state.address}
-                onChange={e => { set("address")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
               Property
               <select
                 value={state.property_id}
@@ -196,7 +179,6 @@ export function BuildingsTestForm() {
           <tr>
             <th>id</th>
             <th>name</th>
-            <th>address</th>
             <th>property_id</th>
             <th>property_name</th>
             <th>actions</th>
@@ -207,7 +189,6 @@ export function BuildingsTestForm() {
             <tr key={b.id}>
               <td>{b.id}</td>
               <td>{b.name}</td>
-              <td>{b.address}</td>
               <td>{b.property_id}</td>
               <td>{b.property_name ?? ""}</td>
               <td>

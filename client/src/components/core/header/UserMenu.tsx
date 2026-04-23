@@ -1,20 +1,34 @@
-import { getRouteApi } from "@tanstack/react-router"
-import UserSwitcher, { type UserAction } from "./UserSwitcher"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/trpc"
+import UserSwitcher from "./UserSwitcher"
 import styles from "./Header.module.css"
 
-const rootApi = getRouteApi("__root__")
-
 export default function UserMenu() {
-  const { auth } = rootApi.useRouteContext()
+  const trpc = useTRPC()
+  const { data: users, isLoading } = useQuery(trpc.user.list.queryOptions())
+  const [selectedId, setSelectedId] = useState<number>(1)
 
-  const handleAction = (_action: UserAction) => {
-    // no-op until trpc.auth.{login,logout} is wired up
+  const list = users ?? []
+  const current = list.find(u => u.id === selectedId)
+
+  let label: string
+  if (isLoading) {
+    label = "Loading…"
+  } else if (current) {
+    label = current.name
+  } else {
+    label = "No user"
   }
 
   return (
     <div className={styles.menu}>
-      <span>{auth.user?.name ?? "Guest"}</span>
-      <UserSwitcher onAction={handleAction} />
+      <span>{label}</span>
+      <UserSwitcher
+        users={list}
+        value={selectedId}
+        onChange={id => { setSelectedId(id) }}
+      />
     </div>
   )
 }

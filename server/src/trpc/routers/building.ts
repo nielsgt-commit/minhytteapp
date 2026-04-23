@@ -8,7 +8,6 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const buildingFields = {
   name: z.string().min(1, { error: "name is required" }),
-  address: z.string().min(1, { error: "address is required" }),
   property_id: z.number().int().positive(),
 }
 
@@ -25,7 +24,6 @@ export const buildingRouter = router({
       .select({
         id: buildingsTable.id,
         name: buildingsTable.name,
-        address: buildingsTable.address,
         property_id: buildingsTable.property_id,
         property_name: propertyTable.name,
       })

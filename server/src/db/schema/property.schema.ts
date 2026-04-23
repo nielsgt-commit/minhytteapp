@@ -20,7 +20,6 @@ export const propertyTable = pgTable("properties", {
 export const buildingsTable = pgTable("buildings", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
-  address: varchar("address", { length: 255 }).notNull(),
   property_id: integer("property_id")
     .notNull()
     .references(() => propertyTable.id),
@@ -37,6 +36,7 @@ export const roomTable = pgTable("rooms", {
   beds_lg: integer("beds_lg").notNull().default(0),
   beds_double: integer("beds_double").notNull().default(0),
   mattresses: integer("mattresses").notNull().default(0),
+  travel_cot: integer("travel_cot").notNull().default(0),
   room_type: varchar("room_type", {
     length: 6,
     enum: ["single", "double", "family"],

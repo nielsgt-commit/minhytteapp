@@ -19,7 +19,6 @@ async function main() {
         .insert(usersTable)
         .values({
           name: "Owner",
-          date_of_birth: 19800101,
           email: "owner@example.com",
         })
         .returning()

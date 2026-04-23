@@ -9,28 +9,28 @@ import { useTRPC } from "@/trpc/trpc"
 type UserRecord = {
   id: number
   name: string
-  date_of_birth: number
   email: string
+  is_child: boolean | null
 }
 
 type FormState = {
   id: number | null
   name: string
-  date_of_birth: string
   email: string
+  is_child: boolean
 }
 
 const initialFormState: FormState = {
   id: null,
   name: "",
-  date_of_birth: "",
   email: "",
+  is_child: false,
 }
 
 type EditableField = Exclude<keyof FormState, "id">
 
 type FormAction =
-  | { type: "setField"; field: EditableField; value: string }
+  | { type: "setField"; field: EditableField; value: string | boolean }
   | { type: "loadForEdit"; record: UserRecord }
   | { type: "reset" }
 
@@ -43,8 +43,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
       return {
         id: r.id,
         name: r.name,
-        date_of_birth: String(r.date_of_birth),
         email: r.email,
+        is_child: r.is_child ?? false,
       }
     }
     case "reset":
@@ -55,8 +55,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
 function buildPayload(state: FormState) {
   return {
     name: state.name,
-    date_of_birth: Number(state.date_of_birth),
     email: state.email,
+    is_child: state.is_child,
   }
 }
 
@@ -104,9 +104,6 @@ export function UsersTestForm() {
   const lastError =
     createMutation.error ?? updateMutation.error ?? deleteMutation.error
 
-  const set = (field: EditableField) => (value: string) =>
-    { dispatch({ type: "setField", field, value }); }
-
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const payload = buildPayload(state)
@@ -131,19 +128,9 @@ export function UsersTestForm() {
               <input
                 type="text"
                 value={state.name}
-                onChange={e => { set("name")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Date of birth (year)
-              <input
-                type="number"
-                value={state.date_of_birth}
-                onChange={e => { set("date_of_birth")(e.target.value); }}
+                onChange={e => {
+                  dispatch({ type: "setField", field: "name", value: e.target.value })
+                }}
                 required
               />
             </label>
@@ -155,9 +142,24 @@ export function UsersTestForm() {
               <input
                 type="email"
                 value={state.email}
-                onChange={e => { set("email")(e.target.value); }}
+                onChange={e => {
+                  dispatch({ type: "setField", field: "email", value: e.target.value })
+                }}
                 required
               />
+            </label>
+          </div>
+
+          <div>
+            <label>
+              <input
+                type="checkbox"
+                checked={state.is_child}
+                onChange={e => {
+                  dispatch({ type: "setField", field: "is_child", value: e.target.checked })
+                }}
+              />
+              Is child
             </label>
           </div>
 
@@ -184,8 +186,8 @@ export function UsersTestForm() {
           <tr>
             <th>id</th>
             <th>name</th>
-            <th>date_of_birth</th>
             <th>email</th>
+            <th>is_child</th>
             <th>actions</th>
           </tr>
         </thead>
@@ -194,17 +196,17 @@ export function UsersTestForm() {
             <tr key={u.id}>
               <td>{u.id}</td>
               <td>{u.name}</td>
-              <td>{u.date_of_birth}</td>
               <td>{u.email}</td>
+              <td>{u.is_child ? "yes" : "no"}</td>
               <td>
                 <button
                   type="button"
-                  onClick={() =>
-                    { dispatch({
+                  onClick={() => {
+                    dispatch({
                       type: "loadForEdit",
                       record: u as UserRecord,
-                    }); }
-                  }
+                    })
+                  }}
                   disabled={pending}
                 >
                   Edit

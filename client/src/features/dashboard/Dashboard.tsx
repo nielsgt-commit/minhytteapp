@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import styles from "./Dashboard.module.css"
+import { AddBuildingFlow } from "./TestForm/AddBuildingFlow"
 import { AddOwnerGroupFlow } from "./TestForm/AddOwnerGroupFlow.tsx"
 import { AddUserFlow } from "./TestForm/AddUserFlow"
 import { PropertyFlow } from "./TestForm/PropertyFlow"
@@ -19,9 +20,7 @@ export function Dashboard() {
           <li>Upcoming bookings: {data.upcomingBookings}</li>
           <li>Open maintenance tasks: {data.openMaintenance}</li>
         </ul>
-        <PropertyFlow />
-        <AddUserFlow />
-        <AddOwnerGroupFlow />
+        <AddBuildingFlow />
       </div>
     </section>
   )

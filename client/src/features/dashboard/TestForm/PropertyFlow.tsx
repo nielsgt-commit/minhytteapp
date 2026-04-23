@@ -15,8 +15,9 @@ function roomBeds(r: {
   beds_lg: number
   beds_double: number
   mattresses: number
+  travel_cot: number
 }) {
-  return r.beds_sm + r.beds_lg + r.beds_double * 2 + r.mattresses
+  return r.beds_sm + r.beds_lg + r.beds_double * 2 + r.mattresses + r.travel_cot
 }
 
 function fdString(fd: FormData, key: string): string {
@@ -157,7 +158,6 @@ export function PropertyFlow() {
     const fd = new FormData(form)
     const payload = {
       name: fdString(fd, "name"),
-      address: fdString(fd, "address"),
       property_id: buildingForm.propertyId,
     }
     const id = buildingForm.id
@@ -188,6 +188,7 @@ export function PropertyFlow() {
       beds_lg: fdNumber(fd, "beds_lg"),
       beds_double: fdNumber(fd, "beds_double"),
       mattresses: fdNumber(fd, "mattresses"),
+      travel_cot: fdNumber(fd, "travel_cot"),
     }
     const id = roomForm.id
     const opts = {
@@ -322,7 +323,7 @@ export function PropertyFlow() {
               )}
 
               {isCreateBuildingOpenFor(p.id) && (
-                <NameAddressForm
+                <NameOnlyForm
                   key={`building-create-${String(p.id)}`}
                   legend={`New building in ${p.name}`}
                   submitLabel="Create building"
@@ -345,9 +346,7 @@ export function PropertyFlow() {
                     const buildingIsEditing = editingBuildingId === b.id
                     return (
                       <li key={b.id}>
-                        <h5>
-                          {b.name} <small>({b.address})</small>
-                        </h5>
+                        <h5>{b.name}</h5>
                         <p>
                           {buildingRooms.length} room(s), {buildingBeds} bed(s)
                         </p>
@@ -390,12 +389,12 @@ export function PropertyFlow() {
                         </div>
 
                         {buildingIsEditing && (
-                          <NameAddressForm
+                          <NameOnlyForm
                             key={`building-edit-${String(b.id)}`}
                             legend={`Edit building #${String(b.id)}`}
                             submitLabel="Update building"
                             pending={buildingPending}
-                            defaults={{ name: b.name, address: b.address }}
+                            defaults={{ name: b.name }}
                             onSubmit={handleBuildingSubmit}
                             onCancel={closeBuildingForm}
                           />
@@ -460,6 +459,7 @@ export function PropertyFlow() {
                                         beds_lg: r.beds_lg,
                                         beds_double: r.beds_double,
                                         mattresses: r.mattresses,
+                                        travel_cot: r.travel_cot,
                                       }}
                                       onSubmit={handleRoomSubmit}
                                       onCancel={closeRoomForm}
@@ -480,6 +480,51 @@ export function PropertyFlow() {
         })}
       </ul>
     </section>
+  )
+}
+
+type NameOnlyDefaults = { name: string }
+
+function NameOnlyForm({
+  legend,
+  submitLabel,
+  pending,
+  defaults,
+  onSubmit,
+  onCancel,
+}: {
+  legend: string
+  submitLabel: string
+  pending: boolean
+  defaults?: NameOnlyDefaults
+  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onCancel: () => void
+}) {
+  return (
+    <form onSubmit={onSubmit}>
+      <fieldset>
+        <legend>{legend}</legend>
+        <div>
+          <label>
+            Name
+            <input
+              type="text"
+              name="name"
+              defaultValue={defaults?.name ?? ""}
+              required
+            />
+          </label>
+        </div>
+        <div>
+          <button type="submit" disabled={pending}>
+            {submitLabel}
+          </button>
+          <button type="button" onClick={onCancel} disabled={pending}>
+            Cancel
+          </button>
+        </div>
+      </fieldset>
+    </form>
   )
 }
 
@@ -546,6 +591,7 @@ type RoomDefaults = {
   beds_lg: number
   beds_double: number
   mattresses: number
+  travel_cot: number
 }
 
 function RoomFormBlock({
@@ -637,6 +683,18 @@ function RoomFormBlock({
               name="mattresses"
               min={0}
               defaultValue={defaults?.mattresses ?? 0}
+              required
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Travel cot
+            <input
+              type="number"
+              name="travel_cot"
+              min={0}
+              defaultValue={defaults?.travel_cot ?? 0}
               required
             />
           </label>

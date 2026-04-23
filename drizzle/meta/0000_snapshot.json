@@ -1,5 +1,5 @@
 {
-  "id": "2301ec91-4b23-4e29-933c-69ab9296b673",
+  "id": "f416b364-430c-48a6-aa7b-79630b7f2646",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -740,12 +740,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "address": {
-          "name": "address",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
         "property_id": {
           "name": "property_id",
           "type": "integer",
@@ -1071,6 +1065,13 @@
           "notNull": true,
           "default": 0
         },
+        "travel_cot": {
+          "name": "travel_cot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "room_type": {
           "name": "room_type",
           "type": "varchar(6)",
@@ -1314,84 +1315,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.settlement_family_totals": {
-      "name": "settlement_family_totals",
-      "schema": "",
-      "columns": {
-        "settlement_id": {
-          "name": "settlement_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "family_id": {
-          "name": "family_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "total_paid": {
-          "name": "total_paid",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "total_share": {
-          "name": "total_share",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "net": {
-          "name": "net",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "settlement_family_totals_settlement_id_settlements_id_fk": {
-          "name": "settlement_family_totals_settlement_id_settlements_id_fk",
-          "tableFrom": "settlement_family_totals",
-          "tableTo": "settlements",
-          "columnsFrom": [
-            "settlement_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "settlement_family_totals_family_id_families_id_fk": {
-          "name": "settlement_family_totals_family_id_families_id_fk",
-          "tableFrom": "settlement_family_totals",
-          "tableTo": "families",
-          "columnsFrom": [
-            "family_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "settlement_family_totals_settlement_id_family_id_pk": {
-          "name": "settlement_family_totals_settlement_id_family_id_pk",
-          "columns": [
-            "settlement_id",
-            "family_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.settlement_transfers": {
       "name": "settlement_transfers",
       "schema": "",
@@ -1408,14 +1331,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "from_family_id": {
-          "name": "from_family_id",
+        "from_user_group_id": {
+          "name": "from_user_group_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "to_family_id": {
-          "name": "to_family_id",
+        "to_user_group_id": {
+          "name": "to_user_group_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -1454,12 +1377,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "settlement_transfers_from_family_id_families_id_fk": {
-          "name": "settlement_transfers_from_family_id_families_id_fk",
+        "settlement_transfers_from_user_group_id_user_groups_id_fk": {
+          "name": "settlement_transfers_from_user_group_id_user_groups_id_fk",
           "tableFrom": "settlement_transfers",
-          "tableTo": "families",
+          "tableTo": "user_groups",
           "columnsFrom": [
-            "from_family_id"
+            "from_user_group_id"
           ],
           "columnsTo": [
             "id"
@@ -1467,12 +1390,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "settlement_transfers_to_family_id_families_id_fk": {
-          "name": "settlement_transfers_to_family_id_families_id_fk",
+        "settlement_transfers_to_user_group_id_user_groups_id_fk": {
+          "name": "settlement_transfers_to_user_group_id_user_groups_id_fk",
           "tableFrom": "settlement_transfers",
-          "tableTo": "families",
+          "tableTo": "user_groups",
           "columnsFrom": [
-            "to_family_id"
+            "to_user_group_id"
           ],
           "columnsTo": [
             "id"
@@ -1487,7 +1410,7 @@
       "checkConstraints": {
         "transfer_distinct_parties": {
           "name": "transfer_distinct_parties",
-          "value": "\"settlement_transfers\".\"from_family_id\" <> \"settlement_transfers\".\"to_family_id\""
+          "value": "\"settlement_transfers\".\"from_user_group_id\" <> \"settlement_transfers\".\"to_user_group_id\""
         },
         "transfer_amount_positive": {
           "name": "transfer_amount_positive",
@@ -1498,6 +1421,84 @@
           "value": "(\"settlement_transfers\".\"status\" = 'paid') = (\"settlement_transfers\".\"paid_at\" IS NOT NULL)"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.settlement_user_group_totals": {
+      "name": "settlement_user_group_totals",
+      "schema": "",
+      "columns": {
+        "settlement_id": {
+          "name": "settlement_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_group_id": {
+          "name": "user_group_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_paid": {
+          "name": "total_paid",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_share": {
+          "name": "total_share",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "net": {
+          "name": "net",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "settlement_user_group_totals_settlement_id_settlements_id_fk": {
+          "name": "settlement_user_group_totals_settlement_id_settlements_id_fk",
+          "tableFrom": "settlement_user_group_totals",
+          "tableTo": "settlements",
+          "columnsFrom": [
+            "settlement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "settlement_user_group_totals_user_group_id_user_groups_id_fk": {
+          "name": "settlement_user_group_totals_user_group_id_user_groups_id_fk",
+          "tableFrom": "settlement_user_group_totals",
+          "tableTo": "user_groups",
+          "columnsFrom": [
+            "user_group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "settlement_user_group_totals_settlement_id_user_group_id_pk": {
+          "name": "settlement_user_group_totals_settlement_id_user_group_id_pk",
+          "columns": [
+            "settlement_id",
+            "user_group_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.settlements": {
@@ -1570,8 +1571,8 @@
       },
       "isRLSEnabled": false
     },
-    "public.families": {
-      "name": "families",
+    "public.user_groups": {
+      "name": "user_groups",
       "schema": "",
       "columns": {
         "id": {
@@ -1581,7 +1582,7 @@
           "notNull": true,
           "identity": {
             "type": "always",
-            "name": "families_id_seq",
+            "name": "user_groups_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -1600,177 +1601,6 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.family_members": {
-      "name": "family_members",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "family_members_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "family_id": {
-          "name": "family_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "relationship_type": {
-          "name": "relationship_type",
-          "type": "varchar(6)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "family_members_family_id_families_id_fk": {
-          "name": "family_members_family_id_families_id_fk",
-          "tableFrom": "family_members",
-          "tableTo": "families",
-          "columnsFrom": [
-            "family_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "family_members_user_id_users_id_fk": {
-          "name": "family_members_user_id_users_id_fk",
-          "tableFrom": "family_members",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "family_members_family_id_user_id_unique": {
-          "name": "family_members_family_id_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "family_id",
-            "user_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.relationships": {
-      "name": "relationships",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "relationships_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "person_1": {
-          "name": "person_1",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "person_2": {
-          "name": "person_2",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "relationship_type": {
-          "name": "relationship_type",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_date": {
-          "name": "start_date",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_date": {
-          "name": "end_date",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "relationships_person_1_users_id_fk": {
-          "name": "relationships_person_1_users_id_fk",
-          "tableFrom": "relationships",
-          "tableTo": "users",
-          "columnsFrom": [
-            "person_1"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "relationships_person_2_users_id_fk": {
-          "name": "relationships_person_2_users_id_fk",
-          "tableFrom": "relationships",
-          "tableTo": "users",
-          "columnsFrom": [
-            "person_2"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1804,17 +1634,24 @@
           "primaryKey": false,
           "notNull": true
         },
-        "date_of_birth": {
-          "name": "date_of_birth",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "email": {
           "name": "email",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "is_child": {
+          "name": "is_child",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

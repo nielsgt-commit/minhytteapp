@@ -22,25 +22,16 @@ import {
 import {
   expenseSharesTable,
   expensesTable,
-  settlementFamilyTotalsTable,
+  settlementUserGroupTotalsTable,
   settlementTransfersTable,
   settlementsTable,
 } from "./settlement.schema.ts"
 import {
-  familiesTable,
-  familyMembersTable,
-  relationshipsTable,
+  userGroupsTable,
   usersTable,
 } from "./users.schema.ts"
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
-  relationshipsAsPerson1: many(relationshipsTable, {
-    relationName: "relationship_person_1",
-  }),
-  relationshipsAsPerson2: many(relationshipsTable, {
-    relationName: "relationship_person_2",
-  }),
-  familyMemberships: many(familyMembersTable),
   propertyOwnerships: many(propertyOwnersTable),
   bookingsBooked: many(bookingTable),
   bookingOccupancies: many(bookingOccupantsTable),
@@ -59,38 +50,13 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
   expenseShares: many(expenseSharesTable),
 }))
 
-export const relationshipsRelations = relations(relationshipsTable, ({ one }) => ({
-  person1: one(usersTable, {
-    fields: [relationshipsTable.person_1],
-    references: [usersTable.id],
-    relationName: "relationship_person_1",
-  }),
-  person2: one(usersTable, {
-    fields: [relationshipsTable.person_2],
-    references: [usersTable.id],
-    relationName: "relationship_person_2",
-  }),
-}))
-
-export const familiesRelations = relations(familiesTable, ({ many }) => ({
-  members: many(familyMembersTable),
-  settlementTotals: many(settlementFamilyTotalsTable),
+export const userGroupsRelations = relations(userGroupsTable, ({ many }) => ({
+  settlementTotals: many(settlementUserGroupTotalsTable),
   transfersFrom: many(settlementTransfersTable, {
-    relationName: "transfer_from_family",
+    relationName: "transfer_from_user_group",
   }),
   transfersTo: many(settlementTransfersTable, {
-    relationName: "transfer_to_family",
-  }),
-}))
-
-export const familyMembersRelations = relations(familyMembersTable, ({ one }) => ({
-  family: one(familiesTable, {
-    fields: [familyMembersTable.family_id],
-    references: [familiesTable.id],
-  }),
-  user: one(usersTable, {
-    fields: [familyMembersTable.user_id],
-    references: [usersTable.id],
+    relationName: "transfer_to_user_group",
   }),
 }))
 
@@ -282,7 +248,7 @@ export const maintenanceAttachmentsRelations = relations(
 
 export const settlementsRelations = relations(settlementsTable, ({ many }) => ({
   expenses: many(expensesTable),
-  familyTotals: many(settlementFamilyTotalsTable),
+  userGroupTotals: many(settlementUserGroupTotalsTable),
   transfers: many(settlementTransfersTable),
 }))
 
@@ -323,16 +289,16 @@ export const expenseSharesRelations = relations(expenseSharesTable, ({ one }) =>
   }),
 }))
 
-export const settlementFamilyTotalsRelations = relations(
-  settlementFamilyTotalsTable,
+export const settlementUserGroupTotalsRelations = relations(
+  settlementUserGroupTotalsTable,
   ({ one }) => ({
     settlement: one(settlementsTable, {
-      fields: [settlementFamilyTotalsTable.settlement_id],
+      fields: [settlementUserGroupTotalsTable.settlement_id],
       references: [settlementsTable.id],
     }),
-    family: one(familiesTable, {
-      fields: [settlementFamilyTotalsTable.family_id],
-      references: [familiesTable.id],
+    userGroup: one(userGroupsTable, {
+      fields: [settlementUserGroupTotalsTable.user_group_id],
+      references: [userGroupsTable.id],
     }),
   }),
 )
@@ -344,15 +310,15 @@ export const settlementTransfersRelations = relations(
       fields: [settlementTransfersTable.settlement_id],
       references: [settlementsTable.id],
     }),
-    fromFamily: one(familiesTable, {
-      fields: [settlementTransfersTable.from_family_id],
-      references: [familiesTable.id],
-      relationName: "transfer_from_family",
+    fromUserGroup: one(userGroupsTable, {
+      fields: [settlementTransfersTable.from_user_group_id],
+      references: [userGroupsTable.id],
+      relationName: "transfer_from_user_group",
     }),
-    toFamily: one(familiesTable, {
-      fields: [settlementTransfersTable.to_family_id],
-      references: [familiesTable.id],
-      relationName: "transfer_to_family",
+    toUserGroup: one(userGroupsTable, {
+      fields: [settlementTransfersTable.to_user_group_id],
+      references: [userGroupsTable.id],
+      relationName: "transfer_to_user_group",
     }),
   }),
 )
