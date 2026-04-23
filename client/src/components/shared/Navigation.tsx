@@ -3,6 +3,7 @@ import styles from "./Navigation.module.css"
 
 const navLinks = linkOptions([
   { to: "/", label: "Home", activeOptions: { exact: true } },
+  { to: "/onboarding", label: "Onboarding" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/calendar", label: "Calendar" },
   { to: "/expenses", label: "Expenses" },

@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import styles from "./Dashboard.module.css"
-import { AddOwnerGroupFlow } from "./AddOwnerGroupFlow"
+import { AddOwnerGroupFlow } from "./TestForm/AddOwnerGroupFlow.tsx"
 import { AddUserFlow } from "./TestForm/AddUserFlow"
 import { PropertyFlow } from "./TestForm/PropertyFlow"
 import { useTRPC } from "@/trpc/trpc"

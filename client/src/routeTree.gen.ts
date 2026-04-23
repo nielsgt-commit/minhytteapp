@@ -9,15 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/_onboarding'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
+import { Route as OnboardingOnboardingRouteImport } from './routes/_onboarding/onboarding'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
 import { Route as AuthedMaintenanceRouteImport } from './routes/_authed/maintenance'
 import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/_onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketingRoute = MarketingRouteImport.update({
   id: '/_marketing',
   getParentRoute: () => rootRouteImport,
@@ -30,6 +36,11 @@ const MarketingIndexRoute = MarketingIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MarketingRoute,
+} as any)
+const OnboardingOnboardingRoute = OnboardingOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const AuthedSettlementRoute = AuthedSettlementRouteImport.update({
   id: '/settlement',
@@ -64,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/expenses': typeof AuthedExpensesRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/settlement': typeof AuthedSettlementRoute
+  '/onboarding': typeof OnboardingOnboardingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
@@ -72,16 +84,19 @@ export interface FileRoutesByTo {
   '/expenses': typeof AuthedExpensesRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/settlement': typeof AuthedSettlementRoute
+  '/onboarding': typeof OnboardingOnboardingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authed': typeof AuthedRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
+  '/_onboarding': typeof OnboardingRouteWithChildren
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/expenses': typeof AuthedExpensesRoute
   '/_authed/maintenance': typeof AuthedMaintenanceRoute
   '/_authed/settlement': typeof AuthedSettlementRoute
+  '/_onboarding/onboarding': typeof OnboardingOnboardingRoute
   '/_marketing/': typeof MarketingIndexRoute
 }
 export interface FileRouteTypes {
@@ -93,6 +108,7 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/maintenance'
     | '/settlement'
+    | '/onboarding'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -101,25 +117,36 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/maintenance'
     | '/settlement'
+    | '/onboarding'
   id:
     | '__root__'
     | '/_authed'
     | '/_marketing'
+    | '/_onboarding'
     | '/_authed/calendar'
     | '/_authed/dashboard'
     | '/_authed/expenses'
     | '/_authed/maintenance'
     | '/_authed/settlement'
+    | '/_onboarding/onboarding'
     | '/_marketing/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
+  OnboardingRoute: typeof OnboardingRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_onboarding': {
+      id: '/_onboarding'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_marketing': {
       id: '/_marketing'
       path: ''
@@ -140,6 +167,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MarketingIndexRouteImport
       parentRoute: typeof MarketingRoute
+    }
+    '/_onboarding/onboarding': {
+      id: '/_onboarding/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingOnboardingRouteImport
+      parentRoute: typeof OnboardingRoute
     }
     '/_authed/settlement': {
       id: '/_authed/settlement'
@@ -210,9 +244,22 @@ const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
   MarketingRouteChildren,
 )
 
+interface OnboardingRouteChildren {
+  OnboardingOnboardingRoute: typeof OnboardingOnboardingRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingOnboardingRoute: OnboardingOnboardingRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
+  OnboardingRoute: OnboardingRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
