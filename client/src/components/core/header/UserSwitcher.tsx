@@ -9,19 +9,24 @@ type Props = {
   users: User[]
   value: number | null
   onChange: (userId: number) => void
+  onAddClick: () => void
 }
 
-export default function UserSwitcher({ users, value, onChange }: Props) {
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onChange(Number(event.target.value))
-  }
+const ADD_SENTINEL = "__add__"
 
-  if (users.length === 0) {
-    return (
-      <select aria-label="Switch user" disabled>
-        <option value="">No users</option>
-      </select>
-    )
+export default function UserSwitcher({
+  users,
+  value,
+  onChange,
+  onAddClick,
+}: Props) {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const raw = event.target.value
+    if (raw === ADD_SENTINEL) {
+      onAddClick()
+      return
+    }
+    onChange(Number(raw))
   }
 
   return (
@@ -30,11 +35,17 @@ export default function UserSwitcher({ users, value, onChange }: Props) {
       value={value ?? ""}
       onChange={handleChange}
     >
+      {users.length === 0 && (
+        <option value="" disabled>
+          No users
+        </option>
+      )}
       {users.map(u => (
         <option key={u.id} value={u.id}>
           {u.name}
         </option>
       ))}
+      <option value={ADD_SENTINEL}>+ Add user</option>
     </select>
   )
 }

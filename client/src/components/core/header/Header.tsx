@@ -1,6 +1,7 @@
 import Navigation from "@/components/shared/Navigation"
 import PropertyMenu from "./PropertyMenu.tsx"
 import UserMenu from "./UserMenu"
+import UserGroupBadge from "./UserGroupBadge.tsx"
 import styles from "./Header.module.css"
 
 export default function Header() {
@@ -9,8 +10,8 @@ export default function Header() {
 
       <PropertyMenu />
       <UserMenu />
-      <h6>user group</h6>
-      <h1 className={styles.title}>Header</h1>
+      <UserGroupBadge />
+      <h1 className={styles.title}> Hytta </h1>
       <Navigation />
     </header>
   )

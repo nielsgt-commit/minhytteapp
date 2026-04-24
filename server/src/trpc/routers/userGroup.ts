@@ -1,10 +1,15 @@
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
-import { userGroupsTable } from "../../db/schema/users.schema.ts"
+import {
+  userGroupMembersTable,
+  userGroupsTable,
+  usersTable,
+} from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const userGroupFields = {
   name: z.string().min(1, { error: "name is required" }),
+  is_main: z.boolean().optional(),
 }
 
 export const userGroupRouter = router({
@@ -13,6 +18,38 @@ export const userGroupRouter = router({
       .select()
       .from(userGroupsTable)
       .orderBy(asc(userGroupsTable.id))
+  }),
+
+  listWithMembers: publicProcedure.query(async ({ ctx }) => {
+    const groups = await ctx.db
+      .select()
+      .from(userGroupsTable)
+      .orderBy(asc(userGroupsTable.id))
+
+    const members = await ctx.db
+      .select({
+        user_group_id: userGroupMembersTable.user_group_id,
+        user_id: userGroupMembersTable.user_id,
+        user_name: usersTable.name,
+      })
+      .from(userGroupMembersTable)
+      .innerJoin(usersTable, eq(usersTable.id, userGroupMembersTable.user_id))
+      .orderBy(asc(usersTable.id))
+
+    const byGroup = new Map<
+      number,
+      { user_id: number; user_name: string }[]
+    >()
+    for (const m of members) {
+      const list = byGroup.get(m.user_group_id) ?? []
+      list.push({ user_id: m.user_id, user_name: m.user_name })
+      byGroup.set(m.user_group_id, list)
+    }
+
+    return groups.map(g => ({
+      ...g,
+      members: byGroup.get(g.id) ?? [],
+    }))
   }),
 
   create: protectedProcedure
@@ -43,6 +80,41 @@ export const userGroupRouter = router({
       const [deleted] = await ctx.db
         .delete(userGroupsTable)
         .where(eq(userGroupsTable.id, input.id))
+        .returning()
+      return deleted
+    }),
+
+  addMember: protectedProcedure
+    .input(
+      z.object({
+        user_group_id: z.number().int().positive(),
+        user_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [created] = await ctx.db
+        .insert(userGroupMembersTable)
+        .values(input)
+        .returning()
+      return created
+    }),
+
+  removeMember: protectedProcedure
+    .input(
+      z.object({
+        user_group_id: z.number().int().positive(),
+        user_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [deleted] = await ctx.db
+        .delete(userGroupMembersTable)
+        .where(
+          and(
+            eq(userGroupMembersTable.user_group_id, input.user_group_id),
+            eq(userGroupMembersTable.user_id, input.user_id),
+          ),
+        )
         .returning()
       return deleted
     }),

@@ -5,6 +5,7 @@
     "title   title   title   title   title   title"
      " details details buildings buildings addbuilding addbuilding"
     " details details buildings buildings addbuilding addbuilding"
+    "owners owners owners owners owners owners"
     "divider divider divider divider divider divider"
     "dangerzone dangerzone dangerzone dangerzone dangerzone dangerzone"
 ;
@@ -16,5 +17,6 @@
 .details { grid-area: details; }
 .buildings { grid-area: buildings; }
 .addbuilding { grid-area: addbuilding; }
+.owners { grid-area: owners; }
 .divider { grid-area: divider; }
 .dangerzone { grid-area: dangerzone; }

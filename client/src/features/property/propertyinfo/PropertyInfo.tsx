@@ -22,9 +22,6 @@ export default function PropertyInfo() {
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
-  const { data: userGroups } = useSuspenseQuery(
-    trpc.userGroup.list.queryOptions(),
-  )
 
   const updateProperty = useMutation(
     trpc.property.update.mutationOptions({
@@ -47,11 +44,6 @@ export default function PropertyInfo() {
     )
   }
 
-  const ownerGroup =
-    selectedProperty.owner_group_id != null
-      ? userGroups.find(g => g.id === selectedProperty.owner_group_id)
-      : null
-
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -60,16 +52,12 @@ export default function PropertyInfo() {
     const address = fdString(fd, "address").trim()
     if (!name || !address) return
     const linkRaw = fdString(fd, "link").trim()
-    const ownerGroupIdRaw = fdString(fd, "owner_group_id")
-    const owner_group_id =
-      ownerGroupIdRaw === "" ? null : Number(ownerGroupIdRaw)
     updateProperty.mutate(
       {
         id: selectedProperty.id,
         name,
         address,
         link: linkRaw === "" ? null : linkRaw,
-        owner_group_id,
       },
       { onSuccess: () => { setIsEditing(false) } },
     )
@@ -118,26 +106,6 @@ export default function PropertyInfo() {
               </label>
             </div>
             <div>
-              <label>
-                Owner group
-                <select
-                  name="owner_group_id"
-                  defaultValue={
-                    selectedProperty.owner_group_id != null
-                      ? String(selectedProperty.owner_group_id)
-                      : ""
-                  }
-                >
-                  <option value="">None</option>
-                  {userGroups.map(g => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div>
               <button type="submit" disabled={updateProperty.isPending}>
                 Save
               </button>
@@ -169,9 +137,6 @@ export default function PropertyInfo() {
         ) : (
           <em>none</em>
         )}
-      </p>
-      <p>
-        Owner group: {ownerGroup ? ownerGroup.name : <em>none</em>}
       </p>
       <p> coordinates / matrix </p>
       <p> Property description </p>

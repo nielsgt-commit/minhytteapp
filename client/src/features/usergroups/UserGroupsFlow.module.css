@@ -1,0 +1,12 @@
+.groupList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.groupList > li {
+    margin: 0;
+}

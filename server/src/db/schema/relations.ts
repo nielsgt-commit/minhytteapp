@@ -14,6 +14,7 @@ import {
   buildingAdjacenciesTable,
   buildingsTable,
   placeTable,
+  propertyOwnersTable,
   propertyTable,
   roomAdjacenciesTable,
   roomTable,
@@ -26,12 +27,15 @@ import {
   settlementsTable,
 } from "./settlement.schema.ts"
 import {
+  userGroupMembersTable,
   userGroupsTable,
   usersTable,
 } from "./users.schema.ts"
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
   bookingsBooked: many(bookingTable),
+  groupMemberships: many(userGroupMembersTable),
+  propertyOwnerships: many(propertyOwnersTable),
   bookingOccupancies: many(bookingOccupantsTable),
   maintenanceAdded: many(maintenanceTable, {
     relationName: "maintenance_added_by",
@@ -56,18 +60,48 @@ export const userGroupsRelations = relations(userGroupsTable, ({ many }) => ({
   transfersTo: many(settlementTransfersTable, {
     relationName: "transfer_to_user_group",
   }),
-  ownedProperties: many(propertyTable),
+  members: many(userGroupMembersTable),
+  propertyOwnerships: many(propertyOwnersTable),
 }))
 
-export const propertyRelations = relations(propertyTable, ({ one, many }) => ({
+export const userGroupMembersRelations = relations(
+  userGroupMembersTable,
+  ({ one }) => ({
+    group: one(userGroupsTable, {
+      fields: [userGroupMembersTable.user_group_id],
+      references: [userGroupsTable.id],
+    }),
+    user: one(usersTable, {
+      fields: [userGroupMembersTable.user_id],
+      references: [usersTable.id],
+    }),
+  }),
+)
+
+export const propertyRelations = relations(propertyTable, ({ many }) => ({
   buildings: many(buildingsTable),
   places: many(placeTable),
   bookings: many(bookingTable),
-  ownerGroup: one(userGroupsTable, {
-    fields: [propertyTable.owner_group_id],
-    references: [userGroupsTable.id],
-  }),
+  owners: many(propertyOwnersTable),
 }))
+
+export const propertyOwnersRelations = relations(
+  propertyOwnersTable,
+  ({ one }) => ({
+    property: one(propertyTable, {
+      fields: [propertyOwnersTable.property_id],
+      references: [propertyTable.id],
+    }),
+    user: one(usersTable, {
+      fields: [propertyOwnersTable.user_id],
+      references: [usersTable.id],
+    }),
+    userGroup: one(userGroupsTable, {
+      fields: [propertyOwnersTable.user_group_id],
+      references: [userGroupsTable.id],
+    }),
+  }),
+)
 
 export const buildingsRelations = relations(buildingsTable, ({ one, many }) => ({
   property: one(propertyTable, {

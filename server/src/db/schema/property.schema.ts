@@ -2,11 +2,13 @@ import { sql } from "drizzle-orm"
 import {
   check,
   integer,
+  numeric,
   pgTable,
   primaryKey,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
-import { userGroupsTable } from "./users.schema.ts"
+import { userGroupsTable, usersTable } from "./users.schema.ts"
 
 
 
@@ -14,7 +16,6 @@ export const propertyTable = pgTable("properties", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   address: varchar("address", { length: 255 }).notNull(),
-  owner_group_id: integer("owner_group_id").references(() => userGroupsTable.id),
   link: varchar("link", { length: 255 }),
 })
 
@@ -69,6 +70,31 @@ export const roomAdjacenciesTable = pgTable(
   (t) => [
     primaryKey({ columns: [t.room_a, t.room_b] }),
     check("room_adj_order", sql`${t.room_a} < ${t.room_b}`),
+  ],
+)
+
+export const propertyOwnersTable = pgTable(
+  "property_owners",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    user_id: integer("user_id").references(() => usersTable.id),
+    user_group_id: integer("user_group_id").references(() => userGroupsTable.id),
+    ownership_pct: numeric("ownership_pct", { precision: 5, scale: 2 }).notNull(),
+  },
+  (t) => [
+    check(
+      "property_owners_exactly_one_ref",
+      sql`(${t.user_id} IS NULL) <> (${t.user_group_id} IS NULL)`,
+    ),
+    uniqueIndex("property_owners_user_uq")
+      .on(t.property_id, t.user_id)
+      .where(sql`${t.user_id} IS NOT NULL`),
+    uniqueIndex("property_owners_group_uq")
+      .on(t.property_id, t.user_group_id)
+      .where(sql`${t.user_group_id} IS NOT NULL`),
   ],
 )
 

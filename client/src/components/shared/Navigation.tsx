@@ -10,6 +10,7 @@ const navLinks = linkOptions([
   { to: "/maintenance", label: "Maintenance" },
   { to: "/settlement", label: "Settlement" },
   { to: "/manageproperty", label: "Manage Property" },
+  { to: "/usergroups", label: "User groups" },
 ])
 
 export default function Navigation() {

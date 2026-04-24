@@ -2,9 +2,16 @@
 
 Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/services.
 
-## Ownership (`properties.owner_group_id`)
-- Nullable FK from `properties` to `user_groups`. A property may be unassigned (no owner group yet), or assigned to exactly one group.
-- Group membership (which users belong to a group) is not yet modelled — a separate `user_group_members` table is planned. Until that exists, an owner group is effectively an empty label.
+## Ownership (`property_owners`)
+- One row per owner of a property. An owner is **either** a `user_id` **or** a `user_group_id`, never both — enforced by the `property_owners_exactly_one_ref` CHECK.
+- Partial unique indexes prevent the same user or the same group from owning a property twice.
+- `ownership_pct` is numeric(5,2). App code should ensure the sum per `property_id` equals 100.00 before treating a property's ownership as complete — the DB does not enforce this.
+- A user may be a direct owner of a property **and** be a member of a group that also owns the property — the two rows coexist and should not double-count in settlement (use `effective_payer` and family attribution per the settlement rules).
+- Deleting a user / user_group / property while `property_owners` rows reference it will fail with an FK violation. This is intentional — cascade via the router if the UI ever offers a "wipe" action.
+
+## User group membership (`user_group_members`)
+- PK `(user_group_id, user_id)` — a user may belong to many groups, but not twice in the same group.
+- No ON DELETE CASCADE on either FK. Deleting a user or group while memberships exist will fail.
 
 ## Family membership (`family_members`)
 - `relationship_type` enum: `parent` | `child` | `guest`. Guest = associated, not a full member.

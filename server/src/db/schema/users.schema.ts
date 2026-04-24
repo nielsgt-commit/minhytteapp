@@ -1,4 +1,10 @@
-import { boolean, integer, pgTable, varchar } from "drizzle-orm/pg-core"
+import {
+  boolean,
+  integer,
+  pgTable,
+  primaryKey,
+  varchar,
+} from "drizzle-orm/pg-core"
 
 export const usersTable = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -11,4 +17,18 @@ export const usersTable = pgTable("users", {
 export const userGroupsTable = pgTable("user_groups", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
+  is_main: boolean("is_main").notNull().default(false),
 })
+
+export const userGroupMembersTable = pgTable(
+  "user_group_members",
+  {
+    user_group_id: integer("user_group_id")
+      .notNull()
+      .references(() => userGroupsTable.id),
+    user_id: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id),
+  },
+  (t) => [primaryKey({ columns: [t.user_group_id, t.user_id] })],
+)

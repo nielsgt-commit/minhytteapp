@@ -6,7 +6,6 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 const propertyFields = {
   name: z.string().min(1, { error: "name is required" }),
   address: z.string().min(1, { error: "address is required" }),
-  owner_group_id: z.number().int().positive().nullable().optional(),
   link: z.string().max(255).nullable().optional(),
 }
 

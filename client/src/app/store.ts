@@ -8,6 +8,7 @@ import { homeSlice } from "@/features/home/homeSlice"
 import { maintenanceSlice } from "@/features/maintenance/maintenanceSlice"
 import { propertySlice } from "@/features/property/propertySlice"
 import { settlementSlice } from "@/features/settlement/settlementSlice"
+import { userSlice } from "@/features/user/userSlice"
 
 // `combineSlices` automatically combines the reducers using
 // their `reducerPath`s, therefore we no longer need to call `combineReducers`.
@@ -19,6 +20,7 @@ const rootReducer = combineSlices(
   maintenanceSlice,
   propertySlice,
   settlementSlice,
+  userSlice,
 )
 // Infer the `RootState` type from the root reducer
 export type RootState = ReturnType<typeof rootReducer>
