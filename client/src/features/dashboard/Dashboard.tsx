@@ -1,7 +1,5 @@
 import styles from "./Dashboard.module.css"
 import BuildingSummary from "@/features/dashboard/buildingsummary/BuildingSummary"
-import PlannedAvailabilitySummary from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary"
-import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
 import RoomsSummary from "@/features/dashboard/roomssummary/RoomsSummary"
 import UserSummary from "@/features/dashboard/usersummary/UserSummary"

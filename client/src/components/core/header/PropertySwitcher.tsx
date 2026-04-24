@@ -9,19 +9,24 @@ type Props = {
   properties: Property[]
   value: number | null
   onChange: (propertyId: number) => void
+  onAddClick: () => void
 }
 
-export default function PropertySwitcher({ properties, value, onChange }: Props) {
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onChange(Number(event.target.value))
-  }
+const ADD_SENTINEL = "__add__"
 
-  if (properties.length === 0) {
-    return (
-      <select aria-label="Switch property" disabled>
-        <option value="">No properties</option>
-      </select>
-    )
+export default function PropertySwitcher({
+  properties,
+  value,
+  onChange,
+  onAddClick,
+}: Props) {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const raw = event.target.value
+    if (raw === ADD_SENTINEL) {
+      onAddClick()
+      return
+    }
+    onChange(Number(raw))
   }
 
   return (
@@ -30,11 +35,17 @@ export default function PropertySwitcher({ properties, value, onChange }: Props)
       value={value ?? ""}
       onChange={handleChange}
     >
+      {properties.length === 0 && (
+        <option value="" disabled>
+          No properties
+        </option>
+      )}
       {properties.map(p => (
         <option key={p.id} value={p.id}>
           {p.name}
         </option>
       ))}
+      <option value={ADD_SENTINEL}>+ Add property</option>
     </select>
   )
 }

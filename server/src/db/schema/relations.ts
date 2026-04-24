@@ -14,7 +14,6 @@ import {
   buildingAdjacenciesTable,
   buildingsTable,
   placeTable,
-  propertyOwnersTable,
   propertyTable,
   roomAdjacenciesTable,
   roomTable,
@@ -32,7 +31,6 @@ import {
 } from "./users.schema.ts"
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
-  propertyOwnerships: many(propertyOwnersTable),
   bookingsBooked: many(bookingTable),
   bookingOccupancies: many(bookingOccupantsTable),
   maintenanceAdded: many(maintenanceTable, {
@@ -58,23 +56,16 @@ export const userGroupsRelations = relations(userGroupsTable, ({ many }) => ({
   transfersTo: many(settlementTransfersTable, {
     relationName: "transfer_to_user_group",
   }),
+  ownedProperties: many(propertyTable),
 }))
 
-export const propertyRelations = relations(propertyTable, ({ many }) => ({
+export const propertyRelations = relations(propertyTable, ({ one, many }) => ({
   buildings: many(buildingsTable),
   places: many(placeTable),
-  owners: many(propertyOwnersTable),
   bookings: many(bookingTable),
-}))
-
-export const propertyOwnersRelations = relations(propertyOwnersTable, ({ one }) => ({
-  property: one(propertyTable, {
-    fields: [propertyOwnersTable.property_id],
-    references: [propertyTable.id],
-  }),
-  user: one(usersTable, {
-    fields: [propertyOwnersTable.user_id],
-    references: [usersTable.id],
+  ownerGroup: one(userGroupsTable, {
+    fields: [propertyTable.owner_group_id],
+    references: [userGroupsTable.id],
   }),
 }))
 

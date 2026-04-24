@@ -14,7 +14,6 @@ const roomFields = {
   beds_double: z.number().int().nonnegative(),
   mattresses: z.number().int().nonnegative(),
   travel_cot: z.number().int().nonnegative(),
-  room_type: z.enum(["single", "double", "family"]),
 }
 
 const createInput = z.object(roomFields)
@@ -37,7 +36,6 @@ export const roomRouter = router({
         beds_double: roomTable.beds_double,
         mattresses: roomTable.mattresses,
         travel_cot: roomTable.travel_cot,
-        room_type: roomTable.room_type,
       })
       .from(roomTable)
       .leftJoin(buildingsTable, eq(buildingsTable.id, roomTable.building_id))

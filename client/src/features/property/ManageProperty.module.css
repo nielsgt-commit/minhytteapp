@@ -1,0 +1,20 @@
+.page {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-areas:
+    "title   title   title   title   title   title"
+     " details details buildings buildings addbuilding addbuilding"
+    " details details buildings buildings addbuilding addbuilding"
+    "divider divider divider divider divider divider"
+    "dangerzone dangerzone dangerzone dangerzone dangerzone dangerzone"
+;
+    gap: 0.4rem;
+}
+
+.title   { grid-area: title; }
+.content { grid-area: content; }
+.details { grid-area: details; }
+.buildings { grid-area: buildings; }
+.addbuilding { grid-area: addbuilding; }
+.divider { grid-area: divider; }
+.dangerzone { grid-area: dangerzone; }

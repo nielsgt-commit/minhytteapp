@@ -15,6 +15,7 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as OnboardingOnboardingRouteImport } from './routes/_onboarding/onboarding'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
+import { Route as AuthedManagepropertyRouteImport } from './routes/_authed/manageproperty'
 import { Route as AuthedMaintenanceRouteImport } from './routes/_authed/maintenance'
 import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
@@ -47,6 +48,11 @@ const AuthedSettlementRoute = AuthedSettlementRouteImport.update({
   path: '/settlement',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedManagepropertyRoute = AuthedManagepropertyRouteImport.update({
+  id: '/manageproperty',
+  path: '/manageproperty',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedMaintenanceRoute = AuthedMaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
   '/maintenance': typeof AuthedMaintenanceRoute
+  '/manageproperty': typeof AuthedManagepropertyRoute
   '/settlement': typeof AuthedSettlementRoute
   '/onboarding': typeof OnboardingOnboardingRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
   '/maintenance': typeof AuthedMaintenanceRoute
+  '/manageproperty': typeof AuthedManagepropertyRoute
   '/settlement': typeof AuthedSettlementRoute
   '/onboarding': typeof OnboardingOnboardingRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/expenses': typeof AuthedExpensesRoute
   '/_authed/maintenance': typeof AuthedMaintenanceRoute
+  '/_authed/manageproperty': typeof AuthedManagepropertyRoute
   '/_authed/settlement': typeof AuthedSettlementRoute
   '/_onboarding/onboarding': typeof OnboardingOnboardingRoute
   '/_marketing/': typeof MarketingIndexRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/expenses'
     | '/maintenance'
+    | '/manageproperty'
     | '/settlement'
     | '/onboarding'
   fileRoutesByTo: FileRoutesByTo
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/expenses'
     | '/maintenance'
+    | '/manageproperty'
     | '/settlement'
     | '/onboarding'
   id:
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/_authed/expenses'
     | '/_authed/maintenance'
+    | '/_authed/manageproperty'
     | '/_authed/settlement'
     | '/_onboarding/onboarding'
     | '/_marketing/'
@@ -182,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettlementRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/manageproperty': {
+      id: '/_authed/manageproperty'
+      path: '/manageproperty'
+      fullPath: '/manageproperty'
+      preLoaderRoute: typeof AuthedManagepropertyRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/maintenance': {
       id: '/_authed/maintenance'
       path: '/maintenance'
@@ -218,6 +237,7 @@ interface AuthedRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedExpensesRoute: typeof AuthedExpensesRoute
   AuthedMaintenanceRoute: typeof AuthedMaintenanceRoute
+  AuthedManagepropertyRoute: typeof AuthedManagepropertyRoute
   AuthedSettlementRoute: typeof AuthedSettlementRoute
 }
 
@@ -226,6 +246,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedExpensesRoute: AuthedExpensesRoute,
   AuthedMaintenanceRoute: AuthedMaintenanceRoute,
+  AuthedManagepropertyRoute: AuthedManagepropertyRoute,
   AuthedSettlementRoute: AuthedSettlementRoute,
 }
 

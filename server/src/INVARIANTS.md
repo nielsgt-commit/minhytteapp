@@ -2,9 +2,9 @@
 
 Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/services.
 
-## Ownership (`property_owners`)
-- Owner (`user_id`) must exist in `family_members` for some family.
-- Sum of `ownership_pct` per `property_id` should equal 100.00.
+## Ownership (`properties.owner_group_id`)
+- Nullable FK from `properties` to `user_groups`. A property may be unassigned (no owner group yet), or assigned to exactly one group.
+- Group membership (which users belong to a group) is not yet modelled — a separate `user_group_members` table is planned. Until that exists, an owner group is effectively an empty label.
 
 ## Family membership (`family_members`)
 - `relationship_type` enum: `parent` | `child` | `guest`. Guest = associated, not a full member.
@@ -12,9 +12,6 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 
 ## Adjacencies (`building_adjacencies`, `room_adjacencies`)
 - Always insert pairs in sorted order: smaller id first. A CHECK rejects otherwise. This keeps `(1, 2)` and `(2, 1)` from both existing.
-
-## Rooms (`rooms`)
-- `room_type` (single/double/family) is independent from bed counts. If you want consistency (e.g. `room_type = 'single'` implies `beds_sm + beds_double ≤ 1`), enforce in app code or add a CHECK later.
 
 ## Bookings (`bookings`, `booking_rooms`, `booking_occupants`)
 - Booker should also appear in `booking_occupants` (store both at create time).
@@ -68,6 +65,6 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 
 ## Deleting property / building / room
 - No `ON DELETE CASCADE` on `buildings.property_id` or `rooms.building_id`. Deleting a parent while children exist fails with a Postgres FK violation — this is intentional: it prevents a misclick from wiping bookings, maintenance, and expenses transitively.
-- `propertyTable` is also referenced by `places`, `property_owners`, `bookings`, and (via `buildings` → `maintenance`) maintenance. `buildingsTable` is referenced by `maintenance` and `building_adjacencies`. `roomTable` is referenced by `booking_rooms` and `room_adjacencies`. A successful delete needs *all* of those cleared.
+- `propertyTable` is also referenced by `places`, `bookings`, and (via `buildings` → `maintenance`) maintenance. `buildingsTable` is referenced by `maintenance` and `building_adjacencies`. `roomTable` is referenced by `booking_rooms` and `room_adjacencies`. A successful delete needs *all* of those cleared.
 - If the UI ever needs a "delete this property and everything under it" action, implement it as a **transactional cascade in the tRPC router** (`ctx.db.transaction(...)`) deleting children before the parent — do **not** add DB-level `onDelete: "cascade"` on these FKs. Router-level cascade keeps the blast radius explicit (we pick which children to wipe); DB-level cascade would silently also take bookings/maintenance/expenses with it.
 - Minimum chain for a property cascade: rooms → buildings → property. Bookings/owners/places still block — that's the desired safety net; surface the FK error to the user rather than expanding the cascade.

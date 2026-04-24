@@ -9,6 +9,7 @@ const navLinks = linkOptions([
   { to: "/expenses", label: "Expenses" },
   { to: "/maintenance", label: "Maintenance" },
   { to: "/settlement", label: "Settlement" },
+  { to: "/manageproperty", label: "Manage Property" },
 ])
 
 export default function Navigation() {

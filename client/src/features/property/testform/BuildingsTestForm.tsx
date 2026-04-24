@@ -4,7 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/trpc"
+import { useTRPC } from "@/trpc/trpc.ts"
 
 type BuildingRecord = {
   id: number

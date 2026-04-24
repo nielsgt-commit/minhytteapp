@@ -4,11 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/trpc"
-
-type RoomType = "single" | "double" | "family"
-
-const ROOM_TYPES: RoomType[] = ["single", "double", "family"]
+import { useTRPC } from "@/trpc/trpc.ts"
 
 function roomBeds(r: {
   beds_sm: number
@@ -176,14 +172,9 @@ export function PropertyFlow() {
     if (!roomForm) return
     const form = e.currentTarget
     const fd = new FormData(form)
-    const rawType = fdString(fd, "room_type")
-    const room_type: RoomType = ROOM_TYPES.includes(rawType as RoomType)
-      ? (rawType as RoomType)
-      : "single"
     const payload = {
       name: fdString(fd, "name"),
       building_id: roomForm.buildingId,
-      room_type,
       beds_sm: fdNumber(fd, "beds_sm"),
       beds_lg: fdNumber(fd, "beds_lg"),
       beds_double: fdNumber(fd, "beds_double"),
@@ -417,7 +408,7 @@ export function PropertyFlow() {
                               const roomIsEditing = editingRoomId === r.id
                               return (
                                 <li key={r.id}>
-                                  {r.name} – {r.room_type} – {roomBeds(r)}{" "}
+                                  {r.name} – {roomBeds(r)}{" "}
                                   bed(s)
                                   <div>
                                     <button
@@ -454,7 +445,6 @@ export function PropertyFlow() {
                                       pending={roomPending}
                                       defaults={{
                                         name: r.name,
-                                        room_type: r.room_type,
                                         beds_sm: r.beds_sm,
                                         beds_lg: r.beds_lg,
                                         beds_double: r.beds_double,
@@ -586,7 +576,6 @@ function NameAddressForm({
 
 type RoomDefaults = {
   name: string
-  room_type: RoomType
   beds_sm: number
   beds_lg: number
   beds_double: number
@@ -622,21 +611,6 @@ function RoomFormBlock({
               defaultValue={defaults?.name ?? ""}
               required
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Room type
-            <select
-              name="room_type"
-              defaultValue={defaults?.room_type ?? "single"}
-            >
-              {ROOM_TYPES.map(t => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
           </label>
         </div>
         <div>

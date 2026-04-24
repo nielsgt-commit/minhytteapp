@@ -7,9 +7,6 @@ export const Route = createFileRoute("/_onboarding/onboarding")({
     Promise.all([
       context.queryClient.ensureQueryData(trpc.user.list.queryOptions()),
       context.queryClient.ensureQueryData(trpc.property.list.queryOptions()),
-      context.queryClient.ensureQueryData(
-        trpc.propertyOwner.list.queryOptions(),
-      ),
     ]),
   component: OnboardingFlow,
 })

@@ -4,9 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/trpc"
-
-type RoomType = "single" | "double" | "family"
+import { useTRPC } from "@/trpc/trpc.ts"
 
 type RoomRecord = {
   id: number
@@ -18,7 +16,6 @@ type RoomRecord = {
   beds_double: number
   mattresses: number
   travel_cot: number
-  room_type: RoomType
 }
 
 type FormState = {
@@ -30,10 +27,7 @@ type FormState = {
   beds_double: string
   mattresses: string
   travel_cot: string
-  room_type: RoomType
 }
-
-const ROOM_TYPES: RoomType[] = ["single", "double", "family"]
 
 const initialFormState: FormState = {
   id: null,
@@ -44,7 +38,6 @@ const initialFormState: FormState = {
   beds_double: "0",
   mattresses: "0",
   travel_cot: "0",
-  room_type: "single",
 }
 
 type EditableField = Exclude<keyof FormState, "id">
@@ -69,7 +62,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
         beds_double: String(r.beds_double),
         mattresses: String(r.mattresses),
         travel_cot: String(r.travel_cot),
-        room_type: r.room_type,
       }
     }
     case "reset":
@@ -86,7 +78,6 @@ function buildPayload(state: FormState) {
     beds_double: Number(state.beds_double),
     mattresses: Number(state.mattresses),
     travel_cot: Number(state.travel_cot),
-    room_type: state.room_type,
   }
 }
 
@@ -190,22 +181,6 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Room type
-              <select
-                value={state.room_type}
-                onChange={e => { set("room_type")(e.target.value); }}
-              >
-                {ROOM_TYPES.map(t => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div>
-            <label>
               Beds (single)
               <input
                 type="number"
@@ -293,7 +268,6 @@ export function RoomsTestForm() {
             <th>id</th>
             <th>name</th>
             <th>building</th>
-            <th>type</th>
             <th>beds_sm</th>
             <th>beds_lg</th>
             <th>beds_double</th>
@@ -310,7 +284,6 @@ export function RoomsTestForm() {
               <td>
                 #{r.building_id} {r.building_name ?? ""}
               </td>
-              <td>{r.room_type}</td>
               <td>{r.beds_sm}</td>
               <td>{r.beds_lg}</td>
               <td>{r.beds_double}</td>

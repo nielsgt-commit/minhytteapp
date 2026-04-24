@@ -4,7 +4,7 @@ import { MaintenanceTestForm } from "@/features/maintenance/testform/Maintenance
 export function Maintenance() {
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>Maintenance</h2>
+        <h2 className={styles.title}>Maintenance</h2>
       <div className={styles.content}>
         <MaintenanceTestForm />
       </div>

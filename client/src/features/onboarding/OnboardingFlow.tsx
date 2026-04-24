@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useState } from "react"
+import { type SyntheticEvent } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -12,16 +12,11 @@ function fdString(fd: FormData, key: string): string {
   return typeof v === "string" ? v : ""
 }
 
-function fdNumber(fd: FormData, key: string): number {
-  const v = fd.get(key)
-  return typeof v === "string" ? Number(v) : 0
-}
-
 function fdBoolean(fd: FormData, key: string): boolean {
   return fd.get(key) === "on"
 }
 
-type Step = "user" | "property" | "ownership" | "done"
+type Step = "user" | "property" | "done"
 
 export function OnboardingFlow() {
   const trpc = useTRPC()
@@ -31,14 +26,10 @@ export function OnboardingFlow() {
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
-  const { data: owners } = useSuspenseQuery(
-    trpc.propertyOwner.list.queryOptions(),
-  )
 
   const invalidateAll = () => {
     void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
     void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
-    void qc.invalidateQueries({ queryKey: trpc.propertyOwner.list.queryKey() })
   }
 
   const createUser = useMutation(
@@ -47,31 +38,15 @@ export function OnboardingFlow() {
   const createProperty = useMutation(
     trpc.property.create.mutationOptions({ onSuccess: invalidateAll }),
   )
-  const upsertOwner = useMutation(
-    trpc.propertyOwner.upsert.mutationOptions({ onSuccess: invalidateAll }),
-  )
 
-  const lastError =
-    createUser.error ?? createProperty.error ?? upsertOwner.error
-  const pending =
-    createUser.isPending || createProperty.isPending || upsertOwner.isPending
+  const lastError = createUser.error ?? createProperty.error
+  const pending = createUser.isPending || createProperty.isPending
 
   const adminUser = users[0] ?? null
   const firstProperty = properties[0] ?? null
-  const firstPropertyHasOwner =
-    firstProperty != null &&
-    owners.some(o => o.property_id === firstProperty.id)
 
   const step: Step =
-    adminUser == null
-      ? "user"
-      : firstProperty == null
-        ? "property"
-        : firstPropertyHasOwner
-          ? "done"
-          : "ownership"
-
-  const [pctForOwner, setPctForOwner] = useState(100)
+    adminUser == null ? "user" : firstProperty == null ? "property" : "done"
 
   const handleUserSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -90,17 +65,6 @@ export function OnboardingFlow() {
     createProperty.mutate({
       name: fdString(fd, "name"),
       address: fdString(fd, "address"),
-    })
-  }
-
-  const handleOwnershipSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!adminUser || !firstProperty) return
-    const fd = new FormData(e.currentTarget)
-    upsertOwner.mutate({
-      property_id: firstProperty.id,
-      user_id: adminUser.id,
-      ownership_pct: fdNumber(fd, "ownership_pct"),
     })
   }
 
@@ -127,10 +91,6 @@ export function OnboardingFlow() {
               – {firstProperty.name} ({firstProperty.address})
             </span>
           ) : null}
-        </li>
-        <li>
-          <strong>Your ownership share</strong>
-          {firstPropertyHasOwner ? <span> – set</span> : null}
         </li>
       </ol>
 
@@ -186,42 +146,6 @@ export function OnboardingFlow() {
             <div>
               <button type="submit" disabled={pending}>
                 Create property
-              </button>
-            </div>
-          </fieldset>
-        </form>
-      )}
-
-      {step === "ownership" && adminUser && firstProperty && (
-        <form onSubmit={handleOwnershipSubmit}>
-          <fieldset>
-            <legend>
-              Step 3 – Set {adminUser.name}'s share of {firstProperty.name}
-            </legend>
-            <p>
-              Start with 100% and split it with co-owners later, or enter a
-              smaller share now if you already know the split.
-            </p>
-            <div>
-              <label>
-                Ownership %
-                <input
-                  type="number"
-                  name="ownership_pct"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  value={pctForOwner}
-                  onChange={e => {
-                    setPctForOwner(Number(e.currentTarget.value))
-                  }}
-                  required
-                />
-              </label>
-            </div>
-            <div>
-              <button type="submit" disabled={pending}>
-                Save ownership
               </button>
             </div>
           </fieldset>
