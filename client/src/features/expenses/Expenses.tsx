@@ -1,5 +1,5 @@
 import styles from "./Expenses.module.css"
-import { ExpensesTestForm } from "@/features/expenses/TestForm/ExpensesTestForm.tsx"
+import { ExpensesTestForm } from "@/features/expenses/testform/ExpensesTestForm.tsx"
 
 export function Expenses() {
   return (

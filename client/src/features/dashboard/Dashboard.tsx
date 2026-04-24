@@ -1,26 +1,35 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
 import styles from "./Dashboard.module.css"
-import { AddBuildingFlow } from "./TestForm/AddBuildingFlow"
-import { AddOwnerGroupFlow } from "./TestForm/AddOwnerGroupFlow.tsx"
-import { AddUserFlow } from "./TestForm/AddUserFlow"
-import { PropertyFlow } from "./TestForm/PropertyFlow"
-import { useTRPC } from "@/trpc/trpc"
+import BuildingSummary from "@/features/dashboard/buildingsummary/BuildingSummary"
+import PlannedAvailabilitySummary from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary"
+import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary"
+import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
+import RoomsSummary from "@/features/dashboard/roomssummary/RoomsSummary"
+import UserSummary from "@/features/dashboard/usersummary/UserSummary"
+import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
+import EventSummary from "@/features/dashboard/eventsummary/EventSummary.tsx"
 
 export function Dashboard() {
-  const trpc = useTRPC()
-  const { data } = useSuspenseQuery(trpc.dashboard.summary.queryOptions())
-
   return (
+
+
     <section className={styles.page}>
       <h2 className={styles.title}>Dashboard</h2>
-      <div className={styles.content}>
-        <ul>
-          <li>Expenses logged: {data.expenseCount}</li>
-          <li>Total spent: {data.totalSpent} kr</li>
-          <li>Upcoming bookings: {data.upcomingBookings}</li>
-          <li>Open maintenance tasks: {data.openMaintenance}</li>
-        </ul>
-        <AddBuildingFlow />
+      <div className={styles.content} />
+      <div className={styles.capacity}>
+        <CapacitySummary />
+        <EventSummary />
+      </div>
+      <div className={styles.buildings}>
+        <BuildingSummary />
+      </div>
+      <div className={styles.users}>
+        <UserSummary />
+      </div>
+      <div className={styles.rooms}>
+        <RoomsSummary />
+      </div>
+      <div className={styles.calendar}>
+       <CalendarSummary />
       </div>
     </section>
   )

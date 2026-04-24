@@ -1,5 +1,5 @@
 import styles from "./Maintenance.module.css"
-import { MaintenanceTestForm } from "@/features/maintenance/TestForm/MaintenanceTestForm.tsx"
+import { MaintenanceTestForm } from "@/features/maintenance/testform/MaintenanceTestForm.tsx"
 
 export function Maintenance() {
   return (

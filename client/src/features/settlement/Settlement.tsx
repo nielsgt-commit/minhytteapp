@@ -1,5 +1,5 @@
 import styles from "./Settlement.module.css"
-import { SettlementTestForm } from "@/features/settlement/TestForm/SettlementTestForm.tsx"
+import { SettlementTestForm } from "@/features/settlement/testform/SettlementTestForm.tsx"
 
 export function Settlement() {
   return (

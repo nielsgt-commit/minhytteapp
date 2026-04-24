@@ -1,5 +1,5 @@
 import styles from "./Calendar.module.css"
-import { CalendarTestForm } from "@/features/calendar/TestForm/CalendarTestForm.tsx"
+import { CalendarTestForm } from "@/features/calendar/testform/CalendarTestForm.tsx"
 
 export function Calendar() {
   return (

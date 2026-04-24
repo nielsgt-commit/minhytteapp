@@ -2,10 +2,21 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-areas:
-    "title   title   title   title   title   title"
-    "content content content content content content";
+    "title    title    title    title    title    title"
+    "content  content  content  content  content  content"
+    "capacity capacity capacity capacity buildings buildings"
+    "capacity capacity capacity capacity buildings buildings"
+    "calendar calendar calendar calendar users    users"
+    "calendar calendar calendar calendar users    users"
+    "calendar calendar calendar calendar rooms    rooms"
+    "calendar calendar calendar calendar rooms    rooms";
   gap: 0.4rem;
 }
 
-.title   { grid-area: title; }
-.content { grid-area: content; }
+.title    { grid-area: title; }
+.content  { grid-area: content; }
+.capacity { grid-area: capacity; }
+.rooms    { grid-area: rooms; }
+.calendar { grid-area: calendar; }
+.buildings { grid-area: buildings; }
+.users    { grid-area: users; }
