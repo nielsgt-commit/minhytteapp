@@ -30,15 +30,8 @@ export const maintenanceTable = pgTable(
     building_id: integer("building_id").references(() => buildingsTable.id),
     place_id: integer("place_id").references(() => placeTable.id),
     category: varchar("category", {
-      length: 10,
-      enum: [
-        "plumbing",
-        "electrical",
-        "grounds",
-        "exterior",
-        "interior",
-        "other",
-      ],
+      length: 11,
+      enum: ["maintenance", "repair"],
     }).notNull(),
     severity: varchar("severity", {
       length: 5,
@@ -49,10 +42,9 @@ export const maintenanceTable = pgTable(
       enum: ["todo", "doing", "done"],
     }).notNull(),
     recurrence: varchar("recurrence", {
-      length: 9,
-      enum: ["ephemeral", "recurring"],
+      length: 6,
+      enum: ["once", "yearly", "5year"],
     }).notNull(),
-    recurrence_interval_days: integer("recurrence_interval_days"),
     routine_id: integer("routine_id").references(() => routinesTable.id),
     routine_position: integer("routine_position"),
     due_at: timestamp("due_at"),
@@ -71,10 +63,6 @@ export const maintenanceTable = pgTable(
     check(
       "maintenance_routine_position_pairing",
       sql`(${t.routine_id} IS NULL) = (${t.routine_position} IS NULL)`,
-    ),
-    check(
-      "maintenance_recurrence_interval_pairing",
-      sql`(${t.recurrence} = 'recurring') = (${t.recurrence_interval_days} IS NOT NULL)`,
     ),
   ],
 )

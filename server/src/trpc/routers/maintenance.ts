@@ -10,18 +10,10 @@ const maintenanceFields = {
   assigned_to_id: z.number().int().positive().optional(),
   building_id: z.number().int().positive().optional(),
   place_id: z.number().int().positive().optional(),
-  category: z.enum([
-    "plumbing",
-    "electrical",
-    "grounds",
-    "exterior",
-    "interior",
-    "other",
-  ]),
+  category: z.enum(["maintenance", "repair"]),
   severity: z.enum(["major", "minor", "patch"]),
   status: z.enum(["todo", "doing", "done"]),
-  recurrence: z.enum(["ephemeral", "recurring"]),
-  recurrence_interval_days: z.number().int().positive().optional(),
+  recurrence: z.enum(["once", "yearly", "5year"]),
 }
 
 const locationXor = {
@@ -31,23 +23,11 @@ const locationXor = {
   path: ["place_id"] as const,
 }
 
-const recurrenceXor = {
-  check: (v: { recurrence: string; recurrence_interval_days?: number }) =>
-    (v.recurrence === "recurring") === (v.recurrence_interval_days != null),
-  error:
-    "recurrence_interval_days is required iff recurrence is 'recurring'",
-  path: ["recurrence_interval_days"] as const,
-}
-
 const createInput = z
   .object(maintenanceFields)
   .refine(locationXor.check, {
     error: locationXor.error,
     path: [...locationXor.path],
-  })
-  .refine(recurrenceXor.check, {
-    error: recurrenceXor.error,
-    path: [...recurrenceXor.path],
   })
 
 const updateInput = z
@@ -55,10 +35,6 @@ const updateInput = z
   .refine(locationXor.check, {
     error: locationXor.error,
     path: [...locationXor.path],
-  })
-  .refine(recurrenceXor.check, {
-    error: recurrenceXor.error,
-    path: [...recurrenceXor.path],
   })
 
 export const maintenanceRouter = router({
