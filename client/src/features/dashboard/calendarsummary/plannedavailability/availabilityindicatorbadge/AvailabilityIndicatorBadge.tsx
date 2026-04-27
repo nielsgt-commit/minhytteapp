@@ -1,7 +1,7 @@
-export default function AvailabilityIndicatorBadge() {
-  return (
-    <>
-      <p> number of guest on that day</p>
-    </>
-  )
+type Props = {
+  count: number
+}
+
+export default function AvailabilityIndicatorBadge({ count }: Props) {
+  return <span>{count}</span>
 }

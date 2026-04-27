@@ -13,6 +13,14 @@ type Mode = "individual" | "group"
 
 type Status = "pending" | "confirmed" | "cancelled"
 
+function seasonYear(now: Date) {
+  const y = now.getFullYear()
+  return now.getMonth() > 7 ? y + 1 : y
+}
+const SEASON_YEAR = seasonYear(new Date())
+const SEASON_MIN = `${String(SEASON_YEAR)}-05-01`
+const SEASON_MAX = `${String(SEASON_YEAR)}-08-31`
+
 type Room = {
   id: number
   name: string
@@ -56,7 +64,7 @@ const initialFormState: FormState = {
   id: null,
   start_date: "",
   end_date: "",
-  status: "confirmed",
+  status: "pending",
   notes: "",
   mode: "individual",
   individual_room_id: "",
@@ -308,6 +316,8 @@ export function CalendarTestForm() {
               <input
                 type="date"
                 value={state.start_date}
+                min={SEASON_MIN}
+                max={SEASON_MAX}
                 onChange={e => {
                   setText("start_date")(e.target.value)
                 }}
@@ -322,7 +332,8 @@ export function CalendarTestForm() {
               <input
                 type="date"
                 value={state.end_date}
-                min={state.start_date || undefined}
+                min={state.start_date || SEASON_MIN}
+                max={SEASON_MAX}
                 onChange={e => {
                   setText("end_date")(e.target.value)
                 }}

@@ -1,5 +1,8 @@
 import styles from "./Calendar.module.css"
 import { CalendarTestForm } from "@/features/calendar/testform/CalendarTestForm.tsx"
+import { ExperimentalWeekPanel } from "@/features/calendar/testform/ExperimentalWeekPanel.tsx"
+import { WeekRadioPanel } from "@/features/calendar/testform/WeekRadioPanel.tsx"
+import { MyPlannedStay } from "@/features/calendar/MyPlannedStay.tsx"
 import { PriorityWeeks } from "@/features/priority/PriorityWeeks"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -20,8 +23,10 @@ export function Calendar() {
     <section className={styles.page}>
       <h2 className={styles.title}>Calendar</h2>
       <div className={styles.content}>
+        <MyPlannedStay />
         <PriorityWeeks />
         <CalendarTestForm />
+        <ExperimentalWeekPanel />
       </div>
     </section>
   )

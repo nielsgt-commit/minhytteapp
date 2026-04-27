@@ -5,6 +5,7 @@ import { BuildingStats } from "@/features/maintenance/BuildingStats.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { AssignedTasks } from "@/features/maintenance/AssignedTasks.tsx"
 
 export function Maintenance() {
   const trpc = useTRPC()
@@ -51,6 +52,8 @@ export function Maintenance() {
           </div>
         )}
         <MaintenanceTestForm />
+
+        <AssignedTasks />
       </div>
     </section>
   )

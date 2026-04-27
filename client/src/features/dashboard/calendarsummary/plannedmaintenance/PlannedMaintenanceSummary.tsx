@@ -32,19 +32,12 @@ export default function PlannedMaintenanceSummary() {
       {buildingsWithItems.length === 0 ? (
         <p>No planned maintenance.</p>
       ) : (
-        <ul>
+        <ul style={{ display: "flex", flexWrap: "wrap", gap: "1rem", listStyle: "none", padding: 0 }}>
           {buildingsWithItems.map(b => {
             const bucket = itemsByBuilding.get(b.id) ?? []
             return (
               <li key={b.id}>
-                {b.name}
-                <ul>
-                  {bucket.map(it => (
-                    <li key={it.id}>
-                      {it.description} ({it.status})
-                    </li>
-                  ))}
-                </ul>
+                {b.name} ({bucket.length} open)
               </li>
             )
           })}
