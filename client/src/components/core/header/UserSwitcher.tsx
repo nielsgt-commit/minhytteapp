@@ -9,43 +9,40 @@ type Props = {
   users: User[]
   value: number | null
   onChange: (userId: number) => void
-  onAddClick: () => void
+  onLogout: () => void
 }
 
-const ADD_SENTINEL = "__add__"
+const LOGOUT_SENTINEL = "__logout__"
 
 export default function UserSwitcher({
   users,
   value,
   onChange,
-  onAddClick,
+  onLogout,
 }: Props) {
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const raw = event.target.value
-    if (raw === ADD_SENTINEL) {
-      onAddClick()
+    if (raw === LOGOUT_SENTINEL) {
+      onLogout()
       return
     }
     onChange(Number(raw))
   }
 
+  if (users.length === 0) return null
+
   return (
     <select
-      aria-label="Switch user"
+      aria-label="User menu"
       value={value ?? ""}
       onChange={handleChange}
     >
-      {users.length === 0 && (
-        <option value="" disabled>
-          No users
-        </option>
-      )}
       {users.map(u => (
         <option key={u.id} value={u.id}>
           {u.name}
         </option>
       ))}
-      <option value={ADD_SENTINEL}>+ Add user</option>
+      <option value={LOGOUT_SENTINEL}>Log out</option>
     </select>
   )
 }

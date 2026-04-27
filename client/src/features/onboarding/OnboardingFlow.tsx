@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
+import { loadAuth } from "@/auth/oauth"
 
 function fdString(fd: FormData, key: string): string {
   const v = fd.get(key)
@@ -42,11 +43,15 @@ export function OnboardingFlow() {
   const lastError = createUser.error ?? createProperty.error
   const pending = createUser.isPending || createProperty.isPending
 
-  const adminUser = users[0] ?? null
+  const auth = loadAuth()
+  const currentUser = auth.user
+    ? users.find(u => u.oauth_sub === auth.user?.id) ?? null
+    : null
+  const anyUser = users[0] ?? null
   const firstProperty = properties[0] ?? null
 
   const step: Step =
-    adminUser == null ? "user" : firstProperty == null ? "property" : "done"
+    anyUser == null ? "user" : firstProperty == null ? "property" : "done"
 
   const handleUserSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -75,13 +80,15 @@ export function OnboardingFlow() {
 
       <ol>
         <li>
-          <strong>You (admin)</strong>
-          {adminUser ? (
+          <strong>You{currentUser?.is_admin ? " (admin)" : ""}</strong>
+          {currentUser ? (
             <span>
               {" "}
-              – {adminUser.name} ({adminUser.email})
+              – {currentUser.name} ({currentUser.email})
             </span>
-          ) : null}
+          ) : (
+            <span> – not signed in</span>
+          )}
         </li>
         <li>
           <strong>The property</strong>

@@ -1,6 +1,7 @@
 import { useReducer, useState } from "react"
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -34,6 +35,7 @@ type FormState = {
   summary: string
   assigned_to_id: string
   building_id: string
+  place_id: string
   category: Category
   severity: Severity
   status: Status
@@ -55,6 +57,7 @@ const initialFormState: FormState = {
   summary: "",
   assigned_to_id: "",
   building_id: "",
+  place_id: "",
   category: "maintenance",
   severity: "minor",
   status: "todo",
@@ -65,6 +68,7 @@ type EditableField = Exclude<keyof FormState, "id">
 
 type FormAction =
   | { type: "setField"; field: EditableField; value: string }
+  | { type: "setLocation"; kind: "building" | "place" | "none"; id: string }
   | { type: "loadForEdit"; record: MaintenanceRecord }
   | { type: "reset" }
 
@@ -72,6 +76,14 @@ function formReducer(state: FormState, action: FormAction): FormState {
   switch (action.type) {
     case "setField":
       return { ...state, [action.field]: action.value }
+    case "setLocation":
+      if (action.kind === "building") {
+        return { ...state, building_id: action.id, place_id: "" }
+      }
+      if (action.kind === "place") {
+        return { ...state, building_id: "", place_id: action.id }
+      }
+      return { ...state, building_id: "", place_id: "" }
     case "loadForEdit": {
       const r = action.record
       return {
@@ -81,6 +93,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
         assigned_to_id:
           r.assigned_to_id != null ? String(r.assigned_to_id) : "",
         building_id: r.building_id != null ? String(r.building_id) : "",
+        place_id: r.place_id != null ? String(r.place_id) : "",
         category: r.category,
         severity: r.severity,
         status: r.status,
@@ -101,6 +114,7 @@ function buildPayload(state: FormState, addedBy: number) {
       ? Number(state.assigned_to_id)
       : undefined,
     building_id: state.building_id ? Number(state.building_id) : undefined,
+    place_id: state.place_id ? Number(state.place_id) : undefined,
     category: state.category,
     severity: state.severity,
     status: state.status,
@@ -123,14 +137,23 @@ export function MaintenanceTestForm() {
   const { data: buildings } = useSuspenseQuery(
     trpc.building.list.queryOptions(),
   )
+  const { data: places = [] } = useQuery(
+    trpc.place.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
 
   const propertyBuildings =
     selectedPropertyId != null
       ? buildings.filter(b => b.property_id === selectedPropertyId)
       : []
   const propertyBuildingIds = new Set(propertyBuildings.map(b => b.id))
+  const propertyPlaceIds = new Set(places.map(p => p.id))
   const propertyTasks = tasks.filter(
-    t => t.building_id != null && propertyBuildingIds.has(t.building_id),
+    t =>
+      (t.building_id != null && propertyBuildingIds.has(t.building_id)) ||
+      (t.place_id != null && propertyPlaceIds.has(t.place_id)),
   )
 
   const invalidate = () =>
@@ -177,7 +200,14 @@ export function MaintenanceTestForm() {
   const canSubmit =
     selectedUserId != null &&
     selectedPropertyId != null &&
+    (state.building_id !== "" || state.place_id !== "")
+
+  const locationValue =
     state.building_id !== ""
+      ? `b:${state.building_id}`
+      : state.place_id !== ""
+        ? `p:${state.place_id}`
+        : ""
 
   return (
     <section>
@@ -289,18 +319,41 @@ export function MaintenanceTestForm() {
                 <label>
                   Location
                   <select
-                    value={state.building_id}
+                    value={locationValue}
                     onChange={e => {
-                      set("building_id")(e.target.value)
+                      const raw = e.target.value
+                      if (raw === "") {
+                        dispatch({ type: "setLocation", kind: "none", id: "" })
+                        return
+                      }
+                      const [prefix, id] = raw.split(":")
+                      if (prefix === "b") {
+                        dispatch({ type: "setLocation", kind: "building", id })
+                      } else if (prefix === "p") {
+                        dispatch({ type: "setLocation", kind: "place", id })
+                      }
                     }}
                     required
                   >
-                    <option value="">(select building)</option>
-                    {propertyBuildings.map(b => (
-                      <option key={b.id} value={b.id}>
-                        #{b.id} {b.name}
-                      </option>
-                    ))}
+                    <option value="">(select location)</option>
+                    {propertyBuildings.length > 0 && (
+                      <optgroup label="Buildings">
+                        {propertyBuildings.map(b => (
+                          <option key={`b-${String(b.id)}`} value={`b:${String(b.id)}`}>
+                            #{b.id} {b.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {places.length > 0 && (
+                      <optgroup label="Places">
+                        {places.map(p => (
+                          <option key={`p-${String(p.id)}`} value={`p:${String(p.id)}`}>
+                            #{p.id} {p.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </label>
               </div>

@@ -14,6 +14,7 @@ import {
   buildingAdjacenciesTable,
   buildingsTable,
   placeTable,
+  propertyInvitationsTable,
   propertyOwnersTable,
   propertyTable,
   roomAdjacenciesTable,
@@ -32,8 +33,11 @@ import {
   usersTable,
 } from "./users.schema.ts"
 
-export const usersRelations = relations(usersTable, ({ many }) => ({
-  bookingsBooked: many(bookingTable),
+export const usersRelations = relations(usersTable, ({ one, many }) => ({
+  bookingsBooked: many(bookingTable, { relationName: "booking_booker" }),
+  bookingsCancelled: many(bookingTable, {
+    relationName: "booking_cancelled_by",
+  }),
   groupMemberships: many(userGroupMembersTable),
   propertyOwnerships: many(propertyOwnersTable),
   bookingOccupancies: many(bookingOccupantsTable),
@@ -50,6 +54,12 @@ export const usersRelations = relations(usersTable, ({ many }) => ({
     relationName: "expense_reimbursed_by",
   }),
   expenseShares: many(expenseSharesTable),
+  parent: one(usersTable, {
+    fields: [usersTable.parent_user_id],
+    references: [usersTable.id],
+    relationName: "user_parent",
+  }),
+  children: many(usersTable, { relationName: "user_parent" }),
 }))
 
 export const userGroupsRelations = relations(userGroupsTable, ({ many }) => ({
@@ -83,7 +93,28 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   places: many(placeTable),
   bookings: many(bookingTable),
   owners: many(propertyOwnersTable),
+  invitations: many(propertyInvitationsTable),
 }))
+
+export const propertyInvitationsRelations = relations(
+  propertyInvitationsTable,
+  ({ one }) => ({
+    property: one(propertyTable, {
+      fields: [propertyInvitationsTable.property_id],
+      references: [propertyTable.id],
+    }),
+    createdBy: one(usersTable, {
+      fields: [propertyInvitationsTable.created_by_user_id],
+      references: [usersTable.id],
+      relationName: "invitation_created_by",
+    }),
+    usedBy: one(usersTable, {
+      fields: [propertyInvitationsTable.used_by_user_id],
+      references: [usersTable.id],
+      relationName: "invitation_used_by",
+    }),
+  }),
+)
 
 export const propertyOwnersRelations = relations(
   propertyOwnersTable,
@@ -180,6 +211,12 @@ export const bookingRelations = relations(bookingTable, ({ one, many }) => ({
   booker: one(usersTable, {
     fields: [bookingTable.booker_id],
     references: [usersTable.id],
+    relationName: "booking_booker",
+  }),
+  cancelledBy: one(usersTable, {
+    fields: [bookingTable.cancelled_by_id],
+    references: [usersTable.id],
+    relationName: "booking_cancelled_by",
   }),
   rooms: many(bookingRoomsTable),
   occupants: many(bookingOccupantsTable),
@@ -207,6 +244,10 @@ export const bookingOccupantsRelations = relations(
     user: one(usersTable, {
       fields: [bookingOccupantsTable.user_id],
       references: [usersTable.id],
+    }),
+    room: one(roomTable, {
+      fields: [bookingOccupantsTable.room_id],
+      references: [roomTable.id],
     }),
   }),
 )

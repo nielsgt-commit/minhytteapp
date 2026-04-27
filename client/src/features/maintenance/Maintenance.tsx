@@ -18,14 +18,21 @@ export function Maintenance() {
       ? buildings.filter(b => b.property_id === selectedPropertyId)
       : []
 
+  if (selectedPropertyId == null) {
+    return (
+      <section className={styles.page}>
+        <h2 className={styles.title}>Maintenance</h2>
+        <p>Add or select a property to log issues, plan upkeep, and track work across buildings.</p>
+      </section>
+    )
+  }
+
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Maintenance</h2>
       <div className={styles.content}>
-        {selectedPropertyId == null ? (
-          <p>No property selected. Pick one from the header.</p>
-        ) : propertyBuildings.length === 0 ? (
-          <p>No buildings for the selected property.</p>
+        {propertyBuildings.length === 0 ? (
+          <p>No buildings for the selected property. Go to Manage Property</p>
         ) : (
           <div
             style={{

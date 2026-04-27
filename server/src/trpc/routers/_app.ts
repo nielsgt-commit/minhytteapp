@@ -2,8 +2,11 @@ import { router } from "../init.ts"
 import { bookingRouter } from "./booking.ts"
 import { buildingRouter } from "./building.ts"
 import { dashboardRouter } from "./dashboard.ts"
+import { devRouter } from "./dev.ts"
 import { expenseRouter } from "./expense.ts"
+import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
+import { placeRouter } from "./place.ts"
 import { propertyRouter } from "./property.ts"
 import { propertyOwnerRouter } from "./propertyOwner.ts"
 import { roomRouter } from "./room.ts"
@@ -15,8 +18,11 @@ export const appRouter = router({
   booking: bookingRouter,
   building: buildingRouter,
   dashboard: dashboardRouter,
+  dev: devRouter,
   expense: expenseRouter,
+  invite: inviteRouter,
   maintenance: maintenanceRouter,
+  place: placeRouter,
   property: propertyRouter,
   propertyOwner: propertyOwnerRouter,
   room: roomRouter,

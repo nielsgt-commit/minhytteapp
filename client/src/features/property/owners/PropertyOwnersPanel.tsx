@@ -68,7 +68,7 @@ export function PropertyOwnersPanel() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <h3>Owners</h3>
+        <h3>Property Owners</h3>
         <p>No property selected. Pick one from the header.</p>
       </section>
     )
@@ -143,19 +143,20 @@ export function PropertyOwnersPanel() {
       const pct = fdNumber(fd, "ownership_pct")
       if (!Number.isFinite(pct)) return
       updatePct.mutate(
-        { id: ownerId, ownership_pct: pct },
+        { id: ownerId, property_id: selectedPropertyId, ownership_pct: pct },
         { onSuccess: () => { setEditingId(null) } },
       )
     }
 
   const handleRemove = (ownerId: number, label: string) => {
     if (!window.confirm(`Remove ${label} as owner?`)) return
-    removeOwner.mutate({ id: ownerId })
+    removeOwner.mutate({ id: ownerId, property_id: selectedPropertyId })
   }
 
   return (
-    <section>
-      <h3>Owners</h3>
+    <section
+    >
+      <h3>Property Owners</h3>
 
       <p>
         Total: <strong>{totalPct.toFixed(2)}%</strong>{" "}

@@ -12,6 +12,7 @@ const roomFields = {
   beds_sm: z.number().int().nonnegative(),
   beds_lg: z.number().int().nonnegative(),
   beds_double: z.number().int().nonnegative(),
+  beds_kid: z.number().int().nonnegative(),
   mattresses: z.number().int().nonnegative(),
   travel_cot: z.number().int().nonnegative(),
 }
@@ -34,6 +35,7 @@ export const roomRouter = router({
         beds_sm: roomTable.beds_sm,
         beds_lg: roomTable.beds_lg,
         beds_double: roomTable.beds_double,
+        beds_kid: roomTable.beds_kid,
         mattresses: roomTable.mattresses,
         travel_cot: roomTable.travel_cot,
       })
@@ -42,6 +44,28 @@ export const roomRouter = router({
       .orderBy(asc(roomTable.id))
     return rows
   }),
+
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select({
+          id: roomTable.id,
+          name: roomTable.name,
+          building_id: roomTable.building_id,
+          building_name: buildingsTable.name,
+          beds_sm: roomTable.beds_sm,
+          beds_lg: roomTable.beds_lg,
+          beds_double: roomTable.beds_double,
+          beds_kid: roomTable.beds_kid,
+          mattresses: roomTable.mattresses,
+          travel_cot: roomTable.travel_cot,
+        })
+        .from(roomTable)
+        .innerJoin(buildingsTable, eq(buildingsTable.id, roomTable.building_id))
+        .where(eq(buildingsTable.property_id, input.property_id))
+        .orderBy(asc(roomTable.id))
+    }),
 
   create: protectedProcedure
     .input(createInput)

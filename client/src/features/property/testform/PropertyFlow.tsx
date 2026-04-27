@@ -10,10 +10,18 @@ function roomBeds(r: {
   beds_sm: number
   beds_lg: number
   beds_double: number
+  beds_kid: number
   mattresses: number
   travel_cot: number
 }) {
-  return r.beds_sm + r.beds_lg + r.beds_double * 2 + r.mattresses + r.travel_cot
+  return (
+    r.beds_sm +
+    r.beds_lg +
+    r.beds_double * 2 +
+    r.beds_kid +
+    r.mattresses +
+    r.travel_cot
+  )
 }
 
 function fdString(fd: FormData, key: string): string {
@@ -178,6 +186,7 @@ export function PropertyFlow() {
       beds_sm: fdNumber(fd, "beds_sm"),
       beds_lg: fdNumber(fd, "beds_lg"),
       beds_double: fdNumber(fd, "beds_double"),
+      beds_kid: fdNumber(fd, "beds_kid"),
       mattresses: fdNumber(fd, "mattresses"),
       travel_cot: fdNumber(fd, "travel_cot"),
     }
@@ -448,6 +457,7 @@ export function PropertyFlow() {
                                         beds_sm: r.beds_sm,
                                         beds_lg: r.beds_lg,
                                         beds_double: r.beds_double,
+                                        beds_kid: r.beds_kid,
                                         mattresses: r.mattresses,
                                         travel_cot: r.travel_cot,
                                       }}
@@ -579,6 +589,7 @@ type RoomDefaults = {
   beds_sm: number
   beds_lg: number
   beds_double: number
+  beds_kid: number
   mattresses: number
   travel_cot: number
 }
@@ -645,6 +656,18 @@ function RoomFormBlock({
               name="beds_double"
               min={0}
               defaultValue={defaults?.beds_double ?? 0}
+              required
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Beds (kid)
+            <input
+              type="number"
+              name="beds_kid"
+              min={0}
+              defaultValue={defaults?.beds_kid ?? 0}
               required
             />
           </label>

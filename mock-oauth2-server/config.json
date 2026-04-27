@@ -1,0 +1,25 @@
+
+
+
+
+
+{
+
+  "interactiveLogin": true,
+  "httpServer": "NettyWrapper",
+  "tokenCallbacks": [
+    {
+      "issuerId": "default",
+      "tokenExpiry": 3600,
+      "requestMappings": [
+        {
+          "requestParam": "scope",
+          "match": "*",
+          "claims": {
+            "aud": ["hytta-start"]
+          }
+        }
+      ]
+    }
+  ]
+}

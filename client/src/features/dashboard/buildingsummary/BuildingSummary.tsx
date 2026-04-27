@@ -1,13 +1,18 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export default function BuildingSummary() {
   const trpc = useTRPC()
+  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
   const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+    trpc.building.listForProperty.queryOptions({ property_id: propertyId }),
   )
-  const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
+  )
 
   const roomCountByBuilding = new Map<number, number>()
   for (const r of rooms) {

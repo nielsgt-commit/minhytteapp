@@ -5,6 +5,7 @@ import {
   numeric,
   pgTable,
   primaryKey,
+  timestamp,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
@@ -37,6 +38,7 @@ export const roomTable = pgTable("rooms", {
   beds_sm: integer("beds_sm").notNull().default(0),
   beds_lg: integer("beds_lg").notNull().default(0),
   beds_double: integer("beds_double").notNull().default(0),
+  beds_kid: integer("beds_kid").notNull().default(0),
   mattresses: integer("mattresses").notNull().default(0),
   travel_cot: integer("travel_cot").notNull().default(0),
 })
@@ -103,4 +105,23 @@ export const placeTable = pgTable("places", {
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 255 }).notNull(),
   property_id: integer("property_id").references(() => propertyTable.id),
+})
+
+export const propertyInvitationsTable = pgTable("property_invitations", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  property_id: integer("property_id")
+    .notNull()
+    .references(() => propertyTable.id),
+  email: varchar("email", { length: 255 }).notNull(),
+  ownership_pct: numeric("ownership_pct", { precision: 5, scale: 2 })
+    .notNull()
+    .default("0.00"),
+  expires_at: timestamp("expires_at").notNull(),
+  used_at: timestamp("used_at"),
+  used_by_user_id: integer("used_by_user_id").references(() => usersTable.id),
+  created_by_user_id: integer("created_by_user_id")
+    .notNull()
+    .references(() => usersTable.id),
+  created_at: timestamp("created_at").notNull().defaultNow(),
 })

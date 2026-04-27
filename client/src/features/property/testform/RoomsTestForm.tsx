@@ -14,6 +14,7 @@ type RoomRecord = {
   beds_sm: number
   beds_lg: number
   beds_double: number
+  beds_kid: number
   mattresses: number
   travel_cot: number
 }
@@ -25,6 +26,7 @@ type FormState = {
   beds_sm: string
   beds_lg: string
   beds_double: string
+  beds_kid: string
   mattresses: string
   travel_cot: string
 }
@@ -36,6 +38,7 @@ const initialFormState: FormState = {
   beds_sm: "0",
   beds_lg: "0",
   beds_double: "0",
+  beds_kid: "0",
   mattresses: "0",
   travel_cot: "0",
 }
@@ -60,6 +63,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
         beds_sm: String(r.beds_sm),
         beds_lg: String(r.beds_lg),
         beds_double: String(r.beds_double),
+        beds_kid: String(r.beds_kid),
         mattresses: String(r.mattresses),
         travel_cot: String(r.travel_cot),
       }
@@ -76,6 +80,7 @@ function buildPayload(state: FormState) {
     beds_sm: Number(state.beds_sm),
     beds_lg: Number(state.beds_lg),
     beds_double: Number(state.beds_double),
+    beds_kid: Number(state.beds_kid),
     mattresses: Number(state.mattresses),
     travel_cot: Number(state.travel_cot),
   }
@@ -220,6 +225,19 @@ export function RoomsTestForm() {
 
           <div>
             <label>
+              Beds (kid)
+              <input
+                type="number"
+                min={0}
+                value={state.beds_kid}
+                onChange={e => { set("beds_kid")(e.target.value); }}
+                required
+              />
+            </label>
+          </div>
+
+          <div>
+            <label>
               Mattresses
               <input
                 type="number"
@@ -271,6 +289,7 @@ export function RoomsTestForm() {
             <th>beds_sm</th>
             <th>beds_lg</th>
             <th>beds_double</th>
+            <th>beds_kid</th>
             <th>mattresses</th>
             <th>travel_cot</th>
             <th>actions</th>
@@ -287,6 +306,7 @@ export function RoomsTestForm() {
               <td>{r.beds_sm}</td>
               <td>{r.beds_lg}</td>
               <td>{r.beds_double}</td>
+              <td>{r.beds_kid}</td>
               <td>{r.mattresses}</td>
               <td>{r.travel_cot}</td>
               <td>

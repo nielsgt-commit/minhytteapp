@@ -1,14 +1,14 @@
 .page {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: 1fr 1fr;
     grid-template-areas:
-    "title   title   title   title   title   title"
-     " details details buildings buildings addbuilding addbuilding"
-    " details details buildings buildings addbuilding addbuilding"
-    "owners owners owners owners owners owners"
-    "divider divider divider divider divider divider"
-    "dangerzone dangerzone dangerzone dangerzone dangerzone dangerzone"
-;
+        "title       title"
+        "details     owners"
+        "buildings   addbuilding"
+        "invites     invites"
+        "places      places"
+        "divider     divider"
+        "dangerzone  dangerzone";
     gap: 0.4rem;
 }
 
@@ -18,5 +18,7 @@
 .buildings { grid-area: buildings; }
 .addbuilding { grid-area: addbuilding; }
 .owners { grid-area: owners; }
+.invites { grid-area: invites; }
+.places { grid-area: places; }
 .divider { grid-area: divider; }
 .dangerzone { grid-area: dangerzone; }

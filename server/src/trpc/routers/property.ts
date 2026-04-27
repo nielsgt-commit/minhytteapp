@@ -1,6 +1,10 @@
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, or } from "drizzle-orm"
 import { z } from "zod"
-import { propertyTable } from "../../db/schema/property.schema.ts"
+import {
+  propertyOwnersTable,
+  propertyTable,
+} from "../../db/schema/property.schema.ts"
+import { userGroupMembersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const propertyFields = {
@@ -24,14 +28,52 @@ export const propertyRouter = router({
       .orderBy(asc(propertyTable.id))
   }),
 
+  listForUser: protectedProcedure
+    .input(z.object({ user_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .selectDistinct({
+          id: propertyTable.id,
+          name: propertyTable.name,
+          address: propertyTable.address,
+          link: propertyTable.link,
+        })
+        .from(propertyTable)
+        .innerJoin(
+          propertyOwnersTable,
+          eq(propertyOwnersTable.property_id, propertyTable.id),
+        )
+        .leftJoin(
+          userGroupMembersTable,
+          eq(
+            userGroupMembersTable.user_group_id,
+            propertyOwnersTable.user_group_id,
+          ),
+        )
+        .where(
+          or(
+            eq(propertyOwnersTable.user_id, input.user_id),
+            eq(userGroupMembersTable.user_id, input.user_id),
+          ),
+        )
+        .orderBy(asc(propertyTable.id))
+    }),
+
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
-      const [created] = await ctx.db
-        .insert(propertyTable)
-        .values(input)
-        .returning()
-      return created
+      return ctx.db.transaction(async tx => {
+        const [created] = await tx
+          .insert(propertyTable)
+          .values(input)
+          .returning()
+        await tx.insert(propertyOwnersTable).values({
+          property_id: created.id,
+          user_id: ctx.user.id,
+          ownership_pct: "100.00",
+        })
+        return created
+      })
     }),
 
   update: protectedProcedure

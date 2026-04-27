@@ -13,7 +13,10 @@ import { Route as OnboardingRouteImport } from './routes/_onboarding'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as OnboardingOnboardingRouteImport } from './routes/_onboarding/onboarding'
+import { Route as AuthedUsersettingsRouteImport } from './routes/_authed/usersettings'
 import { Route as AuthedUsergroupsRouteImport } from './routes/_authed/usergroups'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
 import { Route as AuthedManagepropertyRouteImport } from './routes/_authed/manageproperty'
@@ -39,10 +42,25 @@ const MarketingIndexRoute = MarketingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MarketingRoute,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingOnboardingRoute = OnboardingOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => OnboardingRoute,
+} as any)
+const AuthedUsersettingsRoute = AuthedUsersettingsRouteImport.update({
+  id: '/usersettings',
+  path: '/usersettings',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedUsergroupsRoute = AuthedUsergroupsRouteImport.update({
   id: '/usergroups',
@@ -89,7 +107,10 @@ export interface FileRoutesByFullPath {
   '/manageproperty': typeof AuthedManagepropertyRoute
   '/settlement': typeof AuthedSettlementRoute
   '/usergroups': typeof AuthedUsergroupsRoute
+  '/usersettings': typeof AuthedUsersettingsRoute
   '/onboarding': typeof OnboardingOnboardingRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
@@ -100,7 +121,10 @@ export interface FileRoutesByTo {
   '/manageproperty': typeof AuthedManagepropertyRoute
   '/settlement': typeof AuthedSettlementRoute
   '/usergroups': typeof AuthedUsergroupsRoute
+  '/usersettings': typeof AuthedUsersettingsRoute
   '/onboarding': typeof OnboardingOnboardingRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,7 +138,10 @@ export interface FileRoutesById {
   '/_authed/manageproperty': typeof AuthedManagepropertyRoute
   '/_authed/settlement': typeof AuthedSettlementRoute
   '/_authed/usergroups': typeof AuthedUsergroupsRoute
+  '/_authed/usersettings': typeof AuthedUsersettingsRoute
   '/_onboarding/onboarding': typeof OnboardingOnboardingRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/_marketing/': typeof MarketingIndexRoute
 }
 export interface FileRouteTypes {
@@ -128,7 +155,10 @@ export interface FileRouteTypes {
     | '/manageproperty'
     | '/settlement'
     | '/usergroups'
+    | '/usersettings'
     | '/onboarding'
+    | '/auth/callback'
+    | '/invite/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,7 +169,10 @@ export interface FileRouteTypes {
     | '/manageproperty'
     | '/settlement'
     | '/usergroups'
+    | '/usersettings'
     | '/onboarding'
+    | '/auth/callback'
+    | '/invite/$token'
   id:
     | '__root__'
     | '/_authed'
@@ -152,7 +185,10 @@ export interface FileRouteTypes {
     | '/_authed/manageproperty'
     | '/_authed/settlement'
     | '/_authed/usergroups'
+    | '/_authed/usersettings'
     | '/_onboarding/onboarding'
+    | '/auth/callback'
+    | '/invite/$token'
     | '/_marketing/'
   fileRoutesById: FileRoutesById
 }
@@ -160,6 +196,8 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   MarketingRoute: typeof MarketingRouteWithChildren
   OnboardingRoute: typeof OnboardingRouteWithChildren
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,12 +230,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingIndexRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_onboarding/onboarding': {
       id: '/_onboarding/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingOnboardingRouteImport
       parentRoute: typeof OnboardingRoute
+    }
+    '/_authed/usersettings': {
+      id: '/_authed/usersettings'
+      path: '/usersettings'
+      fullPath: '/usersettings'
+      preLoaderRoute: typeof AuthedUsersettingsRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/_authed/usergroups': {
       id: '/_authed/usergroups'
@@ -259,6 +318,7 @@ interface AuthedRouteChildren {
   AuthedManagepropertyRoute: typeof AuthedManagepropertyRoute
   AuthedSettlementRoute: typeof AuthedSettlementRoute
   AuthedUsergroupsRoute: typeof AuthedUsergroupsRoute
+  AuthedUsersettingsRoute: typeof AuthedUsersettingsRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -269,6 +329,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedManagepropertyRoute: AuthedManagepropertyRoute,
   AuthedSettlementRoute: AuthedSettlementRoute,
   AuthedUsergroupsRoute: AuthedUsergroupsRoute,
+  AuthedUsersettingsRoute: AuthedUsersettingsRoute,
 }
 
 const AuthedRouteWithChildren =
@@ -302,6 +363,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   MarketingRoute: MarketingRouteWithChildren,
   OnboardingRoute: OnboardingRouteWithChildren,
+  AuthCallbackRoute: AuthCallbackRoute,
+  InviteTokenRoute: InviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

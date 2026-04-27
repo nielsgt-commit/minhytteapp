@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import {
   propertyOwnersTable,
@@ -7,7 +7,11 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  propertyAdminProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
 
 const pctField = z
   .number()
@@ -40,10 +44,9 @@ export const propertyOwnerRouter = router({
       return rows
     }),
 
-  addUser: protectedProcedure
+  addUser: propertyAdminProcedure
     .input(
       z.object({
-        property_id: z.number().int().positive(),
         user_id: z.number().int().positive(),
         ownership_pct: pctField,
       }),
@@ -60,10 +63,9 @@ export const propertyOwnerRouter = router({
       return created
     }),
 
-  addGroup: protectedProcedure
+  addGroup: propertyAdminProcedure
     .input(
       z.object({
-        property_id: z.number().int().positive(),
         user_group_id: z.number().int().positive(),
         ownership_pct: pctField,
       }),
@@ -80,7 +82,7 @@ export const propertyOwnerRouter = router({
       return created
     }),
 
-  updatePct: protectedProcedure
+  updatePct: propertyAdminProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -91,17 +93,27 @@ export const propertyOwnerRouter = router({
       const [updated] = await ctx.db
         .update(propertyOwnersTable)
         .set({ ownership_pct: input.ownership_pct.toFixed(2) })
-        .where(eq(propertyOwnersTable.id, input.id))
+        .where(
+          and(
+            eq(propertyOwnersTable.id, input.id),
+            eq(propertyOwnersTable.property_id, input.property_id),
+          ),
+        )
         .returning()
       return updated
     }),
 
-  remove: protectedProcedure
+  remove: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db
         .delete(propertyOwnersTable)
-        .where(eq(propertyOwnersTable.id, input.id))
+        .where(
+          and(
+            eq(propertyOwnersTable.id, input.id),
+            eq(propertyOwnersTable.property_id, input.property_id),
+          ),
+        )
         .returning()
       return deleted
     }),

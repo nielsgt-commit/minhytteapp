@@ -43,6 +43,48 @@
       "when": 1777038496138,
       "tag": "0005_faithful_mauler",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777060469320,
+      "tag": "0006_flawless_harry_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777061454260,
+      "tag": "0007_round_psynapse",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777183748292,
+      "tag": "0008_white_xorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777271527621,
+      "tag": "0009_acoustic_night_thrasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777276142292,
+      "tag": "0010_lowly_preak",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1777278159697,
+      "tag": "0011_small_serpent_society",
+      "breakpoints": true
     }
   ]
 }

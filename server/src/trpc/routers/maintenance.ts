@@ -1,6 +1,10 @@
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, or } from "drizzle-orm"
 import { z } from "zod"
 import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
+import {
+  buildingsTable,
+  placeTable,
+} from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const maintenanceFields = {
@@ -44,6 +48,27 @@ export const maintenanceRouter = router({
       .from(maintenanceTable)
       .orderBy(asc(maintenanceTable.created_at))
   }),
+
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const rows = await ctx.db
+        .select({ m: maintenanceTable })
+        .from(maintenanceTable)
+        .leftJoin(
+          buildingsTable,
+          eq(buildingsTable.id, maintenanceTable.building_id),
+        )
+        .leftJoin(placeTable, eq(placeTable.id, maintenanceTable.place_id))
+        .where(
+          or(
+            eq(buildingsTable.property_id, input.property_id),
+            eq(placeTable.property_id, input.property_id),
+          ),
+        )
+        .orderBy(asc(maintenanceTable.created_at))
+      return rows.map(r => r.m)
+    }),
 
   create: protectedProcedure
     .input(createInput)

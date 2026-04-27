@@ -19,6 +19,7 @@ type RoomDefaults = {
   beds_sm: number
   beds_lg: number
   beds_double: number
+  beds_kid: number
   mattresses: number
   travel_cot: number
 }
@@ -154,6 +155,7 @@ export function ListPropertyBuildings() {
           beds_sm: fdNumber(fd, "beds_sm"),
           beds_lg: fdNumber(fd, "beds_lg"),
           beds_double: fdNumber(fd, "beds_double"),
+          beds_kid: fdNumber(fd, "beds_kid"),
           mattresses: fdNumber(fd, "mattresses"),
           travel_cot: fdNumber(fd, "travel_cot"),
         },
@@ -181,6 +183,7 @@ export function ListPropertyBuildings() {
           beds_sm: fdNumber(fd, "beds_sm"),
           beds_lg: fdNumber(fd, "beds_lg"),
           beds_double: fdNumber(fd, "beds_double"),
+          beds_kid: fdNumber(fd, "beds_kid"),
           mattresses: fdNumber(fd, "mattresses"),
           travel_cot: fdNumber(fd, "travel_cot"),
         },
@@ -214,7 +217,16 @@ export function ListPropertyBuildings() {
       {propertyBuildings.length === 0 ? (
         <p>No buildings yet.</p>
       ) : (
-        <ul>
+        <ul
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: "1rem",
+            listStyle: "none",
+            padding: 0,
+          }}
+        >
           {propertyBuildings.map(b => {
             const buildingRooms = roomsByBuilding.get(b.id) ?? []
             const editBuildingOpen =
@@ -223,7 +235,7 @@ export function ListPropertyBuildings() {
             const addRoomOpen =
               openForm?.kind === "addRoom" && openForm.buildingId === b.id
             return (
-              <li key={b.id}>
+              <li key={b.id} style={{ flex: "1 1 240px", minWidth: 0 }}>
                 <h4>{b.name}</h4>
                 {buildingRooms.length === 0 ? (
                   <p>No rooms yet.</p>
@@ -236,8 +248,8 @@ export function ListPropertyBuildings() {
                       return (
                         <li key={r.id}>
                           {r.name} (sm:{r.beds_sm}, lg:{r.beds_lg}, dbl:
-                          {r.beds_double}, mat:{r.mattresses}, cot:
-                          {r.travel_cot})
+                          {r.beds_double}, kid:{r.beds_kid}, mat:
+                          {r.mattresses}, cot:{r.travel_cot})
                           <div>
                             <button
                               type="button"
@@ -265,6 +277,7 @@ export function ListPropertyBuildings() {
                                 beds_sm: r.beds_sm,
                                 beds_lg: r.beds_lg,
                                 beds_double: r.beds_double,
+                                beds_kid: r.beds_kid,
                                 mattresses: r.mattresses,
                                 travel_cot: r.travel_cot,
                               }}
@@ -427,6 +440,18 @@ function RoomForm({
               name="beds_double"
               min={0}
               defaultValue={defaults?.beds_double ?? 0}
+              required
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Beds (kid)
+            <input
+              type="number"
+              name="beds_kid"
+              min={0}
+              defaultValue={defaults?.beds_kid ?? 0}
               required
             />
           </label>

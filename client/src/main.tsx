@@ -12,14 +12,11 @@ import { store } from "./app/store"
 import { queryClient } from "./app/queryClient"
 import { TRPCProvider } from "./trpc/trpc"
 import { trpcClient } from "./trpc/client"
+import { loadAuth } from "./auth/oauth"
 import "./index.css"
 
 
-// Until `trpc.auth.me` is wired up, fake an authenticated session in dev so the
-// `_authed` route guard doesn't bounce us back to `/`.
-const auth = import.meta.env.DEV
-  ? { isAuthenticated: true, user: { id: "demo", name: "Demo User" } }
-  : { isAuthenticated: false, user: null }
+const auth = loadAuth()
 
 const router = createRouter({
   routeTree,

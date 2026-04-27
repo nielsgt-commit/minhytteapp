@@ -1,6 +1,16 @@
-import { asc, eq } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
+import { asc, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
-import { bookingTable } from "../../db/schema/booking.schema.ts"
+import type { db as dbClient } from "../../db/client.ts"
+import {
+  bookingOccupantsTable,
+  bookingRoomsTable,
+  bookingTable,
+} from "../../db/schema/booking.schema.ts"
+import {
+  buildingsTable,
+  roomTable,
+} from "../../db/schema/property.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
@@ -8,11 +18,23 @@ const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
   error: "expected YYYY-MM-DD",
 })
 
+const statusEnum = z.enum(["pending", "confirmed", "cancelled"])
+
+const bookingOccupantInput = z.object({
+  user_id: z.number().int().positive(),
+  room_id: z.number().int().positive().nullable().optional(),
+})
+
 const bookingFields = {
   property_id: z.number().int().positive(),
   booker_id: z.number().int().positive(),
   start_date: dateString,
   end_date: dateString,
+  status: statusEnum.default("confirmed"),
+  notes: z.string().max(1024).nullable().optional(),
+  occupants: z.array(bookingOccupantInput).min(1, {
+    error: "at least one occupant (the booker) is required",
+  }),
 }
 
 const dateOrder = {
@@ -34,9 +56,213 @@ const updateInput = z
     path: [...dateOrder.path],
   })
 
+type OccupantInput = z.infer<typeof bookingOccupantInput>
+
+type Db = typeof dbClient
+
+type RoomCapacity = {
+  id: number
+  property_id: number
+  beds_sm: number
+  beds_lg: number
+  beds_double: number
+  beds_kid: number
+  mattresses: number
+  travel_cot: number
+}
+
+type UserRow = { id: number; name: string; is_child: boolean | null }
+
+type BedCounts = {
+  beds_sm: number
+  beds_lg: number
+  beds_double: number
+  beds_kid: number
+  mattresses: number
+  travel_cot: number
+}
+
+function zeroBeds(): BedCounts {
+  return {
+    beds_sm: 0,
+    beds_lg: 0,
+    beds_double: 0,
+    beds_kid: 0,
+    mattresses: 0,
+    travel_cot: 0,
+  }
+}
+
+function allocateRoom(
+  room: RoomCapacity,
+  adults: number,
+  kids: number,
+  roomLabel: string,
+): BedCounts {
+  const used = zeroBeds()
+
+  const takeCot = Math.min(kids, room.travel_cot)
+  used.travel_cot = takeCot
+  let kidsLeft = kids - takeCot
+
+  const takeKid = Math.min(kidsLeft, room.beds_kid)
+  used.beds_kid = takeKid
+  kidsLeft -= takeKid
+
+  let sharedLeft = adults + kidsLeft
+
+  const takeSm = Math.min(sharedLeft, room.beds_sm)
+  used.beds_sm = takeSm
+  sharedLeft -= takeSm
+
+  const takeLg = Math.min(sharedLeft, room.beds_lg)
+  used.beds_lg = takeLg
+  sharedLeft -= takeLg
+
+  const doubleSlots = Math.min(sharedLeft, room.beds_double * 2)
+  used.beds_double = Math.ceil(doubleSlots / 2)
+  sharedLeft -= doubleSlots
+
+  const takeMat = Math.min(sharedLeft, room.mattresses)
+  used.mattresses = takeMat
+  sharedLeft -= takeMat
+
+  if (sharedLeft > 0) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `room ${roomLabel} is over capacity (${String(sharedLeft)} occupant(s) can't be placed)`,
+    })
+  }
+  return used
+}
+
+async function resolveRoomsAndUsers(
+  db: Db,
+  propertyId: number,
+  occupants: OccupantInput[],
+) {
+  const roomIds = new Set<number>()
+  for (const o of occupants) {
+    if (o.room_id != null) roomIds.add(o.room_id)
+  }
+  const userIds = [...new Set(occupants.map(o => o.user_id))]
+
+  const [rooms, users] = await Promise.all([
+    roomIds.size > 0
+      ? db
+          .select({
+            id: roomTable.id,
+            property_id: buildingsTable.property_id,
+            beds_sm: roomTable.beds_sm,
+            beds_lg: roomTable.beds_lg,
+            beds_double: roomTable.beds_double,
+            beds_kid: roomTable.beds_kid,
+            mattresses: roomTable.mattresses,
+            travel_cot: roomTable.travel_cot,
+          })
+          .from(roomTable)
+          .innerJoin(
+            buildingsTable,
+            eq(buildingsTable.id, roomTable.building_id),
+          )
+          .where(inArray(roomTable.id, Array.from(roomIds)))
+      : Promise.resolve([] as RoomCapacity[]),
+    db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        is_child: usersTable.is_child,
+      })
+      .from(usersTable)
+      .where(inArray(usersTable.id, userIds)),
+  ])
+
+  const roomById = new Map(rooms.map(r => [r.id, r]))
+  for (const id of roomIds) {
+    const row = roomById.get(id)
+    if (!row) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `room ${String(id)} not found`,
+      })
+    }
+    if (row.property_id !== propertyId) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `room ${String(id)} does not belong to property ${String(propertyId)}`,
+      })
+    }
+  }
+
+  const userById = new Map<number, UserRow>(users.map(u => [u.id, u]))
+  for (const id of userIds) {
+    if (!userById.has(id)) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `user ${String(id)} not found`,
+      })
+    }
+  }
+
+  return { roomById, userById }
+}
+
+function ensureBookerIsOccupant(
+  bookerId: number,
+  occupants: OccupantInput[],
+) {
+  if (!occupants.some(o => o.user_id === bookerId)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "booker must be listed as an occupant",
+    })
+  }
+}
+
+function dedupeOccupants(occupants: OccupantInput[]) {
+  const seen = new Set<number>()
+  const out: OccupantInput[] = []
+  for (const o of occupants) {
+    if (seen.has(o.user_id)) continue
+    seen.add(o.user_id)
+    out.push(o)
+  }
+  return out
+}
+
+function computeBookingRooms(
+  occupants: OccupantInput[],
+  roomById: Map<number, RoomCapacity>,
+  userById: Map<number, UserRow>,
+): (BedCounts & { room_id: number })[] {
+  const byRoom = new Map<number, { adults: number; kids: number }>()
+  for (const o of occupants) {
+    if (o.room_id == null) continue
+    const bucket = byRoom.get(o.room_id) ?? { adults: 0, kids: 0 }
+    const user = userById.get(o.user_id)
+    if (user?.is_child === true) bucket.kids += 1
+    else bucket.adults += 1
+    byRoom.set(o.room_id, bucket)
+  }
+
+  const out: (BedCounts & { room_id: number })[] = []
+  for (const [roomId, counts] of byRoom) {
+    const room = roomById.get(roomId)
+    if (!room) continue
+    const used = allocateRoom(
+      room,
+      counts.adults,
+      counts.kids,
+      `#${String(roomId)}`,
+    )
+    out.push({ room_id: roomId, ...used })
+  }
+  return out
+}
+
 export const bookingRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.db
+    const bookings = await ctx.db
       .select({
         id: bookingTable.id,
         property_id: bookingTable.property_id,
@@ -44,42 +270,188 @@ export const bookingRouter = router({
         booker_name: usersTable.name,
         start_date: bookingTable.start_date,
         end_date: bookingTable.end_date,
+        status: bookingTable.status,
+        notes: bookingTable.notes,
+        created_at: bookingTable.created_at,
+        updated_at: bookingTable.updated_at,
+        cancelled_at: bookingTable.cancelled_at,
+        cancelled_by_id: bookingTable.cancelled_by_id,
       })
       .from(bookingTable)
       .leftJoin(usersTable, eq(usersTable.id, bookingTable.booker_id))
       .orderBy(asc(bookingTable.start_date))
-    return rows
+
+    if (bookings.length === 0) return []
+
+    const ids = bookings.map(b => b.id)
+    const [rooms, occupants] = await Promise.all([
+      ctx.db
+        .select()
+        .from(bookingRoomsTable)
+        .where(inArray(bookingRoomsTable.booking_id, ids)),
+      ctx.db
+        .select({
+          booking_id: bookingOccupantsTable.booking_id,
+          user_id: bookingOccupantsTable.user_id,
+          user_name: usersTable.name,
+          room_id: bookingOccupantsTable.room_id,
+        })
+        .from(bookingOccupantsTable)
+        .leftJoin(
+          usersTable,
+          eq(usersTable.id, bookingOccupantsTable.user_id),
+        )
+        .where(inArray(bookingOccupantsTable.booking_id, ids)),
+    ])
+
+    return bookings.map(b => ({
+      ...b,
+      rooms: rooms.filter(r => r.booking_id === b.id),
+      occupants: occupants.filter(o => o.booking_id === b.id),
+    }))
   }),
 
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
-      const [created] = await ctx.db
-        .insert(bookingTable)
-        .values(input)
-        .returning()
-      return created
+      ensureBookerIsOccupant(input.booker_id, input.occupants)
+      const occupants = dedupeOccupants(input.occupants)
+      const { roomById, userById } = await resolveRoomsAndUsers(
+        ctx.db,
+        input.property_id,
+        occupants,
+      )
+      const bookingRooms = computeBookingRooms(
+        occupants,
+        roomById,
+        userById,
+      )
+
+      return ctx.db.transaction(async tx => {
+        const [created] = await tx
+          .insert(bookingTable)
+          .values({
+            property_id: input.property_id,
+            booker_id: input.booker_id,
+            start_date: input.start_date,
+            end_date: input.end_date,
+            status: input.status,
+            notes: input.notes ?? null,
+            cancelled_at: input.status === "cancelled" ? new Date() : null,
+            cancelled_by_id:
+              input.status === "cancelled" ? input.booker_id : null,
+          })
+          .returning()
+
+        if (bookingRooms.length > 0) {
+          await tx
+            .insert(bookingRoomsTable)
+            .values(
+              bookingRooms.map(r => ({ ...r, booking_id: created.id })),
+            )
+        }
+        await tx.insert(bookingOccupantsTable).values(
+          occupants.map(o => ({
+            booking_id: created.id,
+            user_id: o.user_id,
+            room_id: o.room_id ?? null,
+          })),
+        )
+
+        return created
+      })
     }),
 
   update: protectedProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...rest } = input
-      const [updated] = await ctx.db
-        .update(bookingTable)
-        .set(rest)
-        .where(eq(bookingTable.id, id))
-        .returning()
-      return updated
+      ensureBookerIsOccupant(input.booker_id, input.occupants)
+      const occupants = dedupeOccupants(input.occupants)
+      const { roomById, userById } = await resolveRoomsAndUsers(
+        ctx.db,
+        input.property_id,
+        occupants,
+      )
+      const bookingRooms = computeBookingRooms(
+        occupants,
+        roomById,
+        userById,
+      )
+
+      return ctx.db.transaction(async tx => {
+        const existing = await tx
+          .select({ status: bookingTable.status })
+          .from(bookingTable)
+          .where(eq(bookingTable.id, input.id))
+        if (existing.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND" })
+        }
+        const wasCancelled = existing[0].status === "cancelled"
+        const nowCancelled = input.status === "cancelled"
+
+        const [updated] = await tx
+          .update(bookingTable)
+          .set({
+            property_id: input.property_id,
+            booker_id: input.booker_id,
+            start_date: input.start_date,
+            end_date: input.end_date,
+            status: input.status,
+            notes: input.notes ?? null,
+            updated_at: new Date(),
+            cancelled_at: nowCancelled
+              ? wasCancelled
+                ? undefined
+                : new Date()
+              : null,
+            cancelled_by_id: nowCancelled
+              ? wasCancelled
+                ? undefined
+                : input.booker_id
+              : null,
+          })
+          .where(eq(bookingTable.id, input.id))
+          .returning()
+
+        await tx
+          .delete(bookingRoomsTable)
+          .where(eq(bookingRoomsTable.booking_id, input.id))
+        if (bookingRooms.length > 0) {
+          await tx
+            .insert(bookingRoomsTable)
+            .values(bookingRooms.map(r => ({ ...r, booking_id: input.id })))
+        }
+
+        await tx
+          .delete(bookingOccupantsTable)
+          .where(eq(bookingOccupantsTable.booking_id, input.id))
+        await tx.insert(bookingOccupantsTable).values(
+          occupants.map(o => ({
+            booking_id: input.id,
+            user_id: o.user_id,
+            room_id: o.room_id ?? null,
+          })),
+        )
+
+        return updated
+      })
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(bookingTable)
-        .where(eq(bookingTable.id, input.id))
-        .returning()
-      return deleted
+      return ctx.db.transaction(async tx => {
+        await tx
+          .delete(bookingRoomsTable)
+          .where(eq(bookingRoomsTable.booking_id, input.id))
+        await tx
+          .delete(bookingOccupantsTable)
+          .where(eq(bookingOccupantsTable.booking_id, input.id))
+        const [deleted] = await tx
+          .delete(bookingTable)
+          .where(eq(bookingTable.id, input.id))
+          .returning()
+        return deleted
+      })
     }),
 })

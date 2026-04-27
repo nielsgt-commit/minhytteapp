@@ -1,4 +1,5 @@
 import { DeletePropertyFlow } from "./DeletePropertyFlow.tsx"
+import { WipeDbFlow } from "./WipeDbFlow.tsx"
 
 export function DangerZone() {
   return (
@@ -8,6 +9,7 @@ export function DangerZone() {
         Destructive actions below. These are irreversible — proceed with care.
       </p>
       <DeletePropertyFlow />
+      <WipeDbFlow />
     </section>
   )
 }

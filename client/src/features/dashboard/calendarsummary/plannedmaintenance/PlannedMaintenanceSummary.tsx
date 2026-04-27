@@ -1,13 +1,16 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export default function PlannedMaintenanceSummary() {
   const trpc = useTRPC()
+  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
   const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+    trpc.building.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: items } = useSuspenseQuery(
-    trpc.maintenance.list.queryOptions(),
+    trpc.maintenance.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
   const pending = items.filter(

@@ -48,7 +48,7 @@ export function AddBuildingFlow() {
 
   return (
     <section>
-      <h3>Add Building Flow</h3>
+      <h3>Add Building</h3>
 
       {createBuilding.error && (
         <p role="alert">Error: {createBuilding.error.message}</p>

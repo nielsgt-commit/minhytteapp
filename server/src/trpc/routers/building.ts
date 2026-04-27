@@ -36,6 +36,25 @@ export const buildingRouter = router({
     return rows
   }),
 
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select({
+          id: buildingsTable.id,
+          name: buildingsTable.name,
+          property_id: buildingsTable.property_id,
+          property_name: propertyTable.name,
+        })
+        .from(buildingsTable)
+        .leftJoin(
+          propertyTable,
+          eq(propertyTable.id, buildingsTable.property_id),
+        )
+        .where(eq(buildingsTable.property_id, input.property_id))
+        .orderBy(asc(buildingsTable.id))
+    }),
+
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {

@@ -10,6 +10,8 @@ import {
   selectSelectedPropertyId,
   setSelectedPropertyId,
 } from "@/features/property/propertySlice"
+import { selectSelectedUserId } from "@/features/user/userSlice"
+import { loadAuth } from "@/auth/oauth"
 import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
 
@@ -21,8 +23,13 @@ function fdString(fd: FormData, key: string): string {
 export default function PropertyMenu() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const auth = loadAuth()
+  const selectedUserId = useAppSelector(selectSelectedUserId)
   const { data: properties, isLoading } = useQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.listForUser.queryOptions(
+      { user_id: selectedUserId ?? 0 },
+      { enabled: auth.isAuthenticated && selectedUserId != null },
+    ),
   )
   const selectedId = useAppSelector(selectSelectedPropertyId)
   const dispatch = useAppDispatch()
@@ -41,8 +48,12 @@ export default function PropertyMenu() {
 
   const createProperty = useMutation(
     trpc.property.create.mutationOptions({
-      onSuccess: () => {
+      onSuccess: created => {
         void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
+        void qc.invalidateQueries({
+          queryKey: trpc.property.listForUser.queryKey(),
+        })
+        dispatch(setSelectedPropertyId(created.id))
         setIsAddOpen(false)
       },
     }),
@@ -58,6 +69,10 @@ export default function PropertyMenu() {
   }
 
   const current = list.find(p => p.id === selectedId)
+
+  if (!auth.isAuthenticated) {
+    return <div className={styles.menu} />
+  }
 
   let label: string
   if (isLoading) {

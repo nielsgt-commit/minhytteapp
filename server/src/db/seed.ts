@@ -20,14 +20,52 @@ async function main() {
         .values({
           name: "Owner",
           email: "owner@example.com",
+          oauth_sub: "Owner",
+          is_admin: true,
         })
         .returning()
     ).at(0)
     if (!created) throw new Error("failed to insert user")
     user = created
+  } else if (!user.oauth_sub) {
+    const updated = (
+      await db
+        .update(usersTable)
+        .set({ oauth_sub: "Owner" })
+        .where(eq(usersTable.id, user.id))
+        .returning()
+    ).at(0)
+    if (updated) user = updated
   }
   console.log(
     `${existingUser ? "found" : "inserted"} user #${String(user.id)} (${user.email})`,
+  )
+
+  const existingMember = (
+    await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, "member@example.com"))
+      .limit(1)
+  ).at(0)
+  let member = existingMember
+  if (!member) {
+    const created = (
+      await db
+        .insert(usersTable)
+        .values({
+          name: "Member",
+          email: "member@example.com",
+          oauth_sub: "Member",
+          is_admin: false,
+        })
+        .returning()
+    ).at(0)
+    if (!created) throw new Error("failed to insert member user")
+    member = created
+  }
+  console.log(
+    `${existingMember ? "found" : "inserted"} member #${String(member.id)} (${member.email})`,
   )
 
   const existingProperty = (

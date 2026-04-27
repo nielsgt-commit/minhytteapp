@@ -5,13 +5,18 @@ import {
   primaryKey,
   varchar,
 } from "drizzle-orm/pg-core"
+import type { AnyPgColumn } from "drizzle-orm/pg-core"
 
 export const usersTable = pgTable("users", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  is_admin: boolean("is_admin").notNull().default(true),
+  oauth_sub: varchar("oauth_sub", { length: 255 }).unique(),
+  is_admin: boolean("is_admin").notNull().default(false),
   is_child: boolean("is_child"),
+  parent_user_id: integer("parent_user_id").references(
+    (): AnyPgColumn => usersTable.id,
+  ),
 })
 
 export const userGroupsTable = pgTable("user_groups", {

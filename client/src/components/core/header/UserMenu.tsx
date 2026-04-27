@@ -1,34 +1,27 @@
-import { type SyntheticEvent, useEffect, useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import {
   selectSelectedUserId,
   setSelectedUserId,
 } from "@/features/user/userSlice"
+import { loadAuth, logout } from "@/auth/oauth"
 import UserSwitcher from "./UserSwitcher"
 import styles from "./Header.module.css"
 
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
 export default function UserMenu() {
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
-  const { data: users, isLoading } = useQuery(trpc.user.list.queryOptions())
+  const auth = loadAuth()
+  const { data: me, isLoading } = useQuery(
+    trpc.user.me.queryOptions(undefined, { enabled: auth.isAuthenticated }),
+  )
   const selectedId = useAppSelector(selectSelectedUserId)
   const dispatch = useAppDispatch()
 
-  const [isAddOpen, setIsAddOpen] = useState(false)
-
-  const list = users ?? []
+  const list = me ? [me] : []
 
   useEffect(() => {
     if (list.length === 0) return
@@ -38,24 +31,12 @@ export default function UserMenu() {
     }
   }, [list, selectedId, dispatch])
 
-  const createUser = useMutation(
-    trpc.user.create.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
-        setIsAddOpen(false)
-      },
-    }),
-  )
-
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const name = fdString(fd, "name").trim()
-    if (!name) return
-    const email = `pending-${String(Date.now())}@example.local`
-    createUser.mutate({ name, email })
+  const handleLogout = () => {
+    logout()
+    window.location.assign("/")
   }
+
+  if (!auth.user) return null
 
   const current = list.find(u => u.id === selectedId)
 
@@ -75,36 +56,9 @@ export default function UserMenu() {
         users={list}
         value={selectedId}
         onChange={id => { dispatch(setSelectedUserId(id)) }}
-        onAddClick={() => { setIsAddOpen(true) }}
+        onLogout={handleLogout}
       />
-      {isAddOpen && (
-        <form onSubmit={handleAdd}>
-          <fieldset>
-            <legend>New user</legend>
-            <div>
-              <label>
-                Name
-                <input type="text" name="name" required autoFocus />
-              </label>
-            </div>
-            <div>
-              <button type="submit" disabled={createUser.isPending}>
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIsAddOpen(false) }}
-                disabled={createUser.isPending}
-              >
-                Cancel
-              </button>
-            </div>
-            {createUser.error && (
-              <p role="alert">Error: {createUser.error.message}</p>
-            )}
-          </fieldset>
-        </form>
-      )}
+      <Link to="/usersettings">Settings</Link>
     </div>
   )
 }
