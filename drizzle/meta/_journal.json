@@ -85,6 +85,13 @@
       "when": 1777278159697,
       "tag": "0011_small_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777283494042,
+      "tag": "0012_peaceful_patch",
+      "breakpoints": true
     }
   ]
 }

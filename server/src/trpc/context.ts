@@ -8,6 +8,7 @@ export type AuthUser = {
   name: string
   email: string
   is_admin: boolean
+  is_head: boolean
 }
 
 export type AuthClaims = {
@@ -46,6 +47,7 @@ async function lookupUser(sub: string | null): Promise<AuthUser | null> {
         name: usersTable.name,
         email: usersTable.email,
         is_admin: usersTable.is_admin,
+        is_head: usersTable.is_head,
       })
       .from(usersTable)
       .where(eq(usersTable.oauth_sub, sub))

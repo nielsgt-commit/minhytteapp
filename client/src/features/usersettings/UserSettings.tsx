@@ -37,6 +37,14 @@ export function UserSettings() {
     }),
   )
 
+  const updateIsHead = useMutation(
+    trpc.user.updateMyIsHead.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: trpc.user.me.queryKey() })
+      },
+    }),
+  )
+
   const createChild = useMutation(
     trpc.user.createChild.mutationOptions({
       onSuccess: () => { void invalidateChildren() },
@@ -123,6 +131,24 @@ export function UserSettings() {
           )}
         </fieldset>
       </form>
+
+      <fieldset>
+        <legend>Household role</legend>
+        <label>
+          <input
+            type="checkbox"
+            checked={me.is_head}
+            disabled={updateIsHead.isPending}
+            onChange={e => {
+              updateIsHead.mutate({ is_head: e.target.checked })
+            }}
+          />
+          I am a household head (can be assigned a priority week)
+        </label>
+        {updateIsHead.error && (
+          <p role="alert">Error: {updateIsHead.error.message}</p>
+        )}
+      </fieldset>
 
       <section>
         <h2>My children</h2>

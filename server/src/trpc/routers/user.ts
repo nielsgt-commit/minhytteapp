@@ -13,6 +13,7 @@ const userFields = {
   name: z.string().min(1, { error: "name is required" }),
   email: z.email(),
   is_admin: z.boolean().optional(),
+  is_head: z.boolean().optional(),
   is_child: z.boolean().optional(),
 }
 
@@ -37,15 +38,23 @@ export const userRouter = router({
     if (ctx.user) return ctx.user
 
     const { sub, name, email } = ctx.claims
-    await ctx.db
-      .insert(usersTable)
-      .values({
-        name: name ?? sub,
-        email: email ?? `${sub}@oauth.local`,
-        oauth_sub: sub,
-        is_admin: false,
-      })
-      .onConflictDoNothing({ target: usersTable.oauth_sub })
+    const isDev = process.env.NODE_ENV !== "production"
+    await ctx.db.transaction(async tx => {
+      const existing = await tx
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .limit(1)
+      const isFirst = isDev && existing.length === 0
+      await tx
+        .insert(usersTable)
+        .values({
+          name: name ?? sub,
+          email: email ?? `${sub}@oauth.local`,
+          oauth_sub: sub,
+          is_admin: isFirst,
+        })
+        .onConflictDoNothing({ target: usersTable.oauth_sub })
+    })
 
     const created = (
       await ctx.db
@@ -54,6 +63,7 @@ export const userRouter = router({
           name: usersTable.name,
           email: usersTable.email,
           is_admin: usersTable.is_admin,
+          is_head: usersTable.is_head,
         })
         .from(usersTable)
         .where(eq(usersTable.oauth_sub, sub))
@@ -85,6 +95,17 @@ export const userRouter = router({
       const [updated] = await ctx.db
         .update(usersTable)
         .set({ name: input.name })
+        .where(eq(usersTable.id, ctx.user.id))
+        .returning()
+      return updated
+    }),
+
+  updateMyIsHead: protectedProcedure
+    .input(z.object({ is_head: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(usersTable)
+        .set({ is_head: input.is_head })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()
       return updated

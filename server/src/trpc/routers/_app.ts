@@ -7,6 +7,7 @@ import { expenseRouter } from "./expense.ts"
 import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
 import { placeRouter } from "./place.ts"
+import { priorityRouter } from "./priority.ts"
 import { propertyRouter } from "./property.ts"
 import { propertyOwnerRouter } from "./propertyOwner.ts"
 import { roomRouter } from "./room.ts"
@@ -23,6 +24,7 @@ export const appRouter = router({
   invite: inviteRouter,
   maintenance: maintenanceRouter,
   place: placeRouter,
+  priority: priorityRouter,
   property: propertyRouter,
   propertyOwner: propertyOwnerRouter,
   room: roomRouter,

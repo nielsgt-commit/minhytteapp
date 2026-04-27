@@ -13,6 +13,7 @@ export const usersTable = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   oauth_sub: varchar("oauth_sub", { length: 255 }).unique(),
   is_admin: boolean("is_admin").notNull().default(false),
+  is_head: boolean("is_head").notNull().default(false),
   is_child: boolean("is_child"),
   parent_user_id: integer("parent_user_id").references(
     (): AnyPgColumn => usersTable.id,

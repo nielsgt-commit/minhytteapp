@@ -107,6 +107,30 @@ export const placeTable = pgTable("places", {
   property_id: integer("property_id").references(() => propertyTable.id),
 })
 
+export const propertyPriorityWeeksTable = pgTable(
+  "property_priority_weeks",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    property_owner_id: integer("property_owner_id")
+      .notNull()
+      .references(() => propertyOwnersTable.id),
+    year: integer("year").notNull(),
+    iso_week: integer("iso_week").notNull(),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    check("priority_week_peak_only", sql`${t.iso_week} IN (28, 29, 30)`),
+    uniqueIndex("priority_week_uq_owner_year").on(
+      t.property_owner_id,
+      t.year,
+    ),
+  ],
+)
+
 export const propertyInvitationsTable = pgTable("property_invitations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   token: varchar("token", { length: 64 }).notNull().unique(),
