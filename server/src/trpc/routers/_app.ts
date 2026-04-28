@@ -3,6 +3,7 @@ import { bookingRouter } from "./booking.ts"
 import { buildingRouter } from "./building.ts"
 import { dashboardRouter } from "./dashboard.ts"
 import { devRouter } from "./dev.ts"
+import { equipmentRouter } from "./equipment.ts"
 import { expenseRouter } from "./expense.ts"
 import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
@@ -20,6 +21,7 @@ export const appRouter = router({
   building: buildingRouter,
   dashboard: dashboardRouter,
   dev: devRouter,
+  equipment: equipmentRouter,
   expense: expenseRouter,
   invite: inviteRouter,
   maintenance: maintenanceRouter,

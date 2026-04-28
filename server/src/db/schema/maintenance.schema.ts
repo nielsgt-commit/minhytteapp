@@ -8,13 +8,27 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core"
-import { buildingsTable, placeTable } from "./property.schema.ts"
+import { buildingsTable, placeTable, propertyTable } from "./property.schema.ts"
 import { usersTable } from "./users.schema.ts"
 
 export const routinesTable = pgTable("routines", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 255 }),
+})
+
+export const equipmentTable = pgTable("equipment", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar("name", { length: 255 }).notNull(),
+  property_id: integer("property_id")
+    .notNull()
+    .references(() => propertyTable.id),
+  building_id: integer("building_id")
+    .notNull()
+    .references(() => buildingsTable.id),
+  category: varchar("category", { length: 32 }),
+  notes: varchar("notes", { length: 255 }),
+  created_at: timestamp("created_at").notNull().defaultNow(),
 })
 
 export const maintenanceTable = pgTable(
@@ -47,6 +61,7 @@ export const maintenanceTable = pgTable(
     }).notNull(),
     routine_id: integer("routine_id").references(() => routinesTable.id),
     routine_position: integer("routine_position"),
+    equipment_id: integer("equipment_id").references(() => equipmentTable.id),
     due_at: timestamp("due_at"),
     created_at: timestamp("created_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),

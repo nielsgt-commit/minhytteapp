@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "settlement_progress" varchar(11) DEFAULT 'in_progress' NOT NULL;

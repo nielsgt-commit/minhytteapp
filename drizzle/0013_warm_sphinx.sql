@@ -1,0 +1,2 @@
+ALTER TABLE "expenses" ADD COLUMN "expense_types" text[] DEFAULT '{}'::text[] NOT NULL;--> statement-breakpoint
+ALTER TABLE "expenses" ADD CONSTRAINT "expense_types_valid" CHECK ("expenses"."expense_types" <@ ARRAY['food','gas','maintenance','capex','opex','fixed']::text[]);

@@ -5,6 +5,7 @@ import {
   bookingTable,
 } from "./booking.schema.ts"
 import {
+  equipmentTable,
   maintenanceAttachmentsTable,
   maintenanceTable,
   maintenanceUpdatesTable,
@@ -94,6 +95,7 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   bookings: many(bookingTable),
   owners: many(propertyOwnersTable),
   invitations: many(propertyInvitationsTable),
+  equipment: many(equipmentTable),
 }))
 
 export const propertyInvitationsRelations = relations(
@@ -147,6 +149,7 @@ export const buildingsRelations = relations(buildingsTable, ({ one, many }) => (
     relationName: "building_adjacency_b",
   }),
   maintenance: many(maintenanceTable),
+  equipment: many(equipmentTable),
 }))
 
 export const buildingAdjacenciesRelations = relations(
@@ -279,9 +282,25 @@ export const maintenanceRelations = relations(maintenanceTable, ({ one, many }) 
     fields: [maintenanceTable.routine_id],
     references: [routinesTable.id],
   }),
+  equipment: one(equipmentTable, {
+    fields: [maintenanceTable.equipment_id],
+    references: [equipmentTable.id],
+  }),
   updates: many(maintenanceUpdatesTable),
   attachments: many(maintenanceAttachmentsTable),
   expenses: many(expensesTable),
+}))
+
+export const equipmentRelations = relations(equipmentTable, ({ one, many }) => ({
+  property: one(propertyTable, {
+    fields: [equipmentTable.property_id],
+    references: [propertyTable.id],
+  }),
+  building: one(buildingsTable, {
+    fields: [equipmentTable.building_id],
+    references: [buildingsTable.id],
+  }),
+  maintenance: many(maintenanceTable),
 }))
 
 export const maintenanceUpdatesRelations = relations(

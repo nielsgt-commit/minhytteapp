@@ -7,6 +7,7 @@ import { DangerZone } from "@/features/property/dangerzone/DangerZone.tsx"
 import { PropertyOwnersPanel } from "@/features/property/owners/PropertyOwnersPanel.tsx"
 import { PropertyInvitesPanel } from "@/features/property/invites/PropertyInvitesPanel.tsx"
 import { PlacesPanel } from "@/features/property/places/PlacesPanel.tsx"
+import { EquipmentPanel } from "@/features/property/equipment/EquipmentPanel.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -69,6 +70,15 @@ export function ManageProperty() {
       {selectedProperty && (
         <div className={styles.places}>
           <PlacesPanel
+            propertyId={selectedProperty.id}
+            propertyName={selectedProperty.name}
+          />
+        </div>
+      )}
+
+      {selectedProperty && (
+        <div className={styles.equipment}>
+          <EquipmentPanel
             propertyId={selectedProperty.id}
             propertyName={selectedProperty.name}
           />

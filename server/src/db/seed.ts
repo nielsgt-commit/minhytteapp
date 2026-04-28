@@ -6,7 +6,10 @@ import {
   bookingRoomsTable,
   bookingTable,
 } from "./schema/booking.schema.ts"
-import { maintenanceTable } from "./schema/maintenance.schema.ts"
+import {
+  equipmentTable,
+  maintenanceTable,
+} from "./schema/maintenance.schema.ts"
 import {
   buildingsTable,
   propertyOwnersTable,
@@ -843,15 +846,71 @@ async function seedMaintenance(buildingIds: number[], userIds: number[]) {
   )
 }
 
+type SeedEquipment = {
+  name: string
+  building_name: string
+  category?: string
+  notes?: string
+}
+
+const SEED_EQUIPMENT: SeedEquipment[] = [
+  { name: "Wood stove", building_name: "Furua", category: "heating" },
+  { name: "Heat pump", building_name: "Nybygget", category: "heating" },
+  { name: "Refrigerator", building_name: "Furua", category: "appliance" },
+  { name: "Dishwasher", building_name: "Furua", category: "appliance" },
+  { name: "Washing machine", building_name: "Nybygget", category: "appliance" },
+  { name: "Outboard motor", building_name: "Naustet", category: "boat" },
+  { name: "Rowing boat", building_name: "Naustet", category: "boat" },
+  { name: "Lawn mower", building_name: "Kabelpalasset", category: "tool" },
+  { name: "Chainsaw", building_name: "Kabelpalasset", category: "tool" },
+  { name: "Smoke detector", building_name: "Slabeslottet", category: "safety" },
+]
+
+async function seedEquipment(
+  property_id: number,
+  buildingsByName: Map<string, number>,
+) {
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(equipmentTable)
+  if (count >= SEED_EQUIPMENT.length) {
+    console.log(`found ${String(count)} equipment items, skipping seed`)
+    return
+  }
+  const rows: (typeof equipmentTable.$inferInsert)[] = []
+  for (const seed of SEED_EQUIPMENT) {
+    const building_id = buildingsByName.get(seed.building_name)
+    if (building_id === undefined) {
+      throw new Error(
+        `seed equipment "${seed.name}" references unknown building "${seed.building_name}"`,
+      )
+    }
+    rows.push({
+      name: seed.name,
+      property_id,
+      building_id,
+      category: seed.category ?? null,
+      notes: seed.notes ?? null,
+    })
+  }
+  const inserted = await db
+    .insert(equipmentTable)
+    .values(rows)
+    .returning({ id: equipmentTable.id })
+  console.log(`inserted ${String(inserted.length)} equipment items`)
+}
+
 async function main() {
   const users = await Promise.all(SEED_USERS.map(upsertUser))
   const usersByName = new Map(users.map(u => [u.name, u]))
   const property = await upsertProperty()
 
   const buildingIds: number[] = []
+  const buildingsByName = new Map<string, number>()
   for (const seedBuilding of SEED_BUILDINGS) {
     const building = await upsertBuilding(property.id, seedBuilding.name)
     buildingIds.push(building.id)
+    buildingsByName.set(building.name, building.id)
     for (const seedRoom of seedBuilding.rooms) {
       await upsertRoom(building.id, seedRoom)
     }
@@ -899,6 +958,7 @@ async function main() {
   await seedBookings(property.id, groupMemberIds)
   const nonAdminIds = users.filter(u => !u.is_admin).map(u => u.id)
   await seedMaintenance(buildingIds, nonAdminIds)
+  await seedEquipment(property.id, buildingsByName)
 
   console.log("\nseed complete.")
   console.log(`  property_id = ${String(property.id)}`)
