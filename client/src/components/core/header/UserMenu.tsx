@@ -44,14 +44,14 @@ export default function UserMenu() {
   if (isLoading) {
     label = "Loading…"
   } else if (current) {
-    label = current.name
+    label = "Logged in as "
   } else {
     label = "No user"
   }
 
   return (
     <div className={styles.menu}>
-      <span>{label}</span>
+      <span> {label}</span>
       <UserSwitcher
         users={list}
         value={selectedId}

@@ -9,6 +9,7 @@ export type AuthUser = {
   email: string
   is_admin: boolean
   is_head: boolean
+  settlement_progress: "in_progress" | "all_done"
 }
 
 export type AuthClaims = {
@@ -48,6 +49,7 @@ async function lookupUser(sub: string | null): Promise<AuthUser | null> {
         email: usersTable.email,
         is_admin: usersTable.is_admin,
         is_head: usersTable.is_head,
+        settlement_progress: usersTable.settlement_progress,
       })
       .from(usersTable)
       .where(eq(usersTable.oauth_sub, sub))

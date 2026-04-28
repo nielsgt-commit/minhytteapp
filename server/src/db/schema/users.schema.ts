@@ -18,6 +18,12 @@ export const usersTable = pgTable("users", {
   parent_user_id: integer("parent_user_id").references(
     (): AnyPgColumn => usersTable.id,
   ),
+  settlement_progress: varchar("settlement_progress", {
+    length: 11,
+    enum: ["in_progress", "all_done"],
+  })
+    .notNull()
+    .default("in_progress"),
 })
 
 export const userGroupsTable = pgTable("user_groups", {

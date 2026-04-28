@@ -1,4 +1,6 @@
 import styles from "./Settlement.module.css"
+import { SettlementHeadColumns } from "@/features/settlement/SettlementHeadColumns.tsx"
+import { RecurringPropertyFees } from "@/features/settlement/RecurringPropertyFees.tsx"
 import { SettlementTestForm } from "@/features/settlement/testform/SettlementTestForm.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -19,6 +21,8 @@ export function Settlement() {
     <section className={styles.page}>
       <h2 className={styles.title}>Settlement</h2>
       <div className={styles.content}>
+        <SettlementHeadColumns />
+        <RecurringPropertyFees />
         <SettlementTestForm />
       </div>
     </section>

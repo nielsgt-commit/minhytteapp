@@ -145,13 +145,13 @@ export function UserSettings() {
               updateIsHead.mutate({ is_head: e.target.checked })
             }}
           />
-          I am a household head (can be assigned a priority week)
+          I am a household head (can be assigned a priority week and settlement)
         </label>
         {updateIsHead.error && (
           <p role="alert">Error: {updateIsHead.error.message}</p>
         )}
       </fieldset>
-
+a
       <section>
         <h2>My children</h2>
         {children && children.length > 0 ? (

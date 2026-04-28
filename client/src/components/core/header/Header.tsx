@@ -1,4 +1,3 @@
-import Navigation from "@/components/shared/Navigation"
 import PropertyMenu from "./PropertyMenu.tsx"
 import UserMenu from "./UserMenu"
 import UserGroupBadge from "./UserGroupBadge.tsx"
@@ -12,7 +11,6 @@ export default function Header() {
       <UserMenu />
       <UserGroupBadge />
       <h1 className={styles.title}> Hytta </h1>
-      <Navigation />
     </header>
   )
 }

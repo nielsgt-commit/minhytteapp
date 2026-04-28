@@ -11,6 +11,10 @@ import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
 
+const TEST_MIN_WEEK = 28
+const TEST_MAX_WEEK = 30
+const TEST_YEAR = new Date().getFullYear()
+
 type Status = "pending" | "confirmed" | "cancelled"
 type Mode = "individual" | "group"
 
@@ -32,11 +36,15 @@ const DEFAULT_DRAFT: DraftConfig = {
   notes: "",
 }
 
-function startOfSunday(d: Date) {
-  const out = new Date(d)
-  out.setHours(0, 0, 0, 0)
-  out.setDate(out.getDate() - out.getDay())
-  return out
+function sundayBeforeIsoWeek(year: number, week: number) {
+  const jan4 = new Date(year, 0, 4)
+  const jan4Day = jan4.getDay() === 0 ? 7 : jan4.getDay()
+  const monday = new Date(jan4)
+  monday.setDate(jan4.getDate() - jan4Day + 1 + (week - 1) * 7)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() - 1)
+  sunday.setHours(0, 0, 0, 0)
+  return sunday
 }
 
 function addDays(d: Date, n: number) {
@@ -120,7 +128,9 @@ function Body({ propertyId }: { propertyId: number }) {
     }),
   )
 
-  const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
+  const [weekStart, setWeekStart] = useState(() =>
+    sundayBeforeIsoWeek(TEST_YEAR, TEST_MIN_WEEK),
+  )
   const [picks, setPicks] = useState<Record<number, string[]>>({})
   const [drafts, setDrafts] = useState<Record<string, DraftConfig>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -292,6 +302,7 @@ function Body({ propertyId }: { propertyId: number }) {
       <div>
         <button
           type="button"
+          disabled={weekNumber <= TEST_MIN_WEEK}
           onClick={() => {
             setWeekStart(prev => addDays(prev, -7))
           }}
@@ -301,6 +312,7 @@ function Body({ propertyId }: { propertyId: number }) {
         <span> Week {weekNumber} </span>
         <button
           type="button"
+          disabled={weekNumber >= TEST_MAX_WEEK}
           onClick={() => {
             setWeekStart(prev => addDays(prev, 7))
           }}

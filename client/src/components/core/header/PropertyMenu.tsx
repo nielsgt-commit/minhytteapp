@@ -78,7 +78,7 @@ export default function PropertyMenu() {
   if (isLoading) {
     label = "Loading…"
   } else if (current) {
-    label = current.name
+    label = "Property "
   } else {
     label = "No property"
   }

@@ -1,10 +1,12 @@
 import { sql } from "drizzle-orm"
 import {
   check,
+  date,
   integer,
   pgTable,
   primaryKey,
   serial,
+  text,
   timestamp,
   unique,
   varchar,
@@ -55,11 +57,18 @@ export const expensesTable = pgTable(
     booking_id: integer("booking_id").references(() => bookingTable.id),
     maintenance_id: integer("maintenance_id").references(() => maintenanceTable.id),
     settlement_id: integer("settlement_id").references(() => settlementsTable.id),
-    timestamp: varchar("timestamp", { length: 255 }).notNull(),
+    date: date("date", { mode: "string" }).notNull(),
     status: varchar("status", {
       length: 11,
-      enum: ["submitted", "reimbursed", "rejected"],
+      enum: ["draft", "submitted", "reimbursed", "rejected"],
     }).notNull(),
+    receipt_url: text("receipt_url"),
+    expense_types: text("expense_types", {
+      enum: ["food", "gas", "maintenance", "capex", "opex", "fixed"],
+    })
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
   },
   (t) => [
     check(
@@ -69,6 +78,10 @@ export const expensesTable = pgTable(
     check(
       "expense_reimburser_not_payer",
       sql`${t.reimbursed_by_id} <> ${t.payer_id}`,
+    ),
+    check(
+      "expense_types_valid",
+      sql`${t.expense_types} <@ ARRAY['food','gas','maintenance','capex','opex','fixed']::text[]`,
     ),
   ],
 )

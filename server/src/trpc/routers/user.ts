@@ -64,6 +64,7 @@ export const userRouter = router({
           email: usersTable.email,
           is_admin: usersTable.is_admin,
           is_head: usersTable.is_head,
+          settlement_progress: usersTable.settlement_progress,
         })
         .from(usersTable)
         .where(eq(usersTable.oauth_sub, sub))
@@ -106,6 +107,27 @@ export const userRouter = router({
       const [updated] = await ctx.db
         .update(usersTable)
         .set({ is_head: input.is_head })
+        .where(eq(usersTable.id, ctx.user.id))
+        .returning()
+      return updated
+    }),
+
+  updateMySettlementProgress: protectedProcedure
+    .input(
+      z.object({
+        settlement_progress: z.enum(["in_progress", "all_done"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.is_head) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "only heads can update settlement progress",
+        })
+      }
+      const [updated] = await ctx.db
+        .update(usersTable)
+        .set({ settlement_progress: input.settlement_progress })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()
       return updated

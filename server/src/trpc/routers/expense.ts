@@ -5,15 +5,18 @@ import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const expenseFields = {
-  description: z.string().min(1),
+  description: z.string().default(""),
   amount: z.number().int(),
-  payer_id: z.number().int().positive(),
   reimbursed_by_id: z.number().int().positive().optional(),
   booking_id: z.number().int().positive().optional(),
   maintenance_id: z.number().int().positive().optional(),
   settlement_id: z.number().int().positive().optional(),
-  timestamp: z.string().min(1),
-  status: z.enum(["submitted", "reimbursed", "rejected"]),
+  date: z.iso.date(),
+  status: z.enum(["draft", "submitted", "reimbursed", "rejected"]),
+  receipt_url: z.string().url().optional().nullable(),
+  expense_types: z
+    .array(z.enum(["food", "gas", "maintenance", "capex", "opex", "fixed"]))
+    .default([]),
 }
 
 const reimbursedHasReimburser = {
@@ -23,22 +26,11 @@ const reimbursedHasReimburser = {
   path: ["reimbursed_by_id"] as const,
 }
 
-const reimburserNotPayer = {
-  check: (v: { payer_id: number; reimbursed_by_id?: number }) =>
-    v.reimbursed_by_id == null || v.reimbursed_by_id !== v.payer_id,
-  error: "reimbursed_by_id must differ from payer_id",
-  path: ["reimbursed_by_id"] as const,
-}
-
 const createInput = z
   .object(expenseFields)
   .refine(reimbursedHasReimburser.check, {
     error: reimbursedHasReimburser.error,
     path: [...reimbursedHasReimburser.path],
-  })
-  .refine(reimburserNotPayer.check, {
-    error: reimburserNotPayer.error,
-    path: [...reimburserNotPayer.path],
   })
 
 const updateInput = z
@@ -46,10 +38,6 @@ const updateInput = z
   .refine(reimbursedHasReimburser.check, {
     error: reimbursedHasReimburser.error,
     path: [...reimbursedHasReimburser.path],
-  })
-  .refine(reimburserNotPayer.check, {
-    error: reimburserNotPayer.error,
-    path: [...reimburserNotPayer.path],
   })
 
 export const expenseRouter = router({
@@ -65,12 +53,14 @@ export const expenseRouter = router({
         booking_id: expensesTable.booking_id,
         maintenance_id: expensesTable.maintenance_id,
         settlement_id: expensesTable.settlement_id,
-        timestamp: expensesTable.timestamp,
+        date: expensesTable.date,
         status: expensesTable.status,
+        receipt_url: expensesTable.receipt_url,
+        expense_types: expensesTable.expense_types,
       })
       .from(expensesTable)
       .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
-      .orderBy(asc(expensesTable.timestamp))
+      .orderBy(asc(expensesTable.date))
     return rows
   }),
 
@@ -79,7 +69,7 @@ export const expenseRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
         .insert(expensesTable)
-        .values(input)
+        .values({ ...input, payer_id: ctx.user.id })
         .returning()
       return created
     }),
