@@ -14,6 +14,7 @@ import {
 import {
   buildingAdjacenciesTable,
   buildingsTable,
+  parkingClaimsTable,
   placeTable,
   propertyInvitationsTable,
   propertyOwnersTable,
@@ -28,6 +29,7 @@ import {
   settlementTransfersTable,
   settlementsTable,
 } from "./settlement.schema.ts"
+import { stayTable } from "./stay.schema.ts"
 import {
   userGroupMembersTable,
   userGroupsTable,
@@ -55,6 +57,7 @@ export const usersRelations = relations(usersTable, ({ one, many }) => ({
     relationName: "expense_reimbursed_by",
   }),
   expenseShares: many(expenseSharesTable),
+  stays: many(stayTable),
   parent: one(usersTable, {
     fields: [usersTable.parent_user_id],
     references: [usersTable.id],
@@ -96,6 +99,30 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   owners: many(propertyOwnersTable),
   invitations: many(propertyInvitationsTable),
   equipment: many(equipmentTable),
+  stays: many(stayTable),
+  parkingClaims: many(parkingClaimsTable),
+}))
+
+export const stayRelations = relations(stayTable, ({ one }) => ({
+  property: one(propertyTable, {
+    fields: [stayTable.property_id],
+    references: [propertyTable.id],
+  }),
+  user: one(usersTable, {
+    fields: [stayTable.user_id],
+    references: [usersTable.id],
+  }),
+}))
+
+export const parkingClaimsRelations = relations(parkingClaimsTable, ({ one }) => ({
+  property: one(propertyTable, {
+    fields: [parkingClaimsTable.property_id],
+    references: [propertyTable.id],
+  }),
+  user: one(usersTable, {
+    fields: [parkingClaimsTable.user_id],
+    references: [usersTable.id],
+  }),
 }))
 
 export const propertyInvitationsRelations = relations(

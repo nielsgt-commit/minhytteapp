@@ -52,12 +52,15 @@ export default function PropertyInfo() {
     const address = fdString(fd, "address").trim()
     if (!name || !address) return
     const linkRaw = fdString(fd, "link").trim()
+    const parkingRaw = fdString(fd, "parking_spots").trim()
+    const parkingNum = parkingRaw === "" ? 0 : Number(parkingRaw)
     updateProperty.mutate(
       {
         id: selectedProperty.id,
         name,
         address,
         link: linkRaw === "" ? null : linkRaw,
+        parking_spots: Number.isFinite(parkingNum) ? parkingNum : 0,
       },
       { onSuccess: () => { setIsEditing(false) } },
     )
@@ -106,6 +109,18 @@ export default function PropertyInfo() {
               </label>
             </div>
             <div>
+              <label>
+                Parking spots
+                <input
+                  type="number"
+                  name="parking_spots"
+                  min={0}
+                  max={99}
+                  defaultValue={selectedProperty.parking_spots}
+                />
+              </label>
+            </div>
+            <div>
               <button type="submit" disabled={updateProperty.isPending}>
                 Save
               </button>
@@ -140,7 +155,7 @@ export default function PropertyInfo() {
       </p>
       <p> coordinates / matrix </p>
       <p> Property description </p>
-      <p> facilities (parking ) </p>
+      <p>Parking spots: {selectedProperty.parking_spots}</p>
 
       <button type="button" onClick={() => { setIsEditing(true) }}>
         Edit property details

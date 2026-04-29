@@ -13,12 +13,35 @@ import { userGroupsTable, usersTable } from "./users.schema.ts"
 
 
 
-export const propertyTable = pgTable("properties", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar("name", { length: 255 }).notNull(),
-  address: varchar("address", { length: 255 }).notNull(),
-  link: varchar("link", { length: 255 }),
-})
+export const propertyTable = pgTable(
+  "properties",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    name: varchar("name", { length: 255 }).notNull(),
+    address: varchar("address", { length: 255 }).notNull(),
+    link: varchar("link", { length: 255 }),
+    parking_spots: integer("parking_spots").notNull().default(0),
+  },
+  (t) => [check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`)],
+)
+
+export const parkingClaimsTable = pgTable(
+  "parking_claims",
+  {
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    slot_index: integer("slot_index").notNull(),
+    user_id: integer("user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    claimed_at: timestamp("claimed_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.property_id, t.slot_index] }),
+    check("parking_slot_nonneg", sql`${t.slot_index} >= 0`),
+  ],
+)
 
 export const buildingsTable = pgTable("buildings", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

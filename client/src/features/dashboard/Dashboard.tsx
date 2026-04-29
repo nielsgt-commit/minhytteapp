@@ -6,6 +6,7 @@ import RoomsSummary from "@/features/dashboard/roomssummary/RoomsSummary"
 import UserSummary from "@/features/dashboard/usersummary/UserSummary"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
 import EventSummary from "@/features/dashboard/eventsummary/EventSummary.tsx"
+import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
@@ -26,7 +27,9 @@ export function Dashboard() {
 
     <section className={styles.page}>
       <h2 className={styles.title}>Dashboard</h2>
-      <div className={styles.content} />
+      <div className={styles.content}>
+        <MyPlannedStay />
+      </div>
       <div className={styles.capacity}>
         <CapacitySummary />
         <EventSummary />

@@ -127,6 +127,20 @@
       "when": 1777375562267,
       "tag": "0017_peaceful_the_santerians",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1777378435311,
+      "tag": "0018_bright_ikaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777380268529,
+      "tag": "0019_medical_mister_fear",
+      "breakpoints": true
     }
   ]
 }

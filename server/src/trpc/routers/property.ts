@@ -11,6 +11,7 @@ const propertyFields = {
   name: z.string().min(1, { error: "name is required" }),
   address: z.string().min(1, { error: "address is required" }),
   link: z.string().max(255).nullable().optional(),
+  parking_spots: z.number().int().min(0).max(99).optional(),
 }
 
 const createInput = z.object(propertyFields)
@@ -37,6 +38,7 @@ export const propertyRouter = router({
           name: propertyTable.name,
           address: propertyTable.address,
           link: propertyTable.link,
+          parking_spots: propertyTable.parking_spots,
         })
         .from(propertyTable)
         .innerJoin(

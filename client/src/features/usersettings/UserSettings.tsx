@@ -151,7 +151,7 @@ export function UserSettings() {
           <p role="alert">Error: {updateIsHead.error.message}</p>
         )}
       </fieldset>
-a
+
       <section>
         <h2>My children</h2>
         {children && children.length > 0 ? (

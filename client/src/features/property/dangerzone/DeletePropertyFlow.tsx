@@ -27,6 +27,9 @@ export function DeletePropertyFlow() {
       onSuccess: () => {
         dispatch(setSelectedPropertyId(null))
         void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
+        void qc.invalidateQueries({
+          queryKey: trpc.property.listForUser.queryKey(),
+        })
       },
     }),
   )

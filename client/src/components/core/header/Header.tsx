@@ -1,3 +1,4 @@
+import CheckIn from "./CheckIn.tsx"
 import PropertyMenu from "./PropertyMenu.tsx"
 import UserMenu from "./UserMenu"
 import UserGroupBadge from "./UserGroupBadge.tsx"
@@ -10,6 +11,7 @@ export default function Header() {
       <PropertyMenu />
       <UserMenu />
       <UserGroupBadge />
+      <CheckIn />
       <h1 className={styles.title}> Hytta </h1>
     </header>
   )

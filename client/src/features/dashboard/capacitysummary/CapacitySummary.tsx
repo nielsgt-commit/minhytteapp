@@ -2,6 +2,8 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
+import AvailableParking from "./availableparking/AvailableParking.tsx"
 
 type RoomBeds = {
   beds_sm: number
@@ -30,13 +32,26 @@ export function CapacitySummary() {
     trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
+  const { data: properties } = useSuspenseQuery(
+    trpc.property.list.queryOptions(),
+  )
+
+
+  const propertyName =
+    properties.find(p => p.id === propertyId)?.name ?? "property"
+
+
+
+
+
+
   return (
     <>
       <h1>Capacity Summary</h1>
+      <h3> At {propertyName} now: </h3>
+      <AtPropertyNow />
 
-     <p> Avatarstack users checked in </p>
-      <p> AvatarStack Cars checked in </p>
-      <p> Available beds in: </p>
+      <AvailableParking />
       <ul style={{ display: "flex", flexWrap: "wrap", gap: "1rem", listStyle: "none", padding: 0 }}>
         {Array.from(
           rooms.reduce((acc, r) => {
@@ -54,6 +69,5 @@ export function CapacitySummary() {
         ))}
       </ul>
     </>
-
   )
 }

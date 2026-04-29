@@ -127,6 +127,9 @@ function Body({ propertyId }: { propertyId: number }) {
       property_id: propertyId,
     }),
   )
+  const { data: bookings } = useSuspenseQuery(
+    trpc.booking.list.queryOptions(),
+  )
 
   const [weekStart, setWeekStart] = useState(() =>
     sundayBeforeIsoWeek(TEST_YEAR, TEST_MIN_WEEK),
@@ -206,6 +209,29 @@ function Body({ propertyId }: { propertyId: number }) {
     selectedUserId != null ? picks[selectedUserId] ?? [] : []
   const ranges = useMemo(() => groupConsecutive(currentPicks), [currentPicks])
 
+  const bookingIdByUserDay = useMemo(() => {
+    const map = new Map<number, Map<string, number>>()
+    for (const b of bookings) {
+      if (b.property_id !== propertyId) continue
+      if (b.status === "cancelled") continue
+      let cur = fromIso(b.start_date)
+      const end = fromIso(b.end_date)
+      while (cur <= end) {
+        const iso = toIso(cur)
+        for (const o of b.occupants) {
+          let inner = map.get(o.user_id)
+          if (inner == null) {
+            inner = new Map<string, number>()
+            map.set(o.user_id, inner)
+          }
+          if (!inner.has(iso)) inner.set(iso, b.id)
+        }
+        cur = addDays(cur, 1)
+      }
+    }
+    return map
+  }, [bookings, propertyId])
+
   const togglePick = (userId: number, iso: string) => {
     setPicks(prev => {
       const cur = prev[userId] ?? []
@@ -228,6 +254,14 @@ function Body({ propertyId }: { propertyId: number }) {
 
   const createMutation = useMutation(
     trpc.booking.create.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+      },
+    }),
+  )
+
+  const deleteMutation = useMutation(
+    trpc.booking.delete.mutationOptions({
       onSuccess: () => {
         void qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
       },
@@ -351,13 +385,27 @@ function Body({ propertyId }: { propertyId: number }) {
                   </th>
                   {days.map(d => {
                     const iso = toIso(d)
+                    const bookingId =
+                      bookingIdByUserDay.get(u.id)?.get(iso) ?? null
+                    const isBooked = bookingId != null
                     return (
                       <td key={iso}>
                         <input
                           type="checkbox"
-                          checked={userPicks.includes(iso)}
-                          disabled={!isCurrent}
+                          checked={isBooked || userPicks.includes(iso)}
+                          disabled={!isCurrent || deleteMutation.isPending}
+                          style={isBooked ? { accentColor: "green" } : undefined}
                           onChange={() => {
+                            if (bookingId != null) {
+                              if (
+                                window.confirm(
+                                  "Remove the booking covering this day?",
+                                )
+                              ) {
+                                deleteMutation.mutate({ id: bookingId })
+                              }
+                              return
+                            }
                             togglePick(u.id, iso)
                           }}
                         />
