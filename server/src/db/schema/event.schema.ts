@@ -1,11 +1,23 @@
-import { pgTable, integer, varchar } from "drizzle-orm/pg-core"
+import {
+  date,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core"
+import { propertyTable } from "./property.schema.ts"
+import { usersTable } from "./users.schema.ts"
 
-
-export const eventsSchema = pgTable('events',{
-  id: integer('id').primaryKey(),
-  name: varchar('name',{length:255}).notNull(),
-  description: varchar('description',{length:255}).notNull(),
-  timestamp: varchar('timestamp',{length:255}).notNull(),
-  authors: varchar('authors',{length:255}).notNull(),
-
+export const eventTable = pgTable("events", {
+  id: serial("id").primaryKey(),
+  property_id: integer("property_id")
+    .notNull()
+    .references(() => propertyTable.id),
+  author_id: integer("author_id")
+    .notNull()
+    .references(() => usersTable.id),
+  body: text("body").notNull(),
+  expires_on: date("expires_on"),
+  created_at: timestamp("created_at").notNull().defaultNow(),
 })

@@ -22,7 +22,9 @@ export function RecurringPropertyFees() {
   const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
 
   const fixed = (expenses as ExpenseRow[])
-    .filter(e => e.expense_types.includes("fixed"))
+    .filter(
+      e => e.expense_types.includes("fixed") && e.status === "reimbursed",
+    )
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date))
 

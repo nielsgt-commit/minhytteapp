@@ -2,10 +2,23 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-areas:
-    "title   title   title   title   title   title"
-    "content content content content content content";
+    "title      title      title      title      title      title"
+    "buildings  buildings  buildings  buildings  assigned  assigned"
+
+    "buildings  buildings  buildings  buildings  assigned  assigned"
+
+    "buildings  buildings  buildings  buildings  unassigned  unassigned"
+
+    "buildings buildings buildings buildings unassigned unassigned"
+
+    " buildings  buildings buildings buildings equipment equipment "
+    "testform   testform   testform   testform   testform   testform";
   gap: 0.4rem;
 }
 
-.title   { grid-area: title; }
-.content { grid-area: content; }
+.title      { grid-area: title; }
+.buildings  { grid-area: buildings; }
+.equipment  { grid-area: equipment; }
+.assigned   { grid-area: assigned; }
+.unassigned { grid-area: unassigned; }
+.testform   { grid-area: testform; }

@@ -6,8 +6,15 @@ import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export const Route = createFileRoute("/_authed/calendar")({
   loader: ({ context }) => {
-    if (selectSelectedPropertyId(store.getState()) == null) return
-    return context.queryClient.ensureQueryData(trpc.booking.list.queryOptions())
+    const tasks: Promise<unknown>[] = [
+      context.queryClient.ensureQueryData(trpc.user.me.queryOptions()),
+    ]
+    if (selectSelectedPropertyId(store.getState()) != null) {
+      tasks.push(
+        context.queryClient.ensureQueryData(trpc.booking.list.queryOptions()),
+      )
+    }
+    return Promise.all(tasks)
   },
   component: Calendar,
 })

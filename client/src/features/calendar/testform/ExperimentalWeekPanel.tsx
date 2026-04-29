@@ -8,6 +8,7 @@ import { useTRPC } from "@/trpc/trpc"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedUserId } from "@/features/user/userSlice"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { selectPriorityHolderForWeek } from "@/features/priority/prioritySlice"
 
 const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
 
@@ -140,6 +141,10 @@ function Body({ propertyId }: { propertyId: number }) {
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const weekNumber = isoWeekNumber(addDays(weekStart, 4))
+  const isoYear = addDays(weekStart, 4).getFullYear()
+  const priorityHolder = useAppSelector(state =>
+    selectPriorityHolderForWeek(state, isoYear, weekNumber),
+  )
 
   const propertyBuildingIds = new Set(
     buildings.filter(b => b.property_id === propertyId).map(b => b.id),
@@ -353,6 +358,9 @@ function Body({ propertyId }: { propertyId: number }) {
         >
           Next week
         </button>
+        {priorityHolder && (
+          <span> Priority: {priorityHolder.userName}</span>
+        )}
       </div>
 
       <table>
@@ -394,7 +402,7 @@ function Body({ propertyId }: { propertyId: number }) {
                           type="checkbox"
                           checked={isBooked || userPicks.includes(iso)}
                           disabled={!isCurrent || deleteMutation.isPending}
-                          style={isBooked ? { accentColor: "green" } : undefined}
+                          data-booked={isBooked ? "" : undefined}
                           onChange={() => {
                             if (bookingId != null) {
                               if (

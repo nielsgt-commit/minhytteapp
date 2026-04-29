@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useState } from "react"
+import { Fragment, type SyntheticEvent, useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -78,102 +78,120 @@ export function ListUsers() {
       {users.length === 0 ? (
         <p>No users yet.</p>
       ) : (
-        <ul>
-          {users.map(u => {
-            const editing = editingId === u.id
-            return (
-              <li key={u.id}>
-                <strong>{u.name}</strong> <small>({u.email})</small>
-                {u.is_admin && <span> – admin</span>}
-                {u.is_child && <span> – child</span>}
-
-                <div>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      setEditingId(v => (v === u.id ? null : u.id))
-                    }}
-                  >
-                    {editing ? "Cancel" : "Edit"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => { handleDelete(u.id, u.name) }}
-                  >
-                    Delete
-                  </button>
-                </div>
-
-                {editing && (
-                  <form
-                    onSubmit={handleSubmit(u.id)}
-                    key={`edit-user-${String(u.id)}`}
-                  >
-                    <fieldset>
-                      <legend>Edit user</legend>
-                      <div>
-                        <label>
-                          Name
-                          <input
-                            type="text"
-                            name="name"
-                            defaultValue={u.name}
-                            required
-                          />
-                        </label>
-                      </div>
-                      <div>
-                        <label>
-                          Email
-                          <input
-                            type="email"
-                            name="email"
-                            defaultValue={u.email}
-                            required
-                          />
-                        </label>
-                      </div>
-                      <div>
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="is_admin"
-                            defaultChecked={u.is_admin}
-                          />
-                          Admin
-                        </label>
-                      </div>
-                      <div>
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="is_child"
-                            defaultChecked={u.is_child ?? false}
-                          />
-                          Child
-                        </label>
-                      </div>
-                      <div>
-                        <button type="submit" disabled={updateUser.isPending}>
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setEditingId(null) }}
-                          disabled={updateUser.isPending}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </fieldset>
-                  </form>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(u => {
+              const editing = editingId === u.id
+              const roles = [
+                u.is_admin ? "admin" : null,
+                u.is_child ? "child" : null,
+              ].filter(Boolean).join(", ") || "user"
+              return (
+                <Fragment key={u.id}>
+                  <tr>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>{roles}</td>
+                    <td>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => {
+                          setEditingId(v => (v === u.id ? null : u.id))
+                        }}
+                      >
+                        {editing ? "Cancel" : "Edit"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => { handleDelete(u.id, u.name) }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                  {editing && (
+                    <tr>
+                      <td colSpan={4}>
+                        <form onSubmit={handleSubmit(u.id)}>
+                          <fieldset>
+                            <legend>Edit user</legend>
+                            <div>
+                              <label>
+                                Name
+                                <input
+                                  type="text"
+                                  name="name"
+                                  defaultValue={u.name}
+                                  required
+                                />
+                              </label>
+                            </div>
+                            <div>
+                              <label>
+                                Email
+                                <input
+                                  type="email"
+                                  name="email"
+                                  defaultValue={u.email}
+                                  required
+                                />
+                              </label>
+                            </div>
+                            <div>
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  name="is_admin"
+                                  defaultChecked={u.is_admin}
+                                />
+                                Admin
+                              </label>
+                            </div>
+                            <div>
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  name="is_child"
+                                  defaultChecked={u.is_child ?? false}
+                                />
+                                Child
+                              </label>
+                            </div>
+                            <div>
+                              <button
+                                type="submit"
+                                disabled={updateUser.isPending}
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setEditingId(null) }}
+                                disabled={updateUser.isPending}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </fieldset>
+                        </form>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
+          </tbody>
+        </table>
       )}
     </section>
   )

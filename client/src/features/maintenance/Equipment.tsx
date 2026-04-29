@@ -53,8 +53,11 @@ export function Equipment() {
       e.preventDefault()
       if (selectedUserId == null) return
       const fd = new FormData(e.currentTarget)
-      const description = String(fd.get("description") ?? "").trim()
-      const dueRaw = String(fd.get("due_at") ?? "").trim()
+      const rawDescription = fd.get("description")
+      const rawDue = fd.get("due_at")
+      const description =
+        typeof rawDescription === "string" ? rawDescription.trim() : ""
+      const dueRaw = typeof rawDue === "string" ? rawDue.trim() : ""
       if (!description) return
       scheduleMutation.mutate({
         equipment_id,

@@ -10,6 +10,14 @@ function rangesOverlap(
   return aStart <= bEnd && bStart <= aEnd
 }
 
+function formatDayMonth(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  })
+}
+
 export function MyPlannedStay() {
   const trpc = useTRPC()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
@@ -41,9 +49,9 @@ export function MyPlannedStay() {
             const names = Array.from(otherNames)
             return (
               <li key={b.id}>
-                {b.start_date} – {b.end_date}
+                {formatDayMonth(b.start_date)} – {formatDayMonth(b.end_date)}
                 {names.length > 0 ? (
-                  <span> — you will be accompanied by: {names.join(", ")}</span>
+                  <span> — accompanied by: {names.join(", ")}</span>
                 ) : (
                   <span> — solo stay</span>
                 )}

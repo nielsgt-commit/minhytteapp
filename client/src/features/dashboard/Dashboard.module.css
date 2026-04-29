@@ -14,7 +14,6 @@
 }
 
 .title    { grid-area: title; }
-.content  { grid-area: content; }
 .capacity { grid-area: capacity; }
 .rooms    { grid-area: rooms; }
 .calendar { grid-area: calendar; }

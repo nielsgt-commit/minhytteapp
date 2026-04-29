@@ -1,0 +1,16 @@
+.card {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
+    "title   title   addtodo   addtodo   addtodo addtodo"
+    "todos   todos   todos   todos   todos   todos"
+    "toggle  toggle  toggle  toggle  toggle  toggle"
+    "history history history history history history";
+  gap: 0.4rem;
+}
+
+.title   { grid-area: title; }
+.addtodo { grid-area: addtodo; }
+.todos   { grid-area: todos; }
+.toggle  { grid-area: toggle; }
+.history { grid-area: history; }

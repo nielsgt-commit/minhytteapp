@@ -2,10 +2,45 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-areas:
-    "title   title   title   title   title   title"
-    "content content content content content content";
+    "title       title       title       title       title       title"
+    "plannedstay plannedstay plannedstay plannedstay priority priority"
+    "week week week week   priority    priority"
+    "week        week        week        week        priority    priority";
   gap: 0.4rem;
 }
 
-.title   { grid-area: title; }
-.content { grid-area: content; }
+.title       { grid-area: title; }
+.plannedstay { grid-area: plannedstay; }
+.priority    { grid-area: priority; }
+.week        { grid-area: week; display: flex; flex-direction: column; }
+
+.week > section { flex: 1; }
+.week table     { width: 100%; }
+
+.week input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.week input[type="checkbox"]:checked {
+  background: currentColor;
+}
+.week input[type="checkbox"][data-booked]:checked {
+  background: green;
+  border-color: green;
+}
+.week input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.week input[type="checkbox"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

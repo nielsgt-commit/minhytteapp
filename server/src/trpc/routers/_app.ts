@@ -4,6 +4,7 @@ import { buildingRouter } from "./building.ts"
 import { dashboardRouter } from "./dashboard.ts"
 import { devRouter } from "./dev.ts"
 import { equipmentRouter } from "./equipment.ts"
+import { eventRouter } from "./event.ts"
 import { expenseRouter } from "./expense.ts"
 import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
@@ -24,6 +25,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   dev: devRouter,
   equipment: equipmentRouter,
+  event: eventRouter,
   expense: expenseRouter,
   invite: inviteRouter,
   maintenance: maintenanceRouter,

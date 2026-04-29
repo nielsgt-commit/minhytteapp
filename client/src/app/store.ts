@@ -6,6 +6,7 @@ import { dashboardSlice } from "@/features/dashboard/dashboardSlice"
 import { expensesSlice } from "@/features/expenses/expensesSlice"
 import { homeSlice } from "@/features/home/homeSlice"
 import { maintenanceSlice } from "@/features/maintenance/maintenanceSlice"
+import { prioritySlice } from "@/features/priority/prioritySlice"
 import { propertySlice } from "@/features/property/propertySlice"
 import { settlementSlice } from "@/features/settlement/settlementSlice"
 import { userSlice } from "@/features/user/userSlice"
@@ -18,6 +19,7 @@ const rootReducer = combineSlices(
   expensesSlice,
   homeSlice,
   maintenanceSlice,
+  prioritySlice,
   propertySlice,
   settlementSlice,
   userSlice,

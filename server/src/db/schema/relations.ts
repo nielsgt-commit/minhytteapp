@@ -30,6 +30,7 @@ import {
   settlementsTable,
 } from "./settlement.schema.ts"
 import { stayTable } from "./stay.schema.ts"
+import { eventTable } from "./event.schema.ts"
 import {
   userGroupMembersTable,
   userGroupsTable,
@@ -58,6 +59,7 @@ export const usersRelations = relations(usersTable, ({ one, many }) => ({
   }),
   expenseShares: many(expenseSharesTable),
   stays: many(stayTable),
+  events: many(eventTable),
   parent: one(usersTable, {
     fields: [usersTable.parent_user_id],
     references: [usersTable.id],
@@ -101,6 +103,18 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   equipment: many(equipmentTable),
   stays: many(stayTable),
   parkingClaims: many(parkingClaimsTable),
+  events: many(eventTable),
+}))
+
+export const eventRelations = relations(eventTable, ({ one }) => ({
+  property: one(propertyTable, {
+    fields: [eventTable.property_id],
+    references: [propertyTable.id],
+  }),
+  author: one(usersTable, {
+    fields: [eventTable.author_id],
+    references: [usersTable.id],
+  }),
 }))
 
 export const stayRelations = relations(stayTable, ({ one }) => ({

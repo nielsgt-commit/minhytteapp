@@ -1,12 +1,16 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppSelector } from "@/app/hooks"
+import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import {
+  type PriorityWeekHolder,
+  setPriorityYearAssignments,
+} from "@/features/priority/prioritySlice"
 
 type PeakWeek = 28 | 29 | 30
 const PEAK_WEEKS: PeakWeek[] = [28, 29, 30]
@@ -50,6 +54,7 @@ function defaultYear(): number {
 export function PriorityWeeks() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const dispatch = useAppDispatch()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const [year, setYear] = useState<number>(defaultYear())
 
@@ -62,6 +67,28 @@ export function PriorityWeeks() {
     }),
     enabled: selectedPropertyId != null,
   })
+
+  useEffect(() => {
+    const data = priorityQuery.data
+    if (!data) return
+    const ownerById = new Map(
+      data.eligibleOwners.map(o => [
+        o.property_owner_id,
+        { userId: o.user_id, userName: o.user_name },
+      ]),
+    )
+    const next: Record<number, PriorityWeekHolder> = {}
+    for (const a of data.assignments) {
+      const owner = ownerById.get(a.property_owner_id)
+      if (!owner) continue
+      next[a.iso_week] = {
+        ownerId: a.property_owner_id,
+        userId: owner.userId,
+        userName: owner.userName,
+      }
+    }
+    dispatch(setPriorityYearAssignments({ year, assignments: next }))
+  }, [priorityQuery.data, year, dispatch])
 
   const invalidate = () => {
     if (selectedPropertyId == null) return
@@ -115,7 +142,6 @@ export function PriorityWeeks() {
   const unassigned = PEAK_WEEKS.filter(w => (ownersByWeek.get(w)?.length ?? 0) === 0)
   const pending = setMutation.isPending || clearMutation.isPending
   const lastError = setMutation.error ?? clearMutation.error
-  const yearOptions = [year - 1, year, year + 1, year + 2]
 
   return (
     <section>
@@ -126,19 +152,15 @@ export function PriorityWeeks() {
         column; everyone else&apos;s choices are visible but read-only.
       </p>
 
-      <label>
-        Year
-        <select
-          value={year}
-          onChange={e => { setYear(Number(e.target.value)) }}
-        >
-          {yearOptions.map(y => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div>
+        <button type="button" onClick={() => { setYear(y => y - 1) }}>
+          Prev
+        </button>
+        <span> {year} </span>
+        <button type="button" onClick={() => { setYear(y => y + 1) }}>
+          Next
+        </button>
+      </div>
 
       {myOwnerId == null && !isAdmin && (
         <p>

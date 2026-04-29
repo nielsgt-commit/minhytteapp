@@ -15,20 +15,6 @@ type Severity = "major" | "minor" | "patch"
 type Status = "todo" | "doing" | "done"
 type Recurrence = "once" | "yearly" | "5year"
 
-type MaintenanceRecord = {
-  id: number
-  description: string
-  summary: string | null
-  added_by: number
-  assigned_to_id: number | null
-  building_id: number | null
-  place_id: number | null
-  category: Category
-  severity: Severity
-  status: Status
-  recurrence: Recurrence
-}
-
 type FormState = {
   id: number | null
   description: string
@@ -69,7 +55,6 @@ type EditableField = Exclude<keyof FormState, "id">
 type FormAction =
   | { type: "setField"; field: EditableField; value: string }
   | { type: "setLocation"; kind: "building" | "place" | "none"; id: string }
-  | { type: "loadForEdit"; record: MaintenanceRecord }
   | { type: "reset" }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -84,22 +69,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
         return { ...state, building_id: "", place_id: action.id }
       }
       return { ...state, building_id: "", place_id: "" }
-    case "loadForEdit": {
-      const r = action.record
-      return {
-        id: r.id,
-        description: r.description,
-        summary: r.summary ?? "",
-        assigned_to_id:
-          r.assigned_to_id != null ? String(r.assigned_to_id) : "",
-        building_id: r.building_id != null ? String(r.building_id) : "",
-        place_id: r.place_id != null ? String(r.place_id) : "",
-        category: r.category,
-        severity: r.severity,
-        status: r.status,
-        recurrence: r.recurrence,
-      }
-    }
     case "reset":
       return initialFormState
   }
@@ -130,9 +99,6 @@ export function MaintenanceTestForm() {
   const [state, dispatch] = useReducer(formReducer, initialFormState)
   const [showMore, setShowMore] = useState(false)
 
-  const { data: tasks } = useSuspenseQuery(
-    trpc.maintenance.list.queryOptions(),
-  )
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: buildings } = useSuspenseQuery(
     trpc.building.list.queryOptions(),
@@ -148,13 +114,6 @@ export function MaintenanceTestForm() {
     selectedPropertyId != null
       ? buildings.filter(b => b.property_id === selectedPropertyId)
       : []
-  const propertyBuildingIds = new Set(propertyBuildings.map(b => b.id))
-  const propertyPlaceIds = new Set(places.map(p => p.id))
-  const propertyTasks = tasks.filter(
-    t =>
-      (t.building_id != null && propertyBuildingIds.has(t.building_id)) ||
-      (t.place_id != null && propertyPlaceIds.has(t.place_id)),
-  )
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: trpc.maintenance.list.queryKey() })
@@ -177,21 +136,9 @@ export function MaintenanceTestForm() {
     }),
   )
 
-  const deleteMutation = useMutation(
-    trpc.maintenance.delete.mutationOptions({
-      onSuccess: () => {
-        void invalidate()
-      },
-    }),
-  )
-
   const isEditing = state.id != null
-  const pending =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    deleteMutation.isPending
-  const lastError =
-    createMutation.error ?? updateMutation.error ?? deleteMutation.error
+  const pending = createMutation.isPending || updateMutation.isPending
+  const lastError = createMutation.error ?? updateMutation.error
 
   const set = (field: EditableField) => (value: string) => {
     dispatch({ type: "setField", field, value })
@@ -432,64 +379,6 @@ export function MaintenanceTestForm() {
       </form>
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
-
-      <h4>Records</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>description</th>
-            <th>status</th>
-            <th>severity</th>
-            <th>category</th>
-            <th>recurrence</th>
-            <th>building</th>
-            <th>actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {propertyTasks.map(t => (
-            <tr key={t.id}>
-              <td>{t.id}</td>
-              <td>{t.description}</td>
-              <td>{t.status}</td>
-              <td>{t.severity}</td>
-              <td>{t.category}</td>
-              <td>{t.recurrence}</td>
-              <td>
-                {t.building_id != null
-                  ? `b#${String(t.building_id)}`
-                  : t.place_id != null
-                    ? `p#${String(t.place_id)}`
-                    : ""}
-              </td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() => {
-                    dispatch({
-                      type: "loadForEdit",
-                      record: t as MaintenanceRecord,
-                    })
-                  }}
-                  disabled={pending}
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    deleteMutation.mutate({ id: t.id })
-                  }}
-                  disabled={pending}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </section>
   )
 }

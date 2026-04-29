@@ -1,6 +1,10 @@
+import { Suspense } from "react"
 import styles from "./Expenses.module.css"
+import { ExpenseCategories } from "@/features/expenses/ExpenseCategories.tsx"
 import { ExpensesTestForm } from "@/features/expenses/testform/ExpensesTestForm.tsx"
 import { MyExpenses } from "@/features/expenses/MyExpenses.tsx"
+import { PreliminarySettlement } from "@/features/expenses/PreliminarySettlement.tsx"
+import { RecurringPropertyFees } from "@/features/expenses/RecurringPropertyFees.tsx"
 import { ReviewExpenses } from "@/features/expenses/ReviewExpenses.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -20,9 +24,24 @@ export function Expenses() {
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Expenses</h2>
-      <div className={styles.content}>
-        <MyExpenses />
-        <ReviewExpenses />
+      <Suspense fallback={<p>Loading…</p>}>
+        <div className={styles.fees}>
+          <RecurringPropertyFees />
+        </div>
+        <div className={styles.categories}>
+          <ExpenseCategories />
+        </div>
+        <div className={styles.prelim}>
+          <PreliminarySettlement />
+        </div>
+        <div className={styles.review}>
+          <ReviewExpenses />
+        </div>
+        <div className={styles.mine}>
+          <MyExpenses />
+        </div>
+      </Suspense>
+      <div className={styles.testform}>
         <ExpensesTestForm />
       </div>
     </section>
