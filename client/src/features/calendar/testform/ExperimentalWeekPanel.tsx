@@ -102,7 +102,7 @@ export function ExperimentalWeekPanel() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <h3>Experimental Week Panel</h3>
+        <h4>Experimental Week Panel</h4>
         <p role="alert">No property selected — pick one from the header.</p>
       </section>
     )
@@ -332,7 +332,7 @@ function Body({ propertyId }: { propertyId: number }) {
 
   return (
     <section>
-      <h3>Experimental Week Panel</h3>
+      <h4>Experimental Week Panel</h4>
 
       {selectedUserId == null && (
         <p role="alert">No user selected — pick one from the header.</p>
@@ -402,7 +402,6 @@ function Body({ propertyId }: { propertyId: number }) {
                           type="checkbox"
                           checked={isBooked || userPicks.includes(iso)}
                           disabled={!isCurrent || deleteMutation.isPending}
-                          data-booked={isBooked ? "" : undefined}
                           onChange={() => {
                             if (bookingId != null) {
                               if (

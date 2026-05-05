@@ -107,7 +107,6 @@ export default function PlannedAvailabilitySummary() {
           Next week
         </button>
         {priorityHolderName && <span> {priorityHolderName} </span>}
-        <p> Event </p>
       </div>
       <div className="calendar-week-chips"></div>
 

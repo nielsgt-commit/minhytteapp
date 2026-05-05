@@ -1,10 +1,12 @@
 import { type SyntheticEvent, useReducer } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
-
-type ExpenseType = "food" | "gas" | "maintenance" | "capex" | "opex" | "fixed"
 
 type FormState = {
   description: string
@@ -12,17 +14,8 @@ type FormState = {
   receipt_url: string
   date: string
   status: Status
-  expense_types: ExpenseType[]
+  expense_types: string[]
 }
-
-const EXPENSE_TYPES: { value: ExpenseType; label: string }[] = [
-  { value: "food", label: "Food" },
-  { value: "gas", label: "Gas" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "capex", label: "Capex" },
-  { value: "opex", label: "Opex" },
-  { value: "fixed", label: "Fixed" },
-]
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
 
@@ -42,7 +35,7 @@ type EditableStringField = Exclude<
 
 type FormAction =
   | { type: "setField"; field: EditableStringField; value: string }
-  | { type: "toggleType"; value: ExpenseType }
+  | { type: "toggleType"; value: string }
   | { type: "reset" }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -78,6 +71,9 @@ export function ExpensesTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
+  const { data: categories } = useSuspenseQuery(
+    trpc.expenseCategory.list.queryOptions(),
+  )
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
@@ -112,14 +108,14 @@ export function ExpensesTestForm() {
 
           <fieldset>
             <legend>Expense type</legend>
-            {EXPENSE_TYPES.map(t => (
-              <label key={t.value}>
+            {categories.map(c => (
+              <label key={c.id}>
                 <input
                   type="checkbox"
-                  checked={state.expense_types.includes(t.value)}
-                  onChange={() => { dispatch({ type: "toggleType", value: t.value }); }}
+                  checked={state.expense_types.includes(c.name)}
+                  onChange={() => { dispatch({ type: "toggleType", value: c.name }); }}
                 />
-                {t.label}
+                {c.name}
               </label>
             ))}
           </fieldset>

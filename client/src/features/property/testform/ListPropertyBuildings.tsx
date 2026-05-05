@@ -74,6 +74,7 @@ export function ListPropertyBuildings() {
   )
 
   const [openForm, setOpenForm] = useState<OpenForm>(null)
+  const [editMode, setEditMode] = useState(false)
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
@@ -212,6 +213,19 @@ export function ListPropertyBuildings() {
     <section>
       <h3>Buildings for {selectedProperty.name}</h3>
 
+      <label>
+        <input
+          type="checkbox"
+          checked={editMode}
+          onChange={e => {
+            const next = e.currentTarget.checked
+            setEditMode(next)
+            if (!next) setOpenForm(null)
+          }}
+        />
+        Edit mode
+      </label>
+
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       {propertyBuildings.length === 0 ? (
@@ -250,23 +264,25 @@ export function ListPropertyBuildings() {
                           {r.name} (sm:{r.beds_sm}, lg:{r.beds_lg}, dbl:
                           {r.beds_double}, kid:{r.beds_kid}, mat:
                           {r.mattresses}, cot:{r.travel_cot})
-                          <div>
-                            <button
-                              type="button"
-                              disabled={pending}
-                              onClick={() => { toggleRoomEdit(r.id); }}
-                            >
-                              {editRoomOpen ? "Cancel" : "Edit"}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={pending}
-                              onClick={() => { handleDeleteRoom(r.id, r.name); }}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                          {editRoomOpen && (
+                          {editMode && (
+                            <div>
+                              <button
+                                type="button"
+                                disabled={pending}
+                                onClick={() => { toggleRoomEdit(r.id); }}
+                              >
+                                {editRoomOpen ? "Cancel" : "Edit"}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={pending}
+                                onClick={() => { handleDeleteRoom(r.id, r.name); }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                          {editMode && editRoomOpen && (
                             <RoomForm
                               key={`edit-room-${String(r.id)}`}
                               legend={`Edit room ${r.name}`}
@@ -291,29 +307,31 @@ export function ListPropertyBuildings() {
                   </ul>
                 )}
 
-                <div>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => { toggleBuildingForm("editBuilding", b.id); }}
-                  >
-                    {editBuildingOpen ? "Cancel" : "Edit"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => { toggleBuildingForm("addRoom", b.id); }}
-                  >
-                    {addRoomOpen ? "Cancel" : "Add room"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => { handleDeleteBuilding(b.id, b.name); }}
-                  >
-                    Delete
-                  </button>
-                </div>
+                {editMode && (
+                  <div>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => { toggleBuildingForm("editBuilding", b.id); }}
+                    >
+                      {editBuildingOpen ? "Cancel" : "Edit"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => { toggleBuildingForm("addRoom", b.id); }}
+                    >
+                      {addRoomOpen ? "Cancel" : "Add room"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => { handleDeleteBuilding(b.id, b.name); }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
 
                 {editBuildingOpen && (
                   <EditBuildingForm

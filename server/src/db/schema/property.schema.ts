@@ -154,6 +154,19 @@ export const propertyPriorityWeeksTable = pgTable(
   ],
 )
 
+export const propertyContactsTable = pgTable("property_contacts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  property_id: integer("property_id")
+    .notNull()
+    .references(() => propertyTable.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 64 }),
+  email: varchar("email", { length: 255 }),
+  info: varchar("info", { length: 1024 }),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
+})
+
 export const propertyInvitationsTable = pgTable("property_invitations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   token: varchar("token", { length: 64 }).notNull().unique(),

@@ -73,6 +73,7 @@ export function UserGroupsFlow() {
   const [addingUserForGroup, setAddingUserForGroup] = useState<number | null>(
     null,
   )
+  const [editMode, setEditMode] = useState(false)
 
   const lastError =
     createGroup.error ??
@@ -191,19 +192,39 @@ export function UserGroupsFlow() {
         roll up settlements. Deleting a group is blocked while it is in use.
       </p>
 
+      <label>
+        <input
+          type="checkbox"
+          checked={editMode}
+          onChange={e => {
+            const next = e.currentTarget.checked
+            setEditMode(next)
+            if (!next) {
+              setOpenForm(null)
+              setAddingUserForGroup(null)
+            }
+          }}
+        />
+        Edit mode
+      </label>
+
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
-      <div>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => {
-            setOpenForm(v => (v?.kind === "create" ? null : { kind: "create" }))
-          }}
-        >
-          {openForm?.kind === "create" ? "Cancel" : "New group"}
-        </button>
-      </div>
+      {editMode && (
+        <div>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              setOpenForm(v =>
+                v?.kind === "create" ? null : { kind: "create" },
+              )
+            }}
+          >
+            {openForm?.kind === "create" ? "Cancel" : "New group"}
+          </button>
+        </div>
+      )}
 
       {openForm?.kind === "create" && (
         <form onSubmit={handleCreate}>
@@ -259,41 +280,43 @@ export function UserGroupsFlow() {
                   {g.members.length === 1 ? "" : "s"}
                 </p>
 
-                <div>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      setOpenForm(v =>
-                        v?.kind === "rename" && v.groupId === g.id
-                          ? null
-                          : { kind: "rename", groupId: g.id },
-                      )
-                    }}
-                  >
-                    {isRenaming ? "Cancel" : "Rename"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      setOpenForm(v =>
-                        v?.kind === "addMember" && v.groupId === g.id
-                          ? null
-                          : { kind: "addMember", groupId: g.id },
-                      )
-                    }}
-                  >
-                    {isAddingMember ? "Cancel" : "Add member"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => { handleDelete(g.id, g.name) }}
-                  >
-                    Delete
-                  </button>
-                </div>
+                {editMode && (
+                  <div>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setOpenForm(v =>
+                          v?.kind === "rename" && v.groupId === g.id
+                            ? null
+                            : { kind: "rename", groupId: g.id },
+                        )
+                      }}
+                    >
+                      {isRenaming ? "Cancel" : "Rename"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setOpenForm(v =>
+                          v?.kind === "addMember" && v.groupId === g.id
+                            ? null
+                            : { kind: "addMember", groupId: g.id },
+                        )
+                      }}
+                    >
+                      {isAddingMember ? "Cancel" : "Add member"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => { handleDelete(g.id, g.name) }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
 
                 {isRenaming && (
                   <form
@@ -442,15 +465,17 @@ export function UserGroupsFlow() {
                     {g.members.map(m => (
                       <li key={m.user_id}>
                         {m.user_name}
-                        <button
-                          type="button"
-                          disabled={pending}
-                          onClick={() => {
-                            handleRemoveMember(g.id, m.user_id, m.user_name)
-                          }}
-                        >
-                          Remove
-                        </button>
+                        {editMode && (
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => {
+                              handleRemoveMember(g.id, m.user_id, m.user_name)
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>

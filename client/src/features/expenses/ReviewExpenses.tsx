@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -6,7 +7,6 @@ import {
 import { useTRPC } from "@/trpc/trpc"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
-type ExpenseType = "food" | "gas" | "maintenance" | "capex" | "opex" | "fixed"
 
 type ExpenseRow = {
   id: number
@@ -21,7 +21,7 @@ type ExpenseRow = {
   date: string
   status: Status
   receipt_url: string | null
-  expense_types: ExpenseType[]
+  expense_types: string[]
 }
 
 export function ReviewExpenses() {
@@ -35,6 +35,9 @@ export function ReviewExpenses() {
   const { data: settlements } = useSuspenseQuery(
     trpc.settlement.list.queryOptions(),
   )
+  const { data: categories } = useSuspenseQuery(
+    trpc.expenseCategory.list.queryOptions(),
+  )
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
@@ -42,6 +45,8 @@ export function ReviewExpenses() {
   const updateExpense = useMutation(
     trpc.expense.update.mutationOptions({ onSuccess: invalidate }),
   )
+
+  const [editMode, setEditMode] = useState(false)
 
   if (me == null || !me.is_head) return null
 
@@ -90,6 +95,16 @@ export function ReviewExpenses() {
     })
   }
 
+  const setCategory = (e: ExpenseRow, name: string) => {
+    updateExpense.mutate({
+      ...basePayload(e),
+      status: e.status,
+      reimbursed_by_id: e.reimbursed_by_id ?? undefined,
+      settlement_id: e.settlement_id ?? undefined,
+      expense_types: name === "" ? [] : [name],
+    })
+  }
+
   return (
     <section>
       <h3>Review expenses</h3>
@@ -100,6 +115,14 @@ export function ReviewExpenses() {
           ? `#${String(openSettlement.id)} (${String(openSettlement.year)}${openSettlement.season ? ` ${openSettlement.season}` : ""})`
           : "(none — approve disabled)"}
       </p>
+      <label>
+        <input
+          type="checkbox"
+          checked={editMode}
+          onChange={e => { setEditMode(e.currentTarget.checked) }}
+        />
+        Edit mode
+      </label>
       {updateExpense.error && (
         <p role="alert">Error: {updateExpense.error.message}</p>
       )}
@@ -115,7 +138,7 @@ export function ReviewExpenses() {
               <th>Paid by</th>
               <th>Types</th>
               <th>Receipt</th>
-              <th>Actions</th>
+              {editMode && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -125,7 +148,20 @@ export function ReviewExpenses() {
                 <td>{e.description}</td>
                 <td>{e.amount}</td>
                 <td>{e.payer_name ?? `#${String(e.payer_id)}`}</td>
-                <td>{e.expense_types.join(", ")}</td>
+                <td>
+                  <select
+                    value={e.expense_types[0] ?? ""}
+                    disabled={!editMode || updateExpense.isPending}
+                    onChange={ev => { setCategory(e, ev.target.value) }}
+                  >
+                    <option value="">(no category)</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
                 <td>
                   {e.receipt_url ? (
                     <a href={e.receipt_url} target="_blank" rel="noreferrer">
@@ -135,28 +171,30 @@ export function ReviewExpenses() {
                     ""
                   )}
                 </td>
-                <td>
-                  <button
-                    type="button"
-                    disabled={
-                      openSettlement == null || updateExpense.isPending
-                    }
-                    onClick={() => {
-                      approve(e)
-                    }}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    disabled={updateExpense.isPending}
-                    onClick={() => {
-                      reject(e)
-                    }}
-                  >
-                    Reject
-                  </button>
-                </td>
+                {editMode && (
+                  <td>
+                    <button
+                      type="button"
+                      disabled={
+                        openSettlement == null || updateExpense.isPending
+                      }
+                      onClick={() => {
+                        approve(e)
+                      }}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updateExpense.isPending}
+                      onClick={() => {
+                        reject(e)
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -170,7 +208,7 @@ export function ReviewExpenses() {
                   {toReview.reduce((sum, e) => sum + e.amount, 0)}
                 </strong>
               </td>
-              <td colSpan={4} />
+              <td colSpan={editMode ? 4 : 3} />
             </tr>
           </tfoot>
         </table>

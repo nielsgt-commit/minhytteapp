@@ -5,6 +5,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
+import { SettlementHeadVisibility } from "@/features/settlement/SettlementHeadVisibility.tsx"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
 type ExpenseType = "food" | "gas" | "maintenance" | "capex" | "opex" | "fixed"
@@ -79,15 +80,44 @@ export function SettlementHeadColumns() {
     }),
   )
 
+  const [visibleOtherIds, setVisibleOtherIds] = useState<Set<number>>(
+    () => new Set(),
+  )
+
   if (heads.length === 0) {
     return <p>No heads found.</p>
   }
 
+  const otherHeads = heads.filter(h => h.id !== editableHeadId)
+  const displayedHeads =
+    editableHeadId == null
+      ? heads
+      : heads.filter(
+        h => h.id === editableHeadId || visibleOtherIds.has(h.id),
+      )
+
+  const toggleOther = (id: number) => {
+    setVisibleOtherIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
-    <table>
-      <thead>
-        <tr>
-          {heads.map(h => (
+    <>
+      {editableHeadId != null && (
+        <SettlementHeadVisibility
+          others={otherHeads}
+          visibleIds={visibleOtherIds}
+          onToggle={toggleOther}
+        />
+      )}
+      <table>
+        <thead>
+          <tr>
+            {displayedHeads.map(h => (
             <th key={h.id} scope="col">
               {h.name}
               {editableHeadId === h.id ? " (you)" : ""}
@@ -97,7 +127,7 @@ export function SettlementHeadColumns() {
       </thead>
       <tbody>
         <tr>
-          {heads.map(h => {
+          {displayedHeads.map(h => {
             const cellExpenses = reimbursed
               .filter(e => e.reimbursed_by_id === h.id)
               .slice()
@@ -131,7 +161,7 @@ export function SettlementHeadColumns() {
       </tbody>
       <tfoot>
         <tr>
-          {heads.map(h => {
+          {displayedHeads.map(h => {
             const total = reimbursed
               .filter(e => e.reimbursed_by_id === h.id)
               .reduce((sum, e) => sum + e.amount, 0)
@@ -143,7 +173,7 @@ export function SettlementHeadColumns() {
           })}
         </tr>
         <tr>
-          {heads.map(h => {
+          {displayedHeads.map(h => {
             const group = mainGroupForHead(h.id)
             const memberIds = new Set(
               group?.members.map(m => m.user_id) ?? [],
@@ -158,7 +188,7 @@ export function SettlementHeadColumns() {
           })}
         </tr>
         <tr>
-          {heads.map(h => {
+          {displayedHeads.map(h => {
             const isMine = editableHeadId === h.id
             const progress = h.settlement_progress as Progress
             const next: Progress =
@@ -180,6 +210,7 @@ export function SettlementHeadColumns() {
         </tr>
       </tfoot>
     </table>
+    </>
   )
 }
 

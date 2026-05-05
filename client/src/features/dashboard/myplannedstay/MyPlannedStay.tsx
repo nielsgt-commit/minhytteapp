@@ -32,7 +32,7 @@ export function MyPlannedStay() {
 
   return (
     <section>
-      <h2>My planned stays</h2>
+      <h4>My planned stays</h4>
       {myBookings.length === 0 ? (
         <p>No planned stays yet.</p>
       ) : (

@@ -12,6 +12,7 @@ import {
 } from "./schema/maintenance.schema.ts"
 import {
   buildingsTable,
+  propertyContactsTable,
   propertyOwnersTable,
   propertyPriorityWeeksTable,
   propertyTable,
@@ -866,6 +867,64 @@ const SEED_EQUIPMENT: SeedEquipment[] = [
   { name: "Smoke detector", building_name: "Slabeslottet", category: "safety" },
 ]
 
+type SeedContact = {
+  name: string
+  phone?: string | null
+  email?: string | null
+  info?: string | null
+}
+
+const SEED_CONTACTS: SeedContact[] = [
+  {
+    name: "Landowner",
+    phone: "+47 900 00 001",
+    email: "landowner@example.local",
+    info: "Owns the land the property sits on.",
+  },
+  {
+    name: "Neighbour",
+    phone: "+47 900 00 002",
+    email: null,
+    info: "Closest neighbour, holds a spare key.",
+  },
+  {
+    name: "Marina",
+    phone: "+47 900 00 003",
+    email: "marina@example.local",
+    info: "Boat slip rental and fuel.",
+  },
+  {
+    name: "Baker",
+    phone: "+47 900 00 004",
+    email: null,
+    info: "Fresh bread mornings.",
+  },
+]
+
+async function seedContacts(property_id: number) {
+  const existing = await db
+    .select({ name: propertyContactsTable.name })
+    .from(propertyContactsTable)
+    .where(eq(propertyContactsTable.property_id, property_id))
+  const have = new Set(existing.map(r => r.name))
+  const rows = SEED_CONTACTS.filter(c => !have.has(c.name)).map(c => ({
+    property_id,
+    name: c.name,
+    phone: c.phone ?? null,
+    email: c.email ?? null,
+    info: c.info ?? null,
+  }))
+  if (rows.length === 0) {
+    console.log(`found ${String(existing.length)} property contacts, skipping seed`)
+    return
+  }
+  const inserted = await db
+    .insert(propertyContactsTable)
+    .values(rows)
+    .returning({ id: propertyContactsTable.id })
+  console.log(`inserted ${String(inserted.length)} property contacts`)
+}
+
 async function seedEquipment(
   property_id: number,
   buildingsByName: Map<string, number>,
@@ -959,6 +1018,7 @@ async function main() {
   const nonAdminIds = users.filter(u => !u.is_admin).map(u => u.id)
   await seedMaintenance(buildingIds, nonAdminIds)
   await seedEquipment(property.id, buildingsByName)
+  await seedContacts(property.id)
 
   console.log("\nseed complete.")
   console.log(`  property_id = ${String(property.id)}`)

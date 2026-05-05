@@ -28,10 +28,8 @@ export function Maintenance() {
       <div className={styles.equipment}>
         <Equipment />
       </div>
-      <div className={styles.assigned}>
+      <div className={styles.tasks}>
         <AssignedTasks />
-      </div>
-      <div className={styles.unassigned}>
         <UnassignedTasks />
       </div>
       <div className={styles.testform}>

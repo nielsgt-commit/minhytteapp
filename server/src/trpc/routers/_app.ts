@@ -6,12 +6,14 @@ import { devRouter } from "./dev.ts"
 import { equipmentRouter } from "./equipment.ts"
 import { eventRouter } from "./event.ts"
 import { expenseRouter } from "./expense.ts"
+import { expenseCategoryRouter } from "./expenseCategory.ts"
 import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
 import { parkingRouter } from "./parking.ts"
 import { placeRouter } from "./place.ts"
 import { priorityRouter } from "./priority.ts"
 import { propertyRouter } from "./property.ts"
+import { propertyContactRouter } from "./propertyContact.ts"
 import { propertyOwnerRouter } from "./propertyOwner.ts"
 import { roomRouter } from "./room.ts"
 import { settlementRouter } from "./settlement.ts"
@@ -27,12 +29,14 @@ export const appRouter = router({
   equipment: equipmentRouter,
   event: eventRouter,
   expense: expenseRouter,
+  expenseCategory: expenseCategoryRouter,
   invite: inviteRouter,
   maintenance: maintenanceRouter,
   parking: parkingRouter,
   place: placeRouter,
   priority: priorityRouter,
   property: propertyRouter,
+  propertyContact: propertyContactRouter,
   propertyOwner: propertyOwnerRouter,
   room: roomRouter,
   settlement: settlementRouter,

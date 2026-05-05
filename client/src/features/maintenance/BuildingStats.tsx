@@ -1,5 +1,7 @@
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { BuildingCard } from "@/features/maintenance/BuildingCard.tsx"
+import { BuildingFilter } from "@/features/maintenance/BuildingFilter.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -12,6 +14,10 @@ export function BuildingStats() {
     trpc.building.list.queryOptions(),
   )
 
+  const [hiddenIds, setHiddenIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  )
+
   const propertyBuildings =
     selectedPropertyId != null
       ? buildings.filter(b => b.property_id === selectedPropertyId)
@@ -21,11 +27,27 @@ export function BuildingStats() {
     return <p>No buildings for the selected property. Go to Manage Property</p>
   }
 
+  const toggle = (id: number) => {
+    setHiddenIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      {propertyBuildings.map(b => (
-        <BuildingCard key={b.id} buildingId={b.id} buildingName={b.name} />
-      ))}
-    </div>
+    <>
+      <BuildingFilter
+        buildings={propertyBuildings}
+        hiddenIds={hiddenIds}
+        onToggle={toggle}
+      />
+      {propertyBuildings
+        .filter(b => !hiddenIds.has(b.id))
+        .map(b => (
+          <BuildingCard key={b.id} buildingId={b.id} buildingName={b.name} />
+        ))}
+    </>
   )
 }

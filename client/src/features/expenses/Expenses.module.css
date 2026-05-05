@@ -2,20 +2,15 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-areas:
-    "title      title      title      title      title      title"
-    "review       review        review       review       fees       fees"
-    "review review review review        categories categories"
-     "review review review review        categories categories"
-    "review     review     review     review     prelim prelim"
-    "mine       mine       mine       mine       mine       mine"
-    "testform   testform   testform   testform   testform   testform";
+    "title    title    title    title    title    title"
+    "review   review   review   review   panels   panels"
+    "mine     mine     mine     mine     mine     mine"
+    "testform testform testform testform testform testform";
   gap: 0.4rem;
 }
 
-.title      { grid-area: title; }
-.fees       { grid-area: fees; }
-.categories { grid-area: categories; }
-.prelim     { grid-area: prelim; }
-.review     { grid-area: review; }
-.mine       { grid-area: mine; }
-.testform   { grid-area: testform; }
+.title    { grid-area: title; }
+.review   { grid-area: review; }
+.panels   { grid-area: panels; display: flex; flex-direction: column; gap: 1rem; }
+.mine     { grid-area: mine; }
+.testform { grid-area: testform; }

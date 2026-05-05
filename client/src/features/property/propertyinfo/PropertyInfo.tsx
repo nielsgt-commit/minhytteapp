@@ -7,6 +7,7 @@ import {
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import PropertyContacts from "./PropertyContacts.tsx"
 
 function fdString(fd: FormData, key: string): string {
   const v = fd.get(key)
@@ -160,6 +161,8 @@ export default function PropertyInfo() {
       <button type="button" onClick={() => { setIsEditing(true) }}>
         Edit property details
       </button>
+
+      <PropertyContacts />
     </>
   )
 }

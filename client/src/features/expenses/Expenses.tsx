@@ -25,17 +25,13 @@ export function Expenses() {
     <section className={styles.page}>
       <h2 className={styles.title}>Expenses</h2>
       <Suspense fallback={<p>Loading…</p>}>
-        <div className={styles.fees}>
-          <RecurringPropertyFees />
-        </div>
-        <div className={styles.categories}>
-          <ExpenseCategories />
-        </div>
-        <div className={styles.prelim}>
-          <PreliminarySettlement />
-        </div>
         <div className={styles.review}>
           <ReviewExpenses />
+        </div>
+        <div className={styles.panels}>
+          <RecurringPropertyFees />
+          <ExpenseCategories />
+          <PreliminarySettlement />
         </div>
         <div className={styles.mine}>
           <MyExpenses />

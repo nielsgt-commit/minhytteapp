@@ -44,6 +44,11 @@ export const settlementsTable = pgTable(
   ],
 )
 
+export const expenseCategoriesTable = pgTable("expense_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 64 }).notNull().unique(),
+})
+
 export const expensesTable = pgTable(
   "expenses",
   {
@@ -63,9 +68,7 @@ export const expensesTable = pgTable(
       enum: ["draft", "submitted", "reimbursed", "rejected"],
     }).notNull(),
     receipt_url: text("receipt_url"),
-    expense_types: text("expense_types", {
-      enum: ["food", "gas", "maintenance", "capex", "opex", "fixed"],
-    })
+    expense_types: text("expense_types")
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
@@ -78,10 +81,6 @@ export const expensesTable = pgTable(
     check(
       "expense_reimburser_not_payer",
       sql`${t.reimbursed_by_id} <> ${t.payer_id}`,
-    ),
-    check(
-      "expense_types_valid",
-      sql`${t.expense_types} <@ ARRAY['food','gas','maintenance','capex','opex','fixed']::text[]`,
     ),
   ],
 )

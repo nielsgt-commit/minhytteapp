@@ -24,17 +24,17 @@ export function Calendar() {
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Calendar</h2>
-      <div className={styles.plannedstay}>
+      <div className={styles.main}>
         <MyPlannedStay />
+        <div className={styles.week}>
+          <ExperimentalWeekPanel />
+        </div>
       </div>
       {me?.is_head && (
         <div className={styles.priority}>
           <PriorityWeeks />
         </div>
       )}
-      <div className={styles.week}>
-        <ExperimentalWeekPanel />
-      </div>
     </section>
   )
 }

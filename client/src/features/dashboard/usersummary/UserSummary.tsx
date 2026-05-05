@@ -15,7 +15,7 @@ export default function UserSummary() {
 
   return (
     <>
-      <h1>User groups ({userGroups.length})</h1>
+      <h4>User groups ({userGroups.length})</h4>
       {userGroups.length === 0 ? (
         <p>No user groups yet.</p>
       ) : (

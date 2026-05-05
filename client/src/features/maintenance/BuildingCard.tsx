@@ -95,13 +95,13 @@ export function BuildingCard({
       <div className={styles.todos}>
         <BuildingTodos buildingId={buildingId} />
       </div>
-      <button
+      <p
         type="button"
         className={styles.toggle}
         onClick={() => { setShowHistory(v => !v) }}
       >
         {showHistory ? "Hide history" : "Show history"}
-      </button>
+      </p>
       {showHistory && (
         <div className={styles.history}>
           <MaintenanceHistory buildingId={buildingId} />

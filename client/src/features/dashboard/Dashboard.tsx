@@ -1,10 +1,9 @@
 import { Suspense } from "react"
 import styles from "./Dashboard.module.css"
-import BuildingSummary from "@/features/dashboard/buildingsummary/BuildingSummary"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
-import RoomsSummary from "@/features/dashboard/roomssummary/RoomsSummary"
-import UserSummary from "@/features/dashboard/usersummary/UserSummary"
+import PropertyStats from "@/features/dashboard/propertystats/PropertyStats"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
+import ContactsSummary from "@/features/dashboard/contactssummary/ContactsSummary.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
@@ -28,17 +27,14 @@ export function Dashboard() {
         <CapacitySummary />
       </div>
       <Suspense fallback={<p>Loading…</p>}>
-        <div className={styles.buildings}>
-          <BuildingSummary />
-        </div>
-        <div className={styles.users}>
-          <UserSummary />
-        </div>
-        <div className={styles.rooms}>
-          <RoomsSummary />
+        <div className={styles.panels}>
+          <PropertyStats />
         </div>
         <div className={styles.calendar}>
           <CalendarSummary />
+        </div>
+        <div className={styles.contacts}>
+          <ContactsSummary />
         </div>
       </Suspense>
     </section>

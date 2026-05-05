@@ -26,6 +26,7 @@ type FormState = {
   severity: Severity
   status: Status
   recurrence: Recurrence
+  when: string
 }
 
 const CATEGORIES: Category[] = ["maintenance", "repair"]
@@ -36,6 +37,13 @@ const RECURRENCES: { value: Recurrence; label: string }[] = [
   { value: "yearly", label: "yearly" },
   { value: "5year", label: "5 year" },
 ]
+
+function defaultPriorityYear(): number {
+  const now = new Date()
+  return now.getUTCMonth() >= 8
+    ? now.getUTCFullYear() + 1
+    : now.getUTCFullYear()
+}
 
 const initialFormState: FormState = {
   id: null,
@@ -48,6 +56,7 @@ const initialFormState: FormState = {
   severity: "minor",
   status: "todo",
   recurrence: "once",
+  when: "",
 }
 
 type EditableField = Exclude<keyof FormState, "id">
@@ -109,6 +118,26 @@ export function MaintenanceTestForm() {
       { enabled: selectedPropertyId != null },
     ),
   )
+  const priorityYear = defaultPriorityYear()
+  const { data: priority } = useQuery(
+    trpc.priority.list.queryOptions(
+      { property_id: selectedPropertyId ?? 0, year: priorityYear },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
+
+  const priorityWhenOptions = (() => {
+    if (!priority) return []
+    const ownerName = new Map(
+      priority.eligibleOwners.map(o => [o.property_owner_id, o.user_name]),
+    )
+    return priority.assignments
+      .filter(a => a.iso_week === 28 || a.iso_week === 29 || a.iso_week === 30)
+      .map(a => ({
+        value: `week:${String(a.iso_week)}`,
+        label: `${ownerName.get(a.property_owner_id) ?? `#${String(a.property_owner_id)}`} uke`,
+      }))
+  })()
 
   const propertyBuildings =
     selectedPropertyId != null
@@ -225,6 +254,27 @@ export function MaintenanceTestForm() {
                     {s}
                   </option>
                 ))}
+              </select>
+            </label>
+          </div>
+
+          <div>
+            <label>
+              When
+              <select
+                value={state.when}
+                onChange={e => {
+                  set("when")(e.target.value)
+                }}
+              >
+                <option value="">(select)</option>
+                {priorityWhenOptions.map(o => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+                <option value="dugnad">dugnad</option>
+                <option value="just_in_time">just in time</option>
               </select>
             </label>
           </div>

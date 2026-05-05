@@ -64,6 +64,7 @@ export function PropertyOwnersPanel() {
   const [addOpen, setAddOpen] = useState(false)
   const [addKind, setAddKind] = useState<AddKind>("user")
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [editMode, setEditMode] = useState(false)
 
   if (selectedPropertyId == null) {
     return (
@@ -165,6 +166,22 @@ export function PropertyOwnersPanel() {
         )}
       </p>
 
+      <label>
+        <input
+          type="checkbox"
+          checked={editMode}
+          onChange={e => {
+            const next = e.currentTarget.checked
+            setEditMode(next)
+            if (!next) {
+              setEditingId(null)
+              setAddOpen(false)
+            }
+          }}
+        />
+        Edit mode
+      </label>
+
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       {owners.length === 0 ? (
@@ -182,25 +199,27 @@ export function PropertyOwnersPanel() {
               <li key={o.id}>
                 <strong>{label}</strong> <small>({kindLabel})</small> –{" "}
                 {o.ownership_pct}%
-                <div>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      setEditingId(v => (v === o.id ? null : o.id))
-                    }}
-                  >
-                    {editing ? "Cancel" : "Edit %"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => { handleRemove(o.id, label) }}
-                  >
-                    Remove
-                  </button>
-                </div>
-                {editing && (
+                {editMode && (
+                  <div>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setEditingId(v => (v === o.id ? null : o.id))
+                      }}
+                    >
+                      {editing ? "Cancel" : "Edit %"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => { handleRemove(o.id, label) }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {editMode && editing && (
                   <form
                     onSubmit={handleEditSubmit(o.id)}
                     key={`edit-${String(o.id)}`}
@@ -242,17 +261,19 @@ export function PropertyOwnersPanel() {
         </ul>
       )}
 
-      <div>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => { setAddOpen(v => !v) }}
-        >
-          {addOpen ? "Cancel" : "Add owner"}
-        </button>
-      </div>
+      {editMode && (
+        <div>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => { setAddOpen(v => !v) }}
+          >
+            {addOpen ? "Cancel" : "Add owner"}
+          </button>
+        </div>
+      )}
 
-      {addOpen && (
+      {editMode && addOpen && (
         <form onSubmit={handleAddSubmit} key={`add-${addKind}`}>
           <fieldset>
             <legend>Add owner</legend>

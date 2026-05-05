@@ -33,7 +33,7 @@ export default function RoomsSummary() {
 
   return (
     <>
-      <h1>Rooms ({rooms.length})</h1>
+      <h4>Bedrooms ({rooms.length})</h4>
       {rooms.length === 0 ? (
         <p>No rooms yet.</p>
       ) : (

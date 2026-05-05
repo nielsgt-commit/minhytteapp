@@ -14,9 +14,7 @@ const expenseFields = {
   date: z.iso.date(),
   status: z.enum(["draft", "submitted", "reimbursed", "rejected"]),
   receipt_url: z.string().url().optional().nullable(),
-  expense_types: z
-    .array(z.enum(["food", "gas", "maintenance", "capex", "opex", "fixed"]))
-    .default([]),
+  expense_types: z.array(z.string().min(1).max(64)).default([]),
 }
 
 const reimbursedHasReimburser = {

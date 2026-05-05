@@ -24,7 +24,7 @@ export default function BuildingSummary() {
 
   return (
     <>
-      <h1>Buildings ({buildings.length})</h1>
+      <h4>Buildings ({buildings.length})</h4>
       {buildings.length === 0 ? (
         <p>No buildings yet.</p>
       ) : (

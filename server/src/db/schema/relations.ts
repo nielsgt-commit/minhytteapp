@@ -16,6 +16,7 @@ import {
   buildingsTable,
   parkingClaimsTable,
   placeTable,
+  propertyContactsTable,
   propertyInvitationsTable,
   propertyOwnersTable,
   propertyTable,
@@ -104,7 +105,18 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   stays: many(stayTable),
   parkingClaims: many(parkingClaimsTable),
   events: many(eventTable),
+  contacts: many(propertyContactsTable),
 }))
+
+export const propertyContactsRelations = relations(
+  propertyContactsTable,
+  ({ one }) => ({
+    property: one(propertyTable, {
+      fields: [propertyContactsTable.property_id],
+      references: [propertyTable.id],
+    }),
+  }),
+)
 
 export const eventRelations = relations(eventTable, ({ one }) => ({
   property: one(propertyTable, {

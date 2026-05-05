@@ -27,6 +27,7 @@ export function UnassignedTasks() {
 
   const [editing, setEditing] = useState<EditingState>(null)
   const [deleting, setDeleting] = useState<DeletingState>(null)
+  const [editMode, setEditMode] = useState(false)
 
   if (!items) return <p>Loading…</p>
 
@@ -68,14 +69,29 @@ export function UnassignedTasks() {
   return (
     <section>
       <h2>Unassigned tasks</h2>
+      <label>
+        <input
+          type="checkbox"
+          checked={editMode}
+          onChange={e => {
+            const next = e.currentTarget.checked
+            setEditMode(next)
+            if (!next) {
+              setEditing(null)
+              setDeleting(null)
+            }
+          }}
+        />
+        Edit mode
+      </label>
       {lastError && <p role="alert">Error: {lastError.message}</p>}
       {unassigned.length === 0 ? (
         <p>No unassigned tasks.</p>
       ) : (
         <ul>
           {unassigned.map(t => {
-            const isEditing = editing?.id === t.id
-            const isDeleting = deleting?.id === t.id
+            const isEditing = editMode && editing?.id === t.id
+            const isDeleting = editMode && deleting?.id === t.id
 
             if (isEditing) {
               return (
@@ -117,14 +133,16 @@ export function UnassignedTasks() {
             return (
               <li key={t.id}>
                 {t.description} ({t.severity}){" "}
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => { setEditing({ id: t.id }) }}
-                >
-                  Edit
-                </button>
-                {!isDeleting && (
+                {editMode && (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => { setEditing({ id: t.id }) }}
+                  >
+                    Edit
+                  </button>
+                )}
+                {editMode && !isDeleting && (
                   <button
                     type="button"
                     disabled={pending}

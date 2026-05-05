@@ -47,8 +47,7 @@ export function CapacitySummary() {
 
   return (
     <>
-      <h1>Capacity Summary</h1>
-      <h3> At {propertyName} now: </h3>
+      <h4> At {propertyName} now: </h4>
       <AtPropertyNow />
 
       <AvailableParking />

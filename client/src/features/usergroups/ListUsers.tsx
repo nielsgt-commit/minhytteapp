@@ -36,6 +36,7 @@ export function ListUsers() {
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [editMode, setEditMode] = useState(false)
 
   const lastError = updateUser.error ?? deleteUser.error
   const pending = updateUser.isPending || deleteUser.isPending
@@ -73,6 +74,19 @@ export function ListUsers() {
         is referenced by any group, ownership, booking, or expense.
       </p>
 
+      <label>
+        <input
+          type="checkbox"
+          checked={editMode}
+          onChange={e => {
+            const next = e.currentTarget.checked
+            setEditMode(next)
+            if (!next) setEditingId(null)
+          }}
+        />
+        Edit mode
+      </label>
+
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       {users.length === 0 ? (
@@ -84,7 +98,7 @@ export function ListUsers() {
               <th>Name</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Actions</th>
+              {editMode && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -100,26 +114,28 @@ export function ListUsers() {
                     <td>{u.name}</td>
                     <td>{u.email}</td>
                     <td>{roles}</td>
-                    <td>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => {
-                          setEditingId(v => (v === u.id ? null : u.id))
-                        }}
-                      >
-                        {editing ? "Cancel" : "Edit"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => { handleDelete(u.id, u.name) }}
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    {editMode && (
+                      <td>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => {
+                            setEditingId(v => (v === u.id ? null : u.id))
+                          }}
+                        >
+                          {editing ? "Cancel" : "Edit"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => { handleDelete(u.id, u.name) }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
-                  {editing && (
+                  {editMode && editing && (
                     <tr>
                       <td colSpan={4}>
                         <form onSubmit={handleSubmit(u.id)}>

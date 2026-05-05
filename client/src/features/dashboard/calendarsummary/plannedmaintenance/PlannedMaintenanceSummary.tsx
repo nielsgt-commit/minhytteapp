@@ -28,7 +28,7 @@ export default function PlannedMaintenanceSummary() {
 
   return (
     <>
-      <h1>Planned Maintenance</h1>
+      <h4>Planned Maintenance</h4>
       {buildingsWithItems.length === 0 ? (
         <p>No planned maintenance.</p>
       ) : (
