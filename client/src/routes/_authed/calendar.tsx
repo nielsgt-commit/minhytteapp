@@ -9,9 +9,12 @@ export const Route = createFileRoute("/_authed/calendar")({
     const tasks: Promise<unknown>[] = [
       context.queryClient.ensureQueryData(trpc.user.me.queryOptions()),
     ]
-    if (selectSelectedPropertyId(store.getState()) != null) {
+    const propertyId = selectSelectedPropertyId(store.getState())
+    if (propertyId != null) {
       tasks.push(
-        context.queryClient.ensureQueryData(trpc.booking.list.queryOptions()),
+        context.queryClient.ensureQueryData(
+          trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
+        ),
       )
     }
     return Promise.all(tasks)

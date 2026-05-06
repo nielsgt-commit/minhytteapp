@@ -3,7 +3,6 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-  useSuspenseQuery,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppSelector } from "@/app/hooks"
@@ -108,9 +107,17 @@ export function MaintenanceTestForm() {
   const [state, dispatch] = useReducer(formReducer, initialFormState)
   const [showMore, setShowMore] = useState(false)
 
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: users = [] } = useQuery(
+    trpc.user.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
+  const { data: buildings = [] } = useQuery(
+    trpc.building.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
   )
   const { data: places = [] } = useQuery(
     trpc.place.listForProperty.queryOptions(
@@ -139,13 +146,10 @@ export function MaintenanceTestForm() {
       }))
   })()
 
-  const propertyBuildings =
-    selectedPropertyId != null
-      ? buildings.filter(b => b.property_id === selectedPropertyId)
-      : []
+  const propertyBuildings = buildings
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.maintenance.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
 
   const createMutation = useMutation(
     trpc.maintenance.create.mutationOptions({

@@ -4,12 +4,15 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
 
 type ExpenseRow = {
   id: number
+  property_id: number | null
   description: string
   amount: number
   payer_id: number
@@ -27,20 +30,29 @@ type ExpenseRow = {
 export function ReviewExpenses() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
-  const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
   const { data: groups } = useSuspenseQuery(
-    trpc.userGroup.listWithMembers.queryOptions(),
+    trpc.userGroup.listWithMembersForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
   const { data: settlements } = useSuspenseQuery(
-    trpc.settlement.list.queryOptions(),
+    trpc.settlement.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
   const { data: categories } = useSuspenseQuery(
     trpc.expenseCategory.list.queryOptions(),
   )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
 
   const updateExpense = useMutation(
     trpc.expense.update.mutationOptions({ onSuccess: invalidate }),
@@ -48,7 +60,7 @@ export function ReviewExpenses() {
 
   const [editMode, setEditMode] = useState(false)
 
-  if (me == null || !me.is_head) return null
+  if (me == null || !me.is_head || selectedPropertyId == null) return null
 
   const myGroup = groups.find(
     g => g.is_main && g.members.some(m => m.user_id === me.id),
@@ -67,6 +79,7 @@ export function ReviewExpenses() {
 
   const basePayload = (e: ExpenseRow) => ({
     id: e.id,
+    property_id: e.property_id ?? selectedPropertyId,
     description: e.description,
     amount: e.amount,
     booking_id: e.booking_id ?? undefined,

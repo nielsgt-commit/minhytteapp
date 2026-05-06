@@ -14,11 +14,13 @@ import {
 import { usersTable, userGroupsTable } from "./users.schema.ts"
 import { bookingTable } from "./booking.schema.ts"
 import { maintenanceTable } from "./maintenance.schema.ts"
+import { propertyTable } from "./property.schema.ts"
 
 export const settlementsTable = pgTable(
   "settlements",
   {
     id: serial("id").primaryKey(),
+    property_id: integer("property_id").references(() => propertyTable.id),
     year: integer("year").notNull(),
     season: varchar("season", {
       length: 6,
@@ -36,7 +38,7 @@ export const settlementsTable = pgTable(
     closed_at: timestamp("closed_at"),
   },
   (t) => [
-    unique().on(t.year, t.season),
+    unique().on(t.property_id, t.year, t.season),
     check(
       "settlement_closed_has_timestamp",
       sql`(${t.status} = 'closed') = (${t.closed_at} IS NOT NULL)`,
@@ -53,6 +55,7 @@ export const expensesTable = pgTable(
   "expenses",
   {
     id: serial("id").primaryKey(),
+    property_id: integer("property_id").references(() => propertyTable.id),
     description: varchar("description", { length: 255 }).notNull(),
     amount: integer("amount").notNull(),
     payer_id: integer("payer_id")

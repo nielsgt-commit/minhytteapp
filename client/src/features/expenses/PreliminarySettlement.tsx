@@ -1,10 +1,21 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 export function PreliminarySettlement() {
   const trpc = useTRPC()
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
-  const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
 
   const heads = users.filter(u => u.is_head)
   const reimbursed = expenses.filter(

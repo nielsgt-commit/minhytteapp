@@ -5,6 +5,7 @@ import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const expenseFields = {
+  property_id: z.number().int().positive(),
   description: z.string().default(""),
   amount: z.number().int(),
   reimbursed_by_id: z.number().int().positive().optional(),
@@ -38,29 +39,42 @@ const updateInput = z
     path: [...reimbursedHasReimburser.path],
   })
 
+const expenseColumns = {
+  id: expensesTable.id,
+  property_id: expensesTable.property_id,
+  description: expensesTable.description,
+  amount: expensesTable.amount,
+  payer_id: expensesTable.payer_id,
+  payer_name: usersTable.name,
+  reimbursed_by_id: expensesTable.reimbursed_by_id,
+  booking_id: expensesTable.booking_id,
+  maintenance_id: expensesTable.maintenance_id,
+  settlement_id: expensesTable.settlement_id,
+  date: expensesTable.date,
+  status: expensesTable.status,
+  receipt_url: expensesTable.receipt_url,
+  expense_types: expensesTable.expense_types,
+}
+
 export const expenseRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.db
-      .select({
-        id: expensesTable.id,
-        description: expensesTable.description,
-        amount: expensesTable.amount,
-        payer_id: expensesTable.payer_id,
-        payer_name: usersTable.name,
-        reimbursed_by_id: expensesTable.reimbursed_by_id,
-        booking_id: expensesTable.booking_id,
-        maintenance_id: expensesTable.maintenance_id,
-        settlement_id: expensesTable.settlement_id,
-        date: expensesTable.date,
-        status: expensesTable.status,
-        receipt_url: expensesTable.receipt_url,
-        expense_types: expensesTable.expense_types,
-      })
+    return ctx.db
+      .select(expenseColumns)
       .from(expensesTable)
       .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
       .orderBy(asc(expensesTable.date))
-    return rows
   }),
+
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select(expenseColumns)
+        .from(expensesTable)
+        .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
+        .where(eq(expensesTable.property_id, input.property_id))
+        .orderBy(asc(expensesTable.date))
+    }),
 
   create: protectedProcedure
     .input(createInput)

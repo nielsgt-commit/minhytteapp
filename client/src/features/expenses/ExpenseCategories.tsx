@@ -5,6 +5,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type ExpenseRow = {
@@ -16,7 +18,12 @@ type ExpenseRow = {
 export function ExpenseCategories() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
   const { data: categories } = useSuspenseQuery(
     trpc.expenseCategory.list.queryOptions(),
   )
@@ -30,7 +37,7 @@ export function ExpenseCategories() {
   const invalidateCategories = () =>
     qc.invalidateQueries({ queryKey: trpc.expenseCategory.list.queryKey() })
   const invalidateExpenses = () =>
-    qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
 
   const createMutation = useMutation(
     trpc.expenseCategory.create.mutationOptions({

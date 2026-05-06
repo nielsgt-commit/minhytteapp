@@ -26,7 +26,7 @@ export function BuildingCard({
       onSuccess: () => {
         setAdding(false)
         void qc.invalidateQueries({
-          queryKey: trpc.maintenance.list.queryKey(),
+          queryKey: trpc.maintenance.pathKey(),
         })
       },
     }),

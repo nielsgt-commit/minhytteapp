@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
+import { Tag } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedUserId } from "@/features/user/userSlice"
 import { useTRPC } from "@/trpc/trpc"
+
+
 
 export default function UserGroupBadge() {
   const trpc = useTRPC()
@@ -18,5 +21,5 @@ export default function UserGroupBadge() {
 
   if (!mainGroupForUser) return null
 
-  return <h6>{mainGroupForUser.name}</h6>
+  return <Tag data-color="info">{mainGroupForUser.name}</Tag>
 }

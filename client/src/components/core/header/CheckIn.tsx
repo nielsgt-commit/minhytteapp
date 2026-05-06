@@ -1,4 +1,3 @@
-import { useId } from "react"
 import {
   useMutation,
   useQuery,
@@ -9,12 +8,13 @@ import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { loadAuth } from "@/auth/oauth"
 
+import { Switch } from '@digdir/designsystemet-react';
+
 export default function CheckIn() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const auth = loadAuth()
   const propertyId = useAppSelector(selectSelectedPropertyId)
-  const id = useId()
 
   const enabled = auth.isAuthenticated && propertyId != null
   const { data, isLoading } = useQuery(
@@ -27,7 +27,7 @@ export default function CheckIn() {
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: trpc.stay.currentForMe.queryKey() })
     void qc.invalidateQueries({ queryKey: trpc.stay.atProperty.queryKey() })
-    void qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
   }
 
   const checkIn = useMutation(
@@ -49,16 +49,11 @@ export default function CheckIn() {
   }
 
   return (
-    <label htmlFor={id}>
-      <input
-        id={id}
-        type="checkbox"
-        role="switch"
-        checked={checked}
-        disabled={pending}
-        onChange={e => { handleChange(e.currentTarget.checked) }}
-      />
-      {checked ? "Checked in" : "Check in"}
-    </label>
+    <Switch
+      label={checked ? "Checked in" : "Check in"}
+      checked={checked}
+      disabled={pending}
+      onChange={e => { handleChange(e.currentTarget.checked) }}
+    />
   )
 }

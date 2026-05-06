@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 function fdString(fd: FormData, key: string): string {
@@ -18,14 +20,16 @@ function fdBoolean(fd: FormData, key: string): boolean {
 export function ListUsers() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = selectedPropertyId ?? 0
 
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
+  )
 
   const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
-    void qc.invalidateQueries({
-      queryKey: trpc.userGroup.listWithMembers.queryKey(),
-    })
+    void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
+    void qc.invalidateQueries({ queryKey: trpc.userGroup.pathKey() })
   }
 
   const updateUser = useMutation(

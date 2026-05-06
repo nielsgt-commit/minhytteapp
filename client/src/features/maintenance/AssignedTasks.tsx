@@ -1,10 +1,18 @@
 import { useQuery } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function AssignedTasks() {
   const trpc = useTRPC()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const { data: me } = useQuery(trpc.user.me.queryOptions())
-  const { data: items } = useQuery(trpc.maintenance.list.queryOptions())
+  const { data: items } = useQuery(
+    trpc.maintenance.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
 
   if (!me || !items) return <p>Loading…</p>
 

@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import CheckIn from "@/components/core/header/CheckIn.tsx"
 import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "./availableparking/AvailableParking.tsx"
 
@@ -47,7 +48,10 @@ export function CapacitySummary() {
 
   return (
     <>
-      <h4> At {propertyName} now: </h4>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <h4> At {propertyName} now: </h4>
+        <CheckIn />
+      </div>
       <AtPropertyNow />
 
       <AvailableParking />

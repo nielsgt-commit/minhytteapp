@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type EditingState = { id: number } | null
@@ -12,13 +14,16 @@ type DeletingState = { id: number; typed: string } | null
 export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
 
   const { data: items } = useSuspenseQuery(
-    trpc.maintenance.list.queryOptions(),
+    trpc.maintenance.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
 
   const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.maintenance.list.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
   }
 
   const updateMutation = useMutation(

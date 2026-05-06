@@ -6,8 +6,11 @@ import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export const Route = createFileRoute("/_authed/expenses")({
   loader: ({ context }) => {
-    if (selectSelectedPropertyId(store.getState()) == null) return
-    return context.queryClient.ensureQueryData(trpc.expense.list.queryOptions())
+    const propertyId = selectSelectedPropertyId(store.getState())
+    if (propertyId == null) return
+    return context.queryClient.ensureQueryData(
+      trpc.expense.listForProperty.queryOptions({ property_id: propertyId }),
+    )
   },
   component: Expenses,
 })

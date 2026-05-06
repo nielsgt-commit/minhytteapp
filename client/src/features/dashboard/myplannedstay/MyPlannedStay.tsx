@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 function rangesOverlap(
@@ -20,8 +22,23 @@ function formatDayMonth(iso: string) {
 
 export function MyPlannedStay() {
   const trpc = useTRPC()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const { data: me } = useQuery(trpc.user.me.queryOptions())
-  const { data: bookings } = useQuery(trpc.booking.list.queryOptions())
+  const { data: bookings } = useQuery(
+    trpc.booking.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
+
+  if (selectedPropertyId == null) {
+    return (
+      <section>
+        <h4>My planned stays</h4>
+        <p>Select a property to see your stays.</p>
+      </section>
+    )
+  }
 
   if (!me || !bookings) return <p>Loading…</p>
 

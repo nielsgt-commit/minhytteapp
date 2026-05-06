@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
@@ -56,8 +58,9 @@ function formReducer(state: FormState, action: FormAction): FormState {
   }
 }
 
-function buildPayload(state: FormState, status: Status) {
+function buildPayload(state: FormState, status: Status, propertyId: number) {
   return {
+    property_id: propertyId,
     description: state.description,
     amount: Number(state.amount),
     receipt_url: state.receipt_url ? state.receipt_url : null,
@@ -70,13 +73,14 @@ function buildPayload(state: FormState, status: Status) {
 export function ExpensesTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const [state, dispatch] = useReducer(formReducer, initialFormState)
   const { data: categories } = useSuspenseQuery(
     trpc.expenseCategory.list.queryOptions(),
   )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
 
   const createMutation = useMutation(
     trpc.expense.create.mutationOptions({
@@ -95,7 +99,17 @@ export function ExpensesTestForm() {
 
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    createMutation.mutate(buildPayload(state, "submitted"))
+    if (selectedPropertyId == null) return
+    createMutation.mutate(buildPayload(state, "submitted", selectedPropertyId))
+  }
+
+  if (selectedPropertyId == null) {
+    return (
+      <section>
+        <h3>Expenses Test Form</h3>
+        <p>Select a property to record expenses.</p>
+      </section>
+    )
   }
 
   return (

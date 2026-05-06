@@ -260,56 +260,69 @@ function computeBookingRooms(
   return out
 }
 
-export const bookingRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    const bookings = await ctx.db
+async function loadBookings(
+  db: Db,
+  filter?: { property_id: number },
+) {
+  const query = db
+    .select({
+      id: bookingTable.id,
+      property_id: bookingTable.property_id,
+      booker_id: bookingTable.booker_id,
+      booker_name: usersTable.name,
+      start_date: bookingTable.start_date,
+      end_date: bookingTable.end_date,
+      status: bookingTable.status,
+      notes: bookingTable.notes,
+      created_at: bookingTable.created_at,
+      updated_at: bookingTable.updated_at,
+      cancelled_at: bookingTable.cancelled_at,
+      cancelled_by_id: bookingTable.cancelled_by_id,
+    })
+    .from(bookingTable)
+    .leftJoin(usersTable, eq(usersTable.id, bookingTable.booker_id))
+
+  const bookings = await (filter
+    ? query
+        .where(eq(bookingTable.property_id, filter.property_id))
+        .orderBy(asc(bookingTable.start_date))
+    : query.orderBy(asc(bookingTable.start_date)))
+
+  if (bookings.length === 0) return []
+
+  const ids = bookings.map(b => b.id)
+  const [rooms, occupants] = await Promise.all([
+    db
+      .select()
+      .from(bookingRoomsTable)
+      .where(inArray(bookingRoomsTable.booking_id, ids)),
+    db
       .select({
-        id: bookingTable.id,
-        property_id: bookingTable.property_id,
-        booker_id: bookingTable.booker_id,
-        booker_name: usersTable.name,
-        start_date: bookingTable.start_date,
-        end_date: bookingTable.end_date,
-        status: bookingTable.status,
-        notes: bookingTable.notes,
-        created_at: bookingTable.created_at,
-        updated_at: bookingTable.updated_at,
-        cancelled_at: bookingTable.cancelled_at,
-        cancelled_by_id: bookingTable.cancelled_by_id,
+        booking_id: bookingOccupantsTable.booking_id,
+        user_id: bookingOccupantsTable.user_id,
+        user_name: usersTable.name,
+        room_id: bookingOccupantsTable.room_id,
       })
-      .from(bookingTable)
-      .leftJoin(usersTable, eq(usersTable.id, bookingTable.booker_id))
-      .orderBy(asc(bookingTable.start_date))
+      .from(bookingOccupantsTable)
+      .leftJoin(usersTable, eq(usersTable.id, bookingOccupantsTable.user_id))
+      .where(inArray(bookingOccupantsTable.booking_id, ids)),
+  ])
 
-    if (bookings.length === 0) return []
+  return bookings.map(b => ({
+    ...b,
+    rooms: rooms.filter(r => r.booking_id === b.id),
+    occupants: occupants.filter(o => o.booking_id === b.id),
+  }))
+}
 
-    const ids = bookings.map(b => b.id)
-    const [rooms, occupants] = await Promise.all([
-      ctx.db
-        .select()
-        .from(bookingRoomsTable)
-        .where(inArray(bookingRoomsTable.booking_id, ids)),
-      ctx.db
-        .select({
-          booking_id: bookingOccupantsTable.booking_id,
-          user_id: bookingOccupantsTable.user_id,
-          user_name: usersTable.name,
-          room_id: bookingOccupantsTable.room_id,
-        })
-        .from(bookingOccupantsTable)
-        .leftJoin(
-          usersTable,
-          eq(usersTable.id, bookingOccupantsTable.user_id),
-        )
-        .where(inArray(bookingOccupantsTable.booking_id, ids)),
-    ])
+export const bookingRouter = router({
+  list: publicProcedure.query(async ({ ctx }) => loadBookings(ctx.db)),
 
-    return bookings.map(b => ({
-      ...b,
-      rooms: rooms.filter(r => r.booking_id === b.id),
-      occupants: occupants.filter(o => o.booking_id === b.id),
-    }))
-  }),
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) =>
+      loadBookings(ctx.db, { property_id: input.property_id }),
+    ),
 
   create: protectedProcedure
     .input(createInput)

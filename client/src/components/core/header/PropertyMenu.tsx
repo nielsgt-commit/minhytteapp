@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   useMutation,
   useQuery,
@@ -14,11 +14,6 @@ import { selectSelectedUserId } from "@/features/user/userSlice"
 import { loadAuth } from "@/auth/oauth"
 import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
 
 export default function PropertyMenu() {
   const trpc = useTRPC()
@@ -59,15 +54,6 @@ export default function PropertyMenu() {
     }),
   )
 
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const name = fdString(fd, "name").trim()
-    if (!name) return
-    createProperty.mutate({ name, address: "—" })
-  }
-
   const current = list.find(p => p.id === selectedId)
 
   if (!auth.isAuthenticated) {
@@ -78,7 +64,7 @@ export default function PropertyMenu() {
   if (isLoading) {
     label = "Loading…"
   } else if (current) {
-    label = "Property "
+    label = ""
   } else {
     label = "No property"
   }
@@ -90,36 +76,12 @@ export default function PropertyMenu() {
         properties={list}
         value={selectedId}
         onChange={id => { dispatch(setSelectedPropertyId(id)) }}
-        onAddClick={() => { setIsAddOpen(true) }}
+        isAddOpen={isAddOpen}
+        onAddOpenChange={setIsAddOpen}
+        onAdd={name => { createProperty.mutate({ name, address: "—" }) }}
+        isAddPending={createProperty.isPending}
+        addError={createProperty.error?.message ?? null}
       />
-      {isAddOpen && (
-        <form onSubmit={handleAdd}>
-          <fieldset>
-            <legend>New property</legend>
-            <div>
-              <label>
-                Name
-                <input type="text" name="name" required autoFocus />
-              </label>
-            </div>
-            <div>
-              <button type="submit" disabled={createProperty.isPending}>
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIsAddOpen(false) }}
-                disabled={createProperty.isPending}
-              >
-                Cancel
-              </button>
-            </div>
-            {createProperty.error && (
-              <p role="alert">Error: {createProperty.error.message}</p>
-            )}
-          </fieldset>
-        </form>
-      )}
     </div>
   )
 }

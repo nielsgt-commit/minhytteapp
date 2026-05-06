@@ -206,7 +206,11 @@ export function CalendarTestForm() {
   const [state, dispatch] = useReducer(formReducer, initialFormState)
 
   const { data: bookings } = useSuspenseQuery(
-    trpc.booking.list.queryOptions(),
+    selectedPropertyId != null
+      ? trpc.booking.listForProperty.queryOptions({
+          property_id: selectedPropertyId,
+        })
+      : trpc.booking.list.queryOptions(),
   )
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
   const { data: buildings } = useSuspenseQuery(
@@ -231,7 +235,7 @@ export function CalendarTestForm() {
   )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
 
   const createMutation = useMutation(
     trpc.booking.create.mutationOptions({

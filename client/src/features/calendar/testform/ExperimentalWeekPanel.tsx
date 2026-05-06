@@ -129,7 +129,7 @@ function Body({ propertyId }: { propertyId: number }) {
     }),
   )
   const { data: bookings } = useSuspenseQuery(
-    trpc.booking.list.queryOptions(),
+    trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
   const [weekStart, setWeekStart] = useState(() =>
@@ -260,7 +260,7 @@ function Body({ propertyId }: { propertyId: number }) {
   const createMutation = useMutation(
     trpc.booking.create.mutationOptions({
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+        void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
       },
     }),
   )
@@ -268,7 +268,7 @@ function Body({ propertyId }: { propertyId: number }) {
   const deleteMutation = useMutation(
     trpc.booking.delete.mutationOptions({
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.booking.list.queryKey() })
+        void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
       },
     }),
   )

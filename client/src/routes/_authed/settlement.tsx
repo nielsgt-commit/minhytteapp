@@ -6,9 +6,10 @@ import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export const Route = createFileRoute("/_authed/settlement")({
   loader: ({ context }) => {
-    if (selectSelectedPropertyId(store.getState()) == null) return
+    const propertyId = selectSelectedPropertyId(store.getState())
+    if (propertyId == null) return
     return context.queryClient.ensureQueryData(
-      trpc.settlement.list.queryOptions(),
+      trpc.settlement.listForProperty.queryOptions({ property_id: propertyId }),
     )
   },
   component: Settlement,

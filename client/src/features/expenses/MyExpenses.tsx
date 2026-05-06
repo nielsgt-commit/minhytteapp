@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
@@ -11,6 +13,7 @@ type ExpenseType = "food" | "gas" | "maintenance" | "capex" | "opex" | "fixed"
 
 type ExpenseRow = {
   id: number
+  property_id: number | null
   description: string
   amount: number
   payer_id: number
@@ -35,17 +38,22 @@ const STATUS_ORDER: Record<Status, number> = {
 export function MyExpenses() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
-  const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
 
   const deleteExpense = useMutation(
     trpc.expense.delete.mutationOptions({ onSuccess: invalidate }),
   )
 
-  if (me == null) return null
+  if (me == null || selectedPropertyId == null) return null
 
   const mine = (expenses as ExpenseRow[])
     .filter(e => e.payer_id === me.id)
@@ -82,6 +90,7 @@ export function MyExpenses() {
               <MyExpenseRow
                 key={e.id}
                 expense={e}
+                propertyId={selectedPropertyId}
                 onSaved={invalidate}
                 onDelete={() => {
                   deleteExpense.mutate({ id: e.id })
@@ -109,11 +118,13 @@ export function MyExpenses() {
 
 function MyExpenseRow({
   expense,
+  propertyId,
   onSaved,
   onDelete,
   deletePending,
 }: {
   expense: ExpenseRow
+  propertyId: number
   onSaved: () => void
   onDelete: () => void
   deletePending: boolean
@@ -139,6 +150,7 @@ function MyExpenseRow({
     ev.preventDefault()
     updateExpense.mutate({
       id: expense.id,
+      property_id: expense.property_id ?? propertyId,
       description,
       amount: Number(amount),
       reimbursed_by_id: expense.reimbursed_by_id ?? undefined,

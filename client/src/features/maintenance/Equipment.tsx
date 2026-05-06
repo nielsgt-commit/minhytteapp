@@ -30,11 +30,9 @@ export function Equipment() {
 
   const invalidate = () => {
     void qc.invalidateQueries({
-      queryKey: trpc.equipment.listForProperty.queryKey({
-        property_id: selectedPropertyId ?? 0,
-      }),
+      queryKey: trpc.equipment.pathKey(),
     })
-    void qc.invalidateQueries({ queryKey: trpc.maintenance.list.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
   }
 
   const scheduleMutation = useMutation(

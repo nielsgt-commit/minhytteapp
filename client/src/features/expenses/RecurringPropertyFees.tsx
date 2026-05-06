@@ -1,4 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type Status = "draft" | "submitted" | "reimbursed" | "rejected"
@@ -19,7 +21,12 @@ type ExpenseRow = {
 
 export function RecurringPropertyFees() {
   const trpc = useTRPC()
-  const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
 
   const fixed = (expenses as ExpenseRow[])
     .filter(

@@ -106,6 +106,8 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   parkingClaims: many(parkingClaimsTable),
   events: many(eventTable),
   contacts: many(propertyContactsTable),
+  expenses: many(expensesTable),
+  settlements: many(settlementsTable),
 }))
 
 export const propertyContactsRelations = relations(
@@ -384,13 +386,21 @@ export const maintenanceAttachmentsRelations = relations(
   }),
 )
 
-export const settlementsRelations = relations(settlementsTable, ({ many }) => ({
+export const settlementsRelations = relations(settlementsTable, ({ one, many }) => ({
+  property: one(propertyTable, {
+    fields: [settlementsTable.property_id],
+    references: [propertyTable.id],
+  }),
   expenses: many(expensesTable),
   userGroupTotals: many(settlementUserGroupTotalsTable),
   transfers: many(settlementTransfersTable),
 }))
 
 export const expensesRelations = relations(expensesTable, ({ one, many }) => ({
+  property: one(propertyTable, {
+    fields: [expensesTable.property_id],
+    references: [propertyTable.id],
+  }),
   payer: one(usersTable, {
     fields: [expensesTable.payer_id],
     references: [usersTable.id],

@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type Season = "winter" | "spring" | "summer" | "autumn"
@@ -68,8 +70,9 @@ function formReducer(state: FormState, action: FormAction): FormState {
   }
 }
 
-function buildPayload(state: FormState) {
+function buildPayload(state: FormState, propertyId: number) {
   return {
+    property_id: propertyId,
     year: Number(state.year),
     season: state.season === "" ? undefined : state.season,
     status: state.status,
@@ -80,14 +83,17 @@ function buildPayload(state: FormState) {
 export function SettlementTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const [state, dispatch] = useReducer(formReducer, initialFormState)
 
   const { data: settlements } = useSuspenseQuery(
-    trpc.settlement.list.queryOptions(),
+    trpc.settlement.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.settlement.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
 
   const createMutation = useMutation(
     trpc.settlement.create.mutationOptions({
@@ -128,12 +134,22 @@ export function SettlementTestForm() {
 
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const payload = buildPayload(state)
+    if (selectedPropertyId == null) return
+    const payload = buildPayload(state, selectedPropertyId)
     if (state.id == null) {
       createMutation.mutate(payload)
     } else {
       updateMutation.mutate({ id: state.id, ...payload })
     }
+  }
+
+  if (selectedPropertyId == null) {
+    return (
+      <section>
+        <h3>Settlement Test Form</h3>
+        <p>Select a property to manage settlements.</p>
+      </section>
+    )
   }
 
   return (

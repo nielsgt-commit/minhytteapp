@@ -48,7 +48,7 @@ export default function PlannedAvailabilitySummary() {
   const trpc = useTRPC()
   const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
   const { data: bookings } = useSuspenseQuery(
-    trpc.booking.list.queryOptions(),
+    trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
 
@@ -72,9 +72,7 @@ export default function PlannedAvailabilitySummary() {
     return o?.user_name ?? null
   })()
 
-  const propertyBookings = bookings.filter(
-    b => b.property_id === propertyId && b.status !== "cancelled",
-  )
+  const propertyBookings = bookings.filter(b => b.status !== "cancelled")
 
   const guestsOnDay = (iso: string) => {
     let count = 0

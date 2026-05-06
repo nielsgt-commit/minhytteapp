@@ -4,6 +4,7 @@ import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const settlementFields = {
+  property_id: z.number().int().positive(),
   year: z.number().int(),
   season: z
     .enum(["winter", "spring", "summer", "autumn"])
@@ -26,6 +27,16 @@ export const settlementRouter = router({
       .from(settlementsTable)
       .orderBy(asc(settlementsTable.year))
   }),
+
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select()
+        .from(settlementsTable)
+        .where(eq(settlementsTable.property_id, input.property_id))
+        .orderBy(asc(settlementsTable.year))
+    }),
 
   create: protectedProcedure
     .input(createInput)

@@ -1,7 +1,11 @@
 import { TRPCError } from "@trpc/server"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
-import { usersTable } from "../../db/schema/users.schema.ts"
+import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
+import {
+  userGroupMembersTable,
+  usersTable,
+} from "../../db/schema/users.schema.ts"
 import {
   authenticatedProcedure,
   protectedProcedure,
@@ -31,6 +35,42 @@ export const userRouter = router({
       .from(usersTable)
       .orderBy(asc(usersTable.id))
   }),
+
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const directOwnerIds = await ctx.db
+        .selectDistinct({ user_id: propertyOwnersTable.user_id })
+        .from(propertyOwnersTable)
+        .where(eq(propertyOwnersTable.property_id, input.property_id))
+
+      const groupMemberIds = await ctx.db
+        .selectDistinct({ user_id: userGroupMembersTable.user_id })
+        .from(userGroupMembersTable)
+        .innerJoin(
+          propertyOwnersTable,
+          eq(
+            propertyOwnersTable.user_group_id,
+            userGroupMembersTable.user_group_id,
+          ),
+        )
+        .where(eq(propertyOwnersTable.property_id, input.property_id))
+
+      const ids = new Set<number>()
+      for (const row of directOwnerIds) {
+        if (row.user_id != null) ids.add(row.user_id)
+      }
+      for (const row of groupMemberIds) {
+        ids.add(row.user_id)
+      }
+      if (ids.size === 0) return []
+
+      return ctx.db
+        .select()
+        .from(usersTable)
+        .where(inArray(usersTable.id, Array.from(ids)))
+        .orderBy(asc(usersTable.id))
+    }),
 
   me: authenticatedProcedure.query(({ ctx }) => ctx.user),
 

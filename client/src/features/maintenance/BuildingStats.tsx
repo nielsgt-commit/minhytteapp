@@ -11,17 +11,16 @@ export function BuildingStats() {
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
 
   const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+    trpc.building.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
 
   const [hiddenIds, setHiddenIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   )
 
-  const propertyBuildings =
-    selectedPropertyId != null
-      ? buildings.filter(b => b.property_id === selectedPropertyId)
-      : []
+  const propertyBuildings = buildings
 
   if (propertyBuildings.length === 0) {
     return <p>No buildings for the selected property. Go to Manage Property</p>

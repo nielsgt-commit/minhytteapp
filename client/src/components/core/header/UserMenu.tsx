@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import {
@@ -20,6 +20,7 @@ export default function UserMenu() {
   )
   const selectedId = useAppSelector(selectSelectedUserId)
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
 
   const list = me ? [me] : []
 
@@ -44,21 +45,21 @@ export default function UserMenu() {
   if (isLoading) {
     label = "Loading…"
   } else if (current) {
-    label = "Logged in as "
+    label = ""
   } else {
     label = "No user"
   }
 
   return (
-    <div className={styles.menu}>
+    <div className={styles.menu} style={{ alignSelf: "flex-end" }}>
       <span> {label}</span>
       <UserSwitcher
         users={list}
         value={selectedId}
         onChange={id => { dispatch(setSelectedUserId(id)) }}
         onLogout={handleLogout}
+        onSettings={() => { void navigate({ to: "/usersettings" }) }}
       />
-      <Link to="/usersettings">Settings</Link>
     </div>
   )
 }

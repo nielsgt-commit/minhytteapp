@@ -1,8 +1,22 @@
 .header {
+  background: var(--ds-color-accent-surface-default);
+  border-block: solid 1px var(--ds-color-border-subtle);
+}
+
+.inner {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem 1rem;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 0.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.header button[popovertarget] {
+  border: solid 1px var(--ds-color-border-subtle);
+  border-radius: var(--ds-border-radius-default);
+  background: var(--ds-color-accent-surface-default);
 }
 
 .title {

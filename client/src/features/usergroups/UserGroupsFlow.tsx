@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./UserGroupsFlow.module.css"
 
@@ -34,20 +36,23 @@ function fdNumber(fd: FormData, key: string): number {
 export function UserGroupsFlow() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = selectedPropertyId ?? 0
 
   const { data: groups } = useSuspenseQuery(
-    trpc.userGroup.listWithMembers.queryOptions(),
+    trpc.userGroup.listWithMembersForProperty.queryOptions({
+      property_id: propertyId,
+    }),
   )
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
+  )
 
   const invalidateGroups = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.userGroup.listWithMembers.queryKey(),
-    })
-    void qc.invalidateQueries({ queryKey: trpc.userGroup.list.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.userGroup.pathKey() })
   }
   const invalidateUsers = () => {
-    void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
   }
 
   const createGroup = useMutation(

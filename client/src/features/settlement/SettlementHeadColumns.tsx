@@ -4,6 +4,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 import { SettlementHeadVisibility } from "@/features/settlement/SettlementHeadVisibility.tsx"
 
@@ -20,6 +22,7 @@ function inclusiveDayCount(startIso: string, endIso: string) {
 
 type ExpenseRow = {
   id: number
+  property_id: number | null
   description: string
   amount: number
   payer_id: number
@@ -34,15 +37,23 @@ type ExpenseRow = {
 export function SettlementHeadColumns() {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = selectedPropertyId ?? 0
 
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
-  const { data: expenses } = useSuspenseQuery(trpc.expense.list.queryOptions())
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({ property_id: propertyId }),
+  )
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
   const { data: bookings } = useSuspenseQuery(
-    trpc.booking.list.queryOptions(),
+    trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: groups } = useSuspenseQuery(
-    trpc.userGroup.listWithMembers.queryOptions(),
+    trpc.userGroup.listWithMembersForProperty.queryOptions({
+      property_id: propertyId,
+    }),
   )
 
   const heads = users.filter(u => u.is_head)
@@ -69,9 +80,8 @@ export function SettlementHeadColumns() {
   const editableHeadId = me?.is_head ? me.id : null
 
   const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.expense.list.queryKey() })
-    void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
-    void qc.invalidateQueries({ queryKey: trpc.user.me.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
+    void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
   }
 
   const updateProgress = useMutation(
@@ -244,8 +254,10 @@ function ExpenseEditor({
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (expense.reimbursed_by_id == null) return
+    if (expense.property_id == null) return
     updateExpense.mutate({
       id: expense.id,
+      property_id: expense.property_id,
       description,
       amount: Number(amount),
       reimbursed_by_id: expense.reimbursed_by_id,
