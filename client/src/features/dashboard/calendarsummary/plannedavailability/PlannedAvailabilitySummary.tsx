@@ -1,6 +1,18 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Tag } from "@digdir/designsystemet-react"
+import {
+  Badge,
+  Button,
+  Heading,
+  Paragraph,
+  Table,
+  Tag,
+} from "@digdir/designsystemet-react"
+import flatpickr from "flatpickr"
+import weekSelectPlugin from "flatpickr/dist/plugins/weekSelect/weekSelect"
+import type { Plugin } from "flatpickr/dist/types/options"
+import "flatpickr/dist/flatpickr.min.css"
+import styles from "./PlannedAvailabilitySummary.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -66,6 +78,27 @@ export default function PlannedAvailabilitySummary() {
     0,
   )
   const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
+  const weekPickerRef = useRef<HTMLInputElement>(null)
+  const flatpickrRef = useRef<flatpickr.Instance | null>(null)
+
+  useEffect(() => {
+    if (!weekPickerRef.current) return
+    const fp = flatpickr(weekPickerRef.current, {
+      plugins: [weekSelectPlugin() as Plugin],
+      onChange: dates => {
+        setWeekStart(startOfSunday(dates[0]))
+      },
+    })
+    flatpickrRef.current = fp
+    return () => {
+      fp.destroy()
+      flatpickrRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    flatpickrRef.current?.setDate(weekStart, false)
+  }, [weekStart])
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const thursday = addDays(weekStart, 4)
@@ -101,57 +134,46 @@ export default function PlannedAvailabilitySummary() {
 
   return (
     <>
-      <div className="calendar-week-nav">
-        <button
-          type="button"
-          onClick={() => {
-            setWeekStart(prev => addDays(prev, -7))
-          }}
-        >
-          Previous week
-        </button>
-        <span> Week {weekNumber} </span>
-        <button
-          type="button"
-          onClick={() => {
-            setWeekStart(prev => addDays(prev, 7))
-          }}
-        >
-          Next week
-        </button>
+
+
+      <div className={styles.weekNav}>
+
+        <Paragraph> Week {weekNumber} </Paragraph>
         {priorityHolderName && <Tag>{priorityHolderName}</Tag>}
       </div>
       <div className="calendar-week-chips"></div>
 
-      <div className="calendar-week-days">
-        <table>
-          <thead>
-            <tr>
-              {days.map((d, i) => (
-                <th key={toIso(d)} scope="col">{WEEKDAY_LABELS[i]}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {days.map(d => (
-                <td key={toIso(d)}>
-                  {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              {days.map(d => {
-                const iso = toIso(d)
+      <div className={styles.weekDays}>
+        <Table border style={{ width: "90%"}}>
+          <Table.Head>
+            <Table.Row>
+              {days.map((d, i) => {
+                const count = guestsOnDay(toIso(d))
                 return (
-                  <td key={iso}>
-                    <AvailabilityIndicatorBadge count={guestsOnDay(iso)} totalBeds={totalBeds} />
-                  </td>
+                  <Table.HeaderCell key={toIso(d)} scope="col">
+                    {count > 0 ? (
+                      <Badge.Position placement="top-right">
+                        <AvailabilityIndicatorBadge count={count} totalBeds={totalBeds} />
+                        <span>{WEEKDAY_LABELS[i]}</span>
+                      </Badge.Position>
+                    ) : (
+                      WEEKDAY_LABELS[i]
+                    )}
+                  </Table.HeaderCell>
                 )
               })}
-            </tr>
-          </tbody>
-        </table>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
+            <Table.Row>
+              {days.map(d => (
+                <Table.Cell key={toIso(d)}>
+                  {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          </Table.Body>
+        </Table>
       </div>
     </>
   )

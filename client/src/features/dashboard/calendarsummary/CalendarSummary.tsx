@@ -7,6 +7,7 @@ import { trpc } from "@/trpc/client.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
+import { Heading } from "@digdir/designsystemet-react"
 
 
 
@@ -27,7 +28,7 @@ export default function CalendarSummary() {
 
   return (
     <>
-      <h4> This week at {propertyName}</h4>
+      <Heading> This week at {propertyName}</Heading>
       <PlannedAvailabilitySummary />
       <PlannedMaintenanceSummary />
     </>

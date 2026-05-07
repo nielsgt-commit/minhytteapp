@@ -1,0 +1,10 @@
+.weekNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weekDays {
+  --dsc-table-border-color: var(--ds-color-neutral-border-subtle);
+  --dsc-table-divider-border-width: var(--ds-border-width-default);
+}
