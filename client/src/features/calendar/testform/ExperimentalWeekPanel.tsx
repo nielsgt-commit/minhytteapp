@@ -1,9 +1,25 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Field,
+  Fieldset,
+  Heading,
+  Label,
+  Paragraph,
+  Select,
+  Table,
+  Tag,
+  Textfield,
+} from "@digdir/designsystemet-react"
+import flatpickr from "flatpickr"
+import weekSelectPlugin from "flatpickr/dist/plugins/weekSelect/weekSelect"
+import type { Plugin } from "flatpickr/dist/types/options"
+import "flatpickr/dist/flatpickr.min.css"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedUserId } from "@/features/user/userSlice"
@@ -102,8 +118,8 @@ export function ExperimentalWeekPanel() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <h4>Experimental Week Panel</h4>
-        <p role="alert">No property selected — pick one from the header.</p>
+        <Heading level={4}>Experimental Week Panel</Heading>
+        <Paragraph role="alert">No property selected — pick one from the header.</Paragraph>
       </section>
     )
   }
@@ -138,6 +154,35 @@ function Body({ propertyId }: { propertyId: number }) {
   const [picks, setPicks] = useState<Record<number, string[]>>({})
   const [drafts, setDrafts] = useState<Record<string, DraftConfig>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const weekPickerRef = useRef<HTMLInputElement>(null)
+  const flatpickrRef = useRef<flatpickr.Instance | null>(null)
+
+  useEffect(() => {
+    if (!weekPickerRef.current) return
+    const fp = flatpickr(weekPickerRef.current, {
+      plugins: [weekSelectPlugin() as Plugin],
+      minDate: sundayBeforeIsoWeek(TEST_YEAR, TEST_MIN_WEEK),
+      maxDate: addDays(sundayBeforeIsoWeek(TEST_YEAR, TEST_MAX_WEEK), 6),
+      onChange: dates => {
+        if (dates[0]) {
+          const sunday = new Date(dates[0])
+          sunday.setHours(0, 0, 0, 0)
+          sunday.setDate(sunday.getDate() - sunday.getDay())
+          setWeekStart(sunday)
+        }
+      },
+    })
+    flatpickrRef.current = fp
+    return () => {
+      fp.destroy()
+      flatpickrRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    flatpickrRef.current?.setDate(weekStart, false)
+  }, [weekStart])
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const weekNumber = isoWeekNumber(addDays(weekStart, 4))
@@ -332,72 +377,71 @@ function Body({ propertyId }: { propertyId: number }) {
 
   return (
     <section>
-      <h4>Experimental Week Panel</h4>
+      <Heading level={4}>Experimental Week Panel</Heading>
 
       {selectedUserId == null && (
-        <p role="alert">No user selected — pick one from the header.</p>
+        <Paragraph role="alert">No user selected — pick one from the header.</Paragraph>
       )}
 
-      <div>
-        <button
-          type="button"
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <Button
+          variant="secondary"
           disabled={weekNumber <= TEST_MIN_WEEK}
           onClick={() => {
             setWeekStart(prev => addDays(prev, -7))
           }}
         >
           Prev week
-        </button>
-        <span> Week {weekNumber} </span>
-        <button
-          type="button"
+        </Button>
+        <input ref={weekPickerRef} type="text" aria-label="Pick week" />
+        <Paragraph>Week {weekNumber}</Paragraph>
+        <Button
+          variant="secondary"
           disabled={weekNumber >= TEST_MAX_WEEK}
           onClick={() => {
             setWeekStart(prev => addDays(prev, 7))
           }}
         >
           Next week
-        </button>
-        {priorityHolder && (
-          <span> Priority: {priorityHolder.userName}</span>
-        )}
+        </Button>
+        {priorityHolder && <Tag>Priority: {priorityHolder.userName}</Tag>}
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>User</th>
+      <Table>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell>User</Table.HeaderCell>
             {days.map((d, i) => (
-              <th key={toIso(d)}>
+              <Table.HeaderCell key={toIso(d)}>
                 <div>{WEEKDAY_LABELS[i]}</div>
                 <div>{pad2(d.getDate())}/{pad2(d.getMonth() + 1)}</div>
-              </th>
+              </Table.HeaderCell>
             ))}
-          </tr>
-        </thead>
+          </Table.Row>
+        </Table.Head>
         {rowGroups.map(group => (
-          <tbody key={group.key}>
-            <tr>
-              <th colSpan={8} scope="colgroup">
+          <Table.Body key={group.key}>
+            <Table.Row>
+              <Table.HeaderCell colSpan={8} scope="colgroup">
                 {group.label}
-              </th>
-            </tr>
+              </Table.HeaderCell>
+            </Table.Row>
             {group.members.map(u => {
               const isCurrent = u.id === selectedUserId
               const userPicks = picks[u.id] ?? []
               return (
-                <tr key={u.id}>
-                  <th scope="row">
+                <Table.Row key={u.id}>
+                  <Table.HeaderCell scope="row">
                     {u.name}
                     {u.is_head ? " (head)" : ""}
-                  </th>
+                  </Table.HeaderCell>
                   {days.map(d => {
                     const iso = toIso(d)
                     const bookingId =
                       bookingIdByUserDay.get(u.id)?.get(iso) ?? null
                     const isBooked = bookingId != null
                     return (
-                      <td key={iso}>
+                      <Table.Cell key={iso}>
                         <input
                           type="checkbox"
                           checked={isBooked || userPicks.includes(iso)}
@@ -416,19 +460,19 @@ function Body({ propertyId }: { propertyId: number }) {
                             togglePick(u.id, iso)
                           }}
                         />
-                      </td>
+                      </Table.Cell>
                     )
                   })}
-                </tr>
+                </Table.Row>
               )
             })}
-          </tbody>
+          </Table.Body>
         ))}
-      </table>
+      </Table>
 
-      <h4>Convert picks to bookings</h4>
+      <Heading level={4}>Convert picks to bookings</Heading>
       {ranges.length === 0 && (
-        <p>Pick days above to derive booking ranges.</p>
+        <Paragraph>Pick days above to derive booking ranges.</Paragraph>
       )}
       {ranges.map(range => {
         const draft = getDraft(range.start)
@@ -440,152 +484,141 @@ function Body({ propertyId }: { propertyId: number }) {
             ? [...new Set([selectedUserId, ...draft.group_user_ids])]
             : draft.group_user_ids
         return (
-          <fieldset key={range.start}>
-            <legend>
+          <Fieldset key={range.start}>
+            <Fieldset.Legend>
               {range.start} – {range.end} ({String(dayCount)}{" "}
               {dayCount === 1 ? "day" : "days"})
-            </legend>
+            </Fieldset.Legend>
 
-            <div>
-              <label>
-                Status
-                <select
-                  value={draft.status}
-                  onChange={e => {
-                    setDraft(range.start, {
-                      status: e.target.value as Status,
-                    })
-                  }}
-                >
-                  <option value="pending">pending</option>
-                  <option value="confirmed">confirmed</option>
-                  <option value="cancelled">cancelled</option>
-                </select>
-              </label>
-            </div>
+            <Field>
+              <Label>Status</Label>
+              <Select
+                value={draft.status}
+                onChange={e => {
+                  setDraft(range.start, {
+                    status: e.target.value as Status,
+                  })
+                }}
+              >
+                <Select.Option value="pending">pending</Select.Option>
+                <Select.Option value="confirmed">confirmed</Select.Option>
+                <Select.Option value="cancelled">cancelled</Select.Option>
+              </Select>
+            </Field>
 
-            <div>
-              <label>
-                Booking type
-                <select
-                  value={draft.mode}
-                  onChange={e => {
-                    setDraft(range.start, {
-                      mode: e.target.value as Mode,
-                    })
-                  }}
-                >
-                  <option value="individual">Individual</option>
-                  <option value="group">Group</option>
-                </select>
-              </label>
-            </div>
+            <Field>
+              <Label>Booking type</Label>
+              <Select
+                value={draft.mode}
+                onChange={e => {
+                  setDraft(range.start, {
+                    mode: e.target.value as Mode,
+                  })
+                }}
+              >
+                <Select.Option value="individual">Individual</Select.Option>
+                <Select.Option value="group">Group</Select.Option>
+              </Select>
+            </Field>
 
             {draft.mode === "individual" && (
-              <div>
-                <label>
-                  Room
-                  <select
-                    value={draft.room_id}
-                    onChange={e => {
-                      setDraft(range.start, { room_id: e.target.value })
-                    }}
-                  >
-                    <option value="">(no room)</option>
-                    {propertyRooms.map(r => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <Field>
+                <Label>Room</Label>
+                <Select
+                  value={draft.room_id}
+                  onChange={e => {
+                    setDraft(range.start, { room_id: e.target.value })
+                  }}
+                >
+                  <Select.Option value="">(no room)</Select.Option>
+                  {propertyRooms.map(r => (
+                    <Select.Option key={r.id} value={r.id}>
+                      {r.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Field>
             )}
 
             {draft.mode === "group" && (
               <>
-                <div>
-                  <label>
+                <Field>
+                  <Label htmlFor={`other-occupants-${range.start}`}>
                     Other occupants
-                    <select
-                      multiple
-                      value={draft.group_user_ids.map(String)}
-                      onChange={e => {
-                        const ids = Array.from(e.target.selectedOptions).map(
-                          o => Number(o.value),
-                        )
-                        setDraft(range.start, { group_user_ids: ids })
-                      }}
-                    >
-                      {otherUsers.map(u => (
-                        <option key={u.id} value={u.id}>
-                          #{u.id} {u.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+                  </Label>
+                  <select
+                    id={`other-occupants-${range.start}`}
+                    multiple
+                    value={draft.group_user_ids.map(String)}
+                    onChange={e => {
+                      const ids = Array.from(e.target.selectedOptions).map(
+                        o => Number(o.value),
+                      )
+                      setDraft(range.start, { group_user_ids: ids })
+                    }}
+                  >
+                    {otherUsers.map(u => (
+                      <option key={u.id} value={u.id}>
+                        #{u.id} {u.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
                 {groupRoster.map(uid => {
                   const u = users.find(x => x.id === uid)
                   return (
-                    <div key={uid}>
-                      <label>
-                        Room for #{uid} {u ? u.name : ""}
-                        <select
-                          value={draft.group_assignments[uid] ?? ""}
-                          onChange={e => {
-                            setDraft(range.start, {
-                              group_assignments: {
-                                ...draft.group_assignments,
-                                [uid]: e.target.value,
-                              },
-                            })
-                          }}
-                        >
-                          <option value="">(no room)</option>
-                          {propertyRooms.map(r => (
-                            <option key={r.id} value={r.id}>
-                              {r.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
+                    <Field key={uid}>
+                      <Label>Room for #{uid} {u ? u.name : ""}</Label>
+                      <Select
+                        value={draft.group_assignments[uid] ?? ""}
+                        onChange={e => {
+                          setDraft(range.start, {
+                            group_assignments: {
+                              ...draft.group_assignments,
+                              [uid]: e.target.value,
+                            },
+                          })
+                        }}
+                      >
+                        <Select.Option value="">(no room)</Select.Option>
+                        {propertyRooms.map(r => (
+                          <Select.Option key={r.id} value={r.id}>
+                            {r.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Field>
                   )
                 })}
               </>
             )}
 
-            <div>
-              <label>
-                Notes
-                <input
-                  type="text"
-                  value={draft.notes}
-                  onChange={e => {
-                    setDraft(range.start, { notes: e.target.value })
-                  }}
-                />
-              </label>
-            </div>
+            <Textfield
+              label="Notes"
+              value={draft.notes}
+              onChange={e => {
+                setDraft(range.start, { notes: e.target.value })
+              }}
+            />
 
-            <div>
-              <button
-                type="button"
-                disabled={
-                  selectedUserId == null || createMutation.isPending
-                }
-                onClick={() => {
-                  submitRange(range)
-                }}
-              >
-                Create booking
-              </button>
-            </div>
+            <Button
+              disabled={
+                selectedUserId == null || createMutation.isPending
+              }
+              onClick={() => {
+                submitRange(range)
+              }}
+            >
+              Create booking
+            </Button>
 
-            {err !== undefined && <p role="alert">Error: {err}</p>}
-          </fieldset>
+            {err !== undefined && (
+              <Paragraph data-color="danger" role="alert">
+                Error: {err}
+              </Paragraph>
+            )}
+          </Fieldset>
         )
       })}
     </section>
