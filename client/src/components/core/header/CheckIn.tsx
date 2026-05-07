@@ -50,7 +50,7 @@ export default function CheckIn() {
 
   return (
     <Switch
-      label={checked ? "Checked in" : "Check in"}
+      label={checked ? "På hytta nå" : "På hytta?"}
       checked={checked}
       disabled={pending}
       onChange={e => { handleChange(e.currentTarget.checked) }}

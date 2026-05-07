@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Tag } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -49,6 +50,20 @@ export default function PlannedAvailabilitySummary() {
   const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const totalBeds = rooms.reduce(
+    (sum, r) =>
+      sum +
+      r.beds_sm +
+      r.beds_lg +
+      r.beds_double * 2 +
+      r.beds_kid +
+      r.mattresses +
+      r.travel_cot,
+    0,
   )
   const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
 
@@ -104,7 +119,7 @@ export default function PlannedAvailabilitySummary() {
         >
           Next week
         </button>
-        {priorityHolderName && <span> {priorityHolderName} </span>}
+        {priorityHolderName && <Tag>{priorityHolderName}</Tag>}
       </div>
       <div className="calendar-week-chips"></div>
 
@@ -130,7 +145,7 @@ export default function PlannedAvailabilitySummary() {
                 const iso = toIso(d)
                 return (
                   <td key={iso}>
-                    <AvailabilityIndicatorBadge count={guestsOnDay(iso)} />
+                    <AvailabilityIndicatorBadge count={guestsOnDay(iso)} totalBeds={totalBeds} />
                   </td>
                 )
               })}

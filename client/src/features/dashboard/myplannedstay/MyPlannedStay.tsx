@@ -53,7 +53,7 @@ export function MyPlannedStay() {
       {myBookings.length === 0 ? (
         <p>No planned stays yet.</p>
       ) : (
-        <ul>
+        <ul style={{ listStyle: "none", padding: 0 }}>
           {myBookings.map(b => {
             const otherNames = new Set<string>()
             for (const other of active) {

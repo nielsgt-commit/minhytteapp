@@ -3,6 +3,7 @@ import PropertyMenu from "./PropertyMenu.tsx"
 import UserMenu from "./UserMenu"
 import HeaderUserGroupPanel from "./HeaderUserGroupPanel.tsx"
 import styles from "./Header.module.css"
+import CheckIn from "@/components/core/header/CheckIn.tsx"
 
 export default function Header() {
   return (
@@ -11,7 +12,12 @@ export default function Header() {
         <PropertyMenu />
         <UserMenu />
         <HeaderUserGroupPanel />
-        <Heading level={1} className={styles.title}>  </Heading>
+        <Heading level={1} className={styles.title}>
+          {" "}
+        </Heading>
+        <div className={styles.end}>
+          <CheckIn />
+        </div>
       </div>
     </header>
   )

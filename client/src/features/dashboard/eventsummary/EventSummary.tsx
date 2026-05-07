@@ -87,7 +87,7 @@ export default function EventSummary() {
       ) : events.length === 0 ? (
         <p>No active events.</p>
       ) : (
-        <ul>
+        <ul style={{ listStyle: "none", padding: 0 }}>
           {events.map(ev => {
             const canDelete = me?.id === ev.author_id || me?.is_admin === true
             return (

@@ -8,8 +8,8 @@ import {
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 
 export default function RoomsSummary() {
   const trpc = useTRPC()
@@ -46,7 +46,7 @@ export default function RoomsSummary() {
       {rooms.length === 0 ? (
         <Paragraph>No rooms yet.</Paragraph>
       ) : (
-        <List.Unordered>
+        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
           <List.Item>Beds (single) – {totals.beds_sm}</List.Item>
           <List.Item>Beds (large) – {totals.beds_lg}</List.Item>
           <List.Item>Beds (double) – {totals.beds_double}</List.Item>

@@ -8,8 +8,8 @@ import {
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 
 export default function UserSummary() {
   const trpc = useTRPC()
@@ -28,7 +28,7 @@ export default function UserSummary() {
       {userGroups.length === 0 ? (
         <Paragraph>No user groups yet.</Paragraph>
       ) : (
-        <List.Unordered>
+        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
           {userGroups.map(g => (
             <List.Item key={g.id}>
               {g.name} – {g.members.length} member

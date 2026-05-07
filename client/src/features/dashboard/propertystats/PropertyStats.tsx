@@ -3,9 +3,9 @@ import { Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
-import BuildingSummary from "@/features/dashboard/buildingsummary/BuildingSummary"
-import UserSummary from "@/features/dashboard/usersummary/UserSummary"
-import RoomsSummary from "@/features/dashboard/roomssummary/RoomsSummary"
+import BuildingSummary from "@/features/dashboard/propertystats/buildingsummary/BuildingSummary"
+import UserSummary from "@/features/dashboard/propertystats/usersummary/UserSummary"
+import RoomsSummary from "@/features/dashboard/propertystats/roomssummary/RoomsSummary"
 
 export default function PropertyStats() {
   const trpc = useTRPC()
@@ -18,8 +18,8 @@ export default function PropertyStats() {
   return (
     <>
       <Heading level={4}> {selectedProperty?.name ?? ""} at a glance</Heading>
-      <BuildingSummary />
       <UserSummary />
+      <BuildingSummary />
       <RoomsSummary />
     </>
   )

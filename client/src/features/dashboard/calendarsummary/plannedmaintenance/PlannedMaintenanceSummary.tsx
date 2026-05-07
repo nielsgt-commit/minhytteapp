@@ -1,7 +1,18 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Heading, Tag } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+
+type Severity = "major" | "minor" | "patch"
+
+function severityColor(
+  items: { severity: Severity }[],
+): "info" | "warning" | "danger" {
+  if (items.some(i => i.severity === "major")) return "danger"
+  if (items.some(i => i.severity === "minor")) return "warning"
+  return "info"
+}
 
 export default function PlannedMaintenanceSummary() {
   const trpc = useTRPC()
@@ -28,7 +39,7 @@ export default function PlannedMaintenanceSummary() {
 
   return (
     <>
-      <h4>Planned Maintenance</h4>
+      <Heading level={6} size="medium">Planned Maintenance</Heading>
       {buildingsWithItems.length === 0 ? (
         <p>No planned maintenance.</p>
       ) : (
@@ -36,9 +47,9 @@ export default function PlannedMaintenanceSummary() {
           {buildingsWithItems.map(b => {
             const bucket = itemsByBuilding.get(b.id) ?? []
             return (
-              <li key={b.id}>
+              <Tag key={b.id} data-color={severityColor(bucket)}>
                 {b.name} ({bucket.length} open)
-              </li>
+              </Tag>
             )
           })}
         </ul>

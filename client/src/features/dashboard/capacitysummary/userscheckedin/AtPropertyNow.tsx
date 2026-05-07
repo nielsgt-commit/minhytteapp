@@ -1,7 +1,20 @@
 import { useQuery } from "@tanstack/react-query"
+import {
+  Avatar,
+  EXPERIMENTAL_AvatarStack as AvatarStack,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0]?.toUpperCase() ?? "")
+    .join("")
+}
 
 export default function AtPropertyNow() {
   const trpc = useTRPC()
@@ -19,17 +32,15 @@ export default function AtPropertyNow() {
   const guests = data ?? []
   if (guests.length === 0) return <p>No one at the property right now.</p>
 
-
   return (
-
-       <ul style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", listStyle: "none", padding: 0 }}>
-          {guests.map(g => (
-            <li key={g.user_id}>
-              {g.name}
-              {g.via === "stay" && " (checked in)"}
-              {g.via === "both" && " (booking + checked in)"}
-            </li>
-          ))}
-       </ul>
+    <AvatarStack aria-label="At property now" expandable>
+      {guests.map(g => (
+        <Avatar
+          key={g.user_id}
+          aria-label={g.name}
+          data-initials={initials(g.name)}
+        />
+      ))}
+    </AvatarStack>
   )
 }

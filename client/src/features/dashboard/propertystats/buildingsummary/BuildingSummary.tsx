@@ -8,8 +8,8 @@ import {
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useAppSelector } from "@/app/hooks.ts"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 
 export default function BuildingSummary() {
   const trpc = useTRPC()
@@ -37,7 +37,7 @@ export default function BuildingSummary() {
       {buildings.length === 0 ? (
         <Paragraph>No buildings yet.</Paragraph>
       ) : (
-        <List.Unordered>
+        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
           {buildings.map(b => {
             const count = roomCountByBuilding.get(b.id) ?? 0
             return (
