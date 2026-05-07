@@ -1,5 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import {
+  Badge,
+  Button,
+  Heading,
+  List,
+  Paragraph,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -24,22 +31,26 @@ export default function BuildingSummary() {
 
   return (
     <>
-      <h4>Buildings ({buildings.length})</h4>
+      <Heading level={4}>
+        Buildings <Badge count={buildings.length} />
+      </Heading>
       {buildings.length === 0 ? (
-        <p>No buildings yet.</p>
+        <Paragraph>No buildings yet.</Paragraph>
       ) : (
-        <ul>
+        <List.Unordered>
           {buildings.map(b => {
             const count = roomCountByBuilding.get(b.id) ?? 0
             return (
-              <li key={b.id}>
+              <List.Item key={b.id}>
                 {b.name} – {count} room{count === 1 ? "" : "s"}
-              </li>
+              </List.Item>
             )
           })}
-        </ul>
+        </List.Unordered>
       )}
-      <Link to="/manageproperty">Manage buildings</Link>
+      <Button asChild variant="secondary">
+        <Link to="/manageproperty">Manage buildings</Link>
+      </Button>
     </>
   )
 }

@@ -1,5 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import {
+  Badge,
+  Button,
+  Heading,
+  List,
+  Paragraph,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -33,20 +40,24 @@ export default function RoomsSummary() {
 
   return (
     <>
-      <h4>Bedrooms ({rooms.length})</h4>
+      <Heading level={4}>
+        Bedrooms <Badge count={rooms.length} />
+      </Heading>
       {rooms.length === 0 ? (
-        <p>No rooms yet.</p>
+        <Paragraph>No rooms yet.</Paragraph>
       ) : (
-        <ul>
-          <li>Beds (single) – {totals.beds_sm}</li>
-          <li>Beds (large) – {totals.beds_lg}</li>
-          <li>Beds (double) – {totals.beds_double}</li>
-          <li>Beds (kid) – {totals.beds_kid}</li>
-          <li>Mattresses – {totals.mattresses}</li>
-          <li>Travel cots – {totals.travel_cot}</li>
-        </ul>
+        <List.Unordered>
+          <List.Item>Beds (single) – {totals.beds_sm}</List.Item>
+          <List.Item>Beds (large) – {totals.beds_lg}</List.Item>
+          <List.Item>Beds (double) – {totals.beds_double}</List.Item>
+          <List.Item>Beds (kid) – {totals.beds_kid}</List.Item>
+          <List.Item>Mattresses – {totals.mattresses}</List.Item>
+          <List.Item>Travel cots – {totals.travel_cot}</List.Item>
+        </List.Unordered>
       )}
-      <Link to="/manageproperty">Manage rooms</Link>
+      <Button asChild variant="secondary">
+        <Link to="/manageproperty">Manage rooms</Link>
+      </Button>
     </>
   )
 }

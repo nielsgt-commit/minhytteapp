@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -16,7 +17,7 @@ export default function PropertyStats() {
 
   return (
     <>
-      <h4>Manage {selectedProperty?.name ?? ""}</h4>
+      <Heading level={4}> {selectedProperty?.name ?? ""} at a glance</Heading>
       <BuildingSummary />
       <UserSummary />
       <RoomsSummary />

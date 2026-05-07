@@ -1,5 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import {
+  Badge,
+  Button,
+  Heading,
+  List,
+  Paragraph,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -15,20 +22,24 @@ export default function UserSummary() {
 
   return (
     <>
-      <h4>User groups ({userGroups.length})</h4>
+      <Heading level={4}>
+        User groups <Badge count={userGroups.length} />
+      </Heading>
       {userGroups.length === 0 ? (
-        <p>No user groups yet.</p>
+        <Paragraph>No user groups yet.</Paragraph>
       ) : (
-        <ul>
+        <List.Unordered>
           {userGroups.map(g => (
-            <li key={g.id}>
+            <List.Item key={g.id}>
               {g.name} – {g.members.length} member
               {g.members.length === 1 ? "" : "s"}
-            </li>
+            </List.Item>
           ))}
-        </ul>
+        </List.Unordered>
       )}
-      <Link to="/usergroups">Manage user groups</Link>
+      <Button asChild variant="secondary">
+        <Link to="/usergroups">Manage user groups</Link>
+      </Button>
     </>
   )
 }
