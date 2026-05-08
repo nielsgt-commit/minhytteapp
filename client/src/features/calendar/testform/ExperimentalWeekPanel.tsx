@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import {
   Button,
+  EXPERIMENTAL_Suggestion as Suggestion,
   Field,
   Fieldset,
   Heading,
@@ -16,6 +17,7 @@ import {
   Tag,
   Textfield,
 } from "@digdir/designsystemet-react"
+import type { SuggestionItem } from "@digdir/designsystemet-react"
 import flatpickr from "flatpickr"
 import weekSelectPlugin from "flatpickr/dist/plugins/weekSelect/weekSelect"
 import type { Plugin } from "flatpickr/dist/types/options"
@@ -159,8 +161,9 @@ function Body({ propertyId }: { propertyId: number }) {
   const flatpickrRef = useRef<flatpickr.Instance | null>(null)
 
   useEffect(() => {
-    if (!weekPickerRef.current) return
-    const fp = flatpickr(weekPickerRef.current, {
+    const input = weekPickerRef.current
+    if (!input) return
+    const result = flatpickr(input, {
       plugins: [weekSelectPlugin() as Plugin],
       minDate: sundayBeforeIsoWeek(TEST_YEAR, TEST_MIN_WEEK),
       maxDate: addDays(sundayBeforeIsoWeek(TEST_YEAR, TEST_MAX_WEEK), 6),
@@ -173,9 +176,13 @@ function Body({ propertyId }: { propertyId: number }) {
         }
       },
     })
-    flatpickrRef.current = fp
+    const instance = Array.isArray(result) ? result[0] : result
+    if (!instance) return
+    flatpickrRef.current = instance
     return () => {
-      fp.destroy()
+      if (typeof instance.destroy === "function") {
+        instance.destroy()
+      }
       flatpickrRef.current = null
     }
   }, [])
@@ -546,23 +553,37 @@ function Body({ propertyId }: { propertyId: number }) {
                   <Label htmlFor={`other-occupants-${range.start}`}>
                     Other occupants
                   </Label>
-                  <select
-                    id={`other-occupants-${range.start}`}
+                  <Suggestion
                     multiple
-                    value={draft.group_user_ids.map(String)}
-                    onChange={e => {
-                      const ids = Array.from(e.target.selectedOptions).map(
-                        o => Number(o.value),
-                      )
+                    selected={draft.group_user_ids.map(id => {
+                      const u = users.find(x => x.id === id)
+                      return {
+                        value: String(id),
+                        label: u ? `#${String(id)} ${u.name}` : `#${String(id)}`,
+                      }
+                    })}
+                    onSelectedChange={(items: SuggestionItem[]) => {
+                      const ids = items.map(i => Number(i.value))
                       setDraft(range.start, { group_user_ids: ids })
                     }}
                   >
-                    {otherUsers.map(u => (
-                      <option key={u.id} value={u.id}>
-                        #{u.id} {u.name}
-                      </option>
-                    ))}
-                  </select>
+                    <Suggestion.Input
+                      id={`other-occupants-${range.start}`}
+                    />
+                    <Suggestion.Clear />
+                    <Suggestion.List>
+                      <Suggestion.Empty>No matches</Suggestion.Empty>
+                      {otherUsers.map(u => (
+                        <Suggestion.Option
+                          key={u.id}
+                          value={String(u.id)}
+                          label={`#${String(u.id)} ${u.name}`}
+                        >
+                          #{u.id} {u.name}
+                        </Suggestion.Option>
+                      ))}
+                    </Suggestion.List>
+                  </Suggestion>
                 </Field>
 
                 {groupRoster.map(uid => {

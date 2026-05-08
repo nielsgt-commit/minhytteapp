@@ -1,11 +1,7 @@
 import styles from "./Maintenance.module.css"
-import { MaintenanceTestForm } from "@/features/maintenance/testform/MaintenanceTestForm.tsx"
 import { BuildingStats } from "@/features/maintenance/BuildingStats.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
-import { AssignedTasks } from "@/features/maintenance/AssignedTasks.tsx"
-import { UnassignedTasks } from "@/features/maintenance/UnassignedTasks.tsx"
-import { Equipment } from "@/features/maintenance/Equipment.tsx"
 
 export function Maintenance() {
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
@@ -22,19 +18,7 @@ export function Maintenance() {
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Maintenance</h2>
-      <div className={styles.buildings}>
-        <BuildingStats />
-      </div>
-      <div className={styles.equipment}>
-        <Equipment />
-      </div>
-      <div className={styles.tasks}>
-        <AssignedTasks />
-        <UnassignedTasks />
-      </div>
-      <div className={styles.testform}>
-        <MaintenanceTestForm />
-      </div>
+      <BuildingStats />
     </section>
   )
 }

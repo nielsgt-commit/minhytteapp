@@ -1,3 +1,5 @@
+import { Chip } from "@digdir/designsystemet-react"
+
 export function BuildingFilter({
   buildings,
   hiddenIds,
@@ -8,18 +10,18 @@ export function BuildingFilter({
   onToggle: (id: number) => void
 }) {
   return (
-    <fieldset>
-      <legend>Show buildings</legend>
+    <>
       {buildings.map(b => (
-        <label key={b.id}>
-          <input
-            type="checkbox"
-            checked={!hiddenIds.has(b.id)}
-            onChange={() => { onToggle(b.id) }}
-          />
+        <Chip.Checkbox
+          key={b.id}
+          checked={!hiddenIds.has(b.id)}
+          onChange={() => {
+            onToggle(b.id)
+          }}
+        >
           {b.name}
-        </label>
+        </Chip.Checkbox>
       ))}
-    </fieldset>
+    </>
   )
 }

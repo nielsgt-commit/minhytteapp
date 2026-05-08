@@ -25,7 +25,7 @@ const updateInput = z.object({
 const scheduleMaintenanceInput = z.object({
   equipment_id: z.number().int().positive(),
   description: z.string().min(1, { error: "description is required" }).max(255),
-  summary: z.string().max(255).optional(),
+  instructions: z.string().max(255).optional(),
   added_by: z.number().int().positive(),
   assigned_to_id: z.number().int().positive().optional(),
   category: z.enum(["maintenance", "repair"]).default("maintenance"),
@@ -113,7 +113,7 @@ export const equipmentRouter = router({
         .insert(maintenanceTable)
         .values({
           description: input.description,
-          summary: input.summary,
+          instructions: input.instructions,
           added_by: input.added_by,
           assigned_to_id: input.assigned_to_id,
           building_id: equipment.building_id,

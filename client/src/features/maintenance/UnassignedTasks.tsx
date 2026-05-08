@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { Button, Switch, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -51,16 +52,17 @@ export function UnassignedTasks() {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const rawDescription = fd.get("description")
-      const rawSummary = fd.get("summary")
+      const rawInstructions = fd.get("instructions")
       const description =
         typeof rawDescription === "string" ? rawDescription.trim() : ""
-      const summary = typeof rawSummary === "string" ? rawSummary.trim() : ""
+      const instructions =
+        typeof rawInstructions === "string" ? rawInstructions.trim() : ""
       if (!description) return
       updateMutation.mutate(
         {
           id: item.id,
           description,
-          summary: summary || undefined,
+          instructions: instructions || undefined,
           added_by: item.added_by,
           assigned_to_id: item.assigned_to_id ?? undefined,
           building_id: item.building_id ?? undefined,
@@ -77,21 +79,18 @@ export function UnassignedTasks() {
   return (
     <section>
       <h2>Unassigned tasks</h2>
-      <label>
-        <input
-          type="checkbox"
-          checked={editMode}
-          onChange={e => {
-            const next = e.currentTarget.checked
-            setEditMode(next)
-            if (!next) {
-              setEditing(null)
-              setDeleting(null)
-            }
-          }}
-        />
-        Edit mode
-      </label>
+      <Switch
+        label="Edit mode"
+        checked={editMode}
+        onChange={e => {
+          const next = e.target.checked
+          setEditMode(next)
+          if (!next) {
+            setEditing(null)
+            setDeleting(null)
+          }
+        }}
+      />
       {lastError && <p role="alert">Error: {lastError.message}</p>}
       {unassigned.length === 0 ? (
         <p>No unassigned tasks.</p>
@@ -107,31 +106,25 @@ export function UnassignedTasks() {
                   <form onSubmit={handleEditSubmit(t)}>
                     <fieldset>
                       <legend>Edit task</legend>
-                      <label>
-                        Task
-                        <input
-                          type="text"
-                          name="description"
-                          defaultValue={t.description}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Summary
-                        <input
-                          type="text"
-                          name="summary"
-                          defaultValue={t.summary ?? ""}
-                        />
-                      </label>
-                      <button type="submit" disabled={pending}>Save</button>
-                      <button
-                        type="button"
+                      <Textfield
+                        label="Task"
+                        name="description"
+                        defaultValue={t.description}
+                        required
+                      />
+                      <Textfield
+                        label="Instructions"
+                        name="instructions"
+                        defaultValue={t.instructions ?? ""}
+                      />
+                      <Button type="submit" disabled={pending}>Save</Button>
+                      <Button
+                        variant="secondary"
                         disabled={pending}
                         onClick={() => { setEditing(null) }}
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </fieldset>
                   </form>
                 </li>
@@ -142,35 +135,35 @@ export function UnassignedTasks() {
               <li key={t.id}>
                 {t.description} ({t.severity}){" "}
                 {editMode && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="tertiary"
                     disabled={pending}
                     onClick={() => { setEditing({ id: t.id }) }}
                   >
                     Edit
-                  </button>
+                  </Button>
                 )}
                 {editMode && !isDeleting && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="tertiary"
                     disabled={pending}
                     onClick={() => { setDeleting({ id: t.id, typed: "" }) }}
                   >
                     Delete
-                  </button>
+                  </Button>
                 )}
                 {isDeleting && (
                   <span>
                     {" "}Type <code>{t.description}</code> to confirm:{" "}
-                    <input
-                      type="text"
+                    <Textfield
+                      aria-label="Type description to confirm deletion"
                       value={deleting.typed}
                       onChange={e => {
                         setDeleting({ id: t.id, typed: e.target.value })
                       }}
                     />
-                    <button
-                      type="button"
+                    <Button
+                      data-color="danger"
                       disabled={pending || deleting.typed !== t.description}
                       onClick={() => {
                         deleteMutation.mutate(
@@ -180,14 +173,14 @@ export function UnassignedTasks() {
                       }}
                     >
                       Confirm delete
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
                       disabled={pending}
                       onClick={() => { setDeleting(null) }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </span>
                 )}
               </li>

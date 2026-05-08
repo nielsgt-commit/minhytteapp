@@ -1,18 +1,20 @@
 .page {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-areas:
-    "title    title    title    title    title  title"
-    "content  content  content  content  content content"
-    "capacity capacity capacity capacity panels panels"
-    "calendar calendar calendar calendar panels panels"
-    "contacts contacts contacts contacts panels panels";
+  grid-template-columns: 4fr 2fr;
   gap: 0.4rem;
 }
 
+.title { grid-column: 1 / -1; }
 
-.title    { grid-area: title; }
-.capacity { grid-area: capacity; }
-.calendar { grid-area: calendar; }
-.panels   { grid-area: panels; display: flex; flex-direction: column; gap: 1rem; }
-.contacts { grid-area: contacts; }
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.panels {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

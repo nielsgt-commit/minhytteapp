@@ -9,7 +9,7 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const maintenanceFields = {
   description: z.string().min(1),
-  summary: z.string().optional(),
+  instructions: z.string().optional(),
   added_by: z.number().int().positive(),
   assigned_to_id: z.number().int().positive().optional(),
   building_id: z.number().int().positive().optional(),

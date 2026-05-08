@@ -5,6 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
@@ -108,42 +109,40 @@ export function Equipment() {
                   <td>
                     {isScheduling ? (
                       <form onSubmit={handleSubmit(item.id)}>
-                        <label>
-                          Task
-                          <input
-                            type="text"
-                            name="description"
-                            defaultValue={`Service ${item.name}`}
-                            required
-                          />
-                        </label>
-                        <label>
-                          Due
-                          <input type="date" name="due_at" />
-                        </label>
-                        <button
+                        <Textfield
+                          label="Task"
+                          name="description"
+                          defaultValue={`Service ${item.name}`}
+                          required
+                        />
+                        <Textfield
+                          label="Due"
+                          type="date"
+                          name="due_at"
+                        />
+                        <Button
                           type="submit"
                           disabled={
                             scheduleMutation.isPending || selectedUserId == null
                           }
                         >
                           Schedule
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          variant="secondary"
                           disabled={scheduleMutation.isPending}
                           onClick={() => { setSchedulingId(null) }}
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </form>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="tertiary"
                         onClick={() => { setSchedulingId(item.id) }}
                       >
                         Schedule maintenance
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>

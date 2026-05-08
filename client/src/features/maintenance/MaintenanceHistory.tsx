@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -55,16 +56,17 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const rawDescription = fd.get("description")
-      const rawSummary = fd.get("summary")
+      const rawInstructions = fd.get("instructions")
       const description =
         typeof rawDescription === "string" ? rawDescription.trim() : ""
-      const summary = typeof rawSummary === "string" ? rawSummary.trim() : ""
+      const instructions =
+        typeof rawInstructions === "string" ? rawInstructions.trim() : ""
       if (!description) return
       updateMutation.mutate(
         {
           id: item.id,
           description,
-          summary: summary || undefined,
+          instructions: instructions || undefined,
           added_by: item.added_by,
           assigned_to_id: item.assigned_to_id ?? undefined,
           building_id: item.building_id ?? undefined,
@@ -92,7 +94,7 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
         <tr>
           <th>Done</th>
           <th>Description</th>
-          <th>Summary</th>
+          <th>Instructions</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -111,31 +113,25 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
                   <form onSubmit={handleEditSubmit(item)}>
                     <fieldset>
                       <legend>Edit completed task</legend>
-                      <label>
-                        Task
-                        <input
-                          type="text"
-                          name="description"
-                          defaultValue={item.description}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Summary
-                        <input
-                          type="text"
-                          name="summary"
-                          defaultValue={item.summary ?? ""}
-                        />
-                      </label>
-                      <button type="submit" disabled={pending}>Save</button>
-                      <button
-                        type="button"
+                      <Textfield
+                        label="Task"
+                        name="description"
+                        defaultValue={item.description}
+                        required
+                      />
+                      <Textfield
+                        label="Instructions"
+                        name="instructions"
+                        defaultValue={item.instructions ?? ""}
+                      />
+                      <Button type="submit" disabled={pending}>Save</Button>
+                      <Button
+                        variant="secondary"
                         disabled={pending}
                         onClick={() => { setEditing(null) }}
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </fieldset>
                   </form>
                 </td>
@@ -147,36 +143,36 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
             <tr key={item.id}>
               <td>{completedLabel}</td>
               <td>{item.description}</td>
-              <td>{item.summary ?? ""}</td>
+              <td>{item.instructions ?? ""}</td>
               <td>
-                <button
-                  type="button"
+                <Button
+                  variant="tertiary"
                   disabled={pending}
                   onClick={() => { setEditing({ id: item.id }) }}
                 >
                   Edit
-                </button>
+                </Button>
                 {!isDeleting && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="tertiary"
                     disabled={pending}
                     onClick={() => { setDeleting({ id: item.id, typed: "" }) }}
                   >
                     Delete
-                  </button>
+                  </Button>
                 )}
                 {isDeleting && (
                   <span>
                     Type <code>{item.description}</code> to confirm:{" "}
-                    <input
-                      type="text"
+                    <Textfield
+                      aria-label="Type description to confirm deletion"
                       value={deleting.typed}
                       onChange={e => {
                         setDeleting({ id: item.id, typed: e.target.value })
                       }}
                     />
-                    <button
-                      type="button"
+                    <Button
+                      data-color="danger"
                       disabled={
                         pending || deleting.typed !== item.description
                       }
@@ -188,14 +184,14 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
                       }}
                     >
                       Confirm delete
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
                       disabled={pending}
                       onClick={() => { setDeleting(null) }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </span>
                 )}
               </td>

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import styles from "./BuildingStats.module.css"
 import { BuildingCard } from "@/features/maintenance/BuildingCard.tsx"
 import { BuildingFilter } from "@/features/maintenance/BuildingFilter.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
@@ -36,17 +37,21 @@ export function BuildingStats() {
   }
 
   return (
-    <>
-      <BuildingFilter
-        buildings={propertyBuildings}
-        hiddenIds={hiddenIds}
-        onToggle={toggle}
-      />
-      {propertyBuildings
-        .filter(b => !hiddenIds.has(b.id))
-        .map(b => (
-          <BuildingCard key={b.id} buildingId={b.id} buildingName={b.name} />
-        ))}
-    </>
+    <div className={styles.wrap}>
+      <div className={styles.filter}>
+        <BuildingFilter
+          buildings={propertyBuildings}
+          hiddenIds={hiddenIds}
+          onToggle={toggle}
+        />
+      </div>
+      <div className={styles.cards}>
+        {propertyBuildings
+          .filter(b => !hiddenIds.has(b.id))
+          .map(b => (
+            <BuildingCard key={b.id} buildingId={b.id} buildingName={b.name} />
+          ))}
+      </div>
+    </div>
   )
 }

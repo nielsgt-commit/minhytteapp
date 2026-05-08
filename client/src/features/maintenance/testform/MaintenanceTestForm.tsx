@@ -4,6 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Field,
+  Label,
+  Select,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedUserId } from "@/features/user/userSlice"
@@ -17,7 +24,7 @@ type Recurrence = "once" | "yearly" | "5year"
 type FormState = {
   id: number | null
   description: string
-  summary: string
+  instructions: string
   assigned_to_id: string
   building_id: string
   place_id: string
@@ -47,7 +54,7 @@ function defaultPriorityYear(): number {
 const initialFormState: FormState = {
   id: null,
   description: "",
-  summary: "",
+  instructions: "",
   assigned_to_id: "",
   building_id: "",
   place_id: "",
@@ -85,7 +92,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
 function buildPayload(state: FormState, addedBy: number) {
   return {
     description: state.description,
-    summary: state.summary.trim() ? state.summary : undefined,
+    instructions: state.instructions.trim() ? state.instructions : undefined,
     added_by: addedBy,
     assigned_to_id: state.assigned_to_id
       ? Number(state.assigned_to_id)
@@ -217,217 +224,193 @@ export function MaintenanceTestForm() {
             {isEditing ? `Editing #${String(state.id)}` : "New record"}
           </legend>
 
-          <div>
-            <label>
-              Description
-              <input
-                type="text"
-                value={state.description}
-                onChange={e => {
-                  set("description")(e.target.value)
-                }}
-                required
-              />
-            </label>
-          </div>
+          <Textfield
+            label="Description"
+            value={state.description}
+            onChange={e => {
+              set("description")(e.target.value)
+            }}
+            required
+          />
+
+          <Textfield
+            label="Instructions"
+            value={state.instructions}
+            onChange={e => {
+              set("instructions")(e.target.value)
+            }}
+          />
+
+          <Field>
+            <Label>Status</Label>
+            <Select
+              value={state.status}
+              onChange={e => {
+                set("status")(e.target.value)
+              }}
+            >
+              {STATUSES.map(s => (
+                <Select.Option key={s} value={s}>
+                  {s}
+                </Select.Option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field>
+            <Label>When</Label>
+            <Select
+              value={state.when}
+              onChange={e => {
+                set("when")(e.target.value)
+              }}
+            >
+              <Select.Option value="">(select)</Select.Option>
+              {priorityWhenOptions.map(o => (
+                <Select.Option key={o.value} value={o.value}>
+                  {o.label}
+                </Select.Option>
+              ))}
+              <Select.Option value="dugnad">dugnad</Select.Option>
+              <Select.Option value="just_in_time">just in time</Select.Option>
+            </Select>
+          </Field>
 
           <div>
-            <label>
-              Summary
-              <input
-                type="text"
-                value={state.summary}
-                onChange={e => {
-                  set("summary")(e.target.value)
-                }}
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Status
-              <select
-                value={state.status}
-                onChange={e => {
-                  set("status")(e.target.value)
-                }}
-              >
-                {STATUSES.map(s => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div>
-            <label>
-              When
-              <select
-                value={state.when}
-                onChange={e => {
-                  set("when")(e.target.value)
-                }}
-              >
-                <option value="">(select)</option>
-                {priorityWhenOptions.map(o => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-                <option value="dugnad">dugnad</option>
-                <option value="just_in_time">just in time</option>
-              </select>
-            </label>
-          </div>
-
-          <div>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               onClick={() => {
                 setShowMore(v => !v)
               }}
               aria-expanded={showMore}
             >
               {showMore ? "Hide details" : "Add more details"}
-            </button>
+            </Button>
           </div>
 
           {showMore && (
             <>
-              <div>
-                <label>
-                  Assigned to
-                  <select
-                    value={state.assigned_to_id}
-                    onChange={e => {
-                      set("assigned_to_id")(e.target.value)
-                    }}
-                  >
-                    <option value="">(unassigned)</option>
-                    {users.map(u => (
-                      <option key={u.id} value={u.id}>
-                        #{u.id} {u.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <Field>
+                <Label>Assigned to</Label>
+                <Select
+                  value={state.assigned_to_id}
+                  onChange={e => {
+                    set("assigned_to_id")(e.target.value)
+                  }}
+                >
+                  <Select.Option value="">(unassigned)</Select.Option>
+                  {users.map(u => (
+                    <Select.Option key={u.id} value={u.id}>
+                      #{u.id} {u.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Field>
 
-              <div>
-                <label>
-                  Location
-                  <select
-                    value={locationValue}
-                    onChange={e => {
-                      const raw = e.target.value
-                      if (raw === "") {
-                        dispatch({ type: "setLocation", kind: "none", id: "" })
-                        return
-                      }
-                      const [prefix, id] = raw.split(":")
-                      if (prefix === "b") {
-                        dispatch({ type: "setLocation", kind: "building", id })
-                      } else if (prefix === "p") {
-                        dispatch({ type: "setLocation", kind: "place", id })
-                      }
-                    }}
-                    required
-                  >
-                    <option value="">(select location)</option>
-                    {propertyBuildings.length > 0 && (
-                      <optgroup label="Buildings">
-                        {propertyBuildings.map(b => (
-                          <option key={`b-${String(b.id)}`} value={`b:${String(b.id)}`}>
-                            #{b.id} {b.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                    {places.length > 0 && (
-                      <optgroup label="Places">
-                        {places.map(p => (
-                          <option key={`p-${String(p.id)}`} value={`p:${String(p.id)}`}>
-                            #{p.id} {p.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
-                </label>
-              </div>
+              <Field>
+                <Label>Location</Label>
+                <Select
+                  value={locationValue}
+                  onChange={e => {
+                    const raw = e.target.value
+                    if (raw === "") {
+                      dispatch({ type: "setLocation", kind: "none", id: "" })
+                      return
+                    }
+                    const [prefix, id] = raw.split(":")
+                    if (prefix === "b") {
+                      dispatch({ type: "setLocation", kind: "building", id })
+                    } else if (prefix === "p") {
+                      dispatch({ type: "setLocation", kind: "place", id })
+                    }
+                  }}
+                  required
+                >
+                  <Select.Option value="">(select location)</Select.Option>
+                  {propertyBuildings.length > 0 && (
+                    <Select.Optgroup label="Buildings">
+                      {propertyBuildings.map(b => (
+                        <Select.Option key={`b-${String(b.id)}`} value={`b:${String(b.id)}`}>
+                          #{b.id} {b.name}
+                        </Select.Option>
+                      ))}
+                    </Select.Optgroup>
+                  )}
+                  {places.length > 0 && (
+                    <Select.Optgroup label="Places">
+                      {places.map(p => (
+                        <Select.Option key={`p-${String(p.id)}`} value={`p:${String(p.id)}`}>
+                          #{p.id} {p.name}
+                        </Select.Option>
+                      ))}
+                    </Select.Optgroup>
+                  )}
+                </Select>
+              </Field>
 
-              <div>
-                <label>
-                  Category
-                  <select
-                    value={state.category}
-                    onChange={e => {
-                      set("category")(e.target.value)
-                    }}
-                  >
-                    {CATEGORIES.map(c => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <Field>
+                <Label>Category</Label>
+                <Select
+                  value={state.category}
+                  onChange={e => {
+                    set("category")(e.target.value)
+                  }}
+                >
+                  {CATEGORIES.map(c => (
+                    <Select.Option key={c} value={c}>
+                      {c}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Field>
 
-              <div>
-                <label>
-                  Severity
-                  <select
-                    value={state.severity}
-                    onChange={e => {
-                      set("severity")(e.target.value)
-                    }}
-                  >
-                    {SEVERITIES.map(s => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <Field>
+                <Label>Severity</Label>
+                <Select
+                  value={state.severity}
+                  onChange={e => {
+                    set("severity")(e.target.value)
+                  }}
+                >
+                  {SEVERITIES.map(s => (
+                    <Select.Option key={s} value={s}>
+                      {s}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Field>
 
-              <div>
-                <label>
-                  Recurrence
-                  <select
-                    value={state.recurrence}
-                    onChange={e => {
-                      set("recurrence")(e.target.value)
-                    }}
-                  >
-                    {RECURRENCES.map(r => (
-                      <option key={r.value} value={r.value}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <Field>
+                <Label>Recurrence</Label>
+                <Select
+                  value={state.recurrence}
+                  onChange={e => {
+                    set("recurrence")(e.target.value)
+                  }}
+                >
+                  {RECURRENCES.map(r => (
+                    <Select.Option key={r.value} value={r.value}>
+                      {r.label}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Field>
             </>
           )}
 
           <div>
-            <button type="submit" disabled={pending || !canSubmit}>
+            <Button type="submit" disabled={pending || !canSubmit}>
               {isEditing ? "Update" : "Create"}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => {
                 dispatch({ type: "reset" })
               }}
               disabled={pending}
             >
               Reset
-            </button>
+            </Button>
           </div>
         </fieldset>
       </form>

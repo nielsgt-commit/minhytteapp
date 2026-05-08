@@ -805,7 +805,7 @@ async function seedMaintenance(buildingIds: number[], userIds: number[]) {
         : null
     return {
       description: pick(MAINTENANCE_DESCRIPTIONS),
-      summary: rng() < 0.4 ? "see notes" : null,
+      instructions: rng() < 0.4 ? "see notes" : null,
       added_by: pick(userIds),
       assigned_to_id: rng() < 0.5 ? pick(userIds) : null,
       building_id,

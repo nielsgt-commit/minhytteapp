@@ -1,6 +1,6 @@
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import styles from "./BuildingCard.module.css"
+import { Alert, Button, Card, Heading, Textfield } from "@digdir/designsystemet-react"
 import { MaintenanceHistory } from "@/features/maintenance/MaintenanceHistory.tsx"
 import { BuildingTodos } from "@/features/maintenance/BuildingTodos.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
@@ -52,61 +52,62 @@ export function BuildingCard({
   }
 
   return (
-    <section className={styles.card}>
-      <h4 className={styles.title}>{buildingName}</h4>
-      <div className={styles.addtodo}>
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => { setAdding(true) }}
-            disabled={selectedUserId == null}
+    <Card asChild>
+      <section>
+        <Card.Block>
+          <Heading level={4} data-size="xs">{buildingName}</Heading>
+        </Card.Block>
+        <Card.Block>
+          {!adding && (
+            <Button
+              variant="tertiary"
+              onClick={() => { setAdding(true) }}
+              disabled={selectedUserId == null}
+            >
+              Add todo
+            </Button>
+          )}
+          {adding && (
+            <form onSubmit={handleAddSubmit}>
+              <Textfield
+                aria-label="Task description"
+                name="description"
+                placeholder="Task description"
+                required
+                autoFocus
+              />
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || selectedUserId == null}
+              >
+                Create
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={createMutation.isPending}
+                onClick={() => { setAdding(false) }}
+              >
+                Cancel
+              </Button>
+            </form>
+          )}
+          {createMutation.error && (
+            <Alert data-color="danger">Error: {createMutation.error.message}</Alert>
+          )}
+        </Card.Block>
+        <Card.Block>
+          <BuildingTodos buildingId={buildingId} />
+        </Card.Block>
+        <Card.Block>
+          <Button
+            variant="tertiary"
+            onClick={() => { setShowHistory(v => !v) }}
           >
-            Add todo
-          </button>
-        )}
-        {adding && (
-          <form onSubmit={handleAddSubmit}>
-            <input
-              type="text"
-              name="description"
-              placeholder="Task description"
-              required
-              autoFocus
-            />
-            <button
-              type="submit"
-              disabled={createMutation.isPending || selectedUserId == null}
-            >
-              Create
-            </button>
-            <button
-              type="button"
-              disabled={createMutation.isPending}
-              onClick={() => { setAdding(false) }}
-            >
-              Cancel
-            </button>
-          </form>
-        )}
-        {createMutation.error && (
-          <p role="alert">Error: {createMutation.error.message}</p>
-        )}
-      </div>
-      <div className={styles.todos}>
-        <BuildingTodos buildingId={buildingId} />
-      </div>
-      <p
-        type="button"
-        className={styles.toggle}
-        onClick={() => { setShowHistory(v => !v) }}
-      >
-        {showHistory ? "Hide history" : "Show history"}
-      </p>
-      {showHistory && (
-        <div className={styles.history}>
-          <MaintenanceHistory buildingId={buildingId} />
-        </div>
-      )}
-    </section>
+            {showHistory ? "Hide history" : "Show history"}
+          </Button>
+          {showHistory && <MaintenanceHistory buildingId={buildingId} />}
+        </Card.Block>
+      </section>
+    </Card>
   )
 }

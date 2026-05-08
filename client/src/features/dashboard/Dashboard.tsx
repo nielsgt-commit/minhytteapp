@@ -23,18 +23,22 @@ export function Dashboard() {
     <section className={styles.page}>
       <h2 className={styles.title}>Dashboard</h2>
 
-      <div className={styles.capacity}>
-        <CapacitySummary />
+      <div className={styles.left}>
+        <div>
+          <CapacitySummary />
+        </div>
+        <Suspense fallback={<p>Loading…</p>}>
+          <div>
+            <CalendarSummary />
+          </div>
+          <div>
+            <ContactsSummary />
+          </div>
+        </Suspense>
       </div>
       <Suspense fallback={<p>Loading…</p>}>
         <div className={styles.panels}>
           <PropertyStats />
-        </div>
-        <div className={styles.calendar}>
-          <CalendarSummary />
-        </div>
-        <div className={styles.contacts}>
-          <ContactsSummary />
         </div>
       </Suspense>
     </section>
