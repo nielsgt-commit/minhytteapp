@@ -1,17 +1,22 @@
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { Details, Paragraph, Table } from "@digdir/designsystemet-react"
+import { useQuery } from "@tanstack/react-query"
+import { Details, Heading, Link, Paragraph } from "@digdir/designsystemet-react"
+import { EnvelopeClosedIcon, PhoneIcon } from "@navikt/aksel-icons"
+import styles from "./ContactsSummary.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export default function ContactsSummary() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
-  const { data: contacts } = useSuspenseQuery(
-    trpc.propertyContact.listForProperty.queryOptions({
-      property_id: propertyId,
-    }),
+  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const { data: contacts } = useQuery(
+    trpc.propertyContact.listForProperty.queryOptions(
+      { property_id: propertyId ?? 0 },
+      { enabled: propertyId != null },
+    ),
   )
+
+  if (propertyId == null || !contacts) return null
 
   return (
     <Details>
@@ -20,26 +25,26 @@ export default function ContactsSummary() {
         {contacts.length === 0 ? (
           <Paragraph>No contacts.</Paragraph>
         ) : (
-          <Table>
-            <Table.Head>
-              <Table.Row>
-                <Table.HeaderCell scope="col">Name</Table.HeaderCell>
-                <Table.HeaderCell scope="col">Phone</Table.HeaderCell>
-                <Table.HeaderCell scope="col">Email</Table.HeaderCell>
-                <Table.HeaderCell scope="col">Info</Table.HeaderCell>
-              </Table.Row>
-            </Table.Head>
-            <Table.Body>
-              {contacts.map(c => (
-                <Table.Row key={c.id}>
-                  <Table.HeaderCell scope="row">{c.name}</Table.HeaderCell>
-                  <Table.Cell>{c.phone}</Table.Cell>
-                  <Table.Cell>{c.email}</Table.Cell>
-                  <Table.Cell>{c.info}</Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table>
+          <ul className={styles.list}>
+            {contacts.map(c => (
+              <li key={c.id} className={styles.item}>
+                <Heading level={4} data-size="xs">{c.name}</Heading>
+                {c.phone && (
+                  <div className={styles.line}>
+                    <PhoneIcon aria-hidden className={styles.icon} />
+                    <Link href={`tel:${c.phone}`}>{c.phone}</Link>
+                  </div>
+                )}
+                {c.email && (
+                  <div className={styles.line}>
+                    <EnvelopeClosedIcon aria-hidden className={styles.icon} />
+                    <Link href={`mailto:${c.email}`}>{c.email}</Link>
+                  </div>
+                )}
+                {c.info && <Paragraph>{c.info}</Paragraph>}
+              </li>
+            ))}
+          </ul>
         )}
       </Details.Content>
     </Details>

@@ -10,3 +10,16 @@ code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+
+.ds-card,
+.ds-card__block {
+  min-width: 0;
+}
+
+ds-tabs,
+ds-tabpanel,
+u-tabs,
+u-tabpanel {
+  display: block;
+  min-width: 0;
+}

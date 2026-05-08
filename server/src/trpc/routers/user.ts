@@ -13,12 +13,17 @@ import {
   router,
 } from "../init.ts"
 
+const birthdayString = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { error: "expected YYYY-MM-DD" })
+
 const userFields = {
   name: z.string().min(1, { error: "name is required" }),
   email: z.email(),
   is_admin: z.boolean().optional(),
   is_head: z.boolean().optional(),
   is_child: z.boolean().optional(),
+  birthday: birthdayString.nullable().optional(),
 }
 
 const createInput = z.object(userFields)
@@ -105,6 +110,7 @@ export const userRouter = router({
           is_admin: usersTable.is_admin,
           is_head: usersTable.is_head,
           settlement_progress: usersTable.settlement_progress,
+          birthday: usersTable.birthday,
         })
         .from(usersTable)
         .where(eq(usersTable.oauth_sub, sub))
@@ -147,6 +153,17 @@ export const userRouter = router({
       const [updated] = await ctx.db
         .update(usersTable)
         .set({ is_head: input.is_head })
+        .where(eq(usersTable.id, ctx.user.id))
+        .returning()
+      return updated
+    }),
+
+  updateMyBirthday: protectedProcedure
+    .input(z.object({ birthday: birthdayString.nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(usersTable)
+        .set({ birthday: input.birthday })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()
       return updated

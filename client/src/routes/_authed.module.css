@@ -1,8 +1,14 @@
 .shell {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
-  padding: 1.5rem;
+  padding: 1.5rem 1rem;
   max-width: 1200px;
   margin-inline: auto;
   width: 100%;
+  box-sizing: border-box;
+}
+
+.shell > * {
+  min-width: 0;
 }

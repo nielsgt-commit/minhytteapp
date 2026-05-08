@@ -33,7 +33,7 @@ export default function AtPropertyNow() {
   if (guests.length === 0) return <p>No one at the property right now.</p>
 
   return (
-    <AvatarStack aria-label="At property now" expandable>
+    <AvatarStack aria-label="At property now" expandable overlap={8}>
       {guests.map(g => (
         <Avatar
           key={g.user_id}

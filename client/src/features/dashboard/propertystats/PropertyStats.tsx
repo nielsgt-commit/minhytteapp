@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Heading } from "@digdir/designsystemet-react"
+import styles from "./PropertyStats.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -18,9 +19,11 @@ export default function PropertyStats() {
   return (
     <>
       <Heading level={4}> {selectedProperty?.name ?? ""} at a glance</Heading>
-      <UserSummary />
-      <BuildingSummary />
-      <RoomsSummary />
+      <div className={styles.grid}>
+        <UserSummary />
+        <BuildingSummary />
+        <RoomsSummary />
+      </div>
     </>
   )
 }

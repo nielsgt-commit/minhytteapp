@@ -1,5 +1,8 @@
+import { useState } from "react"
 import PlannedAvailabilitySummary
   from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
+import PlannedAvailabilitySummaryStacked
+  from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummaryStacked.tsx"
 import PlannedMaintenanceSummary
   from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { useSuspenseQuery } from "@tanstack/react-query"
@@ -7,10 +10,14 @@ import { trpc } from "@/trpc/client.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
-import { Heading } from "@digdir/designsystemet-react"
+import { Card, Heading } from "@digdir/designsystemet-react"
 
-
-
+function startOfSunday(d: Date) {
+  const out = new Date(d)
+  out.setHours(0, 0, 0, 0)
+  out.setDate(out.getDate() - out.getDay())
+  return out
+}
 
 
 export default function CalendarSummary() {
@@ -24,14 +31,28 @@ export default function CalendarSummary() {
   const propertyName =
     properties.find(p => p.id === propertyId)?.name ?? "property"
 
-
+  const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
+  const resetWeek = () => { setWeekStart(startOfSunday(new Date())) }
 
   return (
-    <>
-      <Heading> This week at {propertyName}</Heading>
-      <PlannedAvailabilitySummary />
-      <PlannedMaintenanceSummary />
-    </>
+    <Card asChild>
+      <section>
+        <Card.Block>
+          <Heading onClick={resetWeek} style={{ cursor: "pointer" }}>
+            This week at {propertyName}
+          </Heading>
+          <PlannedAvailabilitySummaryStacked
+            weekStart={weekStart}
+            onWeekStartChange={setWeekStart}
+          />
+          <PlannedAvailabilitySummary
+            weekStart={weekStart}
+            onWeekStartChange={setWeekStart}
+          />
+          <PlannedMaintenanceSummary />
+        </Card.Block>
+      </section>
+    </Card>
   )
 
 }

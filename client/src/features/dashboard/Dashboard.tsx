@@ -3,7 +3,6 @@ import styles from "./Dashboard.module.css"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
 import PropertyStats from "@/features/dashboard/propertystats/PropertyStats"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
-import ContactsSummary from "@/features/dashboard/contactssummary/ContactsSummary.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
@@ -22,24 +21,10 @@ export function Dashboard() {
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Dashboard</h2>
-
-      <div className={styles.left}>
-        <div>
-          <CapacitySummary />
-        </div>
-        <Suspense fallback={<p>Loading…</p>}>
-          <div>
-            <CalendarSummary />
-          </div>
-          <div>
-            <ContactsSummary />
-          </div>
-        </Suspense>
-      </div>
+      <CapacitySummary />
       <Suspense fallback={<p>Loading…</p>}>
-        <div className={styles.panels}>
-          <PropertyStats />
-        </div>
+        <CalendarSummary />
+        <PropertyStats />
       </Suspense>
     </section>
   )

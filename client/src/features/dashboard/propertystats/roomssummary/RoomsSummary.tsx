@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import {
   Badge,
   Button,
+  Card,
   Heading,
   List,
   Paragraph,
@@ -39,25 +40,29 @@ export default function RoomsSummary() {
   )
 
   return (
-    <>
-      <Heading level={4}>
-        Bedrooms <Badge count={rooms.length} />
-      </Heading>
-      {rooms.length === 0 ? (
-        <Paragraph>No rooms yet.</Paragraph>
-      ) : (
-        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
-          <List.Item>Beds (single) – {totals.beds_sm}</List.Item>
-          <List.Item>Beds (large) – {totals.beds_lg}</List.Item>
-          <List.Item>Beds (double) – {totals.beds_double}</List.Item>
-          <List.Item>Beds (kid) – {totals.beds_kid}</List.Item>
-          <List.Item>Mattresses – {totals.mattresses}</List.Item>
-          <List.Item>Travel cots – {totals.travel_cot}</List.Item>
-        </List.Unordered>
-      )}
-      <Button asChild variant="secondary">
-        <Link to="/manageproperty">Manage rooms</Link>
-      </Button>
-    </>
+    <Card asChild>
+      <section>
+        <Card.Block>
+          <Heading level={4}>
+            Bedrooms <Badge count={rooms.length} />
+          </Heading>
+          {rooms.length === 0 ? (
+            <Paragraph>No rooms yet.</Paragraph>
+          ) : (
+            <List.Unordered style={{ listStyle: "none", padding: 0 }}>
+              <List.Item>Beds (single) – {totals.beds_sm}</List.Item>
+              <List.Item>Beds (large) – {totals.beds_lg}</List.Item>
+              <List.Item>Beds (double) – {totals.beds_double}</List.Item>
+              <List.Item>Beds (kid) – {totals.beds_kid}</List.Item>
+              <List.Item>Mattresses – {totals.mattresses}</List.Item>
+              <List.Item>Travel cots – {totals.travel_cot}</List.Item>
+            </List.Unordered>
+          )}
+          <Button asChild variant="secondary">
+            <Link to="/manageproperty">Manage rooms</Link>
+          </Button>
+        </Card.Block>
+      </section>
+    </Card>
   )
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { Link, linkOptions, useLocation } from "@tanstack/react-router"
 import { Tabs } from "@digdir/designsystemet-react"
+import styles from "./NavTabs.module.css"
 
 const navLinks = linkOptions([
   { to: "/dashboard", label: "Dashboard" },
@@ -21,7 +22,7 @@ export default function NavTabs({ children }: { children: ReactNode }) {
   return (
     <>
       <Tabs key={pathname} defaultValue={activeValue}>
-        <Tabs.List>
+        <Tabs.List className={styles.list}>
           {navLinks.map(link => (
             <Tabs.Tab key={link.to} value={link.to} style={{ position: "relative" }}>
               {link.label}

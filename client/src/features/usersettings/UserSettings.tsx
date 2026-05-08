@@ -24,6 +24,11 @@ export function UserSettings() {
     if (me) setName(me.name)
   }, [me])
 
+  const [birthday, setBirthday] = useState("")
+  useEffect(() => {
+    if (me) setBirthday(me.birthday ?? "")
+  }, [me])
+
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState("")
 
@@ -40,6 +45,14 @@ export function UserSettings() {
 
   const updateIsHead = useMutation(
     trpc.user.updateMyIsHead.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: trpc.user.me.queryKey() })
+      },
+    }),
+  )
+
+  const updateBirthday = useMutation(
+    trpc.user.updateMyBirthday.mutationOptions({
       onSuccess: () => {
         void qc.invalidateQueries({ queryKey: trpc.user.me.queryKey() })
       },
@@ -72,6 +85,13 @@ export function UserSettings() {
     const trimmed = name.trim()
     if (!trimmed || trimmed === me?.name) return
     updateName.mutate({ name: trimmed })
+  }
+
+  const handleBirthdaySubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const next = birthday.trim() || null
+    if (next === (me?.birthday ?? null)) return
+    updateBirthday.mutate({ birthday: next })
   }
 
   const handleAddChild = (e: SyntheticEvent<HTMLFormElement>) => {
@@ -130,6 +150,32 @@ export function UserSettings() {
           </button>
           {updateName.error && (
             <p role="alert">Error: {updateName.error.message}</p>
+          )}
+        </fieldset>
+      </form>
+
+      <form onSubmit={handleBirthdaySubmit}>
+        <fieldset>
+          <legend>Birthday</legend>
+          <label>
+            Birthday
+            <input
+              type="date"
+              value={birthday}
+              onChange={e => { setBirthday(e.target.value) }}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={
+              updateBirthday.isPending ||
+              (birthday.trim() || null) === (me.birthday ?? null)
+            }
+          >
+            Save
+          </button>
+          {updateBirthday.error && (
+            <p role="alert">Error: {updateBirthday.error.message}</p>
           )}
         </fieldset>
       </form>

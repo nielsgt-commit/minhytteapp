@@ -1,0 +1,1 @@
+ALTER TABLE "maintenance" RENAME COLUMN "summary" TO "instructions";

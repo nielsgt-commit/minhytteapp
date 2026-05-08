@@ -1,10 +1,59 @@
+.wrap {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    display: none;
+  }
+}
+
 .weekNav {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+}
+
+.weekNavLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.weekNavRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .weekDays {
   --dsc-table-border-color: var(--ds-color-neutral-border-subtle);
   --dsc-table-divider-border-width: var(--ds-border-width-default);
+  overflow-x: auto;
+}
+
+.weekDays :global(.ds-table) {
+  --dsc-table-border-radius: var(--ds-border-radius-lg);
+}
+
+.headerCellClickable {
+  cursor: pointer;
+}
+
+.cellSelected {
+  --dsc-table-background: var(--ds-color-surface-default);
+  --dsc-table-header-background: var(--ds-color-surface-default);
+}
+
+.namesRowCell {
+  --dsc-table-background: var(--ds-color-surface-default);
+}
+
+.cellDimmed {
+  --dsc-table-background: var(--ds-color-background-tinted);
+  --dsc-table-header-background: var(--ds-color-background-tinted);
+  color: var(--ds-color-neutral-text-subtle);
 }

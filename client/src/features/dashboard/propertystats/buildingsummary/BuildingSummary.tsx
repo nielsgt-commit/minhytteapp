@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 import {
   Badge,
   Button,
+  Card,
   Heading,
   List,
   Paragraph,
@@ -30,27 +31,31 @@ export default function BuildingSummary() {
   }
 
   return (
-    <>
-      <Heading level={4}>
-        Buildings <Badge count={buildings.length} />
-      </Heading>
-      {buildings.length === 0 ? (
-        <Paragraph>No buildings yet.</Paragraph>
-      ) : (
-        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
-          {buildings.map(b => {
-            const count = roomCountByBuilding.get(b.id) ?? 0
-            return (
-              <List.Item key={b.id}>
-                {b.name} – {count} room{count === 1 ? "" : "s"}
-              </List.Item>
-            )
-          })}
-        </List.Unordered>
-      )}
-      <Button asChild variant="secondary">
-        <Link to="/manageproperty">Manage buildings</Link>
-      </Button>
-    </>
+    <Card asChild>
+      <section>
+        <Card.Block>
+          <Heading level={4}>
+            Buildings <Badge count={buildings.length} />
+          </Heading>
+          {buildings.length === 0 ? (
+            <Paragraph>No buildings yet.</Paragraph>
+          ) : (
+            <List.Unordered style={{ listStyle: "none", padding: 0 }}>
+              {buildings.map(b => {
+                const count = roomCountByBuilding.get(b.id) ?? 0
+                return (
+                  <List.Item key={b.id}>
+                    {b.name} – {count} room{count === 1 ? "" : "s"}
+                  </List.Item>
+                )
+              })}
+            </List.Unordered>
+          )}
+          <Button asChild variant="secondary">
+            <Link to="/manageproperty">Manage buildings</Link>
+          </Button>
+        </Card.Block>
+      </section>
+    </Card>
   )
 }

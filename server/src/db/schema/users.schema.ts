@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   integer,
   pgTable,
   primaryKey,
@@ -24,6 +25,7 @@ export const usersTable = pgTable("users", {
   })
     .notNull()
     .default("in_progress"),
+  birthday: date("birthday", { mode: "string" }),
 })
 
 export const userGroupsTable = pgTable("user_groups", {

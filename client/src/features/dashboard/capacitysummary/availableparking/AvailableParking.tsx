@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Button } from "@digdir/designsystemet-react"
+import { Button, Heading } from "@digdir/designsystemet-react"
 import { CarFillIcon, CarIcon } from "@navikt/aksel-icons"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
@@ -103,6 +103,7 @@ export default function AvailableParking() {
 
   return (
     <div>
+      <Heading level={6} size="medium">Cars</Heading>
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
         {Array.from({ length: total }, (_, slot) => {
           const occupant = claimedBySlot.get(slot)
