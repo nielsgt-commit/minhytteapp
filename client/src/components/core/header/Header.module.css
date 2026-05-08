@@ -33,3 +33,26 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+.hideOnMobile {
+  display: contents;
+}
+
+.showOnMobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .inner {
+    justify-content: space-between;
+  }
+  .hideOnMobile {
+    display: none;
+  }
+  .showOnMobile {
+    display: contents;
+  }
+  .hideOnMobileBlock {
+    display: none;
+  }
+}

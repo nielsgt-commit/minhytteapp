@@ -6,7 +6,7 @@ import CheckIn from "@/components/core/header/CheckIn.tsx"
 import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "./availableparking/AvailableParking.tsx"
 import RoomAvailabilityIndicator from "./roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
-import { Card, Heading } from "@digdir/designsystemet-react"
+import { Card, Divider, Heading } from "@digdir/designsystemet-react"
 
 export function CapacitySummary() {
   const trpc = useTRPC()
@@ -36,15 +36,17 @@ export function CapacitySummary() {
           <div
             style={{
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
+              alignItems: "flex-start",
               gap: "1rem",
-              flexWrap: "wrap",
             }}
           >
             <AtPropertyNow />
+            <Divider style={{ alignSelf: "stretch" }} />
             <AvailableParking />
+            <Divider style={{ alignSelf: "stretch" }} />
+            <RoomAvailabilityIndicator rooms={rooms} />
           </div>
-          <RoomAvailabilityIndicator rooms={rooms} />
         </Card.Block>
       </section>
     </Card>

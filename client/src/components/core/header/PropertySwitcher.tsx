@@ -1,6 +1,7 @@
 import { type SyntheticEvent, useEffect, useState } from "react"
 import { Button, Divider, Dropdown, Label, Paragraph, Textfield } from '@digdir/designsystemet-react';
 import { ChevronDownIcon } from '@navikt/aksel-icons';
+import styles from "./PropertySwitcher.module.css"
 
 export type Property = {
   id: number
@@ -14,6 +15,8 @@ type Props = {
   isAddOpen: boolean
   onAddOpenChange: (open: boolean) => void
   onAdd: (name: string) => void
+  onManageProperty: () => void
+  onUserGroups: () => void
   isAddPending?: boolean
   addError?: string | null
 }
@@ -25,6 +28,8 @@ export default function PropertySwitcher({
   isAddOpen,
   onAddOpenChange,
   onAdd,
+  onManageProperty,
+  onUserGroups,
   isAddPending,
   addError,
 }: Props) {
@@ -47,7 +52,7 @@ export default function PropertySwitcher({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-      <Label id="property-switcher-label">Property</Label>
+      <Label id="property-switcher-label" className={styles.label}>Property</Label>
       <Dropdown.TriggerContext>
         <Dropdown.Trigger
           variant="tertiary"
@@ -115,6 +120,17 @@ export default function PropertySwitcher({
               <Dropdown.Item>
                 <Dropdown.Button onClick={() => { onAddOpenChange(true) }}>
                   + Add property
+                </Dropdown.Button>
+              </Dropdown.Item>
+              <Divider />
+              <Dropdown.Item>
+                <Dropdown.Button onClick={onManageProperty}>
+                  Manage Property
+                </Dropdown.Button>
+              </Dropdown.Item>
+              <Dropdown.Item>
+                <Dropdown.Button onClick={onUserGroups}>
+                  User groups
                 </Dropdown.Button>
               </Dropdown.Item>
             </Dropdown.List>

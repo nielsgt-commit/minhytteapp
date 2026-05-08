@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Card,
+  Divider,
   Heading,
   List,
   Paragraph,
@@ -32,11 +33,13 @@ export default function BuildingSummary() {
 
   return (
     <Card asChild>
-      <section>
-        <Card.Block>
-          <Heading level={4}>
-            Buildings <Badge count={buildings.length} />
+      <section style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Card.Block style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+          <Heading level={4} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+            <span>Buildings</span>
+            <Badge count={buildings.length} />
           </Heading>
+          <Divider />
           {buildings.length === 0 ? (
             <Paragraph>No buildings yet.</Paragraph>
           ) : (
@@ -44,14 +47,15 @@ export default function BuildingSummary() {
               {buildings.map(b => {
                 const count = roomCountByBuilding.get(b.id) ?? 0
                 return (
-                  <List.Item key={b.id}>
-                    {b.name} – {count} room{count === 1 ? "" : "s"}
+                  <List.Item key={b.id} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                    <span>{b.name}</span>
+                    <span>{count} room{count === 1 ? "" : "s"}</span>
                   </List.Item>
                 )
               })}
             </List.Unordered>
           )}
-          <Button asChild variant="secondary">
+          <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
             <Link to="/manageproperty">Manage buildings</Link>
           </Button>
         </Card.Block>

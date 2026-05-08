@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import {
@@ -28,6 +29,7 @@ export default function PropertyMenu() {
   )
   const selectedId = useAppSelector(selectSelectedPropertyId)
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
 
   const list = properties ?? []
 
@@ -79,6 +81,8 @@ export default function PropertyMenu() {
         isAddOpen={isAddOpen}
         onAddOpenChange={setIsAddOpen}
         onAdd={name => { createProperty.mutate({ name, address: "—" }) }}
+        onManageProperty={() => { void navigate({ to: "/manageproperty" }) }}
+        onUserGroups={() => { void navigate({ to: "/usergroups" }) }}
         isAddPending={createProperty.isPending}
         addError={createProperty.error?.message ?? null}
       />
