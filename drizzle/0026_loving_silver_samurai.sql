@@ -1,0 +1,1 @@
+ALTER TABLE "buildings" ADD COLUMN "category" varchar(16) DEFAULT 'habitable' NOT NULL;

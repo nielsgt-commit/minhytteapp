@@ -1,26 +1,11 @@
 .page {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-        "title       title"
-        "details     owners"
-        "buildings   addbuilding"
-        "invites     invites"
-        "places      places"
-        "equipment   equipment"
-        "divider     divider"
-        "dangerzone  dangerzone";
-    gap: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.title   { grid-area: title; }
-.content { grid-area: content; }
-.details { grid-area: details; }
-.buildings { grid-area: buildings; }
-.addbuilding { grid-area: addbuilding; }
-.owners { grid-area: owners; }
-.invites { grid-area: invites; }
-.places { grid-area: places; }
-.equipment { grid-area: equipment; }
-.divider { grid-area: divider; }
-.dangerzone { grid-area: dangerzone; }
+.title { margin: 0; }
+
+@media (max-width: 640px) {
+  .summaries { display: none; }
+}

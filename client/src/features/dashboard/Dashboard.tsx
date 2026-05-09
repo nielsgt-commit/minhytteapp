@@ -1,7 +1,6 @@
 import { Suspense } from "react"
 import styles from "./Dashboard.module.css"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
-import PropertyStats from "@/features/dashboard/propertystats/PropertyStats"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -24,7 +23,6 @@ export function Dashboard() {
       <CapacitySummary />
       <Suspense fallback={<p>Loading…</p>}>
         <CalendarSummary />
-        <PropertyStats />
       </Suspense>
     </section>
   )

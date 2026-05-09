@@ -7,6 +7,7 @@ import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import BuildingSummary from "@/features/dashboard/propertystats/buildingsummary/BuildingSummary"
 import UserSummary from "@/features/dashboard/propertystats/usersummary/UserSummary"
 import RoomsSummary from "@/features/dashboard/propertystats/roomssummary/RoomsSummary"
+import InventorySummary from "@/features/dashboard/propertystats/inventorysummary/InventorySummary"
 
 export default function PropertyStats() {
   const trpc = useTRPC()
@@ -23,6 +24,7 @@ export default function PropertyStats() {
         <UserSummary />
         <BuildingSummary />
         <RoomsSummary />
+        <InventorySummary />
       </div>
     </>
   )

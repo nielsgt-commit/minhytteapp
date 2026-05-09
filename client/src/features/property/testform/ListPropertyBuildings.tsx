@@ -1,40 +1,38 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Card,
+  Divider,
+  Switch,
+  Tag,
+} from "@digdir/designsystemet-react"
+import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { AddBuildingFlow } from "@/features/property/testform/AddBuildingFlow.tsx"
+import {
+  AddBedsFlow,
+  type RoomData,
+} from "@/features/property/testform/AddBedsFlow.tsx"
+
+type BuildingCategory = "habitable" | "non_habitable"
+
+const CATEGORY_LABEL: Record<BuildingCategory, string> = {
+  habitable: "Habitable",
+  non_habitable: "Non-habitable",
+}
 
 type OpenForm =
-  | { kind: "editBuilding"; buildingId: number }
   | { kind: "addRoom"; buildingId: number }
   | { kind: "editRoom"; roomId: number }
   | null
 
-type RoomDefaults = {
-  name: string
-  beds_sm: number
-  beds_lg: number
-  beds_double: number
-  beds_kid: number
-  mattresses: number
-  travel_cot: number
-}
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
-function fdNumber(fd: FormData, key: string): number {
-  const v = fd.get(key)
-  if (typeof v !== "string" || v === "") return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
-}
 
 export function ListPropertyBuildings() {
   const trpc = useTRPC()
@@ -75,6 +73,9 @@ export function ListPropertyBuildings() {
 
   const [openForm, setOpenForm] = useState<OpenForm>(null)
   const [editMode, setEditMode] = useState(false)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [editingNameId, setEditingNameId] = useState<number | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
@@ -102,14 +103,11 @@ export function ListPropertyBuildings() {
     updateRoom.isPending ||
     deleteRoom.isPending
 
-  const toggleBuildingForm = (
-    kind: "editBuilding" | "addRoom",
-    buildingId: number,
-  ) => {
+  const toggleAddRoom = (buildingId: number) => {
     setOpenForm(v =>
-      v?.kind === kind && v.buildingId === buildingId
+      v?.kind === "addRoom" && v.buildingId === buildingId
         ? null
-        : { kind, buildingId },
+        : { kind: "addRoom", buildingId },
     )
   }
 
@@ -121,82 +119,89 @@ export function ListPropertyBuildings() {
     )
   }
 
-  const handleEditBuilding = (buildingId: number, propertyId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const name = fdString(fd, "name").trim()
-      if (!name) return
-      updateBuilding.mutate(
-        { id: buildingId, name, property_id: propertyId },
-        { onSuccess: () => { setOpenForm(null) } },
-      )
+  const handleNameSave = (
+    b: { id: number; property_id: number; name: string; category: BuildingCategory },
+    newName: string,
+  ) => {
+    const trimmed = newName.trim()
+    if (!trimmed || trimmed === b.name) {
+      setEditingNameId(null)
+      return
     }
+    updateBuilding.mutate(
+      {
+        id: b.id,
+        name: trimmed,
+        property_id: b.property_id,
+        category: b.category,
+      },
+      { onSuccess: () => { setEditingNameId(null) } },
+    )
+  }
 
   const handleDeleteBuilding = (buildingId: number, buildingName: string) => {
     if (!window.confirm(`Delete building "${buildingName}"?`)) return
     deleteBuilding.mutate(
       { id: buildingId },
-      { onSuccess: () => { setOpenForm(null) } },
+      {
+        onSuccess: () => {
+          setOpenForm(null)
+          setExpandedId(null)
+        },
+      },
     )
   }
 
-  const handleAddRoom = (buildingId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const name = fdString(fd, "name").trim()
-      if (!name) return
+  const handleAddRoom =
+    (b: { id: number; property_id: number; name: string; category: BuildingCategory }) =>
+    (data: RoomData) => {
       createRoom.mutate(
-        {
-          name,
-          building_id: buildingId,
-          beds_sm: fdNumber(fd, "beds_sm"),
-          beds_lg: fdNumber(fd, "beds_lg"),
-          beds_double: fdNumber(fd, "beds_double"),
-          beds_kid: fdNumber(fd, "beds_kid"),
-          mattresses: fdNumber(fd, "mattresses"),
-          travel_cot: fdNumber(fd, "travel_cot"),
-        },
+        { ...data, building_id: b.id },
         {
           onSuccess: () => {
-            form.reset()
             setOpenForm(null)
+            if (b.category !== "habitable") {
+              updateBuilding.mutate({
+                id: b.id,
+                name: b.name,
+                property_id: b.property_id,
+                category: "habitable",
+              })
+            }
           },
         },
       )
     }
 
-  const handleEditRoom = (roomId: number, buildingId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const name = fdString(fd, "name").trim()
-      if (!name) return
+  const handleEditRoom =
+    (roomId: number, buildingId: number) => (data: RoomData) => {
       updateRoom.mutate(
-        {
-          id: roomId,
-          name,
-          building_id: buildingId,
-          beds_sm: fdNumber(fd, "beds_sm"),
-          beds_lg: fdNumber(fd, "beds_lg"),
-          beds_double: fdNumber(fd, "beds_double"),
-          beds_kid: fdNumber(fd, "beds_kid"),
-          mattresses: fdNumber(fd, "mattresses"),
-          travel_cot: fdNumber(fd, "travel_cot"),
-        },
+        { id: roomId, building_id: buildingId, ...data },
         { onSuccess: () => { setOpenForm(null) } },
       )
     }
 
-  const handleDeleteRoom = (roomId: number, roomName: string) => {
-    if (!window.confirm(`Delete room "${roomName}"?`)) return
+  const handleDeleteRoom = (
+    room: { id: number; name: string },
+    building: { id: number; property_id: number; name: string; category: BuildingCategory },
+    isLastRoom: boolean,
+  ) => {
+    if (!window.confirm(`Delete room "${room.name}"?`)) return
     deleteRoom.mutate(
-      { id: roomId },
-      { onSuccess: () => { setOpenForm(null) } },
+      { id: room.id },
+      {
+        onSuccess: () => {
+          setOpenForm(null)
+          if (isLastRoom && building.category !== "non_habitable") {
+            updateBuilding.mutate({
+              id: building.id,
+              name: building.name,
+              property_id: building.property_id,
+              category: "non_habitable",
+            })
+          }
+        },
+      },
     )
   }
 
@@ -213,300 +218,300 @@ export function ListPropertyBuildings() {
     <section>
       <h3>Buildings for {selectedProperty.name}</h3>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={editMode}
-          onChange={e => {
-            const next = e.currentTarget.checked
-            setEditMode(next)
-            if (!next) setOpenForm(null)
-          }}
-        />
-        Edit mode
-      </label>
+      <Switch
+        label="Edit mode"
+        checked={editMode}
+        onChange={e => {
+          const next = e.target.checked
+          setEditMode(next)
+          if (!next) {
+            setOpenForm(null)
+            setExpandedId(null)
+            setEditingNameId(null)
+          }
+        }}
+      />
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
-      {propertyBuildings.length === 0 ? (
-        <p>No buildings yet.</p>
-      ) : (
-        <ul
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: "1rem",
-            listStyle: "none",
-            padding: 0,
-          }}
-        >
+      <ul
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: "1rem",
+          listStyle: "none",
+          padding: 0,
+        }}
+      >
           {propertyBuildings.map(b => {
             const buildingRooms = roomsByBuilding.get(b.id) ?? []
-            const editBuildingOpen =
-              openForm?.kind === "editBuilding" &&
-              openForm.buildingId === b.id
+            const isExpanded = expandedId === b.id
+            const isEditingName = editingNameId === b.id
             const addRoomOpen =
               openForm?.kind === "addRoom" && openForm.buildingId === b.id
+            const editingRoom =
+              openForm?.kind === "editRoom"
+                ? buildingRooms.find(r => r.id === openForm.roomId) ?? null
+                : null
+
             return (
-              <li key={b.id} style={{ flex: "1 1 240px", minWidth: 0 }}>
-                <h4>{b.name}</h4>
-                {buildingRooms.length === 0 ? (
-                  <p>No rooms yet.</p>
-                ) : (
-                  <ul>
-                    {buildingRooms.map(r => {
-                      const editRoomOpen =
-                        openForm?.kind === "editRoom" &&
-                        openForm.roomId === r.id
-                      return (
-                        <li key={r.id}>
-                          {r.name} (sm:{r.beds_sm}, lg:{r.beds_lg}, dbl:
-                          {r.beds_double}, kid:{r.beds_kid}, mat:
-                          {r.mattresses}, cot:{r.travel_cot})
-                          {editMode && (
-                            <div>
-                              <button
-                                type="button"
-                                disabled={pending}
-                                onClick={() => { toggleRoomEdit(r.id); }}
+              <Card asChild key={b.id}>
+                <li
+                  style={{
+                    flex: "1 1 240px",
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Card.Block
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      flex: 1,
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      {isEditingName ? (
+                        <input
+                          type="text"
+                          defaultValue={b.name}
+                          autoFocus
+                          aria-label="Building name"
+                          disabled={updateBuilding.isPending}
+                          onBlur={e => { handleNameSave(b, e.currentTarget.value) }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") {
+                              e.preventDefault()
+                              handleNameSave(b, e.currentTarget.value)
+                            } else if (e.key === "Escape") {
+                              setEditingNameId(null)
+                            }
+                          }}
+                          style={{ flex: 1, minWidth: 0 }}
+                        />
+                      ) : (
+                        <strong
+                          onDoubleClick={() => {
+                            if (editMode) setEditingNameId(b.id)
+                          }}
+                          title={
+                            editMode ? "Double-click to rename" : undefined
+                          }
+                          style={{
+                            cursor: editMode ? "text" : undefined,
+                            userSelect: editMode ? "none" : undefined,
+                          }}
+                        >
+                          {b.name}
+                        </strong>
+                      )}
+                      <Tag
+                        data-color={
+                          b.category === "habitable" ? "success" : "neutral"
+                        }
+                        aria-label={CATEGORY_LABEL[b.category]}
+                        title={CATEGORY_LABEL[b.category]}
+                      >
+                        {b.category === "habitable" ? (
+                          <BedIcon aria-hidden fontSize="1.25rem" />
+                        ) : (
+                          <WrenchIcon aria-hidden fontSize="1.25rem" />
+                        )}
+                      </Tag>
+                    </div>
+
+                    {isExpanded && (
+                      <>
+                        <Divider />
+
+                        {editingRoom ? (
+                          <AddBedsFlow
+                            key={`edit-room-${String(editingRoom.id)}`}
+                            legend={`Edit room ${editingRoom.name}`}
+                            submitLabel="Save room"
+                            pending={updateRoom.isPending}
+                            defaults={{
+                              name: editingRoom.name,
+                              beds_sm: editingRoom.beds_sm,
+                              beds_lg: editingRoom.beds_lg,
+                              beds_double: editingRoom.beds_double,
+                              beds_kid: editingRoom.beds_kid,
+                              mattresses: editingRoom.mattresses,
+                              travel_cot: editingRoom.travel_cot,
+                            }}
+                            onSubmit={handleEditRoom(
+                              editingRoom.id,
+                              editingRoom.building_id,
+                            )}
+                            onCancel={() => { setOpenForm(null) }}
+                          />
+                        ) : buildingRooms.length === 0 ? (
+                          <p>No rooms yet.</p>
+                        ) : (
+                          <ul
+                            style={{
+                              listStyle: "none",
+                              padding: 0,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.5rem",
+                            }}
+                          >
+                            {buildingRooms.map(r => (
+                              <li
+                                key={r.id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.5rem",
+                                }}
                               >
-                                {editRoomOpen ? "Cancel" : "Edit"}
-                              </button>
-                              <button
-                                type="button"
-                                disabled={pending}
-                                onClick={() => { handleDeleteRoom(r.id, r.name); }}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                          {editMode && editRoomOpen && (
-                            <RoomForm
-                              key={`edit-room-${String(r.id)}`}
-                              legend={`Edit room ${r.name}`}
-                              submitLabel="Save room"
-                              pending={updateRoom.isPending}
-                              defaults={{
-                                name: r.name,
-                                beds_sm: r.beds_sm,
-                                beds_lg: r.beds_lg,
-                                beds_double: r.beds_double,
-                                beds_kid: r.beds_kid,
-                                mattresses: r.mattresses,
-                                travel_cot: r.travel_cot,
-                              }}
-                              onSubmit={handleEditRoom(r.id, r.building_id)}
-                              onCancel={() => { setOpenForm(null) }}
-                            />
-                          )}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                  {r.name}
+                                </span>
+                                <Button
+                                  variant="tertiary"
+                                  data-size="sm"
+                                  disabled={pending}
+                                  onClick={() => { toggleRoomEdit(r.id) }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="tertiary"
+                                  data-color="danger"
+                                  data-size="sm"
+                                  disabled={pending}
+                                  onClick={() => {
+                                    handleDeleteRoom(
+                                      r,
+                                      b,
+                                      buildingRooms.length === 1,
+                                    )
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
 
-                {editMode && (
-                  <div>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => { toggleBuildingForm("editBuilding", b.id); }}
-                    >
-                      {editBuildingOpen ? "Cancel" : "Edit"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => { toggleBuildingForm("addRoom", b.id); }}
-                    >
-                      {addRoomOpen ? "Cancel" : "Add room"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => { handleDeleteBuilding(b.id, b.name); }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
+                        <Button
+                          variant="secondary"
+                          disabled={pending}
+                          onClick={() => { toggleAddRoom(b.id) }}
+                        >
+                          {addRoomOpen ? "Cancel" : "Add room"}
+                        </Button>
 
-                {editBuildingOpen && (
-                  <EditBuildingForm
-                    key={`edit-building-${String(b.id)}`}
-                    defaultName={b.name}
-                    pending={updateBuilding.isPending}
-                    onSubmit={handleEditBuilding(b.id, b.property_id)}
-                    onCancel={() => { setOpenForm(null) }}
-                  />
-                )}
+                        {addRoomOpen && (
+                          <AddBedsFlow
+                            key={`add-room-${String(b.id)}`}
+                            legend={`Add room to ${b.name}`}
+                            submitLabel="Save room"
+                            pending={createRoom.isPending}
+                            onSubmit={handleAddRoom(b)}
+                            onCancel={() => { setOpenForm(null) }}
+                          />
+                        )}
 
-                {addRoomOpen && (
-                  <RoomForm
-                    key={`add-room-${String(b.id)}`}
-                    legend={`Add room to ${b.name}`}
-                    submitLabel="Save room"
-                    pending={createRoom.isPending}
-                    onSubmit={handleAddRoom(b.id)}
-                    onCancel={() => { setOpenForm(null) }}
-                  />
-                )}
-              </li>
+                        <Button
+                          variant="secondary"
+                          data-color="danger"
+                          disabled={pending}
+                          onClick={() => { handleDeleteBuilding(b.id, b.name) }}
+                        >
+                          Delete building
+                        </Button>
+
+                        <Button
+                          variant="tertiary"
+                          style={{
+                            marginTop: "auto",
+                            alignSelf: "stretch",
+                          }}
+                          onClick={() => {
+                            setExpandedId(null)
+                            setOpenForm(null)
+                          }}
+                        >
+                          Close
+                        </Button>
+                      </>
+                    )}
+
+                    {editMode && !isExpanded && (
+                      <Button
+                        variant="secondary"
+                        style={{
+                          marginTop: "auto",
+                          alignSelf: "stretch",
+                        }}
+                        disabled={pending}
+                        onClick={() => { setExpandedId(b.id) }}
+                      >
+                        Edit building
+                      </Button>
+                    )}
+                  </Card.Block>
+                </li>
+              </Card>
             )
           })}
+
+          <Card asChild key="__add">
+            <li
+              style={{
+                flex: "1 1 240px",
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Card.Block
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                  gap: "0.5rem",
+                }}
+              >
+                {isAdding ? (
+                  <>
+                    <strong>Add building</strong>
+                    <AddBuildingFlow
+                      onAdded={() => { setIsAdding(false) }}
+                      onCancel={() => { setIsAdding(false) }}
+                    />
+                  </>
+                ) : (
+                  <Button
+                    variant="tertiary"
+                    style={{
+                      flex: 1,
+                      minHeight: "4rem",
+                      alignSelf: "stretch",
+                    }}
+                    onClick={() => { setIsAdding(true) }}
+                  >
+                    + Add building
+                  </Button>
+                )}
+              </Card.Block>
+            </li>
+          </Card>
         </ul>
-      )}
     </section>
-  )
-}
-
-function EditBuildingForm({
-  defaultName,
-  pending,
-  onSubmit,
-  onCancel,
-}: {
-  defaultName: string
-  pending: boolean
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
-  onCancel: () => void
-}) {
-  return (
-    <form onSubmit={onSubmit}>
-      <fieldset>
-        <legend>Edit building</legend>
-        <div>
-          <label>
-            Name
-            <input type="text" name="name" defaultValue={defaultName} required />
-          </label>
-        </div>
-        <div>
-          <button type="submit" disabled={pending}>
-            Save
-          </button>
-          <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
-          </button>
-        </div>
-      </fieldset>
-    </form>
-  )
-}
-
-function RoomForm({
-  legend,
-  submitLabel,
-  pending,
-  defaults,
-  onSubmit,
-  onCancel,
-}: {
-  legend: string
-  submitLabel: string
-  pending: boolean
-  defaults?: RoomDefaults
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
-  onCancel: () => void
-}) {
-  return (
-    <form onSubmit={onSubmit}>
-      <fieldset>
-        <legend>{legend}</legend>
-        <div>
-          <label>
-            Name
-            <input
-              type="text"
-              name="name"
-              defaultValue={defaults?.name ?? ""}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (single)
-            <input
-              type="number"
-              name="beds_sm"
-              min={0}
-              defaultValue={defaults?.beds_sm ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (large)
-            <input
-              type="number"
-              name="beds_lg"
-              min={0}
-              defaultValue={defaults?.beds_lg ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (double)
-            <input
-              type="number"
-              name="beds_double"
-              min={0}
-              defaultValue={defaults?.beds_double ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (kid)
-            <input
-              type="number"
-              name="beds_kid"
-              min={0}
-              defaultValue={defaults?.beds_kid ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Mattresses
-            <input
-              type="number"
-              name="mattresses"
-              min={0}
-              defaultValue={defaults?.mattresses ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Travel cot
-            <input
-              type="number"
-              name="travel_cot"
-              min={0}
-              defaultValue={defaults?.travel_cot ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <button type="submit" disabled={pending}>
-            {submitLabel}
-          </button>
-          <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
-          </button>
-        </div>
-      </fieldset>
-    </form>
   )
 }

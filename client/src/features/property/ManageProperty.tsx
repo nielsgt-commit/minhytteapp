@@ -1,13 +1,20 @@
+import { Suspense, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Divider } from "@digdir/designsystemet-react"
 import PropertyInfo from "@/features/property/propertyinfo/PropertyInfo.tsx"
+import PropertyContacts from "@/features/property/propertyinfo/PropertyContacts.tsx"
 import styles from "./ManageProperty.module.css"
-import { AddBuildingFlow } from "@/features/property/testform/AddBuildingFlow.tsx"
 import { ListPropertyBuildings } from "@/features/property/testform/ListPropertyBuildings.tsx"
 import { DangerZone } from "@/features/property/dangerzone/DangerZone.tsx"
 import { PropertyOwnersPanel } from "@/features/property/owners/PropertyOwnersPanel.tsx"
-import { PropertyInvitesPanel } from "@/features/property/invites/PropertyInvitesPanel.tsx"
 import { PlacesPanel } from "@/features/property/places/PlacesPanel.tsx"
 import { EquipmentPanel } from "@/features/property/equipment/EquipmentPanel.tsx"
+import { PropertyRegister } from "@/features/property/register/PropertyRegister.tsx"
+import {
+  PropertyManagerFilter,
+  type PropertyPanel,
+} from "@/features/property/PropertyManagerFilter.tsx"
+import PropertyStats from "@/features/dashboard/propertystats/PropertyStats"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -15,24 +22,16 @@ import { useTRPC } from "@/trpc/trpc.ts"
 export function ManageProperty() {
   const trpc = useTRPC()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
-  )
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
+
+  const [activePanel, setActivePanel] = useState<PropertyPanel>("info")
 
   const selectedProperty =
     selectedPropertyId != null
       ? properties.find(p => p.id === selectedPropertyId)
       : undefined
-
-  const propertyBuildings =
-    selectedPropertyId != null
-      ? buildings.filter(b => b.property_id === selectedPropertyId)
-      : []
-
-  const hasBuildings = propertyBuildings.length > 0
 
   if (selectedPropertyId == null) {
     return (
@@ -45,51 +44,35 @@ export function ManageProperty() {
 
   return (
     <section className={styles.page}>
-      <h1 className={styles.title}>  Manage Property </h1>
-      <div className={styles.details}>
-        <PropertyInfo />
+      <h1 className={styles.title}>Manage Property</h1>
+      <div className={styles.summaries}>
+        <Suspense fallback={<p>Loading…</p>}>
+          <PropertyStats />
+        </Suspense>
       </div>
-      {hasBuildings && (
-        <div className={styles.buildings}>
-          <ListPropertyBuildings />
-        </div>
+
+      <PropertyManagerFilter value={activePanel} onChange={setActivePanel} />
+
+      {activePanel === "info" && <PropertyInfo />}
+      {activePanel === "buildings" && <ListPropertyBuildings />}
+      {activePanel === "places" && selectedProperty && (
+        <PlacesPanel
+          propertyId={selectedProperty.id}
+          propertyName={selectedProperty.name}
+        />
       )}
-
-      <div className={styles.addbuilding}>
-        <AddBuildingFlow />
-      </div>
-
-      <div className={styles.owners}>
-        <PropertyOwnersPanel />
-      </div>
-
-      <div className={styles.invites}>
-        <PropertyInvitesPanel />
-      </div>
-
-      {selectedProperty && (
-        <div className={styles.places}>
-          <PlacesPanel
-            propertyId={selectedProperty.id}
-            propertyName={selectedProperty.name}
-          />
-        </div>
+      {activePanel === "inventory" && selectedProperty && (
+        <EquipmentPanel
+          propertyId={selectedProperty.id}
+          propertyName={selectedProperty.name}
+        />
       )}
+      {activePanel === "contacts" && <PropertyContacts />}
+      {activePanel === "ownership" && <PropertyOwnersPanel />}
+      {activePanel === "register" && <PropertyRegister />}
 
-      {selectedProperty && (
-        <div className={styles.equipment}>
-          <EquipmentPanel
-            propertyId={selectedProperty.id}
-            propertyName={selectedProperty.name}
-          />
-        </div>
-      )}
-
-      <hr className={styles.divider} />
-
-      <div className={styles.dangerzone}>
-        <DangerZone />
-      </div>
+      <Divider />
+      <DangerZone />
     </section>
   )
 }

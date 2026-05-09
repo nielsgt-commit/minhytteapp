@@ -5,7 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
@@ -71,15 +71,21 @@ export function Equipment() {
 
   if (selectedPropertyId == null) {
     return (
-      <section>
-        <h3>Equipment</h3>
-        <p>Select a property to see its equipment.</p>
-      </section>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <h3>Equipment</h3>
+            <p>Select a property to see its equipment.</p>
+          </Card.Block>
+        </section>
+      </Card>
     )
   }
 
   return (
-    <section>
+    <Card asChild>
+      <section>
+        <Card.Block>
       <h3>Equipment</h3>
       {scheduleMutation.error && (
         <p role="alert">Error: {scheduleMutation.error.message}</p>
@@ -151,6 +157,8 @@ export function Equipment() {
           </tbody>
         </table>
       )}
-    </section>
+        </Card.Block>
+      </section>
+    </Card>
   )
 }

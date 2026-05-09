@@ -2,11 +2,13 @@
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-areas:
-    "groups groups groups groups groups groups"
-    "users  users  users  users  users  users"
+    "groups  groups  groups  groups  groups  groups"
+    "invites invites invites invites invites invites"
+    "users   users   users   users   users   users"
 ;
     gap: 0.4rem;
 }
 
-.groups { grid-area: groups; }
-.users  { grid-area: users; }
+.groups  { grid-area: groups; }
+.invites { grid-area: invites; }
+.users   { grid-area: users; }

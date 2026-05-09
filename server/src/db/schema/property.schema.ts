@@ -49,6 +49,12 @@ export const buildingsTable = pgTable("buildings", {
   property_id: integer("property_id")
     .notNull()
     .references(() => propertyTable.id),
+  category: varchar("category", {
+    length: 16,
+    enum: ["habitable", "non_habitable"],
+  })
+    .notNull()
+    .default("habitable"),
 })
 
 export const roomTable = pgTable("rooms", {

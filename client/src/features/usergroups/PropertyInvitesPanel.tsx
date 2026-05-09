@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Card } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -55,10 +56,14 @@ export function PropertyInvitesPanel() {
 
   if (propertyId == null) {
     return (
-      <section>
-        <h3>Invites</h3>
-        <p>No property selected. Pick one from the header.</p>
-      </section>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <h3>Invites</h3>
+            <p>No property selected. Pick one from the header.</p>
+          </Card.Block>
+        </section>
+      </Card>
     )
   }
 
@@ -97,7 +102,9 @@ export function PropertyInvitesPanel() {
   }
 
   return (
-    <section>
+    <Card asChild>
+      <section>
+        <Card.Block>
       <h3>Invites</h3>
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
@@ -189,6 +196,8 @@ export function PropertyInvitesPanel() {
           </fieldset>
         </form>
       )}
-    </section>
+        </Card.Block>
+      </section>
+    </Card>
   )
 }

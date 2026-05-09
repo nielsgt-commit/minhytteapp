@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -13,7 +14,12 @@ function fdString(fd: FormData, key: string): string {
   return typeof v === "string" ? v : ""
 }
 
-export function AddBuildingFlow() {
+type Props = {
+  onAdded?: () => void
+  onCancel?: () => void
+}
+
+export function AddBuildingFlow({ onAdded, onCancel }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -42,45 +48,52 @@ export function AddBuildingFlow() {
     if (!name) return
     createBuilding.mutate(
       { name, property_id: selectedProperty.id },
-      { onSuccess: () => { form.reset() } },
+      {
+        onSuccess: () => {
+          form.reset()
+          onAdded?.()
+        },
+      },
     )
   }
 
-  return (
-    <section>
-      <h3>Add Building</h3>
+  if (!selectedProperty) {
+    return <p>No property selected. Pick one from the header.</p>
+  }
 
+  return (
+    <>
       {createBuilding.error && (
         <p role="alert">Error: {createBuilding.error.message}</p>
       )}
 
-      {!selectedProperty ? (
-        <p>No property selected. Pick one from the header.</p>
-      ) : (
-        <>
-          <p>
-            Adding to: <strong>{selectedProperty.name}</strong>{" "}
-            <small>({selectedProperty.address})</small>
-          </p>
-
-          <form onSubmit={handleAddBuilding}>
-            <fieldset>
-              <legend>New building</legend>
-              <div>
-                <label>
-                  Name
-                  <input type="text" name="name" required />
-                </label>
-              </div>
-              <div>
-                <button type="submit" disabled={createBuilding.isPending}>
-                  Add building
-                </button>
-              </div>
-            </fieldset>
-          </form>
-        </>
-      )}
-    </section>
+      <form
+        onSubmit={handleAddBuilding}
+        style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+      >
+        <Textfield
+          label="Name"
+          name="name"
+          required
+          autoFocus
+          disabled={createBuilding.isPending}
+        />
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <Button type="submit" disabled={createBuilding.isPending}>
+            Add building
+          </Button>
+          {onCancel && (
+            <Button
+              type="button"
+              variant="tertiary"
+              disabled={createBuilding.isPending}
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </form>
+    </>
   )
 }

@@ -9,6 +9,7 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 const buildingFields = {
   name: z.string().min(1, { error: "name is required" }),
   property_id: z.number().int().positive(),
+  category: z.enum(["habitable", "non_habitable"]).default("habitable"),
 }
 
 const createInput = z.object(buildingFields)
@@ -26,6 +27,7 @@ export const buildingRouter = router({
         name: buildingsTable.name,
         property_id: buildingsTable.property_id,
         property_name: propertyTable.name,
+        category: buildingsTable.category,
       })
       .from(buildingsTable)
       .leftJoin(
@@ -45,6 +47,7 @@ export const buildingRouter = router({
           name: buildingsTable.name,
           property_id: buildingsTable.property_id,
           property_name: propertyTable.name,
+          category: buildingsTable.category,
         })
         .from(buildingsTable)
         .leftJoin(
