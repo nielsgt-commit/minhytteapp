@@ -1,9 +1,6 @@
 import { Suspense } from "react"
 import styles from "./Settlement.module.css"
-import { SettlementHeadColumns } from "@/features/settlement/SettlementHeadColumns.tsx"
-import { SettlementTestForm } from "@/features/settlement/testform/SettlementTestForm.tsx"
-import { ExpenseCategories } from "@/features/expenses/ExpenseCategories.tsx"
-import { PreliminarySettlement } from "@/features/expenses/PreliminarySettlement.tsx"
+import { ReviewExpenses } from "@/features/expenses/ReviewExpenses.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
@@ -13,7 +10,7 @@ export function Settlement() {
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <h2 className={styles.title}>Settlement</h2>
+        <h2>Settlement</h2>
         <p>Add or select a property to balance expenses between owners and settle up.</p>
       </section>
     )
@@ -21,19 +18,10 @@ export function Settlement() {
 
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>Settlement</h2>
+      <h2>Settlement</h2>
       <Suspense fallback={<p>Loading…</p>}>
-        <div className={styles.head}>
-          <SettlementHeadColumns />
-        </div>
-        <div className={styles.panels}>
-          <PreliminarySettlement />
-          <ExpenseCategories />
-        </div>
+        <ReviewExpenses />
       </Suspense>
-      <div className={styles.testform}>
-        <SettlementTestForm />
-      </div>
     </section>
   )
 }

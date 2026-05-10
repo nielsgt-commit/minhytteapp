@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -6,11 +5,16 @@ import {
 } from "@tanstack/react-query"
 import {
   Button,
-  Field,
-  Label,
-  Select,
-  Switch,
+  Card,
+  Dialog,
+  Divider,
+  Heading,
+  Paragraph,
+  Skeleton,
+  Tag,
 } from "@digdir/designsystemet-react"
+import { ReceiptIcon } from "@navikt/aksel-icons"
+import styles from "./ReviewExpenses.module.css"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -54,9 +58,6 @@ export function ReviewExpenses() {
       property_id: selectedPropertyId ?? 0,
     }),
   )
-  const { data: categories } = useSuspenseQuery(
-    trpc.expenseCategory.list.queryOptions(),
-  )
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
@@ -65,22 +66,30 @@ export function ReviewExpenses() {
     trpc.expense.update.mutationOptions({ onSuccess: invalidate }),
   )
 
-  const [editMode, setEditMode] = useState(false)
+  if (me == null || selectedPropertyId == null) return null
 
-  if (me == null || !me.is_head || selectedPropertyId == null) return null
+  if (!me.is_head) {
+    return <p>Only the group head can review submitted expenses.</p>
+  }
 
   const myGroup = groups.find(
     g => g.is_main && g.members.some(m => m.user_id === me.id),
   )
   const memberIds = new Set(myGroup?.members.map(m => m.user_id) ?? [])
 
-  const openSettlement = settlements
+  const openSettlements = settlements
     .filter(s => s.status === "open")
     .slice()
-    .sort((a, b) => b.year - a.year)[0]
+    .sort((a, b) => b.year - a.year)
+  const openSettlement = openSettlements.length > 0 ? openSettlements[0] : null
 
   const toReview = (expenses as ExpenseRow[])
-    .filter(e => e.status === "submitted" && memberIds.has(e.payer_id))
+    .filter(
+      e =>
+        e.status === "submitted"
+        && memberIds.has(e.payer_id)
+        && e.payer_id !== me.id,
+    )
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date))
 
@@ -96,13 +105,12 @@ export function ReviewExpenses() {
     expense_types: e.expense_types,
   })
 
-  const approve = (e: ExpenseRow) => {
-    if (openSettlement == null) return
+  const reimburse = (e: ExpenseRow) => {
     updateExpense.mutate({
       ...basePayload(e),
       status: "reimbursed",
       reimbursed_by_id: me.id,
-      settlement_id: openSettlement.id,
+      settlement_id: openSettlement?.id ?? e.settlement_id ?? undefined,
     })
   }
 
@@ -115,124 +123,90 @@ export function ReviewExpenses() {
     })
   }
 
-  const setCategory = (e: ExpenseRow, name: string) => {
-    updateExpense.mutate({
-      ...basePayload(e),
-      status: e.status,
-      reimbursed_by_id: e.reimbursed_by_id ?? undefined,
-      settlement_id: e.settlement_id ?? undefined,
-      expense_types: name === "" ? [] : [name],
-    })
+  if (toReview.length === 0) {
+    return <p>(nothing to review)</p>
   }
 
   return (
-    <section>
-      <h3>Review expenses</h3>
-      <p>Group: {myGroup?.name ?? "(no group)"}</p>
-      <p>
-        Open settlement:{" "}
-        {openSettlement
-          ? `#${String(openSettlement.id)} (${String(openSettlement.year)}${openSettlement.season ? ` ${openSettlement.season}` : ""})`
-          : "(none — approve disabled)"}
-      </p>
-      <Switch
-        label="Edit mode"
-        checked={editMode}
-        onChange={e => { setEditMode(e.target.checked) }}
-      />
+    <div className={styles.list}>
       {updateExpense.error && (
         <p role="alert">Error: {updateExpense.error.message}</p>
       )}
-      {toReview.length === 0 ? (
-        <p>(nothing to review)</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Amount</th>
-              <th>Paid by</th>
-              <th>Types</th>
-              <th>Receipt</th>
-              {editMode && <th>Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {toReview.map(e => (
-              <tr key={e.id}>
-                <td>{e.date}</td>
-                <td>{e.description}</td>
-                <td>{e.amount}</td>
-                <td>{e.payer_name ?? `#${String(e.payer_id)}`}</td>
-                <td>
-                  <Field>
-                    <Label>Category</Label>
-                    <Select
-                      value={e.expense_types[0] ?? ""}
-                      disabled={!editMode || updateExpense.isPending}
-                      onChange={ev => { setCategory(e, ev.target.value) }}
+      {toReview.map(e => (
+        <Card key={e.id} asChild>
+          <article>
+            <Card.Block className={styles.row} data-size="sm">
+              <Paragraph asChild data-size="sm">
+                <span className={styles.category}>
+                  {e.expense_types[0] ?? "(no category)"}
+                </span>
+              </Paragraph>
+              <span className={styles.receipt}>
+                {e.receipt_url && (
+                  <Dialog.TriggerContext>
+                    <Dialog.Trigger
+                      variant="tertiary"
+                      data-size="sm"
+                      icon
+                      aria-label="View receipt"
                     >
-                      <Select.Option value="">(no category)</Select.Option>
-                      {categories.map(c => (
-                        <Select.Option key={c.id} value={c.name}>
-                          {c.name}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </Field>
-                </td>
-                <td>
-                  {e.receipt_url ? (
-                    <a href={e.receipt_url} target="_blank" rel="noreferrer">
-                      link
-                    </a>
-                  ) : (
-                    ""
-                  )}
-                </td>
-                {editMode && (
-                  <td>
-                    <Button
-                      disabled={
-                        openSettlement == null || updateExpense.isPending
-                      }
-                      onClick={() => {
-                        approve(e)
-                      }}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      data-color="danger"
-                      disabled={updateExpense.isPending}
-                      onClick={() => {
-                        reject(e)
-                      }}
-                    >
-                      Reject
-                    </Button>
-                  </td>
+                      <ReceiptIcon aria-hidden fontSize="1.25rem" />
+                    </Dialog.Trigger>
+                    <Dialog>
+                      <Dialog.Block>
+                        <Heading level={3} data-size="xs">Receipt</Heading>
+                      </Dialog.Block>
+                      <Dialog.Block>
+                        <Skeleton
+                          className={styles.dialogImage}
+                          variant="rectangle"
+                        />
+                      </Dialog.Block>
+                    </Dialog>
+                  </Dialog.TriggerContext>
                 )}
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={2}>
-                <strong>Total</strong>
-              </td>
-              <td>
-                <strong>
-                  {toReview.reduce((sum, e) => sum + e.amount, 0)}
-                </strong>
-              </td>
-              <td colSpan={editMode ? 4 : 3} />
-            </tr>
-          </tfoot>
-        </table>
-      )}
-    </section>
+              </span>
+              <Paragraph className={styles.sumLabel} data-size="sm">
+                Sum
+              </Paragraph>
+              <div className={styles.amountGroup}>
+                <Paragraph asChild data-size="sm">
+                  <span className={styles.amount}>{e.amount}</span>
+                </Paragraph>
+                <Paragraph asChild data-size="sm">
+                  <span className={styles.postfix}>,-</span>
+                </Paragraph>
+              </div>
+              <Paragraph className={styles.submittedByLabel} data-size="sm">
+                Submitted by
+              </Paragraph>
+              <Tag className={styles.name} data-color="info" data-size="sm">
+                {e.payer_name ?? `#${String(e.payer_id)}`}
+              </Tag>
+              <Divider className={styles.divider} />
+              <div className={styles.actions}>
+                <Button
+                  variant="secondary"
+                  data-size="sm"
+                  disabled={updateExpense.isPending}
+                  onClick={() => { reimburse(e) }}
+                >
+                  Reimburse
+                </Button>
+                <Button
+                  variant="tertiary"
+                  data-color="danger"
+                  data-size="sm"
+                  disabled={updateExpense.isPending}
+                  onClick={() => { reject(e) }}
+                >
+                  Reject
+                </Button>
+              </div>
+            </Card.Block>
+          </article>
+        </Card>
+      ))}
+    </div>
   )
 }
