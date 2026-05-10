@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Card, Tag, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -35,6 +36,13 @@ const STATUS_ORDER: Record<Status, number> = {
   rejected: 3,
 }
 
+const STATUS_COLOR: Record<Status, "info" | "success" | "warning" | "danger" | "neutral"> = {
+  draft: "neutral",
+  submitted: "info",
+  reimbursed: "success",
+  rejected: "danger",
+}
+
 export function MyExpenses() {
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -64,59 +72,41 @@ export function MyExpenses() {
       return a.date.localeCompare(b.date)
     })
 
+  if (mine.length === 0) return null
+
   return (
-    <section>
-      <h3>My expenses</h3>
+    <>
       {deleteExpense.error && (
         <p role="alert">Error: {deleteExpense.error.message}</p>
       )}
-      {mine.length === 0 ? (
-        <p>(no expenses)</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Types</th>
-              <th>Receipt</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mine.map(e => (
-              <MyExpenseRow
-                key={e.id}
-                expense={e}
-                propertyId={selectedPropertyId}
-                onSaved={invalidate}
-                onDelete={() => {
-                  deleteExpense.mutate({ id: e.id })
-                }}
-                deletePending={deleteExpense.isPending}
-              />
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={2}>
-                <strong>Total</strong>
-              </td>
-              <td>
-                <strong>{mine.reduce((sum, e) => sum + e.amount, 0)}</strong>
-              </td>
-              <td colSpan={4} />
-            </tr>
-          </tfoot>
-        </table>
-      )}
-    </section>
+      <ul
+        style={{
+          listStyle: "none",
+          padding: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+        }}
+      >
+        {mine.map(e => (
+          <li key={e.id}>
+            <MyExpenseCard
+              expense={e}
+              propertyId={selectedPropertyId}
+              onSaved={invalidate}
+              onDelete={() => {
+                deleteExpense.mutate({ id: e.id })
+              }}
+              deletePending={deleteExpense.isPending}
+            />
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 
-function MyExpenseRow({
+function MyExpenseCard({
   expense,
   propertyId,
   onSaved,
@@ -144,8 +134,6 @@ function MyExpenseRow({
     }),
   )
 
-  const editable = expense.status === "draft" || expense.status === "rejected"
-
   const handleSubmit = (ev: SyntheticEvent<HTMLFormElement>) => {
     ev.preventDefault()
     updateExpense.mutate({
@@ -171,105 +159,125 @@ function MyExpenseRow({
     setEditing(false)
   }
 
-  if (editing) {
-    return (
-      <tr>
-        <td colSpan={7}>
+  const categoryLabel =
+    expense.expense_types.length > 0
+      ? expense.expense_types.join(", ")
+      : "(no category)"
+
+  return (
+    <Card>
+      <Card.Block>
+        {editing ? (
           <form onSubmit={handleSubmit}>
-            <label>
-              Date
-              <input
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              <Textfield
+                label="Date"
                 type="date"
                 value={date}
-                onChange={ev => {
-                  setDate(ev.target.value)
-                }}
+                onChange={ev => { setDate(ev.target.value) }}
                 required
               />
-            </label>
-            <label>
-              Description
-              <input
-                type="text"
+              <Textfield
+                label="Description"
                 value={description}
-                onChange={ev => {
-                  setDescription(ev.target.value)
-                }}
+                onChange={ev => { setDescription(ev.target.value) }}
               />
-            </label>
-            <label>
-              Amount
-              <input
+              <Textfield
+                label="Amount"
                 type="number"
                 step={1}
                 value={amount}
-                onChange={ev => {
-                  setAmount(ev.target.value)
-                }}
+                onChange={ev => { setAmount(ev.target.value) }}
                 required
               />
-            </label>
-            <button type="submit" disabled={updateExpense.isPending}>
-              Submit
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                cancel()
-              }}
-              disabled={updateExpense.isPending}
-            >
-              Cancel
-            </button>
-            {updateExpense.error && (
-              <span role="alert"> Error: {updateExpense.error.message}</span>
-            )}
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button type="submit" disabled={updateExpense.isPending}>
+                  Submit
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={updateExpense.isPending}
+                  onClick={() => { cancel() }}
+                >
+                  Cancel
+                </Button>
+              </div>
+              {updateExpense.error && (
+                <span role="alert">Error: {updateExpense.error.message}</span>
+              )}
+            </div>
           </form>
-        </td>
-      </tr>
-    )
-  }
-
-  return (
-    <tr>
-      <td>{expense.date}</td>
-      <td>{expense.description}</td>
-      <td>{expense.amount}</td>
-      <td>{expense.status}</td>
-      <td>{expense.expense_types.join(", ")}</td>
-      <td>
-        {expense.receipt_url ? (
-          <a href={expense.receipt_url} target="_blank" rel="noreferrer">
-            link
-          </a>
         ) : (
-          ""
-        )}
-      </td>
-      <td>
-        {editable && (
-          <>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(true)
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "0.5rem",
               }}
-              disabled={deletePending}
             >
-              Edit and submit
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onDelete()
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "0.125rem 0.625rem",
+                  border: "1px solid currentColor",
+                  borderRadius: "999px",
+                  fontSize: "0.875rem",
+                  lineHeight: 1.4,
+                }}
+              >
+                {categoryLabel}
+              </span>
+              <Tag data-color={STATUS_COLOR[expense.status]}>
+                {expense.status}
+              </Tag>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "0.5rem",
               }}
-              disabled={deletePending}
             >
-              Delete
-            </button>
-          </>
+              <span>{expense.amount},-</span>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button
+                  variant="tertiary"
+                  data-size="sm"
+                  disabled={deletePending}
+                  onClick={() => { setEditing(true) }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="tertiary"
+                  data-color="danger"
+                  data-size="sm"
+                  disabled={deletePending}
+                  onClick={() => { onDelete() }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
-      </td>
-    </tr>
+      </Card.Block>
+    </Card>
   )
 }

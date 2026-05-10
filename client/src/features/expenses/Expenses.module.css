@@ -1,16 +1,7 @@
 .page {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-areas:
-    "title    title    title    title    title    title"
-    "review   review   review   review   panels   panels"
-    "mine     mine     mine     mine     mine     mine"
-    "testform testform testform testform testform testform";
-  gap: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.title    { grid-area: title; }
-.review   { grid-area: review; }
-.panels   { grid-area: panels; display: flex; flex-direction: column; gap: 1rem; }
-.mine     { grid-area: mine; }
-.testform { grid-area: testform; }
+.title { margin: 0; }

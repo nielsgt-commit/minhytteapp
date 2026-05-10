@@ -5,6 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Switch, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -96,21 +97,18 @@ export function ExpenseCategories() {
     <section>
       <h3>Expense categories</h3>
       {me?.is_head && (
-        <label>
-          <input
-            type="checkbox"
-            checked={editMode}
-            onChange={e => {
-              const next = e.currentTarget.checked
-              setEditMode(next)
-              if (!next) {
-                setEditingId(null)
-                setEditingName("")
-              }
-            }}
-          />
-          Edit mode
-        </label>
+        <Switch
+          label="Edit mode"
+          checked={editMode}
+          onChange={e => {
+            const next = e.target.checked
+            setEditMode(next)
+            if (!next) {
+              setEditingId(null)
+              setEditingName("")
+            }
+          }}
+        />
       )}
       <ul>
         <li>(no category) - {uncategorizedTotal}</li>
@@ -118,19 +116,19 @@ export function ExpenseCategories() {
           <li key={c.id}>
             {editMode && editingId === c.id ? (
               <form onSubmit={handleRename}>
-                <input
-                  type="text"
+                <Textfield
+                  label="Category name"
                   value={editingName}
                   onChange={e => { setEditingName(e.target.value) }}
                   maxLength={64}
                   autoFocus
                   required
                 />
-                <button type="submit" disabled={renameMutation.isPending}>
+                <Button type="submit" disabled={renameMutation.isPending}>
                   Save
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="secondary"
                   disabled={renameMutation.isPending}
                   onClick={() => {
                     setEditingId(null)
@@ -138,29 +136,30 @@ export function ExpenseCategories() {
                   }}
                 >
                   Cancel
-                </button>
+                </Button>
               </form>
             ) : (
               <>
                 {c.name} - {totals.get(c.name) ?? 0}
                 {editMode && me?.is_head && (
                   <>
-                    <button
-                      type="button"
+                    <Button
+                      variant="tertiary"
                       onClick={() => {
                         setEditingId(c.id)
                         setEditingName(c.name)
                       }}
                     >
                       Rename
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
                       disabled={deleteMutation.isPending}
                       onClick={() => { deleteMutation.mutate({ id: c.id }) }}
                     >
                       Remove
-                    </button>
+                    </Button>
                   </>
                 )}
               </>
@@ -170,19 +169,16 @@ export function ExpenseCategories() {
       </ul>
       {editMode && me?.is_head && (
         <form onSubmit={handleAdd}>
-          <label>
-            New category
-            <input
-              type="text"
-              value={newName}
-              onChange={e => { setNewName(e.target.value) }}
-              maxLength={64}
-              required
-            />
-          </label>
-          <button type="submit" disabled={createMutation.isPending}>
+          <Textfield
+            label="New category"
+            value={newName}
+            onChange={e => { setNewName(e.target.value) }}
+            maxLength={64}
+            required
+          />
+          <Button type="submit" disabled={createMutation.isPending}>
             Add
-          </button>
+          </Button>
         </form>
       )}
       {createMutation.error && (

@@ -1,13 +1,12 @@
 import { Suspense } from "react"
+import { Details } from "@digdir/designsystemet-react"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import styles from "./Expenses.module.css"
-import { ExpenseCategories } from "@/features/expenses/ExpenseCategories.tsx"
 import { ExpensesTestForm } from "@/features/expenses/testform/ExpensesTestForm.tsx"
 import { MyExpenses } from "@/features/expenses/MyExpenses.tsx"
-import { PreliminarySettlement } from "@/features/expenses/PreliminarySettlement.tsx"
-import { RecurringPropertyFees } from "@/features/expenses/RecurringPropertyFees.tsx"
-import { ReviewExpenses } from "@/features/expenses/ReviewExpenses.tsx"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useTRPC } from "@/trpc/trpc"
 
 export function Expenses() {
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
@@ -25,21 +24,30 @@ export function Expenses() {
     <section className={styles.page}>
       <h2 className={styles.title}>Expenses</h2>
       <Suspense fallback={<p>Loading…</p>}>
-        <div className={styles.review}>
-          <ReviewExpenses />
-        </div>
-        <div className={styles.panels}>
-          <RecurringPropertyFees />
-          <ExpenseCategories />
-          <PreliminarySettlement />
-        </div>
-        <div className={styles.mine}>
-          <MyExpenses />
-        </div>
-      </Suspense>
-      <div className={styles.testform}>
         <ExpensesTestForm />
-      </div>
+        <MyExpensesPanel propertyId={selectedPropertyId} />
+      </Suspense>
     </section>
+  )
+}
+
+function MyExpensesPanel({ propertyId }: { propertyId: number }) {
+  const trpc = useTRPC()
+  const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
+  const { data: expenses } = useSuspenseQuery(
+    trpc.expense.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+
+  if (me == null) return null
+  const myCount = expenses.filter(e => e.payer_id === me.id).length
+  if (myCount === 0) return null
+
+  return (
+    <Details>
+      <Details.Summary>My expenses ({myCount})</Details.Summary>
+      <Details.Content>
+        <MyExpenses />
+      </Details.Content>
+    </Details>
   )
 }

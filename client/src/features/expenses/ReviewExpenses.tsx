@@ -4,6 +4,13 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Field,
+  Label,
+  Select,
+  Switch,
+} from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -128,14 +135,11 @@ export function ReviewExpenses() {
           ? `#${String(openSettlement.id)} (${String(openSettlement.year)}${openSettlement.season ? ` ${openSettlement.season}` : ""})`
           : "(none — approve disabled)"}
       </p>
-      <label>
-        <input
-          type="checkbox"
-          checked={editMode}
-          onChange={e => { setEditMode(e.currentTarget.checked) }}
-        />
-        Edit mode
-      </label>
+      <Switch
+        label="Edit mode"
+        checked={editMode}
+        onChange={e => { setEditMode(e.target.checked) }}
+      />
       {updateExpense.error && (
         <p role="alert">Error: {updateExpense.error.message}</p>
       )}
@@ -162,18 +166,21 @@ export function ReviewExpenses() {
                 <td>{e.amount}</td>
                 <td>{e.payer_name ?? `#${String(e.payer_id)}`}</td>
                 <td>
-                  <select
-                    value={e.expense_types[0] ?? ""}
-                    disabled={!editMode || updateExpense.isPending}
-                    onChange={ev => { setCategory(e, ev.target.value) }}
-                  >
-                    <option value="">(no category)</option>
-                    {categories.map(c => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Field>
+                    <Label>Category</Label>
+                    <Select
+                      value={e.expense_types[0] ?? ""}
+                      disabled={!editMode || updateExpense.isPending}
+                      onChange={ev => { setCategory(e, ev.target.value) }}
+                    >
+                      <Select.Option value="">(no category)</Select.Option>
+                      {categories.map(c => (
+                        <Select.Option key={c.id} value={c.name}>
+                          {c.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Field>
                 </td>
                 <td>
                   {e.receipt_url ? (
@@ -186,8 +193,7 @@ export function ReviewExpenses() {
                 </td>
                 {editMode && (
                   <td>
-                    <button
-                      type="button"
+                    <Button
                       disabled={
                         openSettlement == null || updateExpense.isPending
                       }
@@ -196,16 +202,17 @@ export function ReviewExpenses() {
                       }}
                     >
                       Approve
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      data-color="danger"
                       disabled={updateExpense.isPending}
                       onClick={() => {
                         reject(e)
                       }}
                     >
                       Reject
-                    </button>
+                    </Button>
                   </td>
                 )}
               </tr>
