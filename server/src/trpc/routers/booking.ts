@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { asc, eq, inArray } from "drizzle-orm"
+import { and, asc, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
 import type { db as dbClient } from "../../db/client.ts"
 import {
@@ -11,6 +11,7 @@ import {
   buildingsTable,
   roomTable,
 } from "../../db/schema/property.schema.ts"
+import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
@@ -59,6 +60,45 @@ const updateInput = z
 type OccupantInput = z.infer<typeof bookingOccupantInput>
 
 type Db = typeof dbClient
+
+async function assertBookingsUnlocked(
+  db: Db,
+  propertyId: number,
+  ranges: Array<{ start_date: string; end_date: string }>,
+) {
+  const [open] = await db
+    .select({
+      year: settlementsTable.year,
+      phase: settlementsTable.phase,
+    })
+    .from(settlementsTable)
+    .where(
+      and(
+        eq(settlementsTable.property_id, propertyId),
+        eq(settlementsTable.status, "open"),
+      ),
+    )
+    .limit(1)
+  if (!open) return
+  if (
+    open.phase === "collecting_expenses"
+    || open.phase === "collecting_bookings"
+  ) {
+    return
+  }
+  const yearStart = `${String(open.year)}-01-01`
+  const yearEnd = `${String(open.year)}-12-31`
+  const overlaps = ranges.some(
+    r => !(r.end_date < yearStart || r.start_date > yearEnd),
+  )
+  if (overlaps) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "bookings are locked: the open settlement for this year is in or past review",
+    })
+  }
+}
 
 type RoomCapacity = {
   id: number
@@ -340,6 +380,10 @@ export const bookingRouter = router({
         userById,
       )
 
+      await assertBookingsUnlocked(ctx.db, input.property_id, [
+        { start_date: input.start_date, end_date: input.end_date },
+      ])
+
       return ctx.db.transaction(async tx => {
         const [created] = await tx
           .insert(bookingTable)
@@ -391,15 +435,26 @@ export const bookingRouter = router({
         userById,
       )
 
+      const [existing] = await ctx.db
+        .select({
+          status: bookingTable.status,
+          start_date: bookingTable.start_date,
+          end_date: bookingTable.end_date,
+        })
+        .from(bookingTable)
+        .where(eq(bookingTable.id, input.id))
+        .limit(1)
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND" })
+      }
+
+      await assertBookingsUnlocked(ctx.db, input.property_id, [
+        { start_date: existing.start_date, end_date: existing.end_date },
+        { start_date: input.start_date, end_date: input.end_date },
+      ])
+
       return ctx.db.transaction(async tx => {
-        const existing = await tx
-          .select({ status: bookingTable.status })
-          .from(bookingTable)
-          .where(eq(bookingTable.id, input.id))
-        if (existing.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND" })
-        }
-        const wasCancelled = existing[0].status === "cancelled"
+        const wasCancelled = existing.status === "cancelled"
         const nowCancelled = input.status === "cancelled"
 
         const [updated] = await tx
@@ -453,6 +508,20 @@ export const bookingRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const [existing] = await ctx.db
+        .select({
+          property_id: bookingTable.property_id,
+          start_date: bookingTable.start_date,
+          end_date: bookingTable.end_date,
+        })
+        .from(bookingTable)
+        .where(eq(bookingTable.id, input.id))
+        .limit(1)
+      if (existing && existing.property_id != null) {
+        await assertBookingsUnlocked(ctx.db, existing.property_id, [
+          { start_date: existing.start_date, end_date: existing.end_date },
+        ])
+      }
       return ctx.db.transaction(async tx => {
         await tx
           .delete(bookingRoomsTable)

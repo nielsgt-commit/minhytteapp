@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm"
 import {
+  boolean,
   check,
   date,
   integer,
@@ -9,9 +10,10 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
-import { usersTable, userGroupsTable } from "./users.schema.ts"
+import { userGroupsTable, usersTable } from "./users.schema.ts"
 import { bookingTable } from "./booking.schema.ts"
 import { maintenanceTable } from "./maintenance.schema.ts"
 import { propertyTable } from "./property.schema.ts"
@@ -30,6 +32,18 @@ export const settlementsTable = pgTable(
       length: 6,
       enum: ["open", "closed"],
     }).notNull(),
+    phase: varchar("phase", {
+      length: 20,
+      enum: [
+        "collecting_expenses",
+        "collecting_bookings",
+        "reviewing",
+        "split_policy",
+        "closed",
+      ],
+    })
+      .notNull()
+      .default("collecting_expenses"),
     split_policy: varchar("split_policy", {
       length: 15,
       enum: ["shares", "groups_equal", "occupancy_days"],
@@ -39,6 +53,9 @@ export const settlementsTable = pgTable(
   },
   (t) => [
     unique().on(t.property_id, t.year, t.season),
+    uniqueIndex("settlements_one_open_per_property")
+      .on(t.property_id)
+      .where(sql`${t.status} = 'open'`),
     check(
       "settlement_closed_has_timestamp",
       sql`(${t.status} = 'closed') = (${t.closed_at} IS NOT NULL)`,
@@ -116,6 +133,38 @@ export const settlementUserGroupTotalsTable = pgTable(
     net: integer("net").notNull(),
   },
   (t) => [primaryKey({ columns: [t.settlement_id, t.user_group_id] })],
+)
+
+export const settlementAcceptancesTable = pgTable(
+  "settlement_acceptances",
+  {
+    settlement_id: integer("settlement_id")
+      .notNull()
+      .references(() => settlementsTable.id, { onDelete: "cascade" }),
+    head_user_id: integer("head_user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    accepted_at: timestamp("accepted_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.settlement_id, t.head_user_id] })],
+)
+
+export const settlementBookingAdjustmentsTable = pgTable(
+  "settlement_booking_adjustments",
+  {
+    settlement_id: integer("settlement_id")
+      .notNull()
+      .references(() => settlementsTable.id, { onDelete: "cascade" }),
+    booking_id: integer("booking_id")
+      .notNull()
+      .references(() => bookingTable.id, { onDelete: "cascade" }),
+    excluded: boolean("excluded").notNull().default(false),
+    extra_names: text("extra_names")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+  },
+  (t) => [primaryKey({ columns: [t.settlement_id, t.booking_id] })],
 )
 
 export const settlementTransfersTable = pgTable(

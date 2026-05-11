@@ -4,6 +4,16 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Card,
+  Field,
+  Fieldset,
+  Label,
+  Select,
+  Textfield,
+} from "@digdir/designsystemet-react"
+import styles from "./SettlementTestForm.module.css"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -23,12 +33,10 @@ type SettlementRecord = {
 type FormState = {
   id: number | null
   year: string
-  season: "" | Season
   status: Status
   split_policy: SplitPolicy
 }
 
-const SEASONS: Season[] = ["winter", "spring", "summer", "autumn"]
 const STATUSES: Status[] = ["open", "closed"]
 const SPLIT_POLICIES: SplitPolicy[] = [
   "shares",
@@ -39,7 +47,6 @@ const SPLIT_POLICIES: SplitPolicy[] = [
 const initialFormState: FormState = {
   id: null,
   year: String(new Date().getFullYear()),
-  season: "",
   status: "open",
   split_policy: "shares",
 }
@@ -60,7 +67,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
       return {
         id: r.id,
         year: String(r.year),
-        season: r.season ?? "",
         status: r.status,
         split_policy: r.split_policy,
       }
@@ -74,7 +80,6 @@ function buildPayload(state: FormState, propertyId: number) {
   return {
     property_id: propertyId,
     year: Number(state.year),
-    season: state.season === "" ? undefined : state.season,
     status: state.status,
     split_policy: state.split_policy,
   }
@@ -157,134 +162,121 @@ export function SettlementTestForm() {
       <h3>Settlement Test Form</h3>
 
       <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
+        <Fieldset>
+          <Fieldset.Legend>
+            {isEditing ? `Editing #${String(state.id)}` : "New record"}
+          </Fieldset.Legend>
 
-          <div>
-            <label>
-              Year
-              <input
-                type="number"
-                value={state.year}
-                onChange={e => { set("year")(e.target.value); }}
-                required
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Season
-              <select
-                value={state.season}
-                onChange={e => { set("season")(e.target.value); }}
-              >
-                <option value="">(none)</option>
-                {SEASONS.map(s => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Status
-              <select
+          <div className={styles.formRow}>
+            <Textfield
+              label="Year"
+              type="number"
+              value={state.year}
+              onChange={e => { set("year")(e.target.value); }}
+              required
+            />
+            <Field>
+              <Label>Status</Label>
+              <Select
                 value={state.status}
                 onChange={e => { set("status")(e.target.value); }}
               >
                 {STATUSES.map(s => (
-                  <option key={s} value={s}>
+                  <Select.Option key={s} value={s}>
                     {s}
-                  </option>
+                  </Select.Option>
                 ))}
-              </select>
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Split policy
-              <select
+              </Select>
+            </Field>
+            <Field>
+              <Label>Split policy</Label>
+              <Select
                 value={state.split_policy}
                 onChange={e => { set("split_policy")(e.target.value); }}
               >
                 {SPLIT_POLICIES.map(p => (
-                  <option key={p} value={p}>
+                  <Select.Option key={p} value={p}>
                     {p}
-                  </option>
+                  </Select.Option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
+            <div className={styles.formActions}>
+              <Button type="submit" disabled={pending}>
+                {isEditing ? "Update" : "Create"}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => { dispatch({ type: "reset" }); }}
+                disabled={pending}
+              >
+                Reset
+              </Button>
+            </div>
           </div>
-
-          <div>
-            <button type="submit" disabled={pending}>
-              {isEditing ? "Update" : "Create"}
-            </button>
-            <button
-              type="button"
-              onClick={() => { dispatch({ type: "reset" }); }}
-              disabled={pending}
-            >
-              Reset
-            </button>
-          </div>
-        </fieldset>
+        </Fieldset>
       </form>
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       <h4>Records</h4>
-      <table>
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>year</th>
-            <th>season</th>
-            <th>status</th>
-            <th>split_policy</th>
-            <th>closed_at</th>
-            <th>actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {settlements.map(s => (
-            <tr key={s.id}>
-              <td>{s.id}</td>
-              <td>{s.year}</td>
-              <td>{s.season ?? ""}</td>
-              <td>{s.status}</td>
-              <td>{s.split_policy}</td>
-              <td>{s.closed_at ?? ""}</td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() =>
-                    { dispatch({
-                      type: "loadForEdit",
-                      record: s as SettlementRecord,
-                    }); }
-                  }
-                  disabled={pending}
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { deleteMutation.mutate({ id: s.id }); }}
-                  disabled={pending}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className={styles.list}>
+        {settlements.map(s => (
+          <Card key={s.id} asChild>
+            <article>
+              <Card.Block data-size="sm">
+                <div className={styles.row}>
+                  <span className={styles.field}>
+                    <span className={styles.fieldLabel}>id</span>
+                    <span className={styles.fieldValue}>{s.id}</span>
+                  </span>
+                  <span className={styles.field}>
+                    <span className={styles.fieldLabel}>year</span>
+                    <span className={styles.fieldValue}>{s.year}</span>
+                  </span>
+                  <span className={styles.field}>
+                    <span className={styles.fieldLabel}>season</span>
+                    <span className={styles.fieldValue}>{s.season ?? ""}</span>
+                  </span>
+                  <span className={styles.field}>
+                    <span className={styles.fieldLabel}>status</span>
+                    <span className={styles.fieldValue}>{s.status}</span>
+                  </span>
+                  <span className={styles.field}>
+                    <span className={styles.fieldLabel}>split_policy</span>
+                    <span className={styles.fieldValue}>{s.split_policy}</span>
+                  </span>
+                  <span className={styles.field}>
+                    <span className={styles.fieldLabel}>closed_at</span>
+                    <span className={styles.fieldValue}>{s.closed_at ?? ""}</span>
+                  </span>
+                  <div className={styles.actions}>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        dispatch({
+                          type: "loadForEdit",
+                          record: s as SettlementRecord,
+                        })
+                      }}
+                      disabled={pending}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => { deleteMutation.mutate({ id: s.id }) }}
+                      disabled={pending}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </Card.Block>
+            </article>
+          </Card>
+        ))}
+      </div>
     </section>
   )
 }

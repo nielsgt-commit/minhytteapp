@@ -1,8 +1,35 @@
-import { asc, eq } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
+import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
-import { expensesTable } from "../../db/schema/settlement.schema.ts"
+import type { db as dbClient } from "../../db/client.ts"
+import {
+  expensesTable,
+  settlementsTable,
+} from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
+
+type Db = typeof dbClient
+
+async function assertExpensesUnlocked(db: Db, propertyId: number) {
+  const [open] = await db
+    .select({ phase: settlementsTable.phase })
+    .from(settlementsTable)
+    .where(
+      and(
+        eq(settlementsTable.property_id, propertyId),
+        eq(settlementsTable.status, "open"),
+      ),
+    )
+    .limit(1)
+  if (open && open.phase !== "collecting_expenses") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "expenses are locked: the open settlement is past the collecting phase",
+    })
+  }
+}
 
 const expenseFields = {
   property_id: z.number().int().positive(),
@@ -11,7 +38,7 @@ const expenseFields = {
   reimbursed_by_id: z.number().int().positive().optional(),
   booking_id: z.number().int().positive().optional(),
   maintenance_id: z.number().int().positive().optional(),
-  settlement_id: z.number().int().positive().optional(),
+  settlement_id: z.number().int().positive().nullish(),
   date: z.iso.date(),
   status: z.enum(["draft", "submitted", "reimbursed", "rejected"]),
   receipt_url: z.string().url().optional().nullable(),
@@ -79,6 +106,9 @@ export const expenseRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.status === "submitted") {
+        await assertExpensesUnlocked(ctx.db, input.property_id)
+      }
       const [created] = await ctx.db
         .insert(expensesTable)
         .values({ ...input, payer_id: ctx.user.id })
@@ -89,6 +119,9 @@ export const expenseRouter = router({
   update: protectedProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
+      if (input.status === "submitted") {
+        await assertExpensesUnlocked(ctx.db, input.property_id)
+      }
       const { id, ...rest } = input
       const [updated] = await ctx.db
         .update(expensesTable)
@@ -101,6 +134,21 @@ export const expenseRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const [existing] = await ctx.db
+        .select({
+          property_id: expensesTable.property_id,
+          status: expensesTable.status,
+        })
+        .from(expensesTable)
+        .where(eq(expensesTable.id, input.id))
+        .limit(1)
+      if (
+        existing
+        && existing.status === "submitted"
+        && existing.property_id != null
+      ) {
+        await assertExpensesUnlocked(ctx.db, existing.property_id)
+      }
       const [deleted] = await ctx.db
         .delete(expensesTable)
         .where(eq(expensesTable.id, input.id))

@@ -1,3 +1,11 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
 .list {
   display: flex;
   flex-direction: column;

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "settlements_one_open_per_property" ON "settlements" USING btree ("property_id") WHERE "settlements"."status" = 'open';
