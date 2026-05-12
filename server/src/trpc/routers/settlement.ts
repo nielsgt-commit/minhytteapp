@@ -10,6 +10,7 @@ import {
 import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
 import {
   expensesTable,
+  propertySplitPoliciesTable,
   settlementAcceptancesTable,
   settlementBookingAdjustmentsTable,
   settlementsTable,
@@ -747,8 +748,18 @@ export const settlementRouter = router({
             season: settlementsTable.season,
             status: settlementsTable.status,
             closed_at: settlementsTable.closed_at,
+            split_policy: settlementsTable.split_policy,
+            split_policy_id: settlementsTable.split_policy_id,
+            split_policy_name: propertySplitPoliciesTable.name,
           })
           .from(settlementsTable)
+          .leftJoin(
+            propertySplitPoliciesTable,
+            eq(
+              propertySplitPoliciesTable.id,
+              settlementsTable.split_policy_id,
+            ),
+          )
           .where(eq(settlementsTable.id, input.id))
           .limit(1)
       ).at(0)
@@ -825,6 +836,9 @@ export const settlementRouter = router({
         year: settlement.year,
         season: settlement.season,
         closed_at: settlement.closed_at,
+        split_policy: settlement.split_policy,
+        split_policy_id: settlement.split_policy_id,
+        split_policy_name: settlement.split_policy_name,
         groups,
         transfers: transfers.map(t => ({
           ...t,

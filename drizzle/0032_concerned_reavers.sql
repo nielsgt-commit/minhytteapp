@@ -1,0 +1,2 @@
+ALTER TABLE "settlements" ADD COLUMN "split_policy_id" integer;--> statement-breakpoint
+ALTER TABLE "settlements" ADD CONSTRAINT "settlements_split_policy_id_property_split_policies_id_fk" FOREIGN KEY ("split_policy_id") REFERENCES "public"."property_split_policies"("id") ON DELETE set null ON UPDATE no action;

@@ -1,0 +1,219 @@
+import { and, asc, eq, or } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
+import { z } from "zod"
+import type { db as dbClient } from "../../db/client.ts"
+import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
+import { propertySplitPoliciesTable } from "../../db/schema/settlement.schema.ts"
+import {
+  userGroupMembersTable,
+  usersTable,
+} from "../../db/schema/users.schema.ts"
+import type { AuthUser } from "../context.ts"
+import { protectedProcedure, router } from "../init.ts"
+
+type Db = typeof dbClient
+
+const whatSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("total") }),
+  z.object({
+    kind: z.literal("category"),
+    category_id: z.number().int().positive(),
+  }),
+])
+
+const howSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("equally") }),
+  z.object({ kind: z.literal("weighted_by_occupancy") }),
+])
+
+const whoSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("all_users") }),
+  z.object({
+    kind: z.literal("user_group"),
+    group_id: z.number().int().positive(),
+  }),
+  z.object({ kind: z.literal("heads_only") }),
+])
+
+const whenSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("always") }),
+  z.object({ kind: z.literal("present_when_expense_added") }),
+  z.object({ kind: z.literal("present_this_year") }),
+  z.object({ kind: z.literal("during_any_priority_week") }),
+])
+
+const exceptItemSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("user"), user_id: z.number().int().positive() }),
+  z.object({ kind: z.literal("group"), group_id: z.number().int().positive() }),
+])
+
+const ruleSchema = z.object({
+  what: whatSchema,
+  how: howSchema,
+  who: whoSchema,
+  except: z.array(exceptItemSchema).max(50),
+  when: whenSchema,
+})
+
+const fallbackSchema = z.object({
+  how: howSchema,
+  who: whoSchema,
+  except: z.array(exceptItemSchema).max(50),
+  when: whenSchema,
+})
+
+const configSchema = z.object({
+  rules: z.array(ruleSchema).max(20),
+  fallback: fallbackSchema,
+})
+
+const nameSchema = z.string().trim().min(1).max(80)
+
+async function assertPropertyMember(
+  db: Db,
+  user: AuthUser,
+  propertyId: number,
+) {
+  if (user.is_admin) return
+  const hit = await db
+    .select({ id: propertyOwnersTable.id })
+    .from(propertyOwnersTable)
+    .leftJoin(
+      userGroupMembersTable,
+      eq(
+        userGroupMembersTable.user_group_id,
+        propertyOwnersTable.user_group_id,
+      ),
+    )
+    .where(
+      and(
+        eq(propertyOwnersTable.property_id, propertyId),
+        or(
+          eq(propertyOwnersTable.user_id, user.id),
+          eq(userGroupMembersTable.user_id, user.id),
+        ),
+      ),
+    )
+    .limit(1)
+  if (hit.length === 0) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "must be a registered user on this property",
+    })
+  }
+}
+
+async function assertAuthorOf(
+  db: Db,
+  user: AuthUser,
+  policyId: number,
+  propertyId: number,
+) {
+  const rows = await db
+    .select({
+      created_by_id: propertySplitPoliciesTable.created_by_id,
+      property_id: propertySplitPoliciesTable.property_id,
+    })
+    .from(propertySplitPoliciesTable)
+    .where(eq(propertySplitPoliciesTable.id, policyId))
+    .limit(1)
+  const policy = rows.at(0)
+  if (policy?.property_id !== propertyId) {
+    throw new TRPCError({ code: "NOT_FOUND" })
+  }
+  if (user.is_admin) return
+  if (policy.created_by_id !== user.id) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "only the author can edit or delete this policy",
+    })
+  }
+}
+
+export const propertySplitPolicyRouter = router({
+  listForProperty: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select({
+          id: propertySplitPoliciesTable.id,
+          property_id: propertySplitPoliciesTable.property_id,
+          name: propertySplitPoliciesTable.name,
+          config: propertySplitPoliciesTable.config,
+          created_by_id: propertySplitPoliciesTable.created_by_id,
+          created_by_name: usersTable.name,
+          created_at: propertySplitPoliciesTable.created_at,
+          updated_at: propertySplitPoliciesTable.updated_at,
+        })
+        .from(propertySplitPoliciesTable)
+        .leftJoin(
+          usersTable,
+          eq(usersTable.id, propertySplitPoliciesTable.created_by_id),
+        )
+        .where(eq(propertySplitPoliciesTable.property_id, input.property_id))
+        .orderBy(asc(propertySplitPoliciesTable.name))
+    }),
+
+  save: protectedProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive().optional(),
+        property_id: z.number().int().positive(),
+        name: nameSchema,
+        config: configSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
+      if (input.id == null) {
+        const [created] = await ctx.db
+          .insert(propertySplitPoliciesTable)
+          .values({
+            property_id: input.property_id,
+            name: input.name,
+            config: input.config,
+            created_by_id: ctx.user.id,
+          })
+          .returning()
+        return created
+      }
+      await assertAuthorOf(ctx.db, ctx.user, input.id, input.property_id)
+      const [updated] = await ctx.db
+        .update(propertySplitPoliciesTable)
+        .set({
+          name: input.name,
+          config: input.config,
+          updated_at: new Date(),
+        })
+        .where(
+          and(
+            eq(propertySplitPoliciesTable.id, input.id),
+            eq(propertySplitPoliciesTable.property_id, input.property_id),
+          ),
+        )
+        .returning()
+      return updated
+    }),
+
+  delete: protectedProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        property_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
+      await assertAuthorOf(ctx.db, ctx.user, input.id, input.property_id)
+      const [deleted] = await ctx.db
+        .delete(propertySplitPoliciesTable)
+        .where(
+          and(
+            eq(propertySplitPoliciesTable.id, input.id),
+            eq(propertySplitPoliciesTable.property_id, input.property_id),
+          ),
+        )
+        .returning()
+      return deleted
+    }),
+})

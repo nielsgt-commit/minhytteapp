@@ -9,6 +9,23 @@ type Props = {
   settlementId: number
 }
 
+type BuiltInPolicy = "shares" | "groups_equal" | "occupancy_days"
+
+const BUILT_IN_LABEL: Record<BuiltInPolicy, string> = {
+  occupancy_days: "Occupancy days (built-in)",
+  groups_equal: "Equal split between groups (built-in)",
+  shares: "Shares (built-in)",
+}
+
+const BUILT_IN_EXPLANATION: Record<BuiltInPolicy, string> = {
+  occupancy_days:
+    "Each group's share of costs is proportional to the nights they stayed during the settlement period.",
+  groups_equal:
+    "Costs are split equally between all groups, regardless of usage.",
+  shares:
+    "Costs are split between groups by their configured share weights.",
+}
+
 function formatDateTime(value: string | Date | null) {
   if (value == null) return "—"
   const d = typeof value === "string" ? new Date(value) : value
@@ -31,6 +48,16 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
     }),
   )
 
+  const customPolicyName = data.split_policy_name
+  const policyLabel =
+    data.split_policy_id != null && customPolicyName != null
+      ? `${customPolicyName} (custom)`
+      : BUILT_IN_LABEL[data.split_policy]
+  const policyExplanation =
+    data.split_policy_id != null
+      ? "Custom rule-based policy with a default rule for everything unmatched. The settlement engine currently evaluates the built-in occupancy-days split until live preview lands."
+      : BUILT_IN_EXPLANATION[data.split_policy]
+
   return (
     <section>
       <h3>
@@ -38,6 +65,12 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
         {data.season ? ` (${data.season})` : ""}
       </h3>
       <p>Closed at: {formatDateTime(data.closed_at)}</p>
+
+      <h4>Split policy</h4>
+      <p>
+        <strong>{policyLabel}</strong>
+      </p>
+      <p>{policyExplanation}</p>
 
       <h4>Per group</h4>
       {data.groups.length === 0 ? (
