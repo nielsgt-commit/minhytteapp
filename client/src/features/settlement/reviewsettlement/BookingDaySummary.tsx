@@ -159,7 +159,7 @@ export function BookingDaySummary({ settlementId, phase }: Props) {
         </Card.Block>
         {showDetails && (
           <Card.Block>
-            <ReviewBookingDays settlementId={settlementId} />
+            <ReviewBookingDays settlementId={settlementId} phase={phase} />
           </Card.Block>
         )}
       </article>

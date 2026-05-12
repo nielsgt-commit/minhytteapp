@@ -1,9 +1,23 @@
+import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query"
-import { Button } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Heading,
+  Paragraph,
+  Switch,
+} from "@digdir/designsystemet-react"
 import styles from "./ReviewSettlement.module.css"
+import expenseRowStyles from "./SettlementExpenseRow.module.css"
+import { SettlementExpenseRow } from "./SettlementExpenseRow"
+import { useHeadVisibility } from "./useHeadVisibility"
+import {
+  type ExpenseRow,
+  type Progress,
+  useReviewSettlementData,
+} from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
 import { SettlementHeadVisibility } from "@/features/settlement/SettlementHeadVisibility.tsx"
 import {
@@ -11,24 +25,14 @@ import {
   PREV_PHASE,
   type SettlementPhase,
 } from "@/features/settlement/phase"
-import { SettlementHeadCard } from "./SettlementHeadCard"
-import { useHeadVisibility } from "./useHeadVisibility"
-import {
-  type ExpenseRow,
-  type Progress,
-  useReviewSettlementData,
-} from "./useReviewSettlementData"
 
-function sortedExpensesFor(headId: number, reimbursed: ExpenseRow[]) {
-  return reimbursed
-    .filter(e => e.reimbursed_by_id === headId)
-    .slice()
-    .sort((a, b) => {
-      const aFixed = a.expense_types.includes("fixed") ? 0 : 1
-      const bFixed = b.expense_types.includes("fixed") ? 0 : 1
-      if (aFixed !== bFixed) return aFixed - bFixed
-      return a.date.localeCompare(b.date)
-    })
+function sortExpenses(expenses: ExpenseRow[]) {
+  return expenses.slice().sort((a, b) => {
+    const aFixed = a.expense_types.includes("fixed") ? 0 : 1
+    const bFixed = b.expense_types.includes("fixed") ? 0 : 1
+    if (aFixed !== bFixed) return aFixed - bFixed
+    return a.date.localeCompare(b.date)
+  })
 }
 
 type Props = {
@@ -39,12 +43,11 @@ type Props = {
 export function ReviewSettlement({ settlementId, phase }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const [showWaiting, setShowWaiting] = useState(false)
   const {
     heads,
     reimbursed,
     editableHeadId,
-    mainGroupForHead,
-    groupBookingDays,
     invalidate,
   } = useReviewSettlementData(settlementId)
   const { visibleIds, toggle } = useHeadVisibility()
@@ -75,9 +78,11 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
     return <p>No heads found.</p>
   }
 
-  const allHeadsDone = heads.every(
-    h => h.settlement_progress === "all_done",
-  )
+  const myHead = heads.find(h => h.id === editableHeadId)
+  const myProgress: Progress =
+    (myHead?.settlement_progress as Progress | null | undefined)
+    ?? "in_progress"
+  const stillReviewing = myProgress !== "all_done"
 
   const otherHeads = heads.filter(h => h.id !== editableHeadId)
   const displayedHeads =
@@ -86,54 +91,82 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
       : heads.filter(
         h => h.id === editableHeadId || visibleIds.has(h.id),
       )
+  const displayedHeadIds = new Set(displayedHeads.map(h => h.id))
+  const expensesToShow = sortExpenses(
+    reimbursed.filter(
+      e =>
+        e.reimbursed_by_id != null
+        && displayedHeadIds.has(e.reimbursed_by_id),
+    ),
+  )
+
+  const pendingOthers = otherHeads.filter(
+    h => h.settlement_progress !== "all_done",
+  )
+  const allHeadsDone =
+    pendingOthers.length === 0 && myProgress === "all_done"
+
+  const onProgressToggle = (checked: boolean) => {
+    setShowWaiting(false)
+    const nextProgress: Progress = checked ? "in_progress" : "all_done"
+    updateProgress.mutate({ settlement_progress: nextProgress })
+  }
+
+  const onContinueClick = () => {
+    if (!allHeadsDone) {
+      setShowWaiting(true)
+      return
+    }
+    const nextPhase = NEXT_PHASE.reviewing
+    if (nextPhase == null) return
+    advancePhase.mutate({
+      id: settlementId,
+      from: "reviewing",
+      to: nextPhase,
+    })
+  }
+
+  const next = NEXT_PHASE.reviewing
+  const prev = PREV_PHASE.reviewing
 
   return (
     <>
-      {editableHeadId != null && (
-        <SettlementHeadVisibility
-          others={otherHeads}
-          visibleIds={visibleIds}
-          onToggle={toggle}
+      <div className={styles.header}>
+        <Heading level={4} data-size="sm">Review settlement</Heading>
+        <Switch
+          label="Still reviewing"
+          position="end"
+          data-size="sm"
+          checked={stillReviewing}
+          disabled={updateProgress.isPending}
+          onChange={e => { onProgressToggle(e.target.checked) }}
         />
-      )}
-      <div className={styles.list}>
-        {displayedHeads.map(h => {
-          const expenses = sortedExpensesFor(h.id, reimbursed)
-          const total = expenses.reduce((sum, e) => sum + e.amount, 0)
-          const group = mainGroupForHead(h.id)
-          const memberIds = new Set(group?.members.map(m => m.user_id) ?? [])
-          const days = group ? groupBookingDays(memberIds) : 0
-          const progress = h.settlement_progress as Progress
-          const next: Progress =
-            progress === "in_progress" ? "all_done" : "in_progress"
-          return (
-            <SettlementHeadCard
-              key={h.id}
-              head={h}
-              isMine={editableHeadId === h.id}
-              expenses={expenses}
-              total={total}
-              bookingDaysLabel={`${group?.name ?? "no group"} booking days: ${String(days)}`}
-              progress={progress}
-              progressPending={updateProgress.isPending}
-              openSettlementId={settlementId}
-              onToggleProgress={() => {
-                updateProgress.mutate({ settlement_progress: next })
-              }}
-              onExpenseSaved={invalidate}
-            />
-          )
-        })}
       </div>
+
+      {expensesToShow.length === 0 ? (
+        <Paragraph>No reimbursed expenses.</Paragraph>
+      ) : (
+        <ul className={expenseRowStyles.list}>
+          {expensesToShow.map(e => (
+            <li key={e.id}>
+              <SettlementExpenseRow
+                expense={e}
+                editable={e.reimbursed_by_id === editableHeadId}
+                openSettlementId={settlementId}
+                onSaved={invalidate}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
       {phase === "reviewing" && (
-        <>
+        <div className={styles.footer}>
           <Button
             type="button"
             variant="tertiary"
             data-size="sm"
-            disabled={regressPhase.isPending}
+            disabled={regressPhase.isPending || prev == null}
             onClick={() => {
-              const prev = PREV_PHASE.reviewing
               if (prev == null) return
               regressPhase.mutate({
                 id: settlementId,
@@ -144,29 +177,32 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
           >
             Back
           </Button>
-          <Button
-            type="button"
-            data-size="sm"
-            disabled={!allHeadsDone || advancePhase.isPending}
-            onClick={() => {
-              const next = NEXT_PHASE.reviewing
-              if (next == null) return
-              advancePhase.mutate({
-                id: settlementId,
-                from: "reviewing",
-                to: next,
-              })
-            }}
-          >
-            Progress to split policy
-          </Button>
-          {advancePhase.error && (
-            <p role="alert">Error: {advancePhase.error.message}</p>
+          {!stillReviewing && next != null && (
+            <Button
+              type="button"
+              data-size="sm"
+              disabled={advancePhase.isPending}
+              onClick={onContinueClick}
+            >
+              Progress to split policy
+            </Button>
           )}
-          {regressPhase.error && (
-            <p role="alert">Error: {regressPhase.error.message}</p>
-          )}
-        </>
+        </div>
+      )}
+      {showWaiting && pendingOthers.length > 0 && (
+        <Paragraph role="alert" data-size="sm">
+          Waiting for {pendingOthers.map(h => h.name).join(", ")} to complete
+          the settlement.
+        </Paragraph>
+      )}
+      {advancePhase.error && (
+        <p role="alert">Error: {advancePhase.error.message}</p>
+      )}
+      {regressPhase.error && (
+        <p role="alert">Error: {regressPhase.error.message}</p>
+      )}
+      {updateProgress.error && (
+        <p role="alert">Error: {updateProgress.error.message}</p>
       )}
     </>
   )
