@@ -28,6 +28,7 @@ type SettlementRecord = {
   season: Season | null
   status: Status
   split_policy: SplitPolicy
+  split_policy_id: number | null
 }
 
 type FormState = {
@@ -35,20 +36,20 @@ type FormState = {
   year: string
   status: Status
   split_policy: SplitPolicy
+  split_policy_id: string
 }
 
 const STATUSES: Status[] = ["open", "closed"]
-const SPLIT_POLICIES: SplitPolicy[] = [
-  "shares",
-  "groups_equal",
-  "occupancy_days",
-]
+// Only occupancy_days is implemented in computePreviewSplit; add others as
+// they become available.
+const SPLIT_POLICIES: SplitPolicy[] = ["occupancy_days"]
 
 const initialFormState: FormState = {
   id: null,
   year: String(new Date().getFullYear()),
   status: "open",
-  split_policy: "shares",
+  split_policy: "occupancy_days",
+  split_policy_id: "",
 }
 
 type EditableField = Exclude<keyof FormState, "id">
@@ -68,7 +69,11 @@ function formReducer(state: FormState, action: FormAction): FormState {
         id: r.id,
         year: String(r.year),
         status: r.status,
-        split_policy: r.split_policy,
+        split_policy: SPLIT_POLICIES.includes(r.split_policy)
+          ? r.split_policy
+          : SPLIT_POLICIES[0],
+        split_policy_id:
+          r.split_policy_id == null ? "" : String(r.split_policy_id),
       }
     }
     case "reset":
@@ -82,6 +87,8 @@ function buildPayload(state: FormState, propertyId: number) {
     year: Number(state.year),
     status: state.status,
     split_policy: state.split_policy,
+    split_policy_id:
+      state.split_policy_id === "" ? null : Number(state.split_policy_id),
   }
 }
 
@@ -93,6 +100,12 @@ export function SettlementTestForm() {
 
   const { data: settlements } = useSuspenseQuery(
     trpc.settlement.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
+
+  const { data: customPolicies } = useSuspenseQuery(
+    trpc.propertySplitPolicy.listForProperty.queryOptions({
       property_id: selectedPropertyId ?? 0,
     }),
   )
@@ -197,6 +210,20 @@ export function SettlementTestForm() {
                 {SPLIT_POLICIES.map(p => (
                   <Select.Option key={p} value={p}>
                     {p}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Field>
+            <Field>
+              <Label>Custom policy</Label>
+              <Select
+                value={state.split_policy_id}
+                onChange={e => { set("split_policy_id")(e.target.value); }}
+              >
+                <Select.Option value="">— none —</Select.Option>
+                {customPolicies.map(p => (
+                  <Select.Option key={p.id} value={String(p.id)}>
+                    {p.name} (by {p.created_by_name ?? `#${String(p.created_by_id)}`})
                   </Select.Option>
                 ))}
               </Select>

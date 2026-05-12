@@ -15,6 +15,7 @@ import { priorityRouter } from "./priority.ts"
 import { propertyRouter } from "./property.ts"
 import { propertyContactRouter } from "./propertyContact.ts"
 import { propertyOwnerRouter } from "./propertyOwner.ts"
+import { propertySplitPolicyRouter } from "./propertySplitPolicy.ts"
 import { roomRouter } from "./room.ts"
 import { settlementRouter } from "./settlement.ts"
 import { stayRouter } from "./stay.ts"
@@ -38,6 +39,7 @@ export const appRouter = router({
   property: propertyRouter,
   propertyContact: propertyContactRouter,
   propertyOwner: propertyOwnerRouter,
+  propertySplitPolicy: propertySplitPolicyRouter,
   room: roomRouter,
   settlement: settlementRouter,
   stay: stayRouter,

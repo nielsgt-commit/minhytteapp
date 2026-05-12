@@ -10,6 +10,7 @@ import { PropertyOwnersPanel } from "@/features/property/owners/PropertyOwnersPa
 import { PlacesPanel } from "@/features/property/places/PlacesPanel.tsx"
 import { EquipmentPanel } from "@/features/property/equipment/EquipmentPanel.tsx"
 import { PropertyRegister } from "@/features/property/register/PropertyRegister.tsx"
+import { SplitPolicyBuilder } from "@/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx"
 import {
   PropertyManagerFilter,
   type PropertyPanel,
@@ -70,6 +71,11 @@ export function ManageProperty() {
       {activePanel === "contacts" && <PropertyContacts />}
       {activePanel === "ownership" && <PropertyOwnersPanel />}
       {activePanel === "register" && <PropertyRegister />}
+      {activePanel === "split_policy" && (
+        <Suspense fallback={<p>Loading…</p>}>
+          <SplitPolicyBuilder />
+        </Suspense>
+      )}
 
       <Divider />
       <DangerZone />

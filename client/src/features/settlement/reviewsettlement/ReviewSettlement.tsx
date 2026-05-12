@@ -19,7 +19,6 @@ import {
   useReviewSettlementData,
 } from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
-import { SettlementHeadVisibility } from "@/features/settlement/SettlementHeadVisibility.tsx"
 import {
   NEXT_PHASE,
   PREV_PHASE,
@@ -50,7 +49,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
     editableHeadId,
     invalidate,
   } = useReviewSettlementData(settlementId)
-  const { visibleIds, toggle } = useHeadVisibility()
+  const { visibleIds } = useHeadVisibility()
 
   const updateProgress = useMutation(
     trpc.user.updateMySettlementProgress.mutationOptions({

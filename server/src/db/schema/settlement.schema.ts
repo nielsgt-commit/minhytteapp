@@ -4,6 +4,7 @@ import {
   check,
   date,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   serial,
@@ -48,6 +49,13 @@ export const settlementsTable = pgTable(
       length: 15,
       enum: ["shares", "groups_equal", "occupancy_days"],
     }).notNull(),
+    split_policy_id: integer("split_policy_id").references(
+      () => propertySplitPoliciesTable.id,
+      { onDelete: "set null" },
+    ),
+    created_by_id: integer("created_by_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
     opened_at: timestamp("opened_at").notNull().defaultNow(),
     closed_at: timestamp("closed_at"),
   },
@@ -165,6 +173,62 @@ export const settlementBookingAdjustmentsTable = pgTable(
       .default(sql`'{}'::text[]`),
   },
   (t) => [primaryKey({ columns: [t.settlement_id, t.booking_id] })],
+)
+
+export type SplitPolicyWhat =
+  | { kind: "total" }
+  | { kind: "category"; category_id: number }
+
+export type SplitPolicyHow =
+  | { kind: "equally" }
+  | { kind: "weighted_by_occupancy" }
+
+export type SplitPolicyWho =
+  | { kind: "all_users" }
+  | { kind: "user_group"; group_id: number }
+  | { kind: "heads_only" }
+
+export type SplitPolicyWhen =
+  | { kind: "always" }
+  | { kind: "present_when_expense_added" }
+  | { kind: "present_this_year" }
+  | { kind: "during_any_priority_week" }
+
+export type SplitPolicyExcept =
+  | { kind: "user"; user_id: number }
+  | { kind: "group"; group_id: number }
+
+export type SplitPolicyRule = {
+  what: SplitPolicyWhat
+  how: SplitPolicyHow
+  who: SplitPolicyWho
+  except: SplitPolicyExcept[]
+  when: SplitPolicyWhen
+}
+
+export type SplitPolicyFallback = Omit<SplitPolicyRule, "what">
+
+export type SplitPolicyConfig = {
+  rules: SplitPolicyRule[]
+  fallback: SplitPolicyFallback
+}
+
+export const propertySplitPoliciesTable = pgTable(
+  "property_split_policies",
+  {
+    id: serial("id").primaryKey(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 80 }).notNull(),
+    config: jsonb("config").$type<SplitPolicyConfig>().notNull(),
+    created_by_id: integer("created_by_id")
+      .notNull()
+      .references(() => usersTable.id),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.property_id, t.name)],
 )
 
 export const settlementTransfersTable = pgTable(

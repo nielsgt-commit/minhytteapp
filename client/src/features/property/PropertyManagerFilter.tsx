@@ -9,6 +9,7 @@ export const PROPERTY_PANELS = [
   "contacts",
   "ownership",
   "register",
+  "split_policy",
 ] as const
 
 export type PropertyPanel = (typeof PROPERTY_PANELS)[number]
@@ -21,6 +22,7 @@ const LABELS: Record<PropertyPanel, string> = {
   contacts: "Contacts",
   ownership: "Ownership",
   register: "Register",
+  split_policy: "Split policy",
 }
 
 type Props = {

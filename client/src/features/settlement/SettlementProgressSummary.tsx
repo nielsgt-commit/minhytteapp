@@ -46,12 +46,22 @@ export function SettlementProgressSummary({
       property_id: propertyId,
     }),
   )
+  const { data: policies } = useSuspenseQuery(
+    trpc.propertySplitPolicy.listForProperty.queryOptions({
+      property_id: propertyId,
+    }),
+  )
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
 
   const { heads, groupBookingDays } = useReviewSettlementData(settlementId)
 
   const openSettlement = settlements.find(s => s.id === settlementId)
   const openYear = openSettlement?.year ?? null
+  const createdByName = openSettlement?.created_by_name ?? null
+  const activePolicy = openSettlement?.split_policy_id != null
+    ? policies.find(p => p.id === openSettlement.split_policy_id) ?? null
+    : null
+  const splitPolicyName = activePolicy?.name ?? openSettlement?.split_policy ?? null
 
   const myGroup = me
     ? groups.find(
@@ -78,6 +88,11 @@ export function SettlementProgressSummary({
         <Card.Block data-size="sm">
           <Paragraph data-size="sm">
             Open settlement: <strong>{openYear ?? "—"}</strong>
+          </Paragraph>
+          <Paragraph data-size="sm">
+            Created by: <strong>{createdByName ?? "—"}</strong>
+            {" · "}
+            Split policy: <strong>{splitPolicyName ?? "—"}</strong>
           </Paragraph>
           <div className={styles.phases}>
             <Paragraph asChild data-size="sm">

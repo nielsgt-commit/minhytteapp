@@ -127,15 +127,17 @@ async function assertCanEditBookingAdjustments(
       message: "only heads can edit booking adjustments",
     })
   }
-  const [settlement] = await db
-    .select({
-      phase: settlementsTable.phase,
-      property_id: settlementsTable.property_id,
-    })
-    .from(settlementsTable)
-    .where(eq(settlementsTable.id, settlementId))
-    .limit(1)
-  if (!settlement) {
+  const settlement = (
+    await db
+      .select({
+        phase: settlementsTable.phase,
+        property_id: settlementsTable.property_id,
+      })
+      .from(settlementsTable)
+      .where(eq(settlementsTable.id, settlementId))
+      .limit(1)
+  ).at(0)
+  if (settlement == null) {
     throw new TRPCError({ code: "NOT_FOUND", message: "settlement not found" })
   }
   if (
@@ -206,12 +208,14 @@ async function computePreviewSplit(
   db: Db,
   settlementId: number,
 ): Promise<PreviewResult> {
-  const [settlement] = await db
-    .select()
-    .from(settlementsTable)
-    .where(eq(settlementsTable.id, settlementId))
-    .limit(1)
-  if (!settlement) {
+  const settlement = (
+    await db
+      .select()
+      .from(settlementsTable)
+      .where(eq(settlementsTable.id, settlementId))
+      .limit(1)
+  ).at(0)
+  if (settlement == null) {
     throw new TRPCError({ code: "NOT_FOUND", message: "settlement not found" })
   }
   if (settlement.split_policy !== "occupancy_days") {
@@ -429,6 +433,7 @@ const settlementFields = {
     .optional(),
   status: z.enum(["open", "closed"]),
   split_policy: z.enum(["shares", "groups_equal", "occupancy_days"]),
+  split_policy_id: z.number().int().positive().nullable().optional(),
 }
 
 const createInput = z.object(settlementFields)
@@ -450,8 +455,22 @@ export const settlementRouter = router({
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       return ctx.db
-        .select()
+        .select({
+          id: settlementsTable.id,
+          property_id: settlementsTable.property_id,
+          year: settlementsTable.year,
+          season: settlementsTable.season,
+          status: settlementsTable.status,
+          phase: settlementsTable.phase,
+          split_policy: settlementsTable.split_policy,
+          split_policy_id: settlementsTable.split_policy_id,
+          created_by_id: settlementsTable.created_by_id,
+          created_by_name: usersTable.name,
+          opened_at: settlementsTable.opened_at,
+          closed_at: settlementsTable.closed_at,
+        })
         .from(settlementsTable)
+        .leftJoin(usersTable, eq(usersTable.id, settlementsTable.created_by_id))
         .where(eq(settlementsTable.property_id, input.property_id))
         .orderBy(asc(settlementsTable.year))
     }),
@@ -463,6 +482,7 @@ export const settlementRouter = router({
         .insert(settlementsTable)
         .values({
           ...input,
+          created_by_id: ctx.user.id,
           closed_at: input.status === "closed" ? new Date() : null,
         })
         .returning()
@@ -510,12 +530,14 @@ export const settlementRouter = router({
         })
       }
 
-      const [settlement] = await ctx.db
-        .select()
-        .from(settlementsTable)
-        .where(eq(settlementsTable.id, input.id))
-        .limit(1)
-      if (!settlement) {
+      const settlement = (
+        await ctx.db
+          .select()
+          .from(settlementsTable)
+          .where(eq(settlementsTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (settlement == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "settlement not found",
@@ -571,21 +593,23 @@ export const settlementRouter = router({
       const preview = await computePreviewSplit(ctx.db, input.id)
 
       const closed = await ctx.db.transaction(async tx => {
-        const [updated] = await tx
-          .update(settlementsTable)
-          .set({
-            phase: "closed",
-            status: "closed",
-            closed_at: new Date(),
-          })
-          .where(
-            and(
-              eq(settlementsTable.id, input.id),
-              eq(settlementsTable.phase, "split_policy"),
-            ),
-          )
-          .returning()
-        if (!updated) return false
+        const updated = (
+          await tx
+            .update(settlementsTable)
+            .set({
+              phase: "closed",
+              status: "closed",
+              closed_at: new Date(),
+            })
+            .where(
+              and(
+                eq(settlementsTable.id, input.id),
+                eq(settlementsTable.phase, "split_policy"),
+              ),
+            )
+            .returning()
+        ).at(0)
+        if (updated == null) return false
 
         if (preview.groups.length > 0) {
           await tx
@@ -715,18 +739,20 @@ export const settlementRouter = router({
   getClosedSummary: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
-      const [settlement] = await ctx.db
-        .select({
-          id: settlementsTable.id,
-          year: settlementsTable.year,
-          season: settlementsTable.season,
-          status: settlementsTable.status,
-          closed_at: settlementsTable.closed_at,
-        })
-        .from(settlementsTable)
-        .where(eq(settlementsTable.id, input.id))
-        .limit(1)
-      if (!settlement) {
+      const settlement = (
+        await ctx.db
+          .select({
+            id: settlementsTable.id,
+            year: settlementsTable.year,
+            season: settlementsTable.season,
+            status: settlementsTable.status,
+            closed_at: settlementsTable.closed_at,
+          })
+          .from(settlementsTable)
+          .where(eq(settlementsTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (settlement == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "settlement not found",
@@ -813,17 +839,19 @@ export const settlementRouter = router({
   markTransferPaid: protectedProcedure
     .input(z.object({ transferId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [transfer] = await ctx.db
-        .select({
-          id: settlementTransfersTable.id,
-          settlement_id: settlementTransfersTable.settlement_id,
-          to_user_group_id: settlementTransfersTable.to_user_group_id,
-          status: settlementTransfersTable.status,
-        })
-        .from(settlementTransfersTable)
-        .where(eq(settlementTransfersTable.id, input.transferId))
-        .limit(1)
-      if (!transfer) {
+      const transfer = (
+        await ctx.db
+          .select({
+            id: settlementTransfersTable.id,
+            settlement_id: settlementTransfersTable.settlement_id,
+            to_user_group_id: settlementTransfersTable.to_user_group_id,
+            status: settlementTransfersTable.status,
+          })
+          .from(settlementTransfersTable)
+          .where(eq(settlementTransfersTable.id, input.transferId))
+          .limit(1)
+      ).at(0)
+      if (transfer == null) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "transfer not found",
@@ -835,20 +863,22 @@ export const settlementRouter = router({
           message: "only heads can mark transfers paid",
         })
       }
-      const [membership] = await ctx.db
-        .select({ user_id: userGroupMembersTable.user_id })
-        .from(userGroupMembersTable)
-        .where(
-          and(
-            eq(userGroupMembersTable.user_id, ctx.user.id),
-            eq(
-              userGroupMembersTable.user_group_id,
-              transfer.to_user_group_id,
+      const membership = (
+        await ctx.db
+          .select({ user_id: userGroupMembersTable.user_id })
+          .from(userGroupMembersTable)
+          .where(
+            and(
+              eq(userGroupMembersTable.user_id, ctx.user.id),
+              eq(
+                userGroupMembersTable.user_group_id,
+                transfer.to_user_group_id,
+              ),
             ),
-          ),
-        )
-        .limit(1)
-      if (!membership) {
+          )
+          .limit(1)
+      ).at(0)
+      if (membership == null) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "only the recipient group can mark this transfer paid",
@@ -892,17 +922,19 @@ export const settlementRouter = router({
           message: `cannot advance from ${input.from} to ${input.to}`,
         })
       }
-      const [updated] = await ctx.db
-        .update(settlementsTable)
-        .set({ phase: input.to })
-        .where(
-          and(
-            eq(settlementsTable.id, input.id),
-            eq(settlementsTable.phase, input.from),
-          ),
-        )
-        .returning()
-      if (!updated) {
+      const updated = (
+        await ctx.db
+          .update(settlementsTable)
+          .set({ phase: input.to })
+          .where(
+            and(
+              eq(settlementsTable.id, input.id),
+              eq(settlementsTable.phase, input.from),
+            ),
+          )
+          .returning()
+      ).at(0)
+      if (updated == null) {
         throw new TRPCError({
           code: "CONFLICT",
           message: "settlement phase changed concurrently",
@@ -935,17 +967,19 @@ export const settlementRouter = router({
       }
       const clearAcceptances = input.from === "split_policy"
       const updated = await ctx.db.transaction(async tx => {
-        const [row] = await tx
-          .update(settlementsTable)
-          .set({ phase: input.to })
-          .where(
-            and(
-              eq(settlementsTable.id, input.id),
-              eq(settlementsTable.phase, input.from),
-            ),
-          )
-          .returning()
-        if (!row) return null
+        const row = (
+          await tx
+            .update(settlementsTable)
+            .set({ phase: input.to })
+            .where(
+              and(
+                eq(settlementsTable.id, input.id),
+                eq(settlementsTable.phase, input.from),
+              ),
+            )
+            .returning()
+        ).at(0)
+        if (row == null) return null
         if (clearAcceptances) {
           await tx
             .delete(settlementAcceptancesTable)
