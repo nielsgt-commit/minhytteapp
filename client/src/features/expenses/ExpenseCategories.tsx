@@ -5,7 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Switch, Textfield } from "@digdir/designsystemet-react"
+import { Button, List, Switch, Textfield, ValidationMessage } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -60,8 +60,8 @@ export function ExpenseCategories() {
     }),
   )
 
-  const deleteMutation = useMutation(
-    trpc.expenseCategory.delete.mutationOptions({
+  const archiveMutation = useMutation(
+    trpc.expenseCategory.archive.mutationOptions({
       onSuccess: () => { void invalidateCategories() },
     }),
   )
@@ -110,10 +110,10 @@ export function ExpenseCategories() {
           }}
         />
       )}
-      <ul>
-        <li>(no category) - {uncategorizedTotal}</li>
+      <List.Unordered>
+        <List.Item>(no category) - {uncategorizedTotal}</List.Item>
         {categories.map(c => (
-          <li key={c.id}>
+          <List.Item key={c.id}>
             {editMode && editingId === c.id ? (
               <form onSubmit={handleRename}>
                 <Textfield
@@ -155,8 +155,8 @@ export function ExpenseCategories() {
                     <Button
                       variant="tertiary"
                       data-color="danger"
-                      disabled={deleteMutation.isPending}
-                      onClick={() => { deleteMutation.mutate({ id: c.id }) }}
+                      disabled={archiveMutation.isPending}
+                      onClick={() => { archiveMutation.mutate({ id: c.id }) }}
                     >
                       Remove
                     </Button>
@@ -164,9 +164,9 @@ export function ExpenseCategories() {
                 )}
               </>
             )}
-          </li>
+          </List.Item>
         ))}
-      </ul>
+      </List.Unordered>
       {editMode && me?.is_head && (
         <form onSubmit={handleAdd}>
           <Textfield
@@ -182,13 +182,13 @@ export function ExpenseCategories() {
         </form>
       )}
       {createMutation.error && (
-        <p role="alert">Error: {createMutation.error.message}</p>
+        <ValidationMessage>Error: {createMutation.error.message}</ValidationMessage>
       )}
       {renameMutation.error && (
-        <p role="alert">Error: {renameMutation.error.message}</p>
+        <ValidationMessage>Error: {renameMutation.error.message}</ValidationMessage>
       )}
-      {deleteMutation.error && (
-        <p role="alert">Error: {deleteMutation.error.message}</p>
+      {archiveMutation.error && (
+        <ValidationMessage>Error: {archiveMutation.error.message}</ValidationMessage>
       )}
     </section>
   )

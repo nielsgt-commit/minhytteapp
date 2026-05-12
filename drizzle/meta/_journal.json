@@ -239,6 +239,13 @@
       "when": 1778576500425,
       "tag": "0033_magenta_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1778591980464,
+      "tag": "0034_yummy_blade",
+      "breakpoints": true
     }
   ]
 }

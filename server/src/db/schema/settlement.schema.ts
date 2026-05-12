@@ -71,10 +71,19 @@ export const settlementsTable = pgTable(
   ],
 )
 
-export const expenseCategoriesTable = pgTable("expense_categories", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 64 }).notNull().unique(),
-})
+export const expenseCategoriesTable = pgTable(
+  "expense_categories",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 64 }).notNull(),
+    archived_at: timestamp("archived_at"),
+  },
+  (t) => [
+    uniqueIndex("expense_categories_name_active")
+      .on(t.name)
+      .where(sql`${t.archived_at} IS NULL`),
+  ],
+)
 
 export const expensesTable = pgTable(
   "expenses",

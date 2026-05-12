@@ -6,8 +6,8 @@ import styles from "./NavTabs.module.css"
 const navLinks = linkOptions([
   { to: "/dashboard", label: "Dashboard" },
   { to: "/calendar", label: "Calendar" },
-  { to: "/expenses", label: "Expenses" },
   { to: "/maintenance", label: "Maintenance" },
+  { to: "/expenses", label: "Expenses" },
   { to: "/settlement", label: "Settlement" },
 ])
 

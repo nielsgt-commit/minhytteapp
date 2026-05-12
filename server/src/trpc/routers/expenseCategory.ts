@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { asc, eq, sql } from "drizzle-orm"
+import { asc, eq, isNull, sql } from "drizzle-orm"
 import { z } from "zod"
 import {
   expenseCategoriesTable,
@@ -25,6 +25,18 @@ export const expenseCategoryRouter = router({
         name: expenseCategoriesTable.name,
       })
       .from(expenseCategoriesTable)
+      .where(isNull(expenseCategoriesTable.archived_at))
+      .orderBy(asc(expenseCategoriesTable.name))
+  }),
+
+  listAllForDisplay: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db
+      .select({
+        id: expenseCategoriesTable.id,
+        name: expenseCategoriesTable.name,
+        archived_at: expenseCategoriesTable.archived_at,
+      })
+      .from(expenseCategoriesTable)
       .orderBy(asc(expenseCategoriesTable.name))
   }),
 
@@ -48,11 +60,20 @@ export const expenseCategoryRouter = router({
     .mutation(async ({ ctx, input }) => {
       return ctx.db.transaction(async tx => {
         const [existing] = await tx
-          .select({ name: expenseCategoriesTable.name })
+          .select({
+            name: expenseCategoriesTable.name,
+            archived_at: expenseCategoriesTable.archived_at,
+          })
           .from(expenseCategoriesTable)
           .where(eq(expenseCategoriesTable.id, input.id))
         if (!existing) {
           throw new TRPCError({ code: "NOT_FOUND" })
+        }
+        if (existing.archived_at != null) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "cannot rename an archived category; unarchive first",
+          })
         }
         const [updated] = await tx
           .update(expenseCategoriesTable)
@@ -70,13 +91,31 @@ export const expenseCategoryRouter = router({
       })
     }),
 
-  delete: headProcedure
+  archive: headProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(expenseCategoriesTable)
+      const [archived] = await ctx.db
+        .update(expenseCategoriesTable)
+        .set({ archived_at: new Date() })
         .where(eq(expenseCategoriesTable.id, input.id))
         .returning()
-      return deleted
+      if (!archived) {
+        throw new TRPCError({ code: "NOT_FOUND" })
+      }
+      return archived
+    }),
+
+  unarchive: headProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const [unarchived] = await ctx.db
+        .update(expenseCategoriesTable)
+        .set({ archived_at: null })
+        .where(eq(expenseCategoriesTable.id, input.id))
+        .returning()
+      if (!unarchived) {
+        throw new TRPCError({ code: "NOT_FOUND" })
+      }
+      return unarchived
     }),
 })
