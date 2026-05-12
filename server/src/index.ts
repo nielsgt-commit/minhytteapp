@@ -1,41 +1,42 @@
 import "dotenv/config"
-import express, { type ErrorRequestHandler } from "express"
-import cors from "cors"
-import { createExpressMiddleware } from "@trpc/server/adapters/express"
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { serve } from "@hono/node-server"
+import { trpcServer } from "@hono/trpc-server"
 import { appRouter } from "./trpc/routers/_app.ts"
 import { createContext } from "./trpc/context.ts"
 
-const app = express()
+const app = new Hono()
 
-app.use(cors())
-app.use(express.json())
+app.use("*", cors())
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true })
-})
+app.get("/health", c => c.json({ ok: true }))
 
 const isDev = process.env.NODE_ENV !== "production"
 
 app.use(
-  "/api/trpc",
-  createExpressMiddleware({
+  "/api/trpc/*",
+  trpcServer({
+    endpoint: "/api/trpc",
     router: appRouter,
     createContext,
     onError: isDev
       ? ({ error, path, type }) => {
-          console.error(`[trpc] ${type} ${path ?? "<unknown>"} →`, error.cause ?? error)
+          console.error(
+            `[trpc] ${type} ${path ?? "<unknown>"} →`,
+            error.cause ?? error,
+          )
         }
       : undefined,
   }),
 )
 
-const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+app.onError((err, c) => {
   console.error(err)
-  res.status(500).json({ error: "internal" })
-}
-app.use(errorHandler)
+  return c.json({ error: "internal" }, 500)
+})
 
 const port = Number(process.env.PORT ?? 3001)
-app.listen(port, () => {
+serve({ fetch: app.fetch, port }, () => {
   console.log(`API listening on http://localhost:${String(port)}`)
 })

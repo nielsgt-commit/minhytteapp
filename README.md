@@ -1,6 +1,36 @@
 # hytta-start
 
-Property-management SPA. React + Vite client, Express + tRPC server, Postgres via Drizzle ORM.
+Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via Drizzle ORM.
+
+---
+
+## Tech stack
+
+**Frontend** (`client/`)
+- React 19 + TypeScript, bundled with Vite 6
+- TanStack Router (file-based, code-split) for routing
+- TanStack React Query for server state, paired with `@trpc/tanstack-react-query` for typed hooks (`useTRPC()`, `useSuspenseQuery`, `useMutation`)
+- Redux Toolkit + React-Redux for local UI state
+- `@digdir/designsystemet-react` (+ matching CSS) for the design system
+- Zod v4 for input validation
+- Flatpickr for date inputs
+
+**Backend** (`server/`)
+- Hono 4 on `@hono/node-server`, with `hono/cors` and `@hono/trpc-server` as the tRPC adapter
+- tRPC v11 — routers under `server/src/trpc/routers/`, composed in `_app.ts`
+- Drizzle ORM (`drizzle-orm/node-postgres`) talking to Postgres via `pg`
+- `tsx watch` for hot reload during development
+- `dotenv` for env loading
+
+**Database & infra**
+- Postgres 17 (Docker, see `docker-compose.yml`) — primary store
+- Drizzle Kit for schema migrations (`drizzle/` directory, generated SQL)
+
+**Tooling**
+- TypeScript (project references across `client/` and `server/`)
+- ESLint (flat config) + Prettier
+- Vitest + Testing Library + jsdom for client tests
+- `concurrently` to run web + API together (`npm run dev:all`)
 
 ---
 
@@ -62,7 +92,7 @@ npm run dev:all
 Starts both processes via `concurrently`:
 
 - **web** (cyan) — Vite dev server on `http://localhost:5173`, proxies `/api` → `http://localhost:3001`
-- **api** (magenta) — Express + tRPC on `http://localhost:3001`, watched by `tsx`
+- **api** (magenta) — Hono + tRPC on `http://localhost:3001`, watched by `tsx`
 
 Health check: `http://localhost:3001/health` → `{ "ok": true }`.
 

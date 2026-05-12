@@ -1,7 +1,7 @@
 # Testing — reachability check
 
 Quick way to verify the full stack is wired up: Vite/React → `@trpc/client` →
-Express → Drizzle → Postgres. Runs one procedure per router and logs the
+Hono → Drizzle → Postgres. Runs one procedure per router and logs the
 response so you can eyeball it.
 
 Test file: `client/src/trpc/connectivity.test.ts`.
@@ -13,7 +13,7 @@ The test hits a real API and a real DB, so both must be running:
 ```sh
 docker compose up -d     # Postgres on :5432
 npm run db:migrate       # only needed on a fresh DB
-npm run dev:server       # Express + tRPC on :3001
+npm run dev:server       # Hono + tRPC on :3001
 ```
 
 Optional: `npm run db:seed` to get a user (`id=1`) and property (`id=1`) so

@@ -1,4 +1,4 @@
-import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
+import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch"
 import { eq } from "drizzle-orm"
 import { db } from "../db/client.ts"
 import { usersTable } from "../db/schema/users.schema.ts"
@@ -60,8 +60,8 @@ async function lookupUser(sub: string | null): Promise<AuthUser | null> {
   return row ?? null
 }
 
-export const createContext = async ({ req }: CreateExpressContextOptions) => {
-  const claims = extractClaims(req.header("authorization") ?? null)
+export const createContext = async ({ req }: FetchCreateContextFnOptions) => {
+  const claims = extractClaims(req.headers.get("authorization"))
   return {
     db,
     claims,

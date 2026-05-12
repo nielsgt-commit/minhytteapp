@@ -9,7 +9,7 @@ Use this skill whenever a change crosses layers in this repo. Work the layers in
 
 ## Stack reminders
 
-- DB: Drizzle ORM + Turso. Schema files live in `server/src/db/schema/*.schema.ts`. Relations in `server/src/db/schema/relations.ts`.
+- DB: Drizzle ORM (`drizzle-orm/node-postgres`) + Postgres. Schema files live in `server/src/db/schema/*.schema.ts`. Relations in `server/src/db/schema/relations.ts`.
 - Migrations: `npm run db:generate` (produces SQL in `drizzle/`), then `npm run db:migrate`.
 - tRPC: v11, routers in `server/src/trpc/routers/<feature>.ts`, registered in `server/src/trpc/routers/_app.ts`.
 - Client: `@trpc/tanstack-react-query` hooks, features in `client/src/features/<feature>/`, routes in `client/src/routes/_authed/`.
