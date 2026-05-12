@@ -4,7 +4,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import styles from "./MaintenanceHistory.module.css"
+import type { MaintenanceScope } from "@/features/maintenance/MaintenanceCard.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -12,7 +14,7 @@ import { useTRPC } from "@/trpc/trpc.ts"
 type EditingState = { id: number } | null
 type DeletingState = { id: number; typed: string } | null
 
-export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
+export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
@@ -37,15 +39,18 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
   const [editing, setEditing] = useState<EditingState>(null)
   const [deleting, setDeleting] = useState<DeletingState>(null)
 
+  const matchesScope = (i: (typeof items)[number]) =>
+    scope.kind === "building"
+      ? i.building_id === scope.id
+      : i.place_id === scope.id
+
   const doneItems = items
-    .filter(i => i.building_id === buildingId && i.status === "done")
+    .filter(i => matchesScope(i) && i.status === "done")
     .slice()
     .sort((a, b) => {
-      const aD = a.completed_at ? new Date(a.completed_at) : null
-      const bD = b.completed_at ? new Date(b.completed_at) : null
-      const aKey = aD ? aD.getFullYear() * 12 + aD.getMonth() : 0
-      const bKey = bD ? bD.getFullYear() * 12 + bD.getMonth() : 0
-      return aKey - bKey
+      const aT = a.completed_at ? new Date(a.completed_at).getTime() : 0
+      const bT = b.completed_at ? new Date(b.completed_at).getTime() : 0
+      return bT - aT
     })
 
   const pending = updateMutation.isPending || deleteMutation.isPending
@@ -89,27 +94,19 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
   }
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Done</th>
-          <th>Description</th>
-          <th>Instructions</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {doneItems.map(item => {
-          const isEditing = editing?.id === item.id
-          const isDeleting = deleting?.id === item.id
-          const completedLabel = item.completed_at
-            ? new Date(item.completed_at).toLocaleDateString()
-            : ""
+    <div className={styles.list}>
+      {doneItems.map(item => {
+        const isEditing = editing?.id === item.id
+        const isDeleting = deleting?.id === item.id
+        const completedLabel = item.completed_at
+          ? new Date(item.completed_at).toLocaleDateString()
+          : ""
 
-          if (isEditing) {
-            return (
-              <tr key={item.id}>
-                <td colSpan={4}>
+        if (isEditing) {
+          return (
+            <Card key={item.id} asChild>
+              <article>
+                <Card.Block>
                   <form onSubmit={handleEditSubmit(item)}>
                     <fieldset>
                       <legend>Edit completed task</legend>
@@ -134,38 +131,58 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
                       </Button>
                     </fieldset>
                   </form>
-                </td>
-              </tr>
-            )
-          }
+                </Card.Block>
+              </article>
+            </Card>
+          )
+        }
 
-          return (
-            <tr key={item.id}>
-              <td>{completedLabel}</td>
-              <td>{item.description}</td>
-              <td>{item.instructions ?? ""}</td>
-              <td>
-                <Button
-                  variant="tertiary"
-                  disabled={pending}
-                  onClick={() => { setEditing({ id: item.id }) }}
-                >
-                  Edit
-                </Button>
-                {!isDeleting && (
+        return (
+          <Card key={item.id} asChild>
+            <article>
+              <Card.Block className={styles.row} data-size="sm">
+                <Paragraph className={styles.date} data-size="sm">
+                  {completedLabel}
+                </Paragraph>
+                <Paragraph className={styles.description} data-size="sm">
+                  {item.description}
+                </Paragraph>
+                <Paragraph className={styles.instructions} data-size="sm">
+                  {item.instructions ?? ""}
+                </Paragraph>
+                <div className={styles.actions}>
                   <Button
                     variant="tertiary"
+                    data-size="sm"
                     disabled={pending}
-                    onClick={() => { setDeleting({ id: item.id, typed: "" }) }}
+                    onClick={() => { setEditing({ id: item.id }) }}
                   >
-                    Delete
+                    Edit
                   </Button>
-                )}
-                {isDeleting && (
-                  <span>
-                    Type <code>{item.description}</code> to confirm:{" "}
+                  {!isDeleting && (
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      onClick={() => {
+                        setDeleting({ id: item.id, typed: "" })
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </Card.Block>
+              {isDeleting && (
+                <Card.Block>
+                  <div className={styles.confirm}>
+                    <Paragraph data-size="sm">
+                      Type <code>{item.description}</code> to confirm:
+                    </Paragraph>
                     <Textfield
                       aria-label="Type description to confirm deletion"
+                      data-size="sm"
                       value={deleting.typed}
                       onChange={e => {
                         setDeleting({ id: item.id, typed: e.target.value })
@@ -173,6 +190,7 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
                     />
                     <Button
                       data-color="danger"
+                      data-size="sm"
                       disabled={
                         pending || deleting.typed !== item.description
                       }
@@ -187,18 +205,19 @@ export function MaintenanceHistory({ buildingId }: { buildingId: number }) {
                     </Button>
                     <Button
                       variant="secondary"
+                      data-size="sm"
                       disabled={pending}
                       onClick={() => { setDeleting(null) }}
                     >
                       Cancel
                     </Button>
-                  </span>
-                )}
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+                  </div>
+                </Card.Block>
+              )}
+            </article>
+          </Card>
+        )
+      })}
+    </div>
   )
 }

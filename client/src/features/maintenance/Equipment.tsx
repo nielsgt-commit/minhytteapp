@@ -5,7 +5,14 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Heading,
+  Paragraph,
+  Textfield,
+} from "@digdir/designsystemet-react"
+import styles from "./Equipment.module.css"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
@@ -36,6 +43,8 @@ export function Equipment() {
     void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
   }
 
+  const [schedulingId, setSchedulingId] = useState<number | null>(null)
+
   const scheduleMutation = useMutation(
     trpc.equipment.scheduleMaintenance.mutationOptions({
       onSuccess: () => {
@@ -44,8 +53,6 @@ export function Equipment() {
       },
     }),
   )
-
-  const [schedulingId, setSchedulingId] = useState<number | null>(null)
 
   const handleSubmit = (equipment_id: number) =>
     (e: SyntheticEvent<HTMLFormElement>) => {
@@ -74,7 +81,7 @@ export function Equipment() {
       <Card asChild>
         <section>
           <Card.Block>
-            <h3>Equipment</h3>
+            <Heading level={3} data-size="xs">Equipment</Heading>
             <p>Select a property to see its equipment.</p>
           </Card.Block>
         </section>
@@ -82,81 +89,112 @@ export function Equipment() {
     )
   }
 
+  const sortedEquipment = equipment.slice().sort((a, b) => {
+    const aT = new Date(a.created_at).getTime()
+    const bT = new Date(b.created_at).getTime()
+    return bT - aT
+  })
+
   return (
     <Card asChild>
       <section>
         <Card.Block>
-      <h3>Equipment</h3>
-      {scheduleMutation.error && (
-        <p role="alert">Error: {scheduleMutation.error.message}</p>
-      )}
-      {equipment.length === 0 ? (
-        <p>No equipment registered for this property yet.</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>id</th>
-              <th>name</th>
-              <th>building</th>
-              <th>category</th>
-              <th>actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {equipment.map(item => {
-              const isScheduling = schedulingId === item.id
-              return (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.name}</td>
-                  <td>{buildingNameById.get(item.building_id) ?? item.building_id}</td>
-                  <td>{item.category ?? ""}</td>
-                  <td>
-                    {isScheduling ? (
-                      <form onSubmit={handleSubmit(item.id)}>
-                        <Textfield
-                          label="Task"
-                          name="description"
-                          defaultValue={`Service ${item.name}`}
-                          required
-                        />
-                        <Textfield
-                          label="Due"
-                          type="date"
-                          name="due_at"
-                        />
-                        <Button
-                          type="submit"
-                          disabled={
-                            scheduleMutation.isPending || selectedUserId == null
-                          }
+          <Heading level={3} data-size="xs">Equipment</Heading>
+        </Card.Block>
+        <Card.Block>
+          {scheduleMutation.error && (
+            <p role="alert">Error: {scheduleMutation.error.message}</p>
+          )}
+          {sortedEquipment.length === 0 ? (
+            <p>No equipment registered for this property yet.</p>
+          ) : (
+            <div className={styles.list}>
+              {sortedEquipment.map(item => {
+                const isScheduling = schedulingId === item.id
+                const buildingName =
+                  buildingNameById.get(item.building_id)
+                  ?? `#${String(item.building_id)}`
+                return (
+                  <Card asChild key={item.id}>
+                    <article>
+                      <Card.Block className={styles.row} data-size="sm">
+                        <Paragraph className={styles.name} data-size="sm">
+                          {item.name}
+                        </Paragraph>
+                        <Paragraph
+                          className={styles.building}
+                          data-size="sm"
                         >
-                          Schedule
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          disabled={scheduleMutation.isPending}
-                          onClick={() => { setSchedulingId(null) }}
+                          {buildingName}
+                        </Paragraph>
+                        <Paragraph
+                          className={styles.category}
+                          data-size="sm"
                         >
-                          Cancel
-                        </Button>
-                      </form>
-                    ) : (
-                      <Button
-                        variant="tertiary"
-                        onClick={() => { setSchedulingId(item.id) }}
-                      >
-                        Schedule maintenance
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      )}
+                          {item.category ?? ""}
+                        </Paragraph>
+                        <div className={styles.actions}>
+                          {!isScheduling && (
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setSchedulingId(item.id)
+                              }}
+                            >
+                              Schedule maintenance
+                            </Button>
+                          )}
+                        </div>
+                      </Card.Block>
+                      {isScheduling && (
+                        <Card.Block>
+                          <form
+                            onSubmit={handleSubmit(item.id)}
+                            className={styles.schedule}
+                          >
+                            <Textfield
+                              label="Task"
+                              name="description"
+                              defaultValue={`Service ${item.name}`}
+                              required
+                            />
+                            <Textfield
+                              label="Due"
+                              type="date"
+                              name="due_at"
+                            />
+                            <div className={styles.scheduleActions}>
+                              <Button
+                                type="submit"
+                                data-size="sm"
+                                disabled={
+                                  scheduleMutation.isPending
+                                  || selectedUserId == null
+                                }
+                              >
+                                Schedule
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                data-size="sm"
+                                disabled={scheduleMutation.isPending}
+                                onClick={() => {
+                                  setSchedulingId(null)
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </form>
+                        </Card.Block>
+                      )}
+                    </article>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
         </Card.Block>
       </section>
     </Card>

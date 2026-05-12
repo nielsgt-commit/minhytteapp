@@ -1,0 +1,50 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  grid-template-areas: "name building category actions";
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.name     { grid-area: name; margin: 0; }
+.building { grid-area: building; margin: 0; }
+.category { grid-area: category; margin: 0; }
+.actions {
+  grid-area: actions;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scheduleActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name       category"
+      "building   building"
+      "actions    actions";
+    row-gap: 0.25rem;
+    column-gap: 0.5rem;
+  }
+  .actions {
+    justify-self: stretch;
+    justify-content: flex-end;
+  }
+}
