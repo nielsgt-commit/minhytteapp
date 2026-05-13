@@ -32,12 +32,7 @@ export function MyPlannedStay() {
   )
 
   if (selectedPropertyId == null) {
-    return (
-      <section>
-        <h4>My planned stays</h4>
-        <p>Select a property to see your stays.</p>
-      </section>
-    )
+    return <p>Select a property to see your stays.</p>
   }
 
   if (!me || !bookings) return <p>Loading…</p>
@@ -48,8 +43,7 @@ export function MyPlannedStay() {
   )
 
   return (
-    <section>
-      <h4>My planned stays</h4>
+    <>
       {myBookings.length === 0 ? (
         <p>No planned stays yet.</p>
       ) : (
@@ -77,6 +71,6 @@ export function MyPlannedStay() {
           })}
         </ul>
       )}
-    </section>
+    </>
   )
 }

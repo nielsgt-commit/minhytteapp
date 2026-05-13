@@ -7,7 +7,7 @@ import {
 import {
   Button,
   Chip,
-  EXPERIMENTAL_Suggestion as Suggestion,
+  EXPERIMENTAL_Suggestion as Suggestion,YES
   Heading,
   Switch,
   Textfield,

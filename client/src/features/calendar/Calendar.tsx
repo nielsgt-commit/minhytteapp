@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import styles from "./Calendar.module.css"
 import { ExperimentalWeekPanel } from "@/features/calendar/testform/ExperimentalWeekPanel.tsx"
-import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
 import { PriorityWeeks } from "@/features/priority/PriorityWeeks"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -25,7 +24,6 @@ export function Calendar() {
     <section className={styles.page}>
       <h2 className={styles.title}>Calendar</h2>
       <div className={styles.main}>
-        <MyPlannedStay />
         <div className={styles.week}>
           <ExperimentalWeekPanel />
         </div>

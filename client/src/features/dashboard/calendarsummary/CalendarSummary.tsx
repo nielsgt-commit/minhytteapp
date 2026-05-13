@@ -49,7 +49,7 @@ export default function CalendarSummary() {
             weekStart={weekStart}
             onWeekStartChange={setWeekStart}
           />
-          <PlannedMaintenanceSummary />
+          <PlannedMaintenanceSummary mode="this-week" weekStart={weekStart} />
         </Card.Block>
       </section>
     </Card>

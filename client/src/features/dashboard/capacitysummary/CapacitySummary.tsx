@@ -32,7 +32,6 @@ export function CapacitySummary() {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading level={6}> At {propertyName} now: </Heading>
           <div
             style={{
               display: "flex",
@@ -41,9 +40,22 @@ export function CapacitySummary() {
               gap: "1rem",
             }}
           >
-            <AtPropertyNow />
-            <Divider style={{ alignSelf: "stretch" }} />
-            <AvailableParking />
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: "1.5rem",
+                alignSelf: "stretch",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <Heading level={6} size="medium">{propertyName} now</Heading>
+                <AtPropertyNow />
+              </div>
+              <AvailableParking />
+            </div>
             <Divider style={{ alignSelf: "stretch" }} />
             <RoomAvailabilityIndicator rooms={rooms} />
           </div>

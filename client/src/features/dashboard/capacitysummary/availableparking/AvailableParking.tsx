@@ -102,7 +102,7 @@ export default function AvailableParking() {
   }
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <Heading level={6} size="medium">Cars</Heading>
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
         {Array.from({ length: total }, (_, slot) => {

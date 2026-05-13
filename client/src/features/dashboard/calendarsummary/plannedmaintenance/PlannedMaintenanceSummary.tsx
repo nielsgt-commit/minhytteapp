@@ -14,7 +14,19 @@ function severityColor(
   return "info"
 }
 
-export default function PlannedMaintenanceSummary() {
+function startOfSunday(d: Date) {
+  const out = new Date(d)
+  out.setHours(0, 0, 0, 0)
+  out.setDate(out.getDate() - out.getDay())
+  return out
+}
+
+type Props = {
+  mode: "this-week" | "rest"
+  weekStart?: Date
+}
+
+export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const trpc = useTRPC()
   const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
   const { data: buildings } = useSuspenseQuery(
@@ -24,11 +36,25 @@ export default function PlannedMaintenanceSummary() {
     trpc.maintenance.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
+  const wkStart = weekStart ?? startOfSunday(new Date())
+  const wkEnd = new Date(wkStart)
+  wkEnd.setDate(wkEnd.getDate() + 7)
+
   const pending = items.filter(
     i => i.status === "todo" || i.status === "doing",
   )
-  const itemsByBuilding = new Map<number, typeof pending>()
-  for (const it of pending) {
+  const inWeek = (due: Date | string | null) => {
+    if (due == null) return false
+    const d = new Date(due)
+    return d >= wkStart && d < wkEnd
+  }
+  const filtered =
+    mode === "this-week"
+      ? pending.filter(i => inWeek(i.due_at))
+      : pending.filter(i => !inWeek(i.due_at))
+
+  const itemsByBuilding = new Map<number, typeof filtered>()
+  for (const it of filtered) {
     if (it.building_id == null) continue
     const bucket = itemsByBuilding.get(it.building_id) ?? []
     bucket.push(it)
