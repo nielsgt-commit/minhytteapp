@@ -6,8 +6,9 @@ import {
 } from "@tanstack/react-query"
 import {
   Button,
+  Card,
   Chip,
-  EXPERIMENTAL_Suggestion as Suggestion,YES
+  EXPERIMENTAL_Suggestion as Suggestion,
   Heading,
   Switch,
   Textfield,
@@ -143,218 +144,222 @@ export function AddNewExpenseFlow({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div
-        style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-      >
-        <Heading level={3} data-size="sm">Add expense</Heading>
-
-        {drafts.length > 0 && (
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
+    <Card asChild>
+      <form onSubmit={handleSubmit}>
+        <Card.Block>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
           >
-            {drafts.map(d => (
-              <li
-                key={d.id}
+            <Heading level={3} data-size="sm">Add expense</Heading>
+
+            {drafts.length > 0 && (
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.25rem",
+                }}
+              >
+                {drafts.map(d => (
+                  <li
+                    key={d.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      {d.category} — {d.amount}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      onClick={() => { removeDraft(d.id) }}
+                    >
+                      Remove
+                    </Button>
+                  </li>
+                ))}
+                <li
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    paddingTop: "0.25rem",
+                  }}
+                >
+                  <strong>Total</strong>
+                  <strong>{total}</strong>
+                </li>
+              </ul>
+            )}
+
+            {me?.is_head && (
+              <Switch
+                label="Edit mode"
+                checked={editMode}
+                onChange={e => {
+                  const next = e.target.checked
+                  setEditMode(next)
+                  if (next) {
+                    setOpenCategory(null)
+                    setAmount("")
+                  }
+                }}
+              />
+            )}
+
+            {editMode ? (
+              <Suggestion
+                multiple
+                creatable
+                selected={selectedCats}
+                onSelectedChange={handleCategoriesChange}
+              >
+                <Suggestion.Input
+                  ref={suggestionInputRef}
+                  placeholder="Add or remove categories"
+                />
+                <Suggestion.List>
+                  {categories.map(c => (
+                    <Suggestion.Option key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </Suggestion.Option>
+                  ))}
+                </Suggestion.List>
+              </Suggestion>
+            ) : (
+              <div
                 style={{
                   display: "flex",
-                  alignItems: "center",
+                  flexWrap: "wrap",
                   gap: "0.5rem",
                 }}
               >
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  {d.category} — {d.amount}
-                </span>
+                {categories.map(c => (
+                  <Chip.Button
+                    key={c.id}
+                    type="button"
+                    disabled={pending || openCategory === c.name}
+                    onClick={() => { openEditor(c.name) }}
+                  >
+                    {c.name}
+                  </Chip.Button>
+                ))}
+              </div>
+            )}
+
+            {createCategoryMutation.error && (
+              <ValidationMessage>
+                Error: {createCategoryMutation.error.message}
+              </ValidationMessage>
+            )}
+            {archiveCategoryMutation.error && (
+              <ValidationMessage>
+                Error: {archiveCategoryMutation.error.message}
+              </ValidationMessage>
+            )}
+
+            {!editMode && openCategory != null && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem",
+                }}
+              >
+                <Textfield
+                  label={`Amount for ${openCategory}`}
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={amount}
+                  onChange={e => { setAmount(e.target.value) }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addDraft()
+                    }
+                  }}
+                  autoFocus
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <FolderIcon aria-hidden fontSize="1.25rem" />
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    data-color="danger"
+                    disabled={pending}
+                  >
+                    Remove
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    disabled={pending}
+                  >
+                    Upload receipt
+                  </Button>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={pending}
+                    onClick={addDraft}
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    disabled={pending}
+                    onClick={cancelEditor}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {drafts.length > 0 && (
+              <Textfield
+                label="Description"
+                description="Optional"
+                value={description}
+                onChange={e => { setDescription(e.target.value) }}
+              />
+            )}
+
+            {drafts.length > 0 && (
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                <Button type="submit" disabled={pending}>
+                  Submit
+                </Button>
                 <Button
                   type="button"
                   variant="tertiary"
-                  data-color="danger"
-                  data-size="sm"
+                  onClick={onCancel}
                   disabled={pending}
-                  onClick={() => { removeDraft(d.id) }}
                 >
-                  Remove
+                  Cancel
                 </Button>
-              </li>
-            ))}
-            <li
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                paddingTop: "0.25rem",
-              }}
-            >
-              <strong>Total</strong>
-              <strong>{total}</strong>
-            </li>
-          </ul>
-        )}
-
-        {me?.is_head && (
-          <Switch
-            label="Edit mode"
-            checked={editMode}
-            onChange={e => {
-              const next = e.target.checked
-              setEditMode(next)
-              if (next) {
-                setOpenCategory(null)
-                setAmount("")
-              }
-            }}
-          />
-        )}
-
-        {editMode ? (
-          <Suggestion
-            multiple
-            creatable
-            selected={selectedCats}
-            onSelectedChange={handleCategoriesChange}
-          >
-            <Suggestion.Input
-              ref={suggestionInputRef}
-              placeholder="Add or remove categories"
-            />
-            <Suggestion.List>
-              {categories.map(c => (
-                <Suggestion.Option key={c.id} value={String(c.id)}>
-                  {c.name}
-                </Suggestion.Option>
-              ))}
-            </Suggestion.List>
-          </Suggestion>
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.5rem",
-            }}
-          >
-            {categories.map(c => (
-              <Chip.Button
-                key={c.id}
-                type="button"
-                disabled={pending || openCategory === c.name}
-                onClick={() => { openEditor(c.name) }}
-              >
-                {c.name}
-              </Chip.Button>
-            ))}
+              </div>
+            )}
           </div>
-        )}
-
-        {createCategoryMutation.error && (
-          <ValidationMessage>
-            Error: {createCategoryMutation.error.message}
-          </ValidationMessage>
-        )}
-        {archiveCategoryMutation.error && (
-          <ValidationMessage>
-            Error: {archiveCategoryMutation.error.message}
-          </ValidationMessage>
-        )}
-
-        {!editMode && openCategory != null && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-            }}
-          >
-            <Textfield
-              label={`Amount for ${openCategory}`}
-              type="number"
-              min={1}
-              step={1}
-              value={amount}
-              onChange={e => { setAmount(e.target.value) }}
-              onKeyDown={e => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  addDraft()
-                }
-              }}
-              autoFocus
-            />
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <FolderIcon aria-hidden fontSize="1.25rem" />
-              <Button
-                type="button"
-                variant="tertiary"
-                data-color="danger"
-                disabled={pending}
-              >
-                Remove
-              </Button>
-              <Button
-                type="button"
-                variant="tertiary"
-                disabled={pending}
-              >
-                Upload receipt
-              </Button>
-            </div>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={pending}
-                onClick={addDraft}
-              >
-                Add
-              </Button>
-              <Button
-                type="button"
-                variant="tertiary"
-                disabled={pending}
-                onClick={cancelEditor}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {drafts.length > 0 && (
-          <Textfield
-            label="Description"
-            description="Optional"
-            value={description}
-            onChange={e => { setDescription(e.target.value) }}
-          />
-        )}
-
-        {drafts.length > 0 && (
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Button type="submit" disabled={pending}>
-              Submit
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              onClick={onCancel}
-              disabled={pending}
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
-      </div>
-    </form>
+        </Card.Block>
+      </form>
+    </Card>
   )
 }
