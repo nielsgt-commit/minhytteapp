@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
+import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import styles from "./Calendar.module.css"
-import { ExperimentalWeekPanel } from "@/features/calendar/testform/ExperimentalWeekPanel.tsx"
+import { Agent3Calendar } from "@/features/calendar/agent3/Agent3Calendar"
 import { PriorityWeeks } from "@/features/priority/PriorityWeeks"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -14,19 +15,17 @@ export function Calendar() {
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <h2 className={styles.title}>Calendar</h2>
-        <p>Add or select a property to plan stays, block dates, and see who&apos;s booked in.</p>
+        <Heading level={2} style={{ margin: 0 }}>Calendar</Heading>
+        <Paragraph>Add or select a property to plan stays, block dates, and see who&apos;s booked in.</Paragraph>
       </section>
     )
   }
 
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>Calendar</h2>
+      <Heading level={2} style={{ margin: 0 }}>Calendar</Heading>
       <div className={styles.main}>
-        <div className={styles.week}>
-          <ExperimentalWeekPanel />
-        </div>
+        <Agent3Calendar />
       </div>
       {me?.is_head && (
         <div className={styles.priority}>

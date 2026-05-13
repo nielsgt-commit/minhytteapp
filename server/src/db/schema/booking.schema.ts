@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm"
 import {
+  boolean,
   check,
   date,
   integer,
@@ -74,6 +75,7 @@ export const bookingOccupantsTable = pgTable(
       .notNull()
       .references(() => usersTable.id),
     room_id: integer("room_id").references(() => roomTable.id),
+    queued: boolean("queued").notNull().default(false),
   },
   (t) => [primaryKey({ columns: [t.booking_id, t.user_id] })],
 )

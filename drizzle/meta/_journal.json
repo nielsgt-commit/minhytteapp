@@ -246,6 +246,13 @@
       "when": 1778591980464,
       "tag": "0034_yummy_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1778666815463,
+      "tag": "0035_large_bucky",
+      "breakpoints": true
     }
   ]
 }

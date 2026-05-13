@@ -1,15 +1,8 @@
 .page {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-areas:
-    "title title title title title    title"
-    "main  main  main  main  priority priority";
-  gap: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.title    { grid-area: title; }
-.priority { grid-area: priority; }
-.main     { grid-area: main; display: flex; flex-direction: column; gap: 1rem; }
-
-.week > section { flex: 1; }
-.week table     { width: 100%; }
+.title { margin: 0; }
+.main  { display: flex; flex-direction: column; gap: 1rem; }

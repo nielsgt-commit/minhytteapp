@@ -48,7 +48,7 @@ function PlannedStaysSection({ propertyId }: { propertyId: number }) {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading>This summer at {propertyName}</Heading>
+          <Heading> My summer at {propertyName}</Heading>
           <MyPlannedStay />
           <PlannedMaintenanceSummary mode="rest" />
         </Card.Block>
