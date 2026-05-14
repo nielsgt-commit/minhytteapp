@@ -7,6 +7,7 @@ import { equipmentRouter } from "./equipment.ts"
 import { eventRouter } from "./event.ts"
 import { expenseRouter } from "./expense.ts"
 import { expenseCategoryRouter } from "./expenseCategory.ts"
+import { inspectionRouter } from "./inspection.ts"
 import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
 import { parkingRouter } from "./parking.ts"
@@ -31,6 +32,7 @@ export const appRouter = router({
   event: eventRouter,
   expense: expenseRouter,
   expenseCategory: expenseCategoryRouter,
+  inspection: inspectionRouter,
   invite: inviteRouter,
   maintenance: maintenanceRouter,
   parking: parkingRouter,

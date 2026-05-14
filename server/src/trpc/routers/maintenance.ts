@@ -107,4 +107,34 @@ export const maintenanceRouter = router({
         .returning()
       return deleted
     }),
+
+  setPinned: protectedProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        is_pinned: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(maintenanceTable)
+        .set({ is_pinned: input.is_pinned })
+        .where(eq(maintenanceTable.id, input.id))
+        .returning()
+      return updated
+    }),
+
+  setProcedureOrder: protectedProcedure
+    .input(z.object({ ids: z.array(z.number().int().positive()) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.transaction(async tx => {
+        for (let i = 0; i < input.ids.length; i++) {
+          await tx
+            .update(maintenanceTable)
+            .set({ procedure_position: i })
+            .where(eq(maintenanceTable.id, input.ids[i]))
+        }
+      })
+      return { ok: true as const }
+    }),
 })
