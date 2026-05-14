@@ -1,0 +1,1 @@
+ALTER TABLE "maintenance" ADD COLUMN "procedure_position" integer;

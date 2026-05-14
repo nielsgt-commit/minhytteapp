@@ -1,0 +1,53 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.procHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.procTitle {
+  flex: 1;
+}
+
+.procActions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.adHocRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.committedRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.committedDescription {
+  flex: 1;
+}
+
+.adHocDescription {
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

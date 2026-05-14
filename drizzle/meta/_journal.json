@@ -253,6 +253,20 @@
       "when": 1778666815463,
       "tag": "0035_large_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1778776880556,
+      "tag": "0036_legal_maggott",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1778782595381,
+      "tag": "0037_outgoing_mandarin",
+      "breakpoints": true
     }
   ]
 }

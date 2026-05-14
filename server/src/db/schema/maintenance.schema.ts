@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
+  type AnyPgColumn,
+  boolean,
   check,
   integer,
   pgTable,
@@ -62,6 +64,14 @@ export const maintenanceTable = pgTable(
     routine_id: integer("routine_id").references(() => routinesTable.id),
     routine_position: integer("routine_position"),
     equipment_id: integer("equipment_id").references(() => equipmentTable.id),
+    is_pinned: boolean("is_pinned").notNull().default(false),
+    procedure_position: integer("procedure_position"),
+    parent_maintenance_id: integer("parent_maintenance_id").references(
+      (): AnyPgColumn => maintenanceTable.id,
+    ),
+    inspection_id: integer("inspection_id").references(
+      (): AnyPgColumn => inspectionsTable.id,
+    ),
     due_at: timestamp("due_at"),
     created_at: timestamp("created_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),
@@ -78,6 +88,37 @@ export const maintenanceTable = pgTable(
     check(
       "maintenance_routine_position_pairing",
       sql`(${t.routine_id} IS NULL) = (${t.routine_position} IS NULL)`,
+    ),
+  ],
+)
+
+export const inspectionsTable = pgTable(
+  "inspections",
+  {
+    id: serial("id").primaryKey(),
+    building_id: integer("building_id").references(() => buildingsTable.id),
+    place_id: integer("place_id").references(() => placeTable.id),
+    equipment_id: integer("equipment_id").references(() => equipmentTable.id),
+    started_by_user_id: integer("started_by_user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    inspected_by: varchar("inspected_by", { length: 255 }).notNull(),
+    recurrence: varchar("recurrence", {
+      length: 6,
+      enum: ["once", "yearly", "5year"],
+    }).notNull(),
+    notes: text("notes"),
+    started_at: timestamp("started_at").notNull().defaultNow(),
+    completed_at: timestamp("completed_at"),
+  },
+  (t) => [
+    check(
+      "inspection_target_exclusive",
+      sql`(
+        (CASE WHEN ${t.building_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.place_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.equipment_id} IS NOT NULL THEN 1 ELSE 0 END)
+      ) = 1`,
     ),
   ],
 )

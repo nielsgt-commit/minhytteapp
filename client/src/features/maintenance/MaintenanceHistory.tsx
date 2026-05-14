@@ -1,11 +1,13 @@
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
 import styles from "./MaintenanceHistory.module.css"
+import { InspectionCard } from "@/features/maintenance/InspectionCard.tsx"
 import type { MaintenanceScope } from "@/features/maintenance/MaintenanceCard.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
@@ -23,6 +25,12 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     trpc.maintenance.listForProperty.queryOptions({
       property_id: selectedPropertyId ?? 0,
     }),
+  )
+  const { data: inspections = [] } = useQuery(
+    trpc.inspection.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
   )
 
   const invalidate = () => {
@@ -52,6 +60,30 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
       const bT = b.completed_at ? new Date(b.completed_at).getTime() : 0
       return bT - aT
     })
+
+  const scopedInspections = inspections.filter(i => {
+    if (i.completed_at == null) return false
+    return scope.kind === "building"
+      ? i.building_id === scope.id
+      : i.place_id === scope.id
+  })
+
+  type HistoryEntry =
+    | { kind: "maintenance"; t: number; item: (typeof doneItems)[number] }
+    | { kind: "inspection"; t: number; item: (typeof scopedInspections)[number] }
+
+  const entries: HistoryEntry[] = [
+    ...doneItems.map(item => ({
+      kind: "maintenance" as const,
+      t: item.completed_at ? new Date(item.completed_at).getTime() : 0,
+      item,
+    })),
+    ...scopedInspections.map(item => ({
+      kind: "inspection" as const,
+      t: item.completed_at ? new Date(item.completed_at).getTime() : 0,
+      item,
+    })),
+  ].sort((a, b) => b.t - a.t)
 
   const pending = updateMutation.isPending || deleteMutation.isPending
   const lastError = updateMutation.error ?? deleteMutation.error
@@ -89,13 +121,17 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     return <p role="alert">Error: {lastError.message}</p>
   }
 
-  if (doneItems.length === 0) {
+  if (entries.length === 0) {
     return <p>No completed maintenance yet.</p>
   }
 
   return (
     <div className={styles.list}>
-      {doneItems.map(item => {
+      {entries.map(entry => {
+        if (entry.kind === "inspection") {
+          return <InspectionCard key={`i-${String(entry.item.id)}`} inspection={entry.item} />
+        }
+        const item = entry.item
         const isEditing = editing?.id === item.id
         const isDeleting = deleting?.id === item.id
         const completedLabel = item.completed_at
