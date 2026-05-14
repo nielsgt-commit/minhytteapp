@@ -191,28 +191,34 @@ export type SplitPolicyWhat =
 export type SplitPolicyHow =
   | { kind: "equally" }
   | { kind: "weighted_by_occupancy" }
+  | { kind: "by_ownership_pct" }
 
 export type SplitPolicyWho =
   | { kind: "all_users" }
   | { kind: "user_group"; group_id: number }
+  | { kind: "user"; user_id: number }
   | { kind: "heads_only" }
+  | { kind: "main_groups" }
 
 export type SplitPolicyWhen =
   | { kind: "always" }
   | { kind: "present_when_expense_added" }
   | { kind: "present_this_year" }
   | { kind: "during_any_priority_week" }
+  | { kind: "during_priority_week"; property_owner_id: number }
 
 export type SplitPolicyExcept =
   | { kind: "user"; user_id: number }
   | { kind: "group"; group_id: number }
+  | { kind: "kids" }
 
 export type SplitPolicyRule = {
   what: SplitPolicyWhat
   how: SplitPolicyHow
-  who: SplitPolicyWho
+  who: SplitPolicyWho[]
   except: SplitPolicyExcept[]
   when: SplitPolicyWhen
+  include_extra_guests?: boolean
 }
 
 export type SplitPolicyFallback = Omit<SplitPolicyRule, "what">

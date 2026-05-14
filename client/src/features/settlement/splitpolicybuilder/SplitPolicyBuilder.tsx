@@ -13,6 +13,7 @@ import {
   Label,
   Paragraph,
   Select,
+  Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks"
@@ -30,24 +31,29 @@ type How =
 type Who =
   | { kind: "all_users" }
   | { kind: "user_group"; group_id: number }
+  | { kind: "user"; user_id: number }
   | { kind: "heads_only" }
+  | { kind: "main_groups" }
 
 type When =
   | { kind: "always" }
   | { kind: "present_when_expense_added" }
   | { kind: "present_this_year" }
   | { kind: "during_any_priority_week" }
+  | { kind: "during_priority_week"; property_owner_id: number }
 
 type ExceptItem =
   | { kind: "user"; user_id: number }
   | { kind: "group"; group_id: number }
+  | { kind: "kids" }
 
 type Rule = {
   what: What
   how: How
-  who: Who
+  who: Who[]
   except: ExceptItem[]
   when: When
+  include_extra_guests: boolean
 }
 
 type Fallback = Omit<Rule, "what">
@@ -61,17 +67,30 @@ type FormState = {
 
 const DEFAULT_FALLBACK: Fallback = {
   how: { kind: "equally" },
-  who: { kind: "all_users" },
+  who: [{ kind: "all_users" }],
   except: [],
   when: { kind: "always" },
+  include_extra_guests: false,
 }
 
 const NEW_RULE: Rule = {
   what: { kind: "total" },
   how: { kind: "equally" },
-  who: { kind: "all_users" },
+  who: [{ kind: "all_users" }],
   except: [],
   when: { kind: "always" },
+  include_extra_guests: false,
+}
+
+const OCCUPANCY_DAYS_PRESET: Omit<FormState, "id" | "name"> = {
+  rules: [],
+  fallback: {
+    how: { kind: "weighted_by_occupancy" },
+    who: [{ kind: "main_groups" }],
+    except: [],
+    when: { kind: "always" },
+    include_extra_guests: true,
+  },
 }
 
 const INITIAL_FORM: FormState = {
@@ -83,14 +102,34 @@ const INITIAL_FORM: FormState = {
 
 const HOW_LABEL: Record<How["kind"], string> = {
   equally: "equally",
-  weighted_by_occupancy: "weighted by occupancy",
+  weighted_by_occupancy: "by days stayed",
+  by_ownership_pct: "by ownership percentage",
 }
 
-const WHEN_LABEL: Record<When["kind"], string> = {
+type StaticWhen = Exclude<When, { kind: "during_priority_week" }>
+
+const WHEN_LABEL: Record<StaticWhen["kind"], string> = {
   always: "anytime",
   present_when_expense_added: "present when expense was added",
   present_this_year: "present this year",
   during_any_priority_week: "during any priority week",
+}
+
+function encodeWhen(w: When): string {
+  if (w.kind === "during_priority_week") {
+    return `during_priority_week:${String(w.property_owner_id)}`
+  }
+  return w.kind
+}
+
+function decodeWhen(v: string): When {
+  if (v.startsWith("during_priority_week:")) {
+    return {
+      kind: "during_priority_week",
+      property_owner_id: Number(v.slice("during_priority_week:".length)),
+    }
+  }
+  return { kind: v as StaticWhen["kind"] }
 }
 
 function encodeWhat(w: What): string {
@@ -105,29 +144,32 @@ function decodeWhat(v: string): What {
 
 function encodeWho(w: Who): string {
   switch (w.kind) {
-    case "all_users":
-      return "all_users"
-    case "heads_only":
-      return "heads_only"
-    case "user_group":
-      return `user_group:${String(w.group_id)}`
+    case "all_users": return "all_users"
+    case "heads_only": return "heads_only"
+    case "main_groups": return "main_groups"
+    case "user_group": return `user_group:${String(w.group_id)}`
+    case "user": return `user:${String(w.user_id)}`
   }
 }
 
 function decodeWho(v: string): Who {
   if (v === "all_users") return { kind: "all_users" }
   if (v === "heads_only") return { kind: "heads_only" }
-  const id = Number(v.slice("user_group:".length))
-  return { kind: "user_group", group_id: id }
+  if (v === "main_groups") return { kind: "main_groups" }
+  if (v.startsWith("user_group:")) return { kind: "user_group", group_id: Number(v.slice("user_group:".length)) }
+  if (v.startsWith("user:")) return { kind: "user", user_id: Number(v.slice("user:".length)) }
+  return { kind: "all_users" }
 }
 
 function encodeExcept(item: ExceptItem): string {
+  if (item.kind === "kids") return "kids"
   return item.kind === "user"
     ? `user:${String(item.user_id)}`
     : `group:${String(item.group_id)}`
 }
 
 function decodeExcept(v: string): ExceptItem | null {
+  if (v === "kids") return { kind: "kids" }
   if (v.startsWith("user:")) {
     return { kind: "user", user_id: Number(v.slice("user:".length)) }
   }
@@ -143,6 +185,8 @@ type GroupWithMembers = {
   is_main: boolean
   members: { user_id: number; user_name: string }[]
 }
+
+type EligibleOwner = { property_owner_id: number; user_id: number; user_name: string }
 
 type Category = { id: number; name: string }
 
@@ -166,24 +210,39 @@ function describeWhat(w: What, categories: Category[]) {
   return w.kind === "total" ? "total" : nameForCategory(categories, w.category_id)
 }
 
-function describeWho(w: Who, groups: GroupWithMembers[]) {
+function describeWho(w: Who, groups: GroupWithMembers[]): string {
   switch (w.kind) {
-    case "all_users":
-      return "all users"
-    case "heads_only":
-      return "heads of this property"
-    case "user_group":
-      return `group "${nameForGroup(groups, w.group_id)}"`
+    case "all_users": return "all users"
+    case "heads_only": return "heads of this property"
+    case "main_groups": return "main owner groups"
+    case "user_group": return `group "${nameForGroup(groups, w.group_id)}"`
+    case "user": return nameForUser(groups, w.user_id)
   }
+}
+
+function describeWhoList(who: Who[], groups: GroupWithMembers[]): string {
+  if (who.length === 0) return "nobody"
+  return who.map(w => describeWho(w, groups)).join(", ")
 }
 
 function describeExcept(
   item: ExceptItem,
   groups: GroupWithMembers[],
 ) {
+  if (item.kind === "kids") return "Kids"
   return item.kind === "user"
     ? nameForUser(groups, item.user_id)
     : `group "${nameForGroup(groups, item.group_id)}"`
+}
+
+function describeWhen(w: When, eligibleOwners: EligibleOwner[]): string {
+  if (w.kind === "during_priority_week") {
+    const owner = eligibleOwners.find(o => o.property_owner_id === w.property_owner_id)
+    return owner
+      ? `${owner.user_name}'s priority week`
+      : `priority week (owner #${String(w.property_owner_id)})`
+  }
+  return WHEN_LABEL[w.kind]
 }
 
 function allUsersInProperty(groups: GroupWithMembers[]) {
@@ -223,6 +282,13 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
   )
   const activeCategories = categories.filter(c => c.archived_at == null)
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
+  const { data: priorityData } = useSuspenseQuery(
+    trpc.priority.list.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+      year: new Date().getFullYear(),
+    }),
+  )
+  const eligibleOwners: EligibleOwner[] = priorityData.eligibleOwners
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: trpc.propertySplitPolicy.pathKey() })
@@ -353,12 +419,73 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
     }))
   }
 
+  const addWhoToRule = (idx: number, encoded: string) => {
+    if (encoded === "") return
+    const item = decodeWho(encoded)
+    setForm(f => {
+      const rule = f.rules[idx]
+      if (rule.who.some(w => encodeWho(w) === encoded)) return f
+      return {
+        ...f,
+        rules: f.rules.map((r, i) =>
+          i === idx ? { ...r, who: [...r.who, item] } : r,
+        ),
+      }
+    })
+  }
+
+  const removeWhoFromRule = (idx: number, encoded: string) => {
+    setForm(f => ({
+      ...f,
+      rules: f.rules.map((r, i) =>
+        i === idx ? { ...r, who: r.who.filter(w => encodeWho(w) !== encoded) } : r,
+      ),
+    }))
+  }
+
+  const addWhoToFallback = (encoded: string) => {
+    if (encoded === "") return
+    const item = decodeWho(encoded)
+    setForm(f => {
+      if (f.fallback.who.some(w => encodeWho(w) === encoded)) return f
+      return { ...f, fallback: { ...f.fallback, who: [...f.fallback.who, item] } }
+    })
+  }
+
+  const removeWhoFromFallback = (encoded: string) => {
+    setForm(f => ({
+      ...f,
+      fallback: {
+        ...f.fallback,
+        who: f.fallback.who.filter(w => encodeWho(w) !== encoded),
+      },
+    }))
+  }
+
+  const loadPreset = () => {
+    setForm(f => ({ ...f, ...OCCUPANCY_DAYS_PRESET }))
+  }
+
+  const normalizeWho = (raw: unknown): Who[] => {
+    if (Array.isArray(raw)) return raw as Who[]
+    if (raw != null && typeof raw === "object") return [raw as Who]
+    return [{ kind: "all_users" }]
+  }
+
   const loadForEdit = (policy: (typeof policies)[number]) => {
     setForm({
       id: policy.id,
       name: policy.name,
-      rules: policy.config.rules,
-      fallback: policy.config.fallback,
+      rules: policy.config.rules.map(r => ({
+        ...r,
+        who: normalizeWho(r.who),
+        include_extra_guests: r.include_extra_guests ?? false,
+      })),
+      fallback: {
+        ...policy.config.fallback,
+        who: normalizeWho(policy.config.fallback.who),
+        include_extra_guests: policy.config.fallback.include_extra_guests ?? false,
+      },
     })
   }
 
@@ -390,6 +517,9 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
         }}
       >
         <Select.Option value="">— pick someone to exclude —</Select.Option>
+        <Select.Option value="kids" disabled={selectedEncoded.has("kids")}>
+          Kids (all child users)
+        </Select.Option>
         <Select.Optgroup label="Users">
           {propertyUsers.map(u => {
             const enc = `user:${String(u.user_id)}`
@@ -422,8 +552,56 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
     </Field>
   )
 
+  const renderWhoPicker = (
+    selectedEncoded: Set<string>,
+    onAdd: (encoded: string) => void,
+  ) => (
+    <Field>
+      <Label data-size="sm">Add participant</Label>
+      <Select
+        value=""
+        onChange={e => {
+          onAdd(e.target.value)
+          e.target.value = ""
+        }}
+      >
+        <Select.Option value="">— pick a participant —</Select.Option>
+        <Select.Option value="all_users" disabled={selectedEncoded.has("all_users")}>
+          all users
+        </Select.Option>
+        <Select.Option value="main_groups" disabled={selectedEncoded.has("main_groups")}>
+          main owner groups
+        </Select.Option>
+        <Select.Option value="heads_only" disabled={selectedEncoded.has("heads_only")}>
+          heads of this property
+        </Select.Option>
+        <Select.Optgroup label="Groups">
+          {groups.map(g => {
+            const enc = `user_group:${String(g.id)}`
+            return (
+              <Select.Option key={enc} value={enc} disabled={selectedEncoded.has(enc)}>
+                {g.name}
+              </Select.Option>
+            )
+          })}
+        </Select.Optgroup>
+        <Select.Optgroup label="Users">
+          {propertyUsers.map(u => {
+            const enc = `user:${String(u.user_id)}`
+            return (
+              <Select.Option key={enc} value={enc} disabled={selectedEncoded.has(enc)}>
+                {u.user_name}
+              </Select.Option>
+            )
+          })}
+        </Select.Optgroup>
+      </Select>
+    </Field>
+  )
+
   const renderRuleEditor = (rule: Rule, idx: number) => {
-    const selectedEncoded = new Set(rule.except.map(encodeExcept))
+    const selectedExceptEncoded = new Set(rule.except.map(encodeExcept))
+    const selectedWhoEncoded = new Set(rule.who.map(encodeWho))
     return (
       <Card key={idx} asChild>
         <article>
@@ -466,34 +644,30 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                 ))}
               </Select>{" "}
               between{" "}
-              <Select
-                data-size="sm"
-                value={encodeWho(rule.who)}
-                onChange={e => {
-                  patchRule(idx, { who: decodeWho(e.target.value) })
-                }}
-              >
-                <Select.Option value="all_users">all users</Select.Option>
-                <Select.Option value="heads_only">heads of this property</Select.Option>
-                <Select.Optgroup label="By group">
-                  {groups.map(g => (
-                    <Select.Option
-                      key={g.id}
-                      value={`user_group:${String(g.id)}`}
+              {rule.who.length === 0 ? (
+                <em>nobody selected</em>
+              ) : (
+                rule.who.map(w => {
+                  const enc = encodeWho(w)
+                  return (
+                    <Button
+                      key={enc}
+                      type="button"
+                      variant="tertiary"
+                      data-size="sm"
+                      onClick={() => { removeWhoFromRule(idx, enc) }}
                     >
-                      group: {g.name}
-                    </Select.Option>
-                  ))}
-                </Select.Optgroup>
-              </Select>{" "}
+                      {describeWho(w, groups)} ✕
+                    </Button>
+                  )
+                })
+              )}{" "}
               who were{" "}
               <Select
                 data-size="sm"
-                value={rule.when.kind}
+                value={encodeWhen(rule.when)}
                 onChange={e => {
-                  patchRule(idx, {
-                    when: { kind: e.target.value as When["kind"] },
-                  })
+                  patchRule(idx, { when: decodeWhen(e.target.value) })
                 }}
               >
                 {Object.entries(WHEN_LABEL).map(([value, label]) => (
@@ -501,8 +675,29 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                     {label}
                   </Select.Option>
                 ))}
+                {eligibleOwners.length > 0 && (
+                  <Select.Optgroup label="Specific priority week">
+                    {eligibleOwners.map(o => {
+                      const enc = `during_priority_week:${String(o.property_owner_id)}`
+                      return (
+                        <Select.Option key={enc} value={enc}>
+                          {o.user_name}&apos;s priority week
+                        </Select.Option>
+                      )
+                    })}
+                  </Select.Optgroup>
+                )}
               </Select>
             </Paragraph>
+            <Switch
+              label="Include extra guest names (attributed to booker's group)"
+              data-size="sm"
+              checked={rule.include_extra_guests}
+              onChange={e => {
+                patchRule(idx, { include_extra_guests: e.target.checked })
+              }}
+            />
+            {renderWhoPicker(selectedWhoEncoded, enc => { addWhoToRule(idx, enc) })}
           </Card.Block>
 
           <Card.Block data-size="sm">
@@ -527,7 +722,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                 })
               )}
             </Paragraph>
-            {renderExceptPicker(selectedEncoded, enc => {
+            {renderExceptPicker(selectedExceptEncoded, enc => {
               addExceptToRule(idx, enc)
             })}
           </Card.Block>
@@ -633,34 +828,30 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                     ))}
                   </Select>{" "}
                   between{" "}
-                  <Select
-                    data-size="sm"
-                    value={encodeWho(form.fallback.who)}
-                    onChange={e => {
-                      patchFallback({ who: decodeWho(e.target.value) })
-                    }}
-                  >
-                    <Select.Option value="all_users">all users</Select.Option>
-                    <Select.Option value="heads_only">heads of this property</Select.Option>
-                    <Select.Optgroup label="By group">
-                      {groups.map(g => (
-                        <Select.Option
-                          key={g.id}
-                          value={`user_group:${String(g.id)}`}
+                  {form.fallback.who.length === 0 ? (
+                    <em>nobody selected</em>
+                  ) : (
+                    form.fallback.who.map(w => {
+                      const enc = encodeWho(w)
+                      return (
+                        <Button
+                          key={enc}
+                          type="button"
+                          variant="tertiary"
+                          data-size="sm"
+                          onClick={() => { removeWhoFromFallback(enc) }}
                         >
-                          group: {g.name}
-                        </Select.Option>
-                      ))}
-                    </Select.Optgroup>
-                  </Select>{" "}
+                          {describeWho(w, groups)} ✕
+                        </Button>
+                      )
+                    })
+                  )}{" "}
                   who were{" "}
                   <Select
                     data-size="sm"
-                    value={form.fallback.when.kind}
+                    value={encodeWhen(form.fallback.when)}
                     onChange={e => {
-                      patchFallback({
-                        when: { kind: e.target.value as When["kind"] },
-                      })
+                      patchFallback({ when: decodeWhen(e.target.value) })
                     }}
                   >
                     {Object.entries(WHEN_LABEL).map(([value, label]) => (
@@ -668,8 +859,32 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                         {label}
                       </Select.Option>
                     ))}
+                    {eligibleOwners.length > 0 && (
+                      <Select.Optgroup label="Specific priority week">
+                        {eligibleOwners.map(o => {
+                          const enc = `during_priority_week:${String(o.property_owner_id)}`
+                          return (
+                            <Select.Option key={enc} value={enc}>
+                              {o.user_name}&apos;s priority week
+                            </Select.Option>
+                          )
+                        })}
+                      </Select.Optgroup>
+                    )}
                   </Select>
                 </Paragraph>
+                <Switch
+                  label="Include extra guest names (attributed to booker's group)"
+                  data-size="sm"
+                  checked={form.fallback.include_extra_guests}
+                  onChange={e => {
+                    patchFallback({ include_extra_guests: e.target.checked })
+                  }}
+                />
+                {renderWhoPicker(
+                  new Set(form.fallback.who.map(encodeWho)),
+                  enc => { addWhoToFallback(enc) },
+                )}
               </Card.Block>
               <Card.Block data-size="sm">
                 <Paragraph data-size="sm">
@@ -712,6 +927,17 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
             >
               Reset
             </Button>
+            {!isEditing && (
+              <Button
+                type="button"
+                variant="tertiary"
+                data-size="sm"
+                onClick={() => { loadPreset() }}
+                disabled={pending}
+              >
+                Load occupancy_days preset
+              </Button>
+            )}
           </div>
         </Fieldset>
       </form>
@@ -752,8 +978,8 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                     <li key={`${String(policy.id)}-${String(i)}`}>
                       Split <strong>{describeWhat(rule.what, categories)}</strong>{" "}
                       <strong>{HOW_LABEL[rule.how.kind]}</strong> between{" "}
-                      <strong>{describeWho(rule.who, groups)}</strong> who were{" "}
-                      <strong>{WHEN_LABEL[rule.when.kind]}</strong>
+                      <strong>{describeWhoList(Array.isArray(rule.who) ? rule.who : [rule.who], groups)}</strong> who were{" "}
+                      <strong>{describeWhen(rule.when, eligibleOwners)}</strong>
                       {rule.except.length > 0 && (
                         <>
                           {" "}except{" "}
@@ -762,6 +988,9 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                             .join(", ")}
                         </>
                       )}
+                      {rule.include_extra_guests && (
+                        <> · <em>includes extra guests</em></>
+                      )}
                     </li>
                   ))}
                   <li>
@@ -769,11 +998,11 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                     <strong>{HOW_LABEL[policy.config.fallback.how.kind]}</strong>{" "}
                     between{" "}
                     <strong>
-                      {describeWho(policy.config.fallback.who, groups)}
+                      {describeWhoList(Array.isArray(policy.config.fallback.who) ? policy.config.fallback.who : [policy.config.fallback.who], groups)}
                     </strong>{" "}
                     who were{" "}
                     <strong>
-                      {WHEN_LABEL[policy.config.fallback.when.kind]}
+                      {describeWhen(policy.config.fallback.when, eligibleOwners)}
                     </strong>
                     {policy.config.fallback.except.length > 0 && (
                       <>
@@ -782,6 +1011,9 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                           .map(e => describeExcept(e, groups))
                           .join(", ")}
                       </>
+                    )}
+                    {policy.config.fallback.include_extra_guests && (
+                      <> · <em>includes extra guests</em></>
                     )}
                   </li>
                 </ol>

@@ -106,8 +106,9 @@ export function A3Body({ propertyId }: { propertyId: number }) {
   }, [draft.start_date, draft.end_date, priorityData])
 
   return (
+
     <section>
-      <Card> <Heading level={4}> 1 . Pick dates</Heading> </Card>
+      <Heading level={4}> 1 Pick dates</Heading>
 
       {selectedUserId == null && (
         <Paragraph role="alert">No user selected — pick one from the header.</Paragraph>
@@ -126,25 +127,33 @@ export function A3Body({ propertyId }: { propertyId: number }) {
         <div className="fp-right-panel" style={{ flex: 1, minWidth: "15rem" }}>
           <Card>
             <Card.Block>
-              {occupiedBeds !== null ? (
-                (() => {
-                  const ratio = totalBeds > 0 ? (totalBeds - occupiedBeds) / totalBeds : 1
-                  const [color, label]: ["danger" | "warning" | "neutral" | "success", string] =
-                    ratio <= 0 ? ["danger", "At capacity"] :
-                    ratio <= 0.3 ? ["warning", "Almost at capacity"] :
-                    ratio <= 0.6 ? ["neutral", "Limited availability"] :
-                    ["success", "High availability"]
-                  return (
-                    <Tag data-color={color} style={{ marginBottom: "0.75rem", display: "inline-block" }}>
-                      {label}
-                    </Tag>
-                  )
-                })()
-              ) : (
-                <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
-                  Pick dates to see availability.
-                </Paragraph>
-              )}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                {occupiedBeds !== null ? (
+                  (() => {
+                    const ratio = totalBeds > 0 ? (totalBeds - occupiedBeds) / totalBeds : 1
+                    const [color, label]: ["danger" | "warning" | "neutral" | "success", string] =
+                      ratio <= 0 ? ["danger", "At capacity"] :
+                      ratio <= 0.3 ? ["warning", "Almost at capacity"] :
+                      ratio <= 0.6 ? ["neutral", "Limited availability"] :
+                      ["success", "High availability"]
+                    return <Tag data-color={color}>{label}</Tag>
+                  })()
+                ) : (
+                  <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
+                    Pick dates to see availability.
+                  </Paragraph>
+                )}
+
+                {overlappingPriorityWeeks.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", justifyContent: "flex-end" }}>
+                    {overlappingPriorityWeeks.map(pw => (
+                      <Tag key={pw.iso_week} data-color="neutral">
+                        W{pw.iso_week} priority: {pw.owner_name}
+                      </Tag>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {overlappingBookings.length > 0 && (
                 <div>
@@ -166,16 +175,6 @@ export function A3Body({ propertyId }: { propertyId: number }) {
                         : confirmed.join(", ")
                     })()}
                   </Paragraph>
-                </div>
-              )}
-
-              {overlappingPriorityWeeks.length > 0 && (
-                <div style={{ marginTop: "0.5rem" }}>
-                  {overlappingPriorityWeeks.map(pw => (
-                    <div key={pw.iso_week} style={{ fontSize: "0.85rem", color: "var(--ds-color-neutral-text-subtle)" }}>
-                      W{pw.iso_week} priority: {pw.owner_name}
-                    </div>
-                  ))}
                 </div>
               )}
 

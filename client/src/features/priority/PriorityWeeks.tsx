@@ -4,6 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Heading,
+  Paragraph,
+  Radio,
+  Table,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
@@ -110,11 +117,11 @@ export function PriorityWeeks() {
   )
 
   if (selectedPropertyId == null) {
-    return <p>Select a property to manage priority weeks.</p>
+    return <Paragraph>Select a property to manage priority weeks.</Paragraph>
   }
 
   const data = priorityQuery.data
-  if (!data) return <p>Loading priority weeks…</p>
+  if (!data) return <Paragraph>Loading priority weeks…</Paragraph>
 
   const eligibleOwners = data.eligibleOwners
   const assignments = data.assignments
@@ -145,77 +152,79 @@ export function PriorityWeeks() {
 
   return (
     <section>
-      <h3>Priority weeks (peak summer)</h3>
+      <Heading level={3}>Priority weeks (peak summer)</Heading>
 
-      <p>
+      <Paragraph>
         Each household head picks one peak week. You can only edit your own
         column; everyone else&apos;s choices are visible but read-only.
-      </p>
+      </Paragraph>
 
-      <div>
-        <button type="button" onClick={() => { setYear(y => y - 1) }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <Button type="button" variant="tertiary" data-size="sm" onClick={() => { setYear(y => y - 1) }}>
           Prev
-        </button>
+        </Button>
         <span> {year} </span>
-        <button type="button" onClick={() => { setYear(y => y + 1) }}>
+        <Button type="button" variant="tertiary" data-size="sm" onClick={() => { setYear(y => y + 1) }}>
           Next
-        </button>
+        </Button>
       </div>
 
       {myOwnerId == null && !isAdmin && (
-        <p>
+        <Paragraph>
           You don&apos;t have an editable column here. Either you&apos;re not
           an owner of this property, or you haven&apos;t flagged yourself as a
           household head in user settings.
-        </p>
+        </Paragraph>
       )}
 
       {eligibleOwners.length === 0 ? (
-        <p role="alert">
+        <Paragraph role="alert">
           No household heads found for this property. Owners must enable the
           &quot;household head&quot; flag in their user settings before they
           can be assigned a priority week.
-        </p>
+        </Paragraph>
       ) : (
         <>
           {unassigned.length > 0 && (
-            <p role="status">
+            <Paragraph role="status">
               {unassigned.length} of {PEAK_WEEKS.length} peak weeks still
               unassigned (W{unassigned.join(", W")}).
-            </p>
+            </Paragraph>
           )}
 
-          <table>
-            <thead>
-              <tr>
-                <th>Week</th>
-                <th>Dates</th>
+          <Table>
+            <Table.Head>
+              <Table.Row>
+                <Table.HeaderCell>Week</Table.HeaderCell>
+                <Table.HeaderCell>Dates</Table.HeaderCell>
                 {eligibleOwners.map(o => (
-                  <th key={o.property_owner_id}>
+                  <Table.HeaderCell key={o.property_owner_id}>
                     {o.user_name}
                     {o.user_id === me?.id ? " (you)" : ""}
-                  </th>
+                  </Table.HeaderCell>
                 ))}
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
+                <Table.HeaderCell />
+              </Table.Row>
+            </Table.Head>
+            <Table.Body>
               {PEAK_WEEKS.map(week => {
                 const range = peakWeekRange(year, week)
                 const ownersForWeek = ownersByWeek.get(week) ?? []
                 return (
-                  <tr key={week}>
-                    <td>W{week}</td>
-                    <td>{formatRange(range)}</td>
+                  <Table.Row key={week}>
+                    <Table.Cell>W{week}</Table.Cell>
+                    <Table.Cell>{formatRange(range)}</Table.Cell>
                     {eligibleOwners.map(o => {
                       const checked = ownersForWeek.includes(o.property_owner_id)
                       const isMyColumn = o.user_id === me?.id
                       const editable = (isMyColumn || isAdmin) && !pending
                       return (
-                        <td key={o.property_owner_id}>
-                          <input
-                            type="radio"
+                        <Table.Cell key={o.property_owner_id}>
+                          <Radio
+                            label=""
+                            aria-label={`W${week} – ${o.user_name}`}
                             name={`priority-week-owner-${String(o.property_owner_id)}`}
+                            value={String(week)}
                             checked={checked}
                             disabled={!editable}
                             onChange={() => {
@@ -227,13 +236,15 @@ export function PriorityWeeks() {
                               })
                             }}
                           />
-                        </td>
+                        </Table.Cell>
                       )
                     })}
-                    <td>
+                    <Table.Cell>
                       {ownersForWeek.length > 0 && (isAdmin || (myOwnerId != null && ownersForWeek.includes(myOwnerId))) && (
-                        <button
+                        <Button
                           type="button"
+                          variant="tertiary"
+                          data-size="sm"
                           disabled={pending}
                           onClick={() => {
                             const targetOwnerId = isAdmin
@@ -248,10 +259,10 @@ export function PriorityWeeks() {
                           }}
                         >
                           Clear
-                        </button>
+                        </Button>
                       )}
-                    </td>
-                  </tr>
+                    </Table.Cell>
+                  </Table.Row>
                 )
               })}
               {PEAK_WEEKS.flatMap(week => {
@@ -261,23 +272,23 @@ export function PriorityWeeks() {
                   id => ownerNameById.get(id) ?? `#${String(id)}`,
                 )
                 return [
-                  <tr key={`conflict-${String(week)}`}>
-                    <td colSpan={2 + eligibleOwners.length + 1}>
-                      <p role="alert">
+                  <Table.Row key={`conflict-${String(week)}`}>
+                    <Table.Cell colSpan={2 + eligibleOwners.length + 1}>
+                      <Paragraph role="alert">
                         Conflict on W{week}: {names.join(" and ")} have both
                         claimed this week. Resolve in person — the system will
                         not pick a winner.
-                      </p>
-                    </td>
-                  </tr>,
+                      </Paragraph>
+                    </Table.Cell>
+                  </Table.Row>,
                 ]
               })}
-            </tbody>
-          </table>
+            </Table.Body>
+          </Table>
         </>
       )}
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <Paragraph role="alert">Error: {lastError.message}</Paragraph>}
     </section>
   )
 }

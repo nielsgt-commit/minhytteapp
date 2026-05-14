@@ -29,6 +29,7 @@ export function useFlatpickr(
 
   useEffect(() => {
     if (!inputRef.current) return
+    let ro: ResizeObserver | null = null
     const fp = flatpickr(inputRef.current, {
       mode: "range",
       inline: true,
@@ -47,13 +48,19 @@ export function useFlatpickr(
         }
       },
       onReady(_dates, _str, instance) {
-        const h = instance.calendarContainer.offsetHeight
-        if (h > 0) rowRef.current?.style.setProperty("--fp-height", `${String(h)}px`)
+        ro = new ResizeObserver(() => {
+          const h = instance.calendarContainer.offsetHeight
+          if (h > 0) rowRef.current?.style.setProperty("--fp-height", `${String(h)}px`)
+        })
+        ro.observe(instance.calendarContainer)
       },
     })
     // flatpickr(Element, …) always returns a single Instance, not an array
     fpRef.current = fp as unknown as { destroy: () => void; clear: () => void }
-    return () => { fpRef.current?.destroy() }
+    return () => {
+      ro?.disconnect()
+      fpRef.current?.destroy()
+    }
   }, [showMonths, dispatch])
 
   useEffect(() => {

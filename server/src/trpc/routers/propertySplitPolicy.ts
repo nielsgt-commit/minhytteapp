@@ -24,6 +24,7 @@ const whatSchema = z.discriminatedUnion("kind", [
 const howSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("equally") }),
   z.object({ kind: z.literal("weighted_by_occupancy") }),
+  z.object({ kind: z.literal("by_ownership_pct") }),
 ])
 
 const whoSchema = z.discriminatedUnion("kind", [
@@ -32,7 +33,9 @@ const whoSchema = z.discriminatedUnion("kind", [
     kind: z.literal("user_group"),
     group_id: z.number().int().positive(),
   }),
+  z.object({ kind: z.literal("user"), user_id: z.number().int().positive() }),
   z.object({ kind: z.literal("heads_only") }),
+  z.object({ kind: z.literal("main_groups") }),
 ])
 
 const whenSchema = z.discriminatedUnion("kind", [
@@ -40,26 +43,33 @@ const whenSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("present_when_expense_added") }),
   z.object({ kind: z.literal("present_this_year") }),
   z.object({ kind: z.literal("during_any_priority_week") }),
+  z.object({
+    kind: z.literal("during_priority_week"),
+    property_owner_id: z.number().int().positive(),
+  }),
 ])
 
 const exceptItemSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("user"), user_id: z.number().int().positive() }),
   z.object({ kind: z.literal("group"), group_id: z.number().int().positive() }),
+  z.object({ kind: z.literal("kids") }),
 ])
 
 const ruleSchema = z.object({
   what: whatSchema,
   how: howSchema,
-  who: whoSchema,
+  who: z.array(whoSchema).min(1).max(20),
   except: z.array(exceptItemSchema).max(50),
   when: whenSchema,
+  include_extra_guests: z.boolean().optional(),
 })
 
 const fallbackSchema = z.object({
   how: howSchema,
-  who: whoSchema,
+  who: z.array(whoSchema).min(1).max(20),
   except: z.array(exceptItemSchema).max(50),
   when: whenSchema,
+  include_extra_guests: z.boolean().optional(),
 })
 
 const configSchema = z.object({
