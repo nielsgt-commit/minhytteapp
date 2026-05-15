@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useState } from "react"
 import styles from "./Dashboard.module.css"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
@@ -11,23 +11,9 @@ import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { Card, Heading, Tabs } from "@digdir/designsystemet-react"
+import { Card, Heading, Paragraph, Tabs } from "@digdir/designsystemet-react"
 import { CalendarIcon, ClockIcon, SunIcon } from "@navikt/aksel-icons"
-
-const MOBILE_QUERY = "(max-width: 640px)"
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia(MOBILE_QUERY).matches,
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(MOBILE_QUERY)
-    const onChange = (e: MediaQueryListEvent) => { setIsMobile(e.matches) }
-    mq.addEventListener("change", onChange)
-    return () => { mq.removeEventListener("change", onChange) }
-  }, [])
-  return isMobile
-}
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export function Dashboard() {
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
@@ -72,13 +58,13 @@ function MobileTabs({ propertyId }: { propertyId: number }) {
     <Tabs className={styles.mobileTabs} value={tab} onChange={v => { setTab(v as "now" | "week" | "summer") }}>
       <Tabs.List>
         <Tabs.Tab value="now" aria-label="Now">
-          <ClockIcon aria-hidden fontSize="1.5rem" />
+          <Paragraph>Now </Paragraph>
         </Tabs.Tab>
         <Tabs.Tab value="week" aria-label="This week">
-          <CalendarIcon aria-hidden fontSize="1.5rem" />
+          <Paragraph>This week</Paragraph>
         </Tabs.Tab>
-        <Tabs.Tab value="summer" aria-label="My summer">
-          <SunIcon aria-hidden fontSize="1.5rem" />
+        <Tabs.Tab value="summer" aria-label="This year">
+          <Paragraph>This year</Paragraph>
         </Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value={tab}>
@@ -153,7 +139,7 @@ function PlannedStaysSection({ propertyId }: { propertyId: number }) {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading> My summer at {propertyName}</Heading>
+          <Heading>This year at {propertyName}</Heading>
           <MyPlannedStay />
           <PlannedMaintenanceSummary mode="rest" />
         </Card.Block>

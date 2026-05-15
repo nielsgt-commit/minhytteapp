@@ -402,7 +402,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
 
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
         <Heading level={5}>Details</Heading>
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <Field>
             <Label>Status</Label>
             <Select
@@ -420,7 +420,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
             label="Notes"
             value={draft.notes}
             onChange={e => { dispatch(setNotes(e.target.value)) }}
-            style={{ minWidth: "20rem" }}
+            style={{ width: "100%" }}
           />
         </div>
       </div>

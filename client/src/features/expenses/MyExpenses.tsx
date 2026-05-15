@@ -4,7 +4,15 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Tag, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Divider,
+  Paragraph,
+  Tag,
+  Textfield,
+} from "@digdir/designsystemet-react"
+import styles from "./MyExpenses.module.css"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
@@ -79,15 +87,7 @@ export function MyExpenses() {
       {deleteExpense.error && (
         <p role="alert">Error: {deleteExpense.error.message}</p>
       )}
-      <ul
-        style={{
-          listStyle: "none",
-          padding: 0,
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-        }}
-      >
+      <ul className={styles.list}>
         {mine.map(e => (
           <li key={e.id}>
             <MyExpenseCard
@@ -165,17 +165,11 @@ function MyExpenseCard({
       : "(no category)"
 
   return (
-    <Card>
-      <Card.Block>
-        {editing ? (
-          <form onSubmit={handleSubmit}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-              }}
-            >
+    <Card asChild>
+      <article>
+        <Card.Block className={editing ? undefined : styles.row} data-size="sm">
+          {editing ? (
+            <form onSubmit={handleSubmit} className={styles.editForm}>
               <Textfield
                 label="Date"
                 type="date"
@@ -196,7 +190,7 @@ function MyExpenseCard({
                 onChange={ev => { setAmount(ev.target.value) }}
                 required
               />
-              <div style={{ display: "flex", gap: "0.5rem" }}>
+              <div className={styles.editActions}>
                 <Button type="submit" disabled={updateExpense.isPending}>
                   Submit
                 </Button>
@@ -212,50 +206,35 @@ function MyExpenseCard({
               {updateExpense.error && (
                 <span role="alert">Error: {updateExpense.error.message}</span>
               )}
-            </div>
-          </form>
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "0.125rem 0.625rem",
-                  border: "1px solid currentColor",
-                  borderRadius: "999px",
-                  fontSize: "0.875rem",
-                  lineHeight: 1.4,
-                }}
+            </form>
+          ) : (
+            <>
+              <Paragraph asChild data-size="sm">
+                <span className={styles.category}>{categoryLabel}</span>
+              </Paragraph>
+              <Paragraph className={styles.statusLabel} data-size="sm">
+                Status
+              </Paragraph>
+              <Tag
+                className={styles.statusTag}
+                data-color={STATUS_COLOR[expense.status]}
+                data-size="sm"
               >
-                {categoryLabel}
-              </span>
-              <Tag data-color={STATUS_COLOR[expense.status]}>
                 {expense.status}
               </Tag>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <span>{expense.amount},-</span>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
+              <Paragraph className={styles.sumLabel} data-size="sm">
+                Sum
+              </Paragraph>
+              <div className={styles.amountGroup}>
+                <Paragraph asChild data-size="sm">
+                  <span>{expense.amount}</span>
+                </Paragraph>
+                <Paragraph asChild data-size="sm">
+                  <span>,-</span>
+                </Paragraph>
+              </div>
+              <Divider className={styles.divider} />
+              <div className={styles.actions}>
                 <Button
                   variant="tertiary"
                   data-size="sm"
@@ -274,10 +253,10 @@ function MyExpenseCard({
                   Delete
                 </Button>
               </div>
-            </div>
-          </div>
-        )}
-      </Card.Block>
+            </>
+          )}
+        </Card.Block>
+      </article>
     </Card>
   )
 }

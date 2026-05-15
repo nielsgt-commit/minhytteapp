@@ -1,0 +1,101 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto auto auto;
+  grid-template-areas: "category statusLabel statusTag . sumLabel amount actions";
+  align-items: baseline;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.category {
+  grid-area: category;
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.statusTag { grid-area: statusTag; }
+.actions {
+  grid-area: actions;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.amountGroup {
+  grid-area: amount;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+}
+
+.sumLabel { grid-area: sumLabel; margin: 0; }
+.statusLabel { grid-area: statusLabel; margin: 0; }
+.divider { display: none; }
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: auto auto auto;
+    grid-template-areas:
+      "category    .       ."
+      "statusLabel .       statusTag"
+      "sumLabel    .       amount"
+      "divider     divider divider"
+      "actions     actions actions";
+    row-gap: 0.5rem;
+    column-gap: 0.5rem;
+  }
+  .category {
+    justify-self: start;
+  }
+  .statusLabel {
+    display: block;
+    grid-area: statusLabel;
+    justify-self: start;
+    margin: 0;
+  }
+  .statusTag {
+    justify-self: end;
+  }
+  .sumLabel {
+    display: block;
+    grid-area: sumLabel;
+    justify-self: start;
+    margin: 0;
+  }
+  .amountGroup {
+    justify-self: end;
+  }
+  .divider {
+    display: block;
+    grid-area: divider;
+    width: 100%;
+    margin: 0;
+  }
+  .actions {
+    justify-self: stretch;
+    justify-content: flex-end;
+  }
+}

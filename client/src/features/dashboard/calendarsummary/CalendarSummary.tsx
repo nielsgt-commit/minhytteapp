@@ -1,12 +1,9 @@
 import { useState } from "react"
 import PlannedAvailabilitySummary
   from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
-import PlannedAvailabilitySummaryStacked
-  from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummaryStacked.tsx"
 import PlannedMaintenanceSummary
   from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { trpc } from "@/trpc/client.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
@@ -41,10 +38,6 @@ export default function CalendarSummary() {
           <Heading onClick={resetWeek} style={{ cursor: "pointer" }}>
             This week at {propertyName}
           </Heading>
-          <PlannedAvailabilitySummaryStacked
-            weekStart={weekStart}
-            onWeekStartChange={setWeekStart}
-          />
           <PlannedAvailabilitySummary
             weekStart={weekStart}
             onWeekStartChange={setWeekStart}

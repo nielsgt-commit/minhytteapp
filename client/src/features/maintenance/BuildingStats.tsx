@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Chip, Heading } from "@digdir/designsystemet-react"
+import { Card, Chip, Heading, Tabs } from "@digdir/designsystemet-react"
 import styles from "./BuildingStats.module.css"
 import { Equipment } from "@/features/maintenance/Equipment.tsx"
 import {
@@ -10,15 +10,36 @@ import {
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
-type Selection =
-  | { kind: "building"; id: number }
-  | { kind: "place"; id: number }
-  | { kind: "inventory" }
+type TabValue = "buildings" | "places" | "inventory"
+
+function CategoryFrame({
+  isMobile,
+  title,
+  children,
+}: {
+  isMobile: boolean
+  title: string
+  children: ReactNode
+}) {
+  if (isMobile) return <>{children}</>
+  return (
+    <Card asChild>
+      <section>
+        <Card.Block>
+          <Heading level={3} data-size="xs">{title}</Heading>
+        </Card.Block>
+        <Card.Block>{children}</Card.Block>
+      </section>
+    </Card>
+  )
+}
 
 export function BuildingStats() {
   const trpc = useTRPC()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const isMobile = useIsMobile()
 
   const { data: buildings } = useSuspenseQuery(
     trpc.building.listForProperty.queryOptions({
@@ -31,124 +52,124 @@ export function BuildingStats() {
     }),
   )
 
-  const [selection, setSelection] = useState<Selection | null>(null)
+  const [activeTab, setActiveTab] = useState<TabValue>("buildings")
+  const [buildingFilter, setBuildingFilter] = useState<Set<number>>(new Set())
+  const [placeFilter, setPlaceFilter] = useState<Set<number>>(new Set())
 
-  const resolveSelection = (): Selection => {
-    if (selection != null) {
-      if (
-        selection.kind === "building"
-        && buildings.some(b => b.id === selection.id)
-      ) {
-        return selection
-      }
-      if (
-        selection.kind === "place"
-        && places.some(p => p.id === selection.id)
-      ) {
-        return selection
-      }
-      if (selection.kind === "inventory") return selection
-    }
-    if (buildings.length > 0) return { kind: "building", id: buildings[0].id }
-    if (places.length > 0) return { kind: "place", id: places[0].id }
-    return { kind: "inventory" }
+  const toggle = (set: Set<number>, id: number): Set<number> => {
+    const next = new Set(set)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    return next
   }
 
-  const active = resolveSelection()
-
-  const activeBuilding =
-    active.kind === "building"
-      ? buildings.find(b => b.id === active.id)
-      : undefined
-  const activePlace =
-    active.kind === "place" ? places.find(p => p.id === active.id) : undefined
-
-  const scope: MaintenanceScope | null = activeBuilding
-    ? { kind: "building", id: activeBuilding.id, name: activeBuilding.name }
-    : activePlace
-      ? { kind: "place", id: activePlace.id, name: activePlace.name }
-      : null
+  const visibleBuildings =
+    buildingFilter.size === 0
+      ? buildings
+      : buildings.filter(b => buildingFilter.has(b.id))
+  const visiblePlaces =
+    placeFilter.size === 0 ? places : places.filter(p => placeFilter.has(p.id))
 
   return (
-    <div className={styles.wrap}>
-      <section className={styles.section}>
-        <Heading level={3} data-size="xs">Structures</Heading>
-        {buildings.length === 0 ? (
-          <p>No structures yet.</p>
-        ) : (
-          <div
-            className={styles.filter}
-            role="radiogroup"
-            aria-label="Structure"
-          >
-            {buildings.map(b => (
-              <Chip.Radio
-                key={b.id}
-                name="maintenance-target"
-                value={`building-${String(b.id)}`}
-                checked={active.kind === "building" && active.id === b.id}
-                onChange={() => {
-                  setSelection({ kind: "building", id: b.id })
-                }}
-              >
-                {b.name}
-              </Chip.Radio>
-            ))}
-          </div>
+    <Tabs
+      value={activeTab}
+      onChange={value => {
+        setActiveTab(value as TabValue)
+      }}
+    >
+      <Tabs.List>
+        <Tabs.Tab value="buildings">Buildings</Tabs.Tab>
+        <Tabs.Tab value="places">Places</Tabs.Tab>
+        <Tabs.Tab value="inventory">Inventory</Tabs.Tab>
+      </Tabs.List>
+
+      <Tabs.Panel value="buildings">
+        {activeTab === "buildings" && (
+          <CategoryFrame isMobile={isMobile} title="Buildings">
+            {buildings.length === 0 ? (
+              <p>No buildings yet.</p>
+            ) : (
+              <div className={styles.wrap}>
+                <div
+                  className={styles.filter}
+                  role="group"
+                  aria-label="Filter buildings"
+                >
+                  {buildings.map(b => (
+                    <Chip.Checkbox
+                      key={b.id}
+                      name="building-filter"
+                      value={String(b.id)}
+                      checked={buildingFilter.has(b.id)}
+                      onChange={() => {
+                        setBuildingFilter(prev => toggle(prev, b.id))
+                      }}
+                    >
+                      {b.name}
+                    </Chip.Checkbox>
+                  ))}
+                </div>
+                <div className={styles.cards}>
+                  {visibleBuildings.map(b => {
+                    const scope: MaintenanceScope = {
+                      kind: "building",
+                      id: b.id,
+                      name: b.name,
+                    }
+                    return <MaintenanceCard key={b.id} scope={scope} />
+                  })}
+                </div>
+              </div>
+            )}
+          </CategoryFrame>
         )}
-      </section>
+      </Tabs.Panel>
 
-      <section className={styles.section}>
-        <Heading level={3} data-size="xs">Infrastructure</Heading>
-        {places.length === 0 ? (
-          <p>No infrastructure yet.</p>
-        ) : (
-          <div
-            className={styles.filter}
-            role="radiogroup"
-            aria-label="Infrastructure"
-          >
-            {places.map(p => (
-              <Chip.Radio
-                key={p.id}
-                name="maintenance-target"
-                value={`place-${String(p.id)}`}
-                checked={active.kind === "place" && active.id === p.id}
-                onChange={() => {
-                  setSelection({ kind: "place", id: p.id })
-                }}
-              >
-                {p.name}
-              </Chip.Radio>
-            ))}
-          </div>
+      <Tabs.Panel value="places">
+        {activeTab === "places" && (
+          <CategoryFrame isMobile={isMobile} title="Places">
+            {places.length === 0 ? (
+              <p>No places yet.</p>
+            ) : (
+              <div className={styles.wrap}>
+                <div
+                  className={styles.filter}
+                  role="group"
+                  aria-label="Filter places"
+                >
+                  {places.map(p => (
+                    <Chip.Checkbox
+                      key={p.id}
+                      name="place-filter"
+                      value={String(p.id)}
+                      checked={placeFilter.has(p.id)}
+                      onChange={() => {
+                        setPlaceFilter(prev => toggle(prev, p.id))
+                      }}
+                    >
+                      {p.name}
+                    </Chip.Checkbox>
+                  ))}
+                </div>
+                <div className={styles.cards}>
+                  {visiblePlaces.map(p => {
+                    const scope: MaintenanceScope = {
+                      kind: "place",
+                      id: p.id,
+                      name: p.name,
+                    }
+                    return <MaintenanceCard key={p.id} scope={scope} />
+                  })}
+                </div>
+              </div>
+            )}
+          </CategoryFrame>
         )}
-      </section>
+      </Tabs.Panel>
 
-      <section className={styles.section}>
-        <Heading level={3} data-size="xs">Inventory</Heading>
-        <div
-          className={styles.filter}
-          role="radiogroup"
-          aria-label="Inventory"
-        >
-          <Chip.Radio
-            name="maintenance-target"
-            value="inventory"
-            checked={active.kind === "inventory"}
-            onChange={() => {
-              setSelection({ kind: "inventory" })
-            }}
-          >
-            All
-          </Chip.Radio>
-        </div>
-      </section>
-
-      <div className={styles.cards}>
-        {scope && <MaintenanceCard scope={scope} />}
-        {active.kind === "inventory" && <Equipment />}
-      </div>
-    </div>
+      <Tabs.Panel value="inventory">
+        {activeTab === "inventory" && <Equipment />}
+      </Tabs.Panel>
+    </Tabs>
   )
 }
