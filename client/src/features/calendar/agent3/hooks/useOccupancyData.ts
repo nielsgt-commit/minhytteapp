@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { propertyCapacity } from "@/features/calendar/booking-logic"
+import { bedCapacity, propertyCapacity } from "@/features/calendar/booking-logic"
 import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
 import type { RoomShape, ExistingOccupant } from "../types"
 
@@ -93,6 +93,48 @@ export function useOccupancyData({
     return map
   }, [overlappingBookings])
 
+  const roomOverCapacityDays = useMemo(() => {
+    const map = new Map<number, string[]>()
+    if (!draft.start_date || !draft.end_date) return map
+
+    const draftByRoom = new Map<number, Set<number>>()
+    for (const o of draft.occupants) {
+      if (o.room_id == null) continue
+      if (o.queued) continue
+      let set = draftByRoom.get(o.room_id)
+      if (!set) {
+        set = new Set()
+        draftByRoom.set(o.room_id, set)
+      }
+      set.add(o.user_id)
+    }
+
+    const cur = new Date(draft.start_date)
+    const end = new Date(draft.end_date)
+    while (cur <= end) {
+      const d = cur.toISOString().slice(0, 10)
+      for (const room of propertyRooms) {
+        const placed = new Set<number>(draftByRoom.get(room.id) ?? [])
+        for (const b of bookings) {
+          if (b.status === "cancelled") continue
+          if (b.start_date > d || b.end_date < d) continue
+          for (const o of b.occupants) {
+            if (o.room_id !== room.id) continue
+            if (o.queued) continue
+            placed.add(o.user_id)
+          }
+        }
+        if (placed.size > bedCapacity(room)) {
+          const list = map.get(room.id) ?? []
+          list.push(d)
+          map.set(room.id, list)
+        }
+      }
+      cur.setUTCDate(cur.getUTCDate() + 1)
+    }
+    return map
+  }, [bookings, draft.occupants, draft.start_date, draft.end_date, propertyRooms])
+
   return {
     totalBeds,
     occupiedBeds,
@@ -101,5 +143,6 @@ export function useOccupancyData({
     adultInKidOnlyByRoom,
     overlappingBookings,
     existingOccupantsByRoom,
+    roomOverCapacityDays,
   }
 }

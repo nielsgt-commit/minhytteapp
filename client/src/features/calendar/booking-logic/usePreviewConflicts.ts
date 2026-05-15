@@ -55,7 +55,6 @@ function extractInput(
 
 function hasAnyWarning(data: PreviewConflicts | undefined): boolean {
   if (!data) return false
-  if (data.overlappingBookings.length > 0) return true
   if (data.property.overCapacityBy > 0) return true
   if (data.perRoom.some(r => r.overCapacityBy > 0)) return true
   if (data.perRoom.some(r => r.adultInKidOnlyUserIds.length > 0)) return true

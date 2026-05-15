@@ -1,5 +1,12 @@
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
+import { groupConsecutive } from "@/features/calendar/booking-logic"
 import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
+
+function formatDateRanges(isos: string[]): string {
+  return groupConsecutive(isos)
+    .map(r => (r.start === r.end ? r.start : `${r.start} – ${r.end}`))
+    .join(", ")
+}
 
 export function ConfirmStep({
   conflicts,
@@ -7,12 +14,14 @@ export function ConfirmStep({
   onConfirm,
   onCancel,
   isMutating,
+  roomOverCapacityDays,
 }: {
   conflicts: PreviewConflicts
   draft: BookingDraft
   onConfirm: (d: BookingDraft) => void
   onCancel: () => void
   isMutating: boolean
+  roomOverCapacityDays: Map<number, string[]>
 }) {
   const overflowIds = new Set<number>()
   for (const r of conflicts.perRoom) {
@@ -45,29 +54,23 @@ export function ConfirmStep({
         </Paragraph>
       )}
 
-      {conflicts.perRoom.map(r => (
-        <div key={r.room_id}>
-          {r.overCapacityBy > 0 && (
-            <Paragraph>
-              Room &quot;{r.room_name}&quot; over capacity by {r.overCapacityBy}.
-            </Paragraph>
-          )}
-          {r.adultInKidOnlyUserIds.length > 0 && (
-            <Paragraph data-color="danger">
-              Adult assigned to &quot;{r.room_name}&quot; where only kid-only beds remain.
-            </Paragraph>
-          )}
-        </div>
-      ))}
-
-      {conflicts.overlappingBookings.map(ob => (
-        <Paragraph key={ob.booking_id}>
-          Overlap with {ob.booker_name}: {ob.sharedDays} shared day(s).
-          {ob.sameUserOccupants.length > 0
-            ? ` Same person: ${ob.sameUserOccupants.map(u => u.user_name).join(", ")}.`
-            : ""}
-        </Paragraph>
-      ))}
+      {conflicts.perRoom.map(r => {
+        const days = roomOverCapacityDays.get(r.room_id) ?? []
+        return (
+          <div key={r.room_id}>
+            {r.overCapacityBy > 0 && days.length > 0 && (
+              <Paragraph>
+                Room &quot;{r.room_name}&quot; over capacity by {r.overCapacityBy} on {formatDateRanges(days)}.
+              </Paragraph>
+            )}
+            {r.adultInKidOnlyUserIds.length > 0 && (
+              <Paragraph data-color="danger">
+                Adult assigned to &quot;{r.room_name}&quot; where only kid-only beds remain.
+              </Paragraph>
+            )}
+          </div>
+        )
+      })}
 
       {overflowIds.size > 0 && (
         <Paragraph style={{ marginTop: "0.5rem" }}>

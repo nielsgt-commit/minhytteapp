@@ -1,4 +1,4 @@
-import type { PayloadAction } from "@reduxjs/toolkit"
+ import type { PayloadAction } from "@reduxjs/toolkit"
 import { createAppSlice } from "@/app/createAppSlice"
 
 export type DashboardStatus = "idle" | "loading" | "failed"

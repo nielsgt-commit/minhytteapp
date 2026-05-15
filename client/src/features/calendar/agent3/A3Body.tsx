@@ -30,6 +30,10 @@ import { ConfirmStep } from "./components/ConfirmStep"
 import { useFlatpickr } from "./hooks/useFlatpickr"
 import { useBookingForm } from "./hooks/useBookingForm"
 import { useOccupancyData } from "./hooks/useOccupancyData"
+import styles from "./A3Body.module.css"
+
+const STEP_LABELS = ["Dates", "Guests", "Rooms", "Confirm"] as const
+const TOTAL_STEPS = STEP_LABELS.length
 
 function isoWeekMonday(year: number, week: number): Date {
   const jan4 = new Date(Date.UTC(year, 0, 4))
@@ -52,6 +56,9 @@ export function A3Body({ propertyId }: { propertyId: number }) {
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
+  const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null)
+  const [currentStep, setCurrentStep] = useState(1)
+
   const {
     draft,
     dispatch,
@@ -65,7 +72,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
     handleSubmit,
     canSubmit,
     isPending,
-  } = useBookingForm(propertyId, selectedUserId)
+  } = useBookingForm(propertyId, selectedUserId, () => { setCurrentStep(1) })
 
   const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
 
@@ -73,7 +80,6 @@ export function A3Body({ propertyId }: { propertyId: number }) {
   const propertyBuildingIds = new Set(propertyBuildings.map(b => b.id))
   const propertyRooms = rooms.filter(r => propertyBuildingIds.has(r.building_id))
   const buildingNameById = new Map(propertyBuildings.map(b => [b.id, b.name]))
-  const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null)
   const otherUsers = users.filter(u => u.id !== selectedUserId)
 
   const {
@@ -84,6 +90,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
     adultInKidOnlyByRoom,
     overlappingBookings,
     existingOccupantsByRoom,
+    roomOverCapacityDays,
   } = useOccupancyData({ bookings, draft, propertyRooms, propertyBuildings, conflicts })
 
   const draftYear = draft.start_date ? parseInt(draft.start_date.slice(0, 4)) : new Date().getFullYear()
@@ -105,16 +112,40 @@ export function A3Body({ propertyId }: { propertyId: number }) {
       .map(a => ({ iso_week: a.iso_week, owner_name: ownerNameById.get(a.property_owner_id) ?? `#${String(a.property_owner_id)}` }))
   }, [draft.start_date, draft.end_date, priorityData])
 
+  const goToStep = (n: number) => {
+    if (n < 1 || n > TOTAL_STEPS) return
+    setCurrentStep(n)
+  }
+
   return (
 
     <section>
-      <Heading level={4}> 1 Pick dates</Heading>
+      <nav className={styles.stepper} aria-label="Booking steps">
+        {STEP_LABELS.map((label, i) => {
+          const stepNum = i + 1
+          const isActive = stepNum === currentStep
+          return (
+            <button
+              key={label}
+              type="button"
+              className={`${styles.stepperItem} ${isActive ? styles.stepperItemActive : ""}`}
+              onClick={() => { goToStep(stepNum) }}
+              aria-current={isActive ? "step" : undefined}
+            >
+              <span className={styles.stepperBadge}>{stepNum}</span>
+              <span>{label}</span>
+            </button>
+          )
+        })}
+      </nav>
 
       {selectedUserId == null && (
         <Paragraph role="alert">No user selected — pick one from the header.</Paragraph>
       )}
 
       {/* Step 1: flatpickr stands alone; availability info in a sibling Card */}
+      <div className={`${styles.step} ${currentStep === 1 ? styles.stepActive : ""}`}>
+      <Heading level={4} style={{ marginTop: 0 }}>1. Pick dates</Heading>
       <div
         className="fp-row"
         ref={rowRef}
@@ -187,8 +218,10 @@ export function A3Body({ propertyId }: { propertyId: number }) {
           </Card>
         </div>
       </div>
+      </div>
 
       {/* Step 2: guests */}
+      <div className={`${styles.step} ${currentStep === 2 ? styles.stepActive : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
         <Heading level={5}>2. Who&apos;s coming?</Heading>
 
@@ -241,8 +274,10 @@ export function A3Body({ propertyId }: { propertyId: number }) {
           </Suggestion>
         </Field>
       </div>
+      </div>
 
       {/* Step 3: room assignment */}
+      <div className={`${styles.step} ${currentStep === 3 ? styles.stepActive : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
         <Heading level={5}>3. Assign rooms</Heading>
         {isFetching && (
@@ -292,10 +327,81 @@ export function A3Body({ propertyId }: { propertyId: number }) {
           )}
         </ul>
       </div>
+      </div>
 
-      {/* Step 4: details */}
+      {/* Step 4: details + submit */}
+      <div className={`${styles.step} ${currentStep === 4 ? styles.stepActive : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>4. Details</Heading>
+        <Heading level={5}>Review request</Heading>
+        {(() => {
+          const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
+          const nights = draft.start_date && draft.end_date
+            ? Math.round((new Date(draft.end_date).getTime() - new Date(draft.start_date).getTime()) / 86400000)
+            : null
+          const guestNames = draft.occupants
+            .filter(o => o.user_id !== draft.booker_id)
+            .map(o => {
+              const u = users.find(x => x.id === o.user_id)
+              if (!u) return `#${String(o.user_id)}`
+              return `${u.name}${u.is_child ? " (child)" : ""}${o.queued ? " (queued)" : ""}`
+            })
+          const roomEntries = propertyBuildings.flatMap(b =>
+            propertyRooms
+              .filter(r => r.building_id === b.id)
+              .map(r => {
+                const occs = (occupantsByRoom.get(r.id) ?? []).map(o => {
+                  const u = users.find(x => x.id === o.user_id)
+                  return u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`
+                })
+                return { buildingName: b.name, roomName: r.name, occupants: occs }
+              })
+              .filter(e => e.occupants.length > 0),
+          )
+          const unassignedNames = unassigned.map(o => {
+            const u = users.find(x => x.id === o.user_id)
+            return u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`
+          })
+          return (
+            <dl style={{ margin: 0 }}>
+              <dt><strong>When</strong></dt>
+              <dd style={{ margin: "0 0 0.5rem 0" }}>
+                {draft.start_date && draft.end_date
+                  ? `${draft.start_date} → ${draft.end_date} (${String(nights)} night${nights === 1 ? "" : "s"})`
+                  : "Dates not selected"}
+              </dd>
+
+              <dt><strong>Who</strong></dt>
+              <dd style={{ margin: "0 0 0.5rem 0" }}>
+                {bookerName} (booker)
+                {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
+              </dd>
+
+              <dt><strong>Where</strong></dt>
+              <dd style={{ margin: "0 0 0.5rem 0" }}>
+                {roomEntries.length === 0 && unassignedNames.length === 0 && "No occupants yet"}
+                {roomEntries.length > 0 && (
+                  <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
+                    {roomEntries.map(e => (
+                      <li key={`${e.buildingName}-${e.roomName}`}>
+                        {e.buildingName} · {e.roomName}: {e.occupants.join(", ")}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {unassignedNames.length > 0 && (
+                  <div>Unassigned: {unassignedNames.join(", ")}</div>
+                )}
+              </dd>
+
+              <dt><strong>Status</strong></dt>
+              <dd style={{ margin: 0, textTransform: "capitalize" }}>{draft.status}</dd>
+            </dl>
+          )
+        })()}
+      </div>
+
+      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
+        <Heading level={5}>Details</Heading>
         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
           <Field>
             <Label>Status</Label>
@@ -337,6 +443,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
           isMutating={isPending}
           onConfirm={doMutate}
           onCancel={() => { setConfirmStep(false) }}
+          roomOverCapacityDays={roomOverCapacityDays}
         />
       )}
 
@@ -345,6 +452,22 @@ export function A3Body({ propertyId }: { propertyId: number }) {
           Error: {submitError}
         </Paragraph>
       )}
+      </div>
+
+      <div className={styles.navButtons}>
+        <Button
+          variant="secondary"
+          disabled={currentStep === 1}
+          onClick={() => { goToStep(currentStep - 1) }}
+        >
+          Back
+        </Button>
+        {currentStep < TOTAL_STEPS && (
+          <Button onClick={() => { goToStep(currentStep + 1) }}>
+            Next
+          </Button>
+        )}
+      </div>
     </section>
   )
 }

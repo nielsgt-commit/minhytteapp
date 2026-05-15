@@ -28,9 +28,10 @@ export function Calendar() {
         <Agent3Calendar />
       </div>
       {me?.is_head && (
-        <div className={styles.priority}>
+        <details className={styles.priority}>
+          <summary>Priority weeks</summary>
           <PriorityWeeks />
-        </div>
+        </details>
       )}
     </section>
   )

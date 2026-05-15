@@ -9,7 +9,11 @@ import {
 } from "@/features/calendar/booking-logic"
 import type { BookingDraft } from "@/features/calendar/booking-logic"
 
-export function useBookingForm(propertyId: number, selectedUserId: number | null) {
+export function useBookingForm(
+  propertyId: number,
+  selectedUserId: number | null,
+  onCreated?: () => void,
+) {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [draft, dispatch] = useReducer(bookingDraftReducer, initialBookingDraft)
@@ -29,6 +33,7 @@ export function useBookingForm(propertyId: number, selectedUserId: number | null
         setConfirmStep(false)
         setSubmitError(null)
         void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
+        onCreated?.()
       },
       onError: err => {
         setSubmitError(err.message)
