@@ -1,3 +1,9 @@
 .list {
   overflow-x: auto;
 }
+
+@media (max-width: 640px) {
+  .list {
+    display: none;
+  }
+}
