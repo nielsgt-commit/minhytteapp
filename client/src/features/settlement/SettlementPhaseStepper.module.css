@@ -1,0 +1,39 @@
+.stepper {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.stepperItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.25rem;
+  color: var(--ds-color-neutral-text-subtle);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.stepperBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--ds-color-neutral-border-default);
+  background: var(--ds-color-neutral-background-default);
+  font-weight: 600;
+}
+
+.stepperItemActive {
+  color: var(--ds-color-accent-text-default);
+}
+
+.stepperItemActive .stepperBadge {
+  background: var(--ds-color-accent-background-default);
+  border-color: var(--ds-color-accent-border-default);
+  color: var(--ds-color-accent-text-default);
+}

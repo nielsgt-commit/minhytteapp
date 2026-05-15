@@ -5,6 +5,7 @@ import { ReviewExpenses } from "@/features/expenses/ReviewExpenses.tsx"
 import { ReviewBookingDays } from "@/features/settlement/reviewsettlement/ReviewBookingDays.tsx"
 import { CreateSettlementFlow } from "@/features/settlement/createsettlement/CreateSettlementFlow.tsx"
 import { ReviewSplitPolicy } from "@/features/settlement/reviewsplitpolicy/ReviewSplitPolicy.tsx"
+import { SettlementPhaseStepper } from "@/features/settlement/SettlementPhaseStepper.tsx"
 import { SettlementProgressSummary } from "@/features/settlement/SettlementProgressSummary.tsx"
 import { useTRPC } from "@/trpc/trpc"
 
@@ -34,6 +35,7 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
 
   return (
     <>
+      <SettlementPhaseStepper phase={phase} />
       <SettlementProgressSummary settlementId={settlementId} phase={phase} />
       {phase === "collecting_expenses" && (
         <ReviewExpenses settlementId={settlementId} phase={phase} />
