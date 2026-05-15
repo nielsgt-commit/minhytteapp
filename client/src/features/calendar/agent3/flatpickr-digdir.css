@@ -200,24 +200,19 @@ span.flatpickr-weekday {
   }
 }
 
-/* Mobile: remove all surrounding space from the calendar */
+/* Mobile: stack the calendar with surrounding panels */
 @media (max-width: 639px) {
   .fp-row {
     gap: 0;
   }
 
   .fp-container {
-    margin: 0 -1rem;
-    width: calc(100% + 2rem);
+    margin: 0;
+    width: 100%;
     overflow-y: visible;
   }
 
   .fp-container .flatpickr-calendar.inline {
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    border-radius: 0;
-    box-shadow: none;
     width: 100%;
   }
 }

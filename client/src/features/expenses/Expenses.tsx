@@ -45,7 +45,7 @@ function MyExpensesPanel({ propertyId }: { propertyId: number }) {
   return (
     <Details>
       <Details.Summary>My expenses ({myCount})</Details.Summary>
-      <Details.Content>
+      <Details.Content style={{ padding: 0 }}>
         <MyExpenses />
       </Details.Content>
     </Details>

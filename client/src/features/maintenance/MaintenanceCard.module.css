@@ -1,0 +1,37 @@
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: "name actions inspect";
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+}
+
+.name {
+  grid-area: name;
+  margin: 0;
+}
+
+.inspect {
+  grid-area: inspect;
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name    inspect"
+      "actions actions";
+    row-gap: 0.5rem;
+  }
+  .actions {
+    justify-self: stretch;
+    justify-content: flex-end;
+  }
+}

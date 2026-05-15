@@ -19,12 +19,14 @@ import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export function Equipment() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const selectedUserId = useAppSelector(selectSelectedUserId)
+  const isMobile = useIsMobile()
 
   const { data: equipment = [] } = useQuery(
     trpc.equipment.listForProperty.queryOptions(
@@ -93,6 +95,13 @@ export function Equipment() {
     }
 
   if (selectedPropertyId == null) {
+    if (isMobile) {
+      return (
+        <section>
+          <p>Select a property to see its equipment.</p>
+        </section>
+      )
+    }
     return (
       <Card asChild>
         <section>
@@ -111,14 +120,9 @@ export function Equipment() {
     return bT - aT
   })
 
-  return (
-    <Card asChild>
-      <section>
-        <Card.Block>
-          <Heading level={3} data-size="xs">Equipment</Heading>
-        </Card.Block>
-        <Card.Block>
-          {scheduleMutation.error && (
+  const body = (
+    <>
+      {scheduleMutation.error && (
             <p role="alert">Error: {scheduleMutation.error.message}</p>
           )}
           {sortedEquipment.length === 0 ? (
@@ -191,6 +195,16 @@ export function Equipment() {
                         >
                           {item.category ?? ""}
                         </Paragraph>
+                        {!isInspecting && (
+                          <Button
+                            className={styles.inspect}
+                            variant="secondary"
+                            data-size="sm"
+                            onClick={() => { setInspectingId(item.id) }}
+                          >
+                            Start inspection
+                          </Button>
+                        )}
                         <div className={styles.actions}>
                           {!isScheduling && !isInspecting && (
                             <Button
@@ -201,15 +215,6 @@ export function Equipment() {
                               }}
                             >
                               Schedule maintenance
-                            </Button>
-                          )}
-                          {!isInspecting && (
-                            <Button
-                              variant="secondary"
-                              data-size="sm"
-                              onClick={() => { setInspectingId(item.id) }}
-                            >
-                              Start inspection
                             </Button>
                           )}
                           {!isInspecting && (
@@ -327,7 +332,20 @@ export function Equipment() {
               })}
             </div>
           )}
+    </>
+  )
+
+  if (isMobile) {
+    return <section>{body}</section>
+  }
+
+  return (
+    <Card asChild>
+      <section>
+        <Card.Block>
+          <Heading level={3} data-size="xs">Equipment</Heading>
         </Card.Block>
+        <Card.Block>{body}</Card.Block>
       </section>
     </Card>
   )

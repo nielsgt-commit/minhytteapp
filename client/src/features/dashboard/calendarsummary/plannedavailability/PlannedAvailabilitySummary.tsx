@@ -3,8 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Badge,
   Button,
+  Card,
   Paragraph,
-  Table,
   Tag,
 } from "@digdir/designsystemet-react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
@@ -12,6 +12,7 @@ import styles from "./PlannedAvailabilitySummary.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
 
@@ -62,6 +63,7 @@ export default function PlannedAvailabilitySummary({
 }: Props) {
   const trpc = useTRPC()
   const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
+  const isMobile = useIsMobile()
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
@@ -139,11 +141,6 @@ export default function PlannedAvailabilitySummary({
     return Array.from(seen.values())
   }
 
-  const totalGuestsThisWeek = days.reduce(
-    (sum, d) => sum + guestsOnDay(toIso(d)),
-    0,
-  )
-
   const userById = new Map(users.map(u => [u.id, u]))
 
   const todayIso = toIso(new Date())
@@ -213,84 +210,94 @@ export default function PlannedAvailabilitySummary({
       </div>
       <div className="calendar-week-chips"></div>
 
-      <div className={styles.weekDays}>
-        <Table border style={{ width: "100%"}}>
-          <Table.Head>
-            <Table.Row>
-              {days.map((d, i) => {
-                const iso = toIso(d)
-                const isSelected = selectedDay === iso
-                const isDimmed = selectedDay !== null && !isSelected
-                const hasBirthday = birthdayGuestsOnDay(iso).length > 0
-                const classes = [
-                  styles.headerCellClickable,
-                  isSelected && styles.cellSelected,
-                  isDimmed && styles.cellDimmed,
-                ].filter(Boolean).join(" ")
-                return (
-                  <Table.HeaderCell
-                    key={iso}
-                    scope="col"
-                    aria-expanded={isSelected}
-                    className={classes}
-                    onClick={() => {
-                      setSelectedDay(isSelected ? null : iso)
-                    }}
-                  >
-                    {hasBirthday ? (
-                      <Badge.Position placement="top-right">
-                        <Badge data-color="warning" />
-                        <span>{WEEKDAY_LABELS[i]}</span>
-                      </Badge.Position>
-                    ) : (
-                      WEEKDAY_LABELS[i]
-                    )}
-                  </Table.HeaderCell>
-                )
-              })}
-            </Table.Row>
-          </Table.Head>
-          <Table.Body>
-            <Table.Row>
-              {days.map(d => {
-                const iso = toIso(d)
-                const isSelected = selectedDay === iso
-                const isDimmed = selectedDay !== null && !isSelected
-                return (
-                  <Table.Cell
-                    key={iso}
-                    className={
-                      isSelected
-                        ? styles.cellSelected
-                        : isDimmed
-                          ? styles.cellDimmed
-                          : undefined
+      <ul className={styles.dayList}>
+        {isMobile && days.every(d => guestsOnDay(toIso(d)) === 0) ? (
+          <Card asChild>
+            <li>
+              <Card.Block className={styles.dayCardBlock} style={{ cursor: "default" }}>
+                <div className={styles.dayRow}>
+                  <div className={styles.dayCount}>
+                    <span>No guests</span>
+                  </div>
+                </div>
+              </Card.Block>
+            </li>
+          </Card>
+        ) : days.map((d, i) => {
+          const iso = toIso(d)
+          const isSelected = selectedDay === iso
+          const isToday = iso === todayIso
+          const hasBirthday = birthdayGuestsOnDay(iso).length > 0
+          const names = guestNamesOnDay(iso)
+          const count = guestsOnDay(iso)
+          const isClickable = count > 0
+          const toggle = () => {
+            if (!isClickable) return
+            setSelectedDay(isSelected ? null : iso)
+          }
+          return (
+            <Card asChild key={iso}>
+              <li>
+                <Card.Block
+                  role={isClickable ? "button" : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
+                  aria-expanded={isClickable ? isSelected : undefined}
+                  onClick={isClickable ? toggle : undefined}
+                  onKeyDown={isClickable ? e => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      toggle()
                     }
-                  >
-                    {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
-                  </Table.Cell>
-                )
-              })}
-            </Table.Row>
-            {(selectedDay !== null || totalGuestsThisWeek === 0) && (
-              <Table.Row>
-                <Table.Cell
-                  colSpan={7}
-                  className={selectedDay !== null ? styles.namesRowCell : undefined}
+                  } : undefined}
+                  className={styles.dayCardBlock}
+                  style={isClickable ? undefined : { cursor: "default" }}
                 >
-                  {selectedDay !== null
-                    ? (() => {
-                        const names = guestNamesOnDay(selectedDay)
-                        if (names.length > 0) return names.join(", ")
-                        return <Paragraph>No guests</Paragraph>
-                      })()
-                    : <Paragraph>No guests</Paragraph>}
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
-      </div>
+                  <div className={styles.dayRow}>
+                    <div className={styles.dayLabel}>
+                      {hasBirthday ? (
+                        <Badge.Position placement="top-right">
+                          <Badge data-color="warning" />
+                          <span>
+                            <strong>{WEEKDAY_LABELS[i]}</strong>{" "}
+                            {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
+                            {isToday && " · Today"}
+                          </span>
+                        </Badge.Position>
+                      ) : (
+                        <span>
+                          <strong>{WEEKDAY_LABELS[i]}</strong>{" "}
+                          {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
+                          {isToday && " · Today"}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.dayCount}>
+                      {count > 0 ? (
+                        <strong>
+                          {count} guest{count === 1 ? "" : "s"}
+                        </strong>
+                      ) : (
+                        <span>No guests</span>
+                      )}
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className={styles.guestList}>
+                      {names.length > 0 ? (
+                        names.map(n => (
+                          <Tag key={n} data-color="info">{n}</Tag>
+                        ))
+                      ) : (
+                        <Paragraph>No guests</Paragraph>
+                      )}
+                    </div>
+                  )}
+                </Card.Block>
+              </li>
+            </Card>
+          )
+        })}
+      </ul>
     </div>
   )
 }

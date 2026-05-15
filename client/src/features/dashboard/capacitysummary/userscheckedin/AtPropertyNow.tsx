@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Avatar,
@@ -7,9 +7,9 @@ import {
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 const MOBILE_LIMIT = 4
-const MOBILE_QUERY = "(max-width: 640px)"
 
 function initials(name: string) {
   return name
@@ -18,19 +18,6 @@ function initials(name: string) {
     .slice(0, 2)
     .map(p => p[0]?.toUpperCase() ?? "")
     .join("")
-}
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia(MOBILE_QUERY).matches,
-  )
-  useEffect(() => {
-    const mq = window.matchMedia(MOBILE_QUERY)
-    const onChange = (e: MediaQueryListEvent) => { setIsMobile(e.matches) }
-    mq.addEventListener("change", onChange)
-    return () => { mq.removeEventListener("change", onChange) }
-  }, [])
-  return isMobile
 }
 
 export default function AtPropertyNow() {

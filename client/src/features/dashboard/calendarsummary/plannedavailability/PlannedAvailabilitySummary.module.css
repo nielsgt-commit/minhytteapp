@@ -2,12 +2,6 @@
   display: block;
 }
 
-@media (max-width: 640px) {
-  .wrap {
-    display: none;
-  }
-}
-
 .weekNav {
   display: flex;
   align-items: center;
@@ -29,31 +23,54 @@
   justify-content: flex-end;
 }
 
-.weekDays {
-  --dsc-table-border-color: var(--ds-color-neutral-border-subtle);
-  --dsc-table-divider-border-width: var(--ds-border-width-default);
-  overflow-x: auto;
+.dayList {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.weekDays :global(.ds-table) {
-  --dsc-table-border-radius: var(--ds-border-radius-lg);
-}
-
-.headerCellClickable {
+.dayCardBlock {
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.cellSelected {
-  --dsc-table-background: var(--ds-color-surface-default);
-  --dsc-table-header-background: var(--ds-color-surface-default);
+.dayRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.namesRowCell {
-  --dsc-table-background: var(--ds-color-surface-default);
+.dayLabel {
+  display: inline-flex;
+  align-items: center;
 }
 
-.cellDimmed {
-  --dsc-table-background: var(--ds-color-background-tinted);
-  --dsc-table-header-background: var(--ds-color-background-tinted);
+.dayCount {
   color: var(--ds-color-neutral-text-subtle);
+}
+
+.guestList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (min-width: 641px) {
+  .dayList {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    align-items: start;
+  }
+
+  .dayRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
 }

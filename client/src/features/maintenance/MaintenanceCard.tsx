@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { Button, Card, Heading } from "@digdir/designsystemet-react"
+import { Button, Card, Paragraph } from "@digdir/designsystemet-react"
+import styles from "./MaintenanceCard.module.css"
 import { InspectionFlow } from "@/features/maintenance/InspectionFlow.tsx"
 import { MaintenanceHistory } from "@/features/maintenance/MaintenanceHistory.tsx"
 import { MaintenanceTodos } from "@/features/maintenance/MaintenanceTodos.tsx"
@@ -15,29 +16,51 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
 
   return (
     <Card asChild>
-      <section>
-        <Card.Block>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "0.5rem",
-            }}
-          >
-            <Heading level={4} data-size="xs">{scope.name}</Heading>
-            {!inspecting && (
+      <article>
+        <Card.Block className={styles.row} data-size="sm">
+          <Paragraph className={styles.name} data-size="sm">
+            {scope.name}
+          </Paragraph>
+          {!inspecting && (
+            <Button
+              className={styles.inspect}
+              variant="secondary"
+              data-size="sm"
+              onClick={() => { setInspecting(true) }}
+            >
+              Start inspection
+            </Button>
+          )}
+          {!inspecting && (
+            <div className={styles.actions}>
               <Button
-                variant="secondary"
+                variant="tertiary"
                 data-size="sm"
-                onClick={() => { setInspecting(true) }}
+                onClick={() => { setShowTodos(v => !v) }}
               >
-                Start inspection
+                {showTodos ? "Hide todos" : "Show todos"}
               </Button>
-            )}
-          </div>
+              <Button
+                variant="tertiary"
+                data-size="sm"
+                onClick={() => { setShowHistory(v => !v) }}
+              >
+                {showHistory ? "Hide history" : "Show history"}
+              </Button>
+            </div>
+          )}
         </Card.Block>
-        {inspecting ? (
+        {showTodos && !inspecting && (
+          <Card.Block>
+            <MaintenanceTodos scope={scope} />
+          </Card.Block>
+        )}
+        {showHistory && !inspecting && (
+          <Card.Block>
+            <MaintenanceHistory scope={scope} />
+          </Card.Block>
+        )}
+        {inspecting && (
           <Card.Block>
             <InspectionFlow
               scope={scope}
@@ -45,29 +68,8 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               onClose={() => { setInspecting(false) }}
             />
           </Card.Block>
-        ) : (
-          <>
-            <Card.Block>
-              <Button
-                variant="tertiary"
-                onClick={() => { setShowTodos(v => !v) }}
-              >
-                {showTodos ? "Hide todos" : "Show todos"}
-              </Button>
-              {showTodos && <MaintenanceTodos scope={scope} />}
-            </Card.Block>
-            <Card.Block>
-              <Button
-                variant="tertiary"
-                onClick={() => { setShowHistory(v => !v) }}
-              >
-                {showHistory ? "Hide history" : "Show history"}
-              </Button>
-              {showHistory && <MaintenanceHistory scope={scope} />}
-            </Card.Block>
-          </>
         )}
-      </section>
+      </article>
     </Card>
   )
 }
