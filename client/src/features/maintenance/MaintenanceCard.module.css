@@ -15,6 +15,11 @@
   grid-area: inspect;
 }
 
+.divider {
+  grid-area: divider;
+  display: none;
+}
+
 .actions {
   grid-area: actions;
   display: flex;
@@ -27,8 +32,12 @@
     grid-template-columns: 1fr auto;
     grid-template-areas:
       "name    inspect"
+      "divider divider"
       "actions actions";
     row-gap: 0.5rem;
+  }
+  .divider {
+    display: block;
   }
   .actions {
     justify-self: stretch;

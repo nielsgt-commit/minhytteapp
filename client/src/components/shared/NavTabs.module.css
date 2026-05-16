@@ -6,4 +6,10 @@
   .list {
     display: none;
   }
+
+  /* Drop digdir's tabpanel padding on mobile; the route tablist is hidden,
+     so the panel acts as a bare wrapper and its padding only steals width. */
+  :global(.ds-tabs) .panel {
+    padding: 0;
+  }
 }

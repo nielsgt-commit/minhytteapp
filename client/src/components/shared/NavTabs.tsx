@@ -32,7 +32,11 @@ export default function NavTabs({ children }: { children: ReactNode }) {
             </Tabs.Tab>
           ))}
         </Tabs.List>
-        {activeValue && <Tabs.Panel value={activeValue}>{children}</Tabs.Panel>}
+        {activeValue && (
+          <Tabs.Panel value={activeValue} className={styles.panel}>
+            {children}
+          </Tabs.Panel>
+        )}
       </Tabs>
       {!activeValue && <div>{children}</div>}
     </>

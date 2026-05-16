@@ -29,3 +29,10 @@
   flex-direction: column;
   gap: 1rem;
 }
+
+@media (max-width: 640px) {
+  /* Drop digdir's tabpanel padding on mobile to reclaim horizontal space. */
+  :global(.ds-tabs) .panel {
+    padding: 0;
+  }
+}

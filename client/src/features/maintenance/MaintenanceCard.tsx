@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { Button, Card, Paragraph } from "@digdir/designsystemet-react"
+import { Button, Card, Divider, Paragraph } from "@digdir/designsystemet-react"
 import styles from "./MaintenanceCard.module.css"
 import { InspectionFlow } from "@/features/maintenance/InspectionFlow.tsx"
 import { MaintenanceHistory } from "@/features/maintenance/MaintenanceHistory.tsx"
 import { MaintenanceTodos } from "@/features/maintenance/MaintenanceTodos.tsx"
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export type MaintenanceScope =
   | { kind: "building"; id: number; name: string }
@@ -13,6 +14,14 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   const [showHistory, setShowHistory] = useState(false)
   const [showTodos, setShowTodos] = useState(false)
   const [inspecting, setInspecting] = useState(false)
+  const isMobile = useIsMobile()
+
+  const todosLabel = isMobile
+    ? "Todos"
+    : showTodos ? "Hide todos" : "Show todos"
+  const historyLabel = isMobile
+    ? "History"
+    : showHistory ? "Hide history" : "Show history"
 
   return (
     <Card asChild>
@@ -32,20 +41,23 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
             </Button>
           )}
           {!inspecting && (
+            <Divider className={styles.divider} />
+          )}
+          {!inspecting && (
             <div className={styles.actions}>
               <Button
                 variant="tertiary"
                 data-size="sm"
                 onClick={() => { setShowTodos(v => !v) }}
               >
-                {showTodos ? "Hide todos" : "Show todos"}
+                {todosLabel}
               </Button>
               <Button
                 variant="tertiary"
                 data-size="sm"
                 onClick={() => { setShowHistory(v => !v) }}
               >
-                {showHistory ? "Hide history" : "Show history"}
+                {historyLabel}
               </Button>
             </div>
           )}

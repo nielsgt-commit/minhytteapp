@@ -145,7 +145,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
 
       {/* Step 1: flatpickr stands alone; availability info in a sibling Card */}
       <div className={`${styles.step} ${currentStep === 1 ? styles.stepActive : ""}`}>
-      <Heading level={4} style={{ marginTop: 0 }}>1. Pick dates</Heading>
+      <Heading level={4} style={{ marginTop: 0 }}> </Heading>
       <div
         className="fp-row"
         ref={rowRef}
@@ -223,12 +223,11 @@ export function A3Body({ propertyId }: { propertyId: number }) {
       {/* Step 2: guests */}
       <div className={`${styles.step} ${currentStep === 2 ? styles.stepActive : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>2. Who&apos;s coming?</Heading>
+        <Heading level={5}></Heading>
 
         <Paragraph data-size="sm" style={{ marginBottom: "0.5rem" }}>
           Booker: {users.find(u => u.id === selectedUserId)?.name ?? "(select user)"}
         </Paragraph>
-
         <Field>
           <Label>Add guests</Label>
           <Suggestion
@@ -279,7 +278,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
       {/* Step 3: room assignment */}
       <div className={`${styles.step} ${currentStep === 3 ? styles.stepActive : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>3. Assign rooms</Heading>
+        <Heading level={5}></Heading>
         {isFetching && (
           <Paragraph style={{ color: "#666", fontSize: "0.85rem" }}>Checking conflicts…</Paragraph>
         )}

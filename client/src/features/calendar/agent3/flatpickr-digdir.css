@@ -200,7 +200,15 @@ span.flatpickr-weekday {
   }
 }
 
-/* Mobile: stack the calendar with surrounding panels */
+/* Lift flatpickr's default max-height:640px on inline calendars so theming/borders
+   don't clip the bottom row vertically. */
+.fp-container .flatpickr-calendar.inline {
+  max-height: none;
+}
+
+/* Mobile: stack the calendar with surrounding panels, and make the calendar
+   fluid — override flatpickr's hardcoded 307.875px widths and 39px cell cap so
+   it fits whatever width the container has. */
 @media (max-width: 639px) {
   .fp-row {
     gap: 0;
@@ -209,10 +217,27 @@ span.flatpickr-weekday {
   .fp-container {
     margin: 0;
     width: 100%;
-    overflow-y: visible;
+    overflow: visible;
   }
 
   .fp-container .flatpickr-calendar.inline {
     width: 100%;
+    max-width: 100%;
+  }
+
+  .fp-container .flatpickr-calendar.inline .flatpickr-days,
+  .fp-container .flatpickr-calendar.inline .flatpickr-weekdaycontainer {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .fp-container .flatpickr-calendar.inline .dayContainer {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .fp-container .flatpickr-calendar.inline .flatpickr-day {
+    max-width: none;
   }
 }

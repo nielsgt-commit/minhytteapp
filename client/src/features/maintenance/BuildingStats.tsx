@@ -83,7 +83,7 @@ export function BuildingStats() {
         <Tabs.Tab value="inventory">Inventory</Tabs.Tab>
       </Tabs.List>
 
-      <Tabs.Panel value="buildings">
+      <Tabs.Panel value="buildings" className={styles.panel}>
         {activeTab === "buildings" && (
           <CategoryFrame isMobile={isMobile} title="Buildings">
             {buildings.length === 0 ? (
@@ -125,7 +125,7 @@ export function BuildingStats() {
         )}
       </Tabs.Panel>
 
-      <Tabs.Panel value="places">
+      <Tabs.Panel value="places" className={styles.panel}>
         {activeTab === "places" && (
           <CategoryFrame isMobile={isMobile} title="Places">
             {places.length === 0 ? (
@@ -167,7 +167,7 @@ export function BuildingStats() {
         )}
       </Tabs.Panel>
 
-      <Tabs.Panel value="inventory">
+      <Tabs.Panel value="inventory" className={styles.panel}>
         {activeTab === "inventory" && <Equipment />}
       </Tabs.Panel>
     </Tabs>

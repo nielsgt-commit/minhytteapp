@@ -45,6 +45,7 @@
 @media (max-width: 640px) {
   .inner {
     justify-content: space-between;
+    padding-inline: 0.5rem 0;
   }
   .hideOnMobile {
     display: none;
