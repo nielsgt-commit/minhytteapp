@@ -13,24 +13,24 @@ type Booking = {
   occupants: { user_id: number; room_id: number | null; queued: boolean; user_name: string | null }[]
 }
 
-type Building = { id: number; category: string }
+type Structure = { id: number; category: string }
 
 export function useOccupancyData({
   bookings,
   draft,
   propertyRooms,
-  propertyBuildings,
+  propertyStructures,
   conflicts,
 }: {
   bookings: Booking[]
   draft: BookingDraft
   propertyRooms: RoomShape[]
-  propertyBuildings: Building[]
+  propertyStructures: Structure[]
   conflicts: PreviewConflicts | undefined
 }) {
   const totalBeds = useMemo(
-    () => propertyCapacity(propertyRooms, propertyBuildings),
-    [propertyRooms, propertyBuildings],
+    () => propertyCapacity(propertyRooms, propertyStructures),
+    [propertyRooms, propertyStructures],
   )
 
   const occupiedBeds = useMemo(() => {

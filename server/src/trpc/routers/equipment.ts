@@ -5,13 +5,13 @@ import {
   equipmentTable,
   maintenanceTable,
 } from "../../db/schema/maintenance.schema.ts"
-import { buildingsTable } from "../../db/schema/property.schema.ts"
+import { structuresTable } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const equipmentFields = {
   name: z.string().min(1, { error: "name is required" }).max(255),
   property_id: z.number().int().positive(),
-  building_id: z.number().int().positive(),
+  structure_id: z.number().int().positive(),
   category: z.string().max(32).optional(),
   notes: z.string().max(255).optional(),
 }
@@ -48,20 +48,20 @@ export const equipmentRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
-      const building = (
+      const structure = (
         await ctx.db
           .select({
-            id: buildingsTable.id,
-            property_id: buildingsTable.property_id,
+            id: structuresTable.id,
+            property_id: structuresTable.property_id,
           })
-          .from(buildingsTable)
-          .where(eq(buildingsTable.id, input.building_id))
+          .from(structuresTable)
+          .where(eq(structuresTable.id, input.structure_id))
           .limit(1)
       ).at(0)
-      if (!building || building.property_id !== input.property_id) {
+      if (!structure || structure.property_id !== input.property_id) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "building must belong to the given property",
+          message: "structure must belong to the given property",
         })
       }
       const [created] = await ctx.db
@@ -116,7 +116,7 @@ export const equipmentRouter = router({
           instructions: input.instructions,
           added_by: input.added_by,
           assigned_to_id: input.assigned_to_id,
-          building_id: equipment.building_id,
+          structure_id: equipment.structure_id,
           equipment_id: equipment.id,
           category: input.category,
           severity: input.severity,

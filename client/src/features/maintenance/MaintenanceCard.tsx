@@ -7,8 +7,8 @@ import { MaintenanceTodos } from "@/features/maintenance/MaintenanceTodos.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export type MaintenanceScope =
-  | { kind: "building"; id: number; name: string }
-  | { kind: "place"; id: number; name: string }
+  | { kind: "structure"; id: number; name: string }
+  | { kind: "infrastructure"; id: number; name: string }
 
 export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   const [showHistory, setShowHistory] = useState(false)

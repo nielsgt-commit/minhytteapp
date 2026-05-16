@@ -48,9 +48,9 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   const [deleting, setDeleting] = useState<DeletingState>(null)
 
   const matchesScope = (i: (typeof items)[number]) =>
-    scope.kind === "building"
-      ? i.building_id === scope.id
-      : i.place_id === scope.id
+    scope.kind === "structure"
+      ? i.structure_id === scope.id
+      : i.infrastructure_id === scope.id
 
   const doneItems = items
     .filter(i => matchesScope(i) && i.status === "done")
@@ -63,9 +63,9 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
 
   const scopedInspections = inspections.filter(i => {
     if (i.completed_at == null) return false
-    return scope.kind === "building"
-      ? i.building_id === scope.id
-      : i.place_id === scope.id
+    return scope.kind === "structure"
+      ? i.structure_id === scope.id
+      : i.infrastructure_id === scope.id
   })
 
   type HistoryEntry =
@@ -106,8 +106,8 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
           instructions: instructions || undefined,
           added_by: item.added_by,
           assigned_to_id: item.assigned_to_id ?? undefined,
-          building_id: item.building_id ?? undefined,
-          place_id: item.place_id ?? undefined,
+          structure_id: item.structure_id ?? undefined,
+          infrastructure_id: item.infrastructure_id ?? undefined,
           category: item.category,
           severity: item.severity,
           status: item.status,

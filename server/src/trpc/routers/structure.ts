@@ -1,40 +1,40 @@
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import {
-  buildingsTable,
   propertyTable,
+  structuresTable,
 } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
-const buildingFields = {
+const structureFields = {
   name: z.string().min(1, { error: "name is required" }),
   property_id: z.number().int().positive(),
   category: z.enum(["habitable", "non_habitable"]).default("habitable"),
 }
 
-const createInput = z.object(buildingFields)
+const createInput = z.object(structureFields)
 
 const updateInput = z.object({
   id: z.number().int().positive(),
-  ...buildingFields,
+  ...structureFields,
 })
 
-export const buildingRouter = router({
+export const structureRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db
       .select({
-        id: buildingsTable.id,
-        name: buildingsTable.name,
-        property_id: buildingsTable.property_id,
+        id: structuresTable.id,
+        name: structuresTable.name,
+        property_id: structuresTable.property_id,
         property_name: propertyTable.name,
-        category: buildingsTable.category,
+        category: structuresTable.category,
       })
-      .from(buildingsTable)
+      .from(structuresTable)
       .leftJoin(
         propertyTable,
-        eq(propertyTable.id, buildingsTable.property_id),
+        eq(propertyTable.id, structuresTable.property_id),
       )
-      .orderBy(asc(buildingsTable.id))
+      .orderBy(asc(structuresTable.id))
     return rows
   }),
 
@@ -43,26 +43,26 @@ export const buildingRouter = router({
     .query(async ({ ctx, input }) => {
       return ctx.db
         .select({
-          id: buildingsTable.id,
-          name: buildingsTable.name,
-          property_id: buildingsTable.property_id,
+          id: structuresTable.id,
+          name: structuresTable.name,
+          property_id: structuresTable.property_id,
           property_name: propertyTable.name,
-          category: buildingsTable.category,
+          category: structuresTable.category,
         })
-        .from(buildingsTable)
+        .from(structuresTable)
         .leftJoin(
           propertyTable,
-          eq(propertyTable.id, buildingsTable.property_id),
+          eq(propertyTable.id, structuresTable.property_id),
         )
-        .where(eq(buildingsTable.property_id, input.property_id))
-        .orderBy(asc(buildingsTable.id))
+        .where(eq(structuresTable.property_id, input.property_id))
+        .orderBy(asc(structuresTable.id))
     }),
 
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
-        .insert(buildingsTable)
+        .insert(structuresTable)
         .values(input)
         .returning()
       return created
@@ -73,9 +73,9 @@ export const buildingRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
       const [updated] = await ctx.db
-        .update(buildingsTable)
+        .update(structuresTable)
         .set(rest)
-        .where(eq(buildingsTable.id, id))
+        .where(eq(structuresTable.id, id))
         .returning()
       return updated
     }),
@@ -84,8 +84,8 @@ export const buildingRouter = router({
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db
-        .delete(buildingsTable)
-        .where(eq(buildingsTable.id, input.id))
+        .delete(structuresTable)
+        .where(eq(structuresTable.id, input.id))
         .returning()
       return deleted
     }),

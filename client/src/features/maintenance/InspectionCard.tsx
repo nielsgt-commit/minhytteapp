@@ -5,8 +5,8 @@ import { useTRPC } from "@/trpc/trpc.ts"
 
 type Inspection = {
   id: number
-  building_id: number | null
-  place_id: number | null
+  structure_id: number | null
+  infrastructure_id: number | null
   equipment_id: number | null
   inspected_by: string
   recurrence: "once" | "yearly" | "5year"

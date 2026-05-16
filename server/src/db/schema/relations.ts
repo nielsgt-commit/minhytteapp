@@ -13,16 +13,16 @@ import {
   routinesTable,
 } from "./maintenance.schema.ts"
 import {
-  buildingAdjacenciesTable,
-  buildingsTable,
+  infrastructureTable,
   parkingClaimsTable,
-  placeTable,
   propertyContactsTable,
   propertyInvitationsTable,
   propertyOwnersTable,
   propertyTable,
   roomAdjacenciesTable,
   roomTable,
+  structureAdjacenciesTable,
+  structuresTable,
 } from "./property.schema.ts"
 import {
   expenseSharesTable,
@@ -98,8 +98,8 @@ export const userGroupMembersRelations = relations(
 )
 
 export const propertyRelations = relations(propertyTable, ({ many }) => ({
-  buildings: many(buildingsTable),
-  places: many(placeTable),
+  structures: many(structuresTable),
+  infrastructure: many(infrastructureTable),
   bookings: many(bookingTable),
   owners: many(propertyOwnersTable),
   invitations: many(propertyInvitationsTable),
@@ -193,43 +193,43 @@ export const propertyOwnersRelations = relations(
   }),
 )
 
-export const buildingsRelations = relations(buildingsTable, ({ one, many }) => ({
+export const structuresRelations = relations(structuresTable, ({ one, many }) => ({
   property: one(propertyTable, {
-    fields: [buildingsTable.property_id],
+    fields: [structuresTable.property_id],
     references: [propertyTable.id],
   }),
   rooms: many(roomTable),
-  adjacenciesA: many(buildingAdjacenciesTable, {
-    relationName: "building_adjacency_a",
+  adjacenciesA: many(structureAdjacenciesTable, {
+    relationName: "structure_adjacency_a",
   }),
-  adjacenciesB: many(buildingAdjacenciesTable, {
-    relationName: "building_adjacency_b",
+  adjacenciesB: many(structureAdjacenciesTable, {
+    relationName: "structure_adjacency_b",
   }),
   maintenance: many(maintenanceTable),
   equipment: many(equipmentTable),
   inspections: many(inspectionsTable),
 }))
 
-export const buildingAdjacenciesRelations = relations(
-  buildingAdjacenciesTable,
+export const structureAdjacenciesRelations = relations(
+  structureAdjacenciesTable,
   ({ one }) => ({
-    buildingA: one(buildingsTable, {
-      fields: [buildingAdjacenciesTable.building_a],
-      references: [buildingsTable.id],
-      relationName: "building_adjacency_a",
+    structureA: one(structuresTable, {
+      fields: [structureAdjacenciesTable.structure_a],
+      references: [structuresTable.id],
+      relationName: "structure_adjacency_a",
     }),
-    buildingB: one(buildingsTable, {
-      fields: [buildingAdjacenciesTable.building_b],
-      references: [buildingsTable.id],
-      relationName: "building_adjacency_b",
+    structureB: one(structuresTable, {
+      fields: [structureAdjacenciesTable.structure_b],
+      references: [structuresTable.id],
+      relationName: "structure_adjacency_b",
     }),
   }),
 )
 
 export const roomRelations = relations(roomTable, ({ one, many }) => ({
-  building: one(buildingsTable, {
-    fields: [roomTable.building_id],
-    references: [buildingsTable.id],
+  structure: one(structuresTable, {
+    fields: [roomTable.structure_id],
+    references: [structuresTable.id],
   }),
   bookings: many(bookingRoomsTable),
   adjacenciesA: many(roomAdjacenciesTable, {
@@ -256,9 +256,9 @@ export const roomAdjacenciesRelations = relations(
   }),
 )
 
-export const placeRelations = relations(placeTable, ({ one, many }) => ({
+export const infrastructureRelations = relations(infrastructureTable, ({ one, many }) => ({
   property: one(propertyTable, {
-    fields: [placeTable.property_id],
+    fields: [infrastructureTable.property_id],
     references: [propertyTable.id],
   }),
   maintenance: many(maintenanceTable),
@@ -329,13 +329,13 @@ export const maintenanceRelations = relations(maintenanceTable, ({ one, many }) 
     references: [usersTable.id],
     relationName: "maintenance_assigned_to",
   }),
-  building: one(buildingsTable, {
-    fields: [maintenanceTable.building_id],
-    references: [buildingsTable.id],
+  structure: one(structuresTable, {
+    fields: [maintenanceTable.structure_id],
+    references: [structuresTable.id],
   }),
-  place: one(placeTable, {
-    fields: [maintenanceTable.place_id],
-    references: [placeTable.id],
+  infrastructure: one(infrastructureTable, {
+    fields: [maintenanceTable.infrastructure_id],
+    references: [infrastructureTable.id],
   }),
   routine: one(routinesTable, {
     fields: [maintenanceTable.routine_id],
@@ -363,13 +363,13 @@ export const maintenanceRelations = relations(maintenanceTable, ({ one, many }) 
 export const inspectionsRelations = relations(
   inspectionsTable,
   ({ one, many }) => ({
-    building: one(buildingsTable, {
-      fields: [inspectionsTable.building_id],
-      references: [buildingsTable.id],
+    structure: one(structuresTable, {
+      fields: [inspectionsTable.structure_id],
+      references: [structuresTable.id],
     }),
-    place: one(placeTable, {
-      fields: [inspectionsTable.place_id],
-      references: [placeTable.id],
+    infrastructure: one(infrastructureTable, {
+      fields: [inspectionsTable.infrastructure_id],
+      references: [infrastructureTable.id],
     }),
     equipment: one(equipmentTable, {
       fields: [inspectionsTable.equipment_id],
@@ -388,9 +388,9 @@ export const equipmentRelations = relations(equipmentTable, ({ one, many }) => (
     fields: [equipmentTable.property_id],
     references: [propertyTable.id],
   }),
-  building: one(buildingsTable, {
-    fields: [equipmentTable.building_id],
-    references: [buildingsTable.id],
+  structure: one(structuresTable, {
+    fields: [equipmentTable.structure_id],
+    references: [structuresTable.id],
   }),
   maintenance: many(maintenanceTable),
   inspections: many(inspectionsTable),

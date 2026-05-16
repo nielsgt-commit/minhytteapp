@@ -43,7 +43,7 @@ export const parkingClaimsTable = pgTable(
   ],
 )
 
-export const buildingsTable = pgTable("buildings", {
+export const structuresTable = pgTable("structures", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   property_id: integer("property_id")
@@ -60,9 +60,9 @@ export const buildingsTable = pgTable("buildings", {
 export const roomTable = pgTable("rooms", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
-  building_id: integer("building_id")
+  structure_id: integer("structure_id")
     .notNull()
-    .references(() => buildingsTable.id),
+    .references(() => structuresTable.id),
 
   beds_sm: integer("beds_sm").notNull().default(0),
   beds_lg: integer("beds_lg").notNull().default(0),
@@ -72,19 +72,19 @@ export const roomTable = pgTable("rooms", {
   travel_cot: integer("travel_cot").notNull().default(0),
 })
 
-export const buildingAdjacenciesTable = pgTable(
-  "building_adjacencies",
+export const structureAdjacenciesTable = pgTable(
+  "structure_adjacencies",
   {
-    building_a: integer("building_a")
+    structure_a: integer("structure_a")
       .notNull()
-      .references(() => buildingsTable.id),
-    building_b: integer("building_b")
+      .references(() => structuresTable.id),
+    structure_b: integer("structure_b")
       .notNull()
-      .references(() => buildingsTable.id),
+      .references(() => structuresTable.id),
   },
   (t) => [
-    primaryKey({ columns: [t.building_a, t.building_b] }),
-    check("building_adj_order", sql`${t.building_a} < ${t.building_b}`),
+    primaryKey({ columns: [t.structure_a, t.structure_b] }),
+    check("structure_adj_order", sql`${t.structure_a} < ${t.structure_b}`),
   ],
 )
 
@@ -129,7 +129,7 @@ export const propertyOwnersTable = pgTable(
   ],
 )
 
-export const placeTable = pgTable("places", {
+export const infrastructureTable = pgTable("infrastructure", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 255 }).notNull(),

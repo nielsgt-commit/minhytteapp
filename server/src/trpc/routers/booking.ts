@@ -8,7 +8,7 @@ import {
   bookingTable,
 } from "../../db/schema/booking.schema.ts"
 import {
-  buildingsTable,
+  structuresTable,
   roomTable,
 } from "../../db/schema/property.schema.ts"
 import { settlementsTable } from "../../db/schema/settlement.schema.ts"
@@ -105,7 +105,7 @@ type RoomCapacity = {
   id: number
   name: string
   property_id: number
-  building_category: string | null
+  structure_category: string | null
   beds_sm: number
   beds_lg: number
   beds_double: number
@@ -252,8 +252,8 @@ async function resolveRoomsAndUsers(
           .select({
             id: roomTable.id,
             name: roomTable.name,
-            property_id: buildingsTable.property_id,
-            building_category: buildingsTable.category,
+            property_id: structuresTable.property_id,
+            structure_category: structuresTable.category,
             beds_sm: roomTable.beds_sm,
             beds_lg: roomTable.beds_lg,
             beds_double: roomTable.beds_double,
@@ -263,8 +263,8 @@ async function resolveRoomsAndUsers(
           })
           .from(roomTable)
           .innerJoin(
-            buildingsTable,
-            eq(buildingsTable.id, roomTable.building_id),
+            structuresTable,
+            eq(structuresTable.id, roomTable.structure_id),
           )
           .where(inArray(roomTable.id, Array.from(roomIds)))
       : Promise.resolve([] as RoomCapacity[]),
@@ -577,21 +577,21 @@ export const bookingRouter = router({
         .select({
           id: roomTable.id,
           name: roomTable.name,
-          building_id: roomTable.building_id,
+          structure_id: roomTable.structure_id,
           beds_sm: roomTable.beds_sm,
           beds_lg: roomTable.beds_lg,
           beds_double: roomTable.beds_double,
           beds_kid: roomTable.beds_kid,
           mattresses: roomTable.mattresses,
           travel_cot: roomTable.travel_cot,
-          building_category: buildingsTable.category,
+          structure_category: structuresTable.category,
         })
         .from(roomTable)
-        .innerJoin(buildingsTable, eq(buildingsTable.id, roomTable.building_id))
+        .innerJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
         .where(
           and(
-            eq(buildingsTable.property_id, property_id),
-            eq(buildingsTable.category, "habitable"),
+            eq(structuresTable.property_id, property_id),
+            eq(structuresTable.category, "habitable"),
           ),
         )
 
@@ -656,7 +656,7 @@ export const bookingRouter = router({
           id: room.id,
           name: room.name,
           property_id: 0, // not needed here
-          building_category: room.building_category,
+          structure_category: room.structure_category,
           beds_sm: room.beds_sm,
           beds_lg: room.beds_lg,
           beds_double: room.beds_double,
@@ -683,7 +683,7 @@ export const bookingRouter = router({
           id: room.id,
           name: room.name,
           property_id: 0,
-          building_category: room.building_category,
+          structure_category: room.structure_category,
           beds_sm: room.beds_sm,
           beds_lg: room.beds_lg,
           beds_double: room.beds_double,
@@ -711,7 +711,7 @@ export const bookingRouter = router({
           id: room.id,
           name: room.name,
           property_id: 0,
-          building_category: room.building_category,
+          structure_category: room.structure_category,
           beds_sm: room.beds_sm,
           beds_lg: room.beds_lg,
           beds_double: room.beds_double,

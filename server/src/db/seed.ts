@@ -11,7 +11,7 @@ import {
   maintenanceTable,
 } from "./schema/maintenance.schema.ts"
 import {
-  buildingsTable,
+  structuresTable,
   propertyContactsTable,
   propertyOwnersTable,
   propertyPriorityWeeksTable,
@@ -86,12 +86,12 @@ type SeedRoom = {
   travel_cot?: number
 }
 
-type SeedBuilding = {
+type SeedStructure = {
   name: string
   rooms: SeedRoom[]
 }
 
-const SEED_BUILDINGS: SeedBuilding[] = [
+const SEED_STRUCTURES: SeedStructure[] = [
   {
     name: "Furua",
     rooms: [
@@ -216,42 +216,42 @@ async function upsertProperty() {
   return created
 }
 
-async function upsertBuilding(property_id: number, name: string) {
+async function upsertStructure(property_id: number, name: string) {
   const existing = (
     await db
       .select()
-      .from(buildingsTable)
+      .from(structuresTable)
       .where(
         and(
-          eq(buildingsTable.property_id, property_id),
-          eq(buildingsTable.name, name),
+          eq(structuresTable.property_id, property_id),
+          eq(structuresTable.name, name),
         ),
       )
       .limit(1)
   ).at(0)
   if (existing) {
-    console.log(`found building #${String(existing.id)} (${existing.name})`)
+    console.log(`found structure #${String(existing.id)} (${existing.name})`)
     return existing
   }
   const created = (
     await db
-      .insert(buildingsTable)
+      .insert(structuresTable)
       .values({ name, property_id })
       .returning()
   ).at(0)
-  if (!created) throw new Error(`failed to insert building ${name}`)
-  console.log(`inserted building #${String(created.id)} (${created.name})`)
+  if (!created) throw new Error(`failed to insert structure ${name}`)
+  console.log(`inserted structure #${String(created.id)} (${created.name})`)
   return created
 }
 
-async function upsertRoom(building_id: number, seed: SeedRoom) {
+async function upsertRoom(structure_id: number, seed: SeedRoom) {
   const existing = (
     await db
       .select()
       .from(roomTable)
       .where(
         and(
-          eq(roomTable.building_id, building_id),
+          eq(roomTable.structure_id, structure_id),
           eq(roomTable.name, seed.name),
         ),
       )
@@ -266,7 +266,7 @@ async function upsertRoom(building_id: number, seed: SeedRoom) {
       .insert(roomTable)
       .values({
         name: seed.name,
-        building_id,
+        structure_id,
         beds_sm: seed.beds_sm ?? 0,
         beds_lg: seed.beds_lg ?? 0,
         beds_double: seed.beds_double ?? 0,
@@ -639,8 +639,8 @@ async function seedBookings(
       travel_cot: roomTable.travel_cot,
     })
     .from(roomTable)
-    .innerJoin(buildingsTable, eq(buildingsTable.id, roomTable.building_id))
-    .where(eq(buildingsTable.property_id, property_id))
+    .innerJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
+    .where(eq(structuresTable.property_id, property_id))
 
   if (propertyRooms.length === 0) {
     console.log("skip bookings: property has no rooms")
@@ -745,7 +745,7 @@ async function seedBookings(
 }
 
 const MAINTENANCE_COUNT = 50
-const MAINTENANCE_DONE_PER_BUILDING = 4
+const MAINTENANCE_DONE_PER_STRUCTURE = 4
 const MAINTENANCE_DESCRIPTIONS = [
   "Replace gaskets",
   "Repaint window frames",
@@ -772,9 +772,9 @@ const MAINTENANCE_CATEGORIES = ["maintenance", "repair"] as const
 const MAINTENANCE_SEVERITIES = ["major", "minor", "patch"] as const
 const MAINTENANCE_RECURRENCES = ["once", "yearly", "5year"] as const
 
-async function seedMaintenance(buildingIds: number[], userIds: number[]) {
-  if (buildingIds.length === 0 || userIds.length === 0) {
-    console.log("skip maintenance: missing buildings or users")
+async function seedMaintenance(structureIds: number[], userIds: number[]) {
+  if (structureIds.length === 0 || userIds.length === 0) {
+    console.log("skip maintenance: missing structures or users")
     return
   }
   const [{ count }] = await db
@@ -792,7 +792,7 @@ async function seedMaintenance(buildingIds: number[], userIds: number[]) {
   const yearMs = 365 * 24 * 3600 * 1000
 
   const makeRow = (
-    building_id: number,
+    structure_id: number,
     status: "todo" | "doing" | "done",
   ): typeof maintenanceTable.$inferInsert => {
     const completed_at =
@@ -808,8 +808,8 @@ async function seedMaintenance(buildingIds: number[], userIds: number[]) {
       instructions: rng() < 0.4 ? "see notes" : null,
       added_by: pick(userIds),
       assigned_to_id: rng() < 0.5 ? pick(userIds) : null,
-      building_id,
-      place_id: null,
+      structure_id,
+      infrastructure_id: null,
       category: pick(MAINTENANCE_CATEGORIES),
       severity: pick(MAINTENANCE_SEVERITIES),
       status,
@@ -820,13 +820,13 @@ async function seedMaintenance(buildingIds: number[], userIds: number[]) {
   }
 
   const rows: (typeof maintenanceTable.$inferInsert)[] = []
-  for (const bid of buildingIds) {
-    for (let i = 0; i < MAINTENANCE_DONE_PER_BUILDING; i++) {
+  for (const bid of structureIds) {
+    for (let i = 0; i < MAINTENANCE_DONE_PER_STRUCTURE; i++) {
       rows.push(makeRow(bid, "done"))
     }
   }
   while (rows.length < MAINTENANCE_COUNT) {
-    const bid = pick(buildingIds)
+    const bid = pick(structureIds)
     const status = pick(["todo", "doing", "done"] as const)
     rows.push(makeRow(bid, status))
   }
@@ -849,22 +849,22 @@ async function seedMaintenance(buildingIds: number[], userIds: number[]) {
 
 type SeedEquipment = {
   name: string
-  building_name: string
+  structure_name: string
   category?: string
   notes?: string
 }
 
 const SEED_EQUIPMENT: SeedEquipment[] = [
-  { name: "Wood stove", building_name: "Furua", category: "heating" },
-  { name: "Heat pump", building_name: "Nybygget", category: "heating" },
-  { name: "Refrigerator", building_name: "Furua", category: "appliance" },
-  { name: "Dishwasher", building_name: "Furua", category: "appliance" },
-  { name: "Washing machine", building_name: "Nybygget", category: "appliance" },
-  { name: "Outboard motor", building_name: "Naustet", category: "boat" },
-  { name: "Rowing boat", building_name: "Naustet", category: "boat" },
-  { name: "Lawn mower", building_name: "Kabelpalasset", category: "tool" },
-  { name: "Chainsaw", building_name: "Kabelpalasset", category: "tool" },
-  { name: "Smoke detector", building_name: "Slabeslottet", category: "safety" },
+  { name: "Wood stove", structure_name: "Furua", category: "heating" },
+  { name: "Heat pump", structure_name: "Nybygget", category: "heating" },
+  { name: "Refrigerator", structure_name: "Furua", category: "appliance" },
+  { name: "Dishwasher", structure_name: "Furua", category: "appliance" },
+  { name: "Washing machine", structure_name: "Nybygget", category: "appliance" },
+  { name: "Outboard motor", structure_name: "Naustet", category: "boat" },
+  { name: "Rowing boat", structure_name: "Naustet", category: "boat" },
+  { name: "Lawn mower", structure_name: "Kabelpalasset", category: "tool" },
+  { name: "Chainsaw", structure_name: "Kabelpalasset", category: "tool" },
+  { name: "Smoke detector", structure_name: "Slabeslottet", category: "safety" },
 ]
 
 type SeedContact = {
@@ -927,7 +927,7 @@ async function seedContacts(property_id: number) {
 
 async function seedEquipment(
   property_id: number,
-  buildingsByName: Map<string, number>,
+  structuresByName: Map<string, number>,
 ) {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -938,16 +938,16 @@ async function seedEquipment(
   }
   const rows: (typeof equipmentTable.$inferInsert)[] = []
   for (const seed of SEED_EQUIPMENT) {
-    const building_id = buildingsByName.get(seed.building_name)
-    if (building_id === undefined) {
+    const structure_id = structuresByName.get(seed.structure_name)
+    if (structure_id === undefined) {
       throw new Error(
-        `seed equipment "${seed.name}" references unknown building "${seed.building_name}"`,
+        `seed equipment "${seed.name}" references unknown structure "${seed.structure_name}"`,
       )
     }
     rows.push({
       name: seed.name,
       property_id,
-      building_id,
+      structure_id,
       category: seed.category ?? null,
       notes: seed.notes ?? null,
     })
@@ -964,14 +964,14 @@ async function main() {
   const usersByName = new Map(users.map(u => [u.name, u]))
   const property = await upsertProperty()
 
-  const buildingIds: number[] = []
-  const buildingsByName = new Map<string, number>()
-  for (const seedBuilding of SEED_BUILDINGS) {
-    const building = await upsertBuilding(property.id, seedBuilding.name)
-    buildingIds.push(building.id)
-    buildingsByName.set(building.name, building.id)
-    for (const seedRoom of seedBuilding.rooms) {
-      await upsertRoom(building.id, seedRoom)
+  const structureIds: number[] = []
+  const structuresByName = new Map<string, number>()
+  for (const seedStructure of SEED_STRUCTURES) {
+    const structure = await upsertStructure(property.id, seedStructure.name)
+    structureIds.push(structure.id)
+    structuresByName.set(structure.name, structure.id)
+    for (const seedRoom of seedStructure.rooms) {
+      await upsertRoom(structure.id, seedRoom)
     }
   }
 
@@ -1016,8 +1016,8 @@ async function main() {
 
   await seedBookings(property.id, groupMemberIds)
   const nonAdminIds = users.filter(u => !u.is_admin).map(u => u.id)
-  await seedMaintenance(buildingIds, nonAdminIds)
-  await seedEquipment(property.id, buildingsByName)
+  await seedMaintenance(structureIds, nonAdminIds)
+  await seedEquipment(property.id, structuresByName)
   await seedContacts(property.id)
 
   console.log("\nseed complete.")

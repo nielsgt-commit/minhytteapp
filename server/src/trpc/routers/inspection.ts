@@ -7,28 +7,28 @@ import {
   maintenanceTable,
 } from "../../db/schema/maintenance.schema.ts"
 import {
-  buildingsTable,
-  placeTable,
+  structuresTable,
+  infrastructureTable,
 } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, router } from "../init.ts"
 
 const targetXor = {
   check: (v: {
-    building_id?: number
-    place_id?: number
+    structure_id?: number
+    infrastructure_id?: number
     equipment_id?: number
   }) =>
-    [v.building_id, v.place_id, v.equipment_id].filter(x => x != null).length
+    [v.structure_id, v.infrastructure_id, v.equipment_id].filter(x => x != null).length
     === 1,
-  error: "exactly one of building_id, place_id, equipment_id must be set",
+  error: "exactly one of structure_id, infrastructure_id, equipment_id must be set",
 }
 
 const recurrenceEnum = z.enum(["once", "yearly", "5year"])
 
 const startInput = z
   .object({
-    building_id: z.number().int().positive().optional(),
-    place_id: z.number().int().positive().optional(),
+    structure_id: z.number().int().positive().optional(),
+    infrastructure_id: z.number().int().positive().optional(),
     equipment_id: z.number().int().positive().optional(),
     started_by_user_id: z.number().int().positive(),
     inspected_by: z.string().min(1).max(255),
@@ -54,8 +54,8 @@ const completeInput = z.object({
 
 const recordInput = z
   .object({
-    building_id: z.number().int().positive().optional(),
-    place_id: z.number().int().positive().optional(),
+    structure_id: z.number().int().positive().optional(),
+    infrastructure_id: z.number().int().positive().optional(),
     equipment_id: z.number().int().positive().optional(),
     started_by_user_id: z.number().int().positive(),
     inspected_by: z.string().min(1).max(255),
@@ -74,18 +74,18 @@ export const inspectionRouter = router({
         .select({ i: inspectionsTable })
         .from(inspectionsTable)
         .leftJoin(
-          buildingsTable,
-          eq(buildingsTable.id, inspectionsTable.building_id),
+          structuresTable,
+          eq(structuresTable.id, inspectionsTable.structure_id),
         )
-        .leftJoin(placeTable, eq(placeTable.id, inspectionsTable.place_id))
+        .leftJoin(infrastructureTable, eq(infrastructureTable.id, inspectionsTable.infrastructure_id))
         .leftJoin(
           equipmentTable,
           eq(equipmentTable.id, inspectionsTable.equipment_id),
         )
         .where(
           or(
-            eq(buildingsTable.property_id, input.property_id),
-            eq(placeTable.property_id, input.property_id),
+            eq(structuresTable.property_id, input.property_id),
+            eq(infrastructureTable.property_id, input.property_id),
             eq(equipmentTable.property_id, input.property_id),
           ),
         )
@@ -109,8 +109,8 @@ export const inspectionRouter = router({
       const [created] = await ctx.db
         .insert(inspectionsTable)
         .values({
-          building_id: input.building_id,
-          place_id: input.place_id,
+          structure_id: input.structure_id,
+          infrastructure_id: input.infrastructure_id,
           equipment_id: input.equipment_id,
           started_by_user_id: input.started_by_user_id,
           inspected_by: input.inspected_by,
@@ -144,11 +144,11 @@ export const inspectionRouter = router({
           })
         }
 
-        let equipmentBuildingId: number | null = null
+        let equipmentStructureId: number | null = null
         if (existing.equipment_id != null) {
           const found = (
             await tx
-              .select({ building_id: equipmentTable.building_id })
+              .select({ structure_id: equipmentTable.structure_id })
               .from(equipmentTable)
               .where(eq(equipmentTable.id, existing.equipment_id))
               .limit(1)
@@ -159,17 +159,17 @@ export const inspectionRouter = router({
               message: "equipment for inspection not found",
             })
           }
-          equipmentBuildingId = found.building_id
+          equipmentStructureId = found.structure_id
         }
 
         const findingLocation = () => {
-          if (existing.place_id != null) {
-            return { place_id: existing.place_id }
+          if (existing.infrastructure_id != null) {
+            return { infrastructure_id: existing.infrastructure_id }
           }
-          // building or equipment target — maintenance row needs building_id set
-          // (the XOR check requires exactly one of building_id / place_id)
+          // structure or equipment target — maintenance row needs structure_id set
+          // (the XOR check requires exactly one of structure_id / infrastructure_id)
           return {
-            building_id: existing.building_id ?? equipmentBuildingId!,
+            structure_id: existing.structure_id ?? equipmentStructureId!,
             equipment_id: existing.equipment_id ?? undefined,
           }
         }
@@ -235,11 +235,11 @@ export const inspectionRouter = router({
     .input(recordInput)
     .mutation(async ({ ctx, input }) => {
       return ctx.db.transaction(async tx => {
-        let equipmentBuildingId: number | null = null
+        let equipmentStructureId: number | null = null
         if (input.equipment_id != null) {
           const found = (
             await tx
-              .select({ building_id: equipmentTable.building_id })
+              .select({ structure_id: equipmentTable.structure_id })
               .from(equipmentTable)
               .where(eq(equipmentTable.id, input.equipment_id))
               .limit(1)
@@ -250,15 +250,15 @@ export const inspectionRouter = router({
               message: "equipment not found",
             })
           }
-          equipmentBuildingId = found.building_id
+          equipmentStructureId = found.structure_id
         }
 
         const now = new Date()
         const [inspection] = await tx
           .insert(inspectionsTable)
           .values({
-            building_id: input.building_id,
-            place_id: input.place_id,
+            structure_id: input.structure_id,
+            infrastructure_id: input.infrastructure_id,
             equipment_id: input.equipment_id,
             started_by_user_id: input.started_by_user_id,
             inspected_by: input.inspected_by,
@@ -270,9 +270,9 @@ export const inspectionRouter = router({
           .returning()
 
         const findingLocation = () => {
-          if (input.place_id != null) return { place_id: input.place_id }
+          if (input.infrastructure_id != null) return { infrastructure_id: input.infrastructure_id }
           return {
-            building_id: input.building_id ?? equipmentBuildingId!,
+            structure_id: input.structure_id ?? equipmentStructureId!,
             equipment_id: input.equipment_id ?? undefined,
           }
         }

@@ -1,11 +1,11 @@
 import { Card } from "@digdir/designsystemet-react"
 
-export default function PropertyBuildings() {
+export default function PropertyStructures() {
   return (
     <Card>
       <Card.Block>
-        <h1>Property Buildings</h1>
-        <p> Building names </p>
+        <h1>Property Structures</h1>
+        <p> Structure names </p>
       </Card.Block>
     </Card>
   )

@@ -16,9 +16,9 @@ const DESKTOP_GROUPS = [
     { to: "/manageproperty/usergroups", label: "User groups" },
   ]},
   { label: "Property", items: [
-    { to: "/manageproperty/buildings", label: "Buildings" },
-    { to: "/manageproperty/places", label: "Places" },
-    { to: "/manageproperty/inventory", label: "Inventory" },
+    { to: "/manageproperty/structures", label: "Structures" },
+    { to: "/manageproperty/infrastructure", label: "Infrastructure" },
+    { to: "/manageproperty/equipment", label: "Equipment" },
   ]},
   { label: "Admin", items: [
     { to: "/manageproperty/register", label: "Register" },
@@ -32,9 +32,9 @@ const MOBILE_GROUPS = [
     { to: "/manageproperty/info", label: "Info" },
   ]},
   { label: "Property", items: [
-    { to: "/manageproperty/buildings", label: "Buildings" },
-    { to: "/manageproperty/places", label: "Places" },
-    { to: "/manageproperty/inventory", label: "Inventory" },
+    { to: "/manageproperty/structures", label: "Structures" },
+    { to: "/manageproperty/infrastructure", label: "Infrastructure" },
+    { to: "/manageproperty/equipment", label: "Equipment" },
   ]},
   { label: "Identity", items: [
     { to: "/manageproperty/contacts", label: "Contacts" },
@@ -57,7 +57,7 @@ export function ManageProperty() {
     return (
       <section className={styles.page}>
         <h1 className={styles.title}>Manage Property</h1>
-        <p>Add or select a property to edit its details, buildings, owners, and invites.</p>
+        <p>Add or select a property to edit its details, structures, owners, and invites.</p>
       </section>
     )
   }

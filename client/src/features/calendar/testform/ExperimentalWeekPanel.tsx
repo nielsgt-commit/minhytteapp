@@ -135,8 +135,8 @@ function Body({ propertyId }: { propertyId: number }) {
 
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
   const { data: owners } = useSuspenseQuery(
     trpc.propertyOwner.list.queryOptions({ property_id: propertyId }),
@@ -198,11 +198,11 @@ function Body({ propertyId }: { propertyId: number }) {
     selectPriorityHolderForWeek(state, isoYear, weekNumber),
   )
 
-  const propertyBuildingIds = new Set(
-    buildings.filter(b => b.property_id === propertyId).map(b => b.id),
+  const propertyStructureIds = new Set(
+    structures.filter(b => b.property_id === propertyId).map(b => b.id),
   )
   const propertyRooms = rooms.filter(r =>
-    propertyBuildingIds.has(r.building_id),
+    propertyStructureIds.has(r.structure_id),
   )
 
   const directOwnerUserIds = useMemo(() => {

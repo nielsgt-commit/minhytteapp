@@ -7,7 +7,7 @@ export type RoomShape = {
   beds_kid: number
   mattresses: number
   travel_cot: number
-  building_id: number
+  structure_id: number
 }
 
 export type ExistingOccupant = {

@@ -15,26 +15,26 @@ import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { AddBuildingFlow } from "@/features/property/testform/AddBuildingFlow.tsx"
+import { AddStructureFlow } from "@/features/property/testform/AddStructureFlow.tsx"
 import {
   AddBedsFlow,
   type RoomData,
 } from "@/features/property/testform/AddBedsFlow.tsx"
 
-type BuildingCategory = "habitable" | "non_habitable"
+type StructureCategory = "habitable" | "non_habitable"
 
-const CATEGORY_LABEL: Record<BuildingCategory, string> = {
+const CATEGORY_LABEL: Record<StructureCategory, string> = {
   habitable: "Habitable",
   non_habitable: "Non-habitable",
 }
 
 type OpenForm =
-  | { kind: "addRoom"; buildingId: number }
+  | { kind: "addRoom"; structureId: number }
   | { kind: "editRoom"; roomId: number }
   | null
 
 
-export function ListPropertyBuildings() {
+export function ListPropertyStructures() {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -43,23 +43,23 @@ export function ListPropertyBuildings() {
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
 
-  const invalidateBuildings = () => {
-    void qc.invalidateQueries({ queryKey: trpc.building.list.queryKey() })
+  const invalidateStructures = () => {
+    void qc.invalidateQueries({ queryKey: trpc.structure.list.queryKey() })
   }
   const invalidateRooms = () => {
     void qc.invalidateQueries({ queryKey: trpc.room.list.queryKey() })
   }
 
-  const updateBuilding = useMutation(
-    trpc.building.update.mutationOptions({ onSuccess: invalidateBuildings }),
+  const updateStructure = useMutation(
+    trpc.structure.update.mutationOptions({ onSuccess: invalidateStructures }),
   )
-  const deleteBuilding = useMutation(
-    trpc.building.delete.mutationOptions({ onSuccess: invalidateBuildings }),
+  const deleteStructure = useMutation(
+    trpc.structure.delete.mutationOptions({ onSuccess: invalidateStructures }),
   )
   const createRoom = useMutation(
     trpc.room.create.mutationOptions({ onSuccess: invalidateRooms }),
@@ -79,35 +79,35 @@ export function ListPropertyBuildings() {
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
-  const propertyBuildings = selectedProperty
-    ? buildings.filter(b => b.property_id === selectedProperty.id)
+  const propertyStructures = selectedProperty
+    ? structures.filter(b => b.property_id === selectedProperty.id)
     : []
 
-  const roomsByBuilding = new Map<number, typeof rooms>()
+  const roomsByStructure = new Map<number, typeof rooms>()
   for (const r of rooms) {
-    const list = roomsByBuilding.get(r.building_id) ?? []
+    const list = roomsByStructure.get(r.structure_id) ?? []
     list.push(r)
-    roomsByBuilding.set(r.building_id, list)
+    roomsByStructure.set(r.structure_id, list)
   }
 
   const lastError =
-    updateBuilding.error ??
-    deleteBuilding.error ??
+    updateStructure.error ??
+    deleteStructure.error ??
     createRoom.error ??
     updateRoom.error ??
     deleteRoom.error
   const pending =
-    updateBuilding.isPending ||
-    deleteBuilding.isPending ||
+    updateStructure.isPending ||
+    deleteStructure.isPending ||
     createRoom.isPending ||
     updateRoom.isPending ||
     deleteRoom.isPending
 
-  const toggleAddRoom = (buildingId: number) => {
+  const toggleAddRoom = (structureId: number) => {
     setOpenForm(v =>
-      v?.kind === "addRoom" && v.buildingId === buildingId
+      v?.kind === "addRoom" && v.structureId === structureId
         ? null
-        : { kind: "addRoom", buildingId },
+        : { kind: "addRoom", structureId },
     )
   }
 
@@ -120,7 +120,7 @@ export function ListPropertyBuildings() {
   }
 
   const handleNameSave = (
-    b: { id: number; property_id: number; name: string; category: BuildingCategory },
+    b: { id: number; property_id: number; name: string; category: StructureCategory },
     newName: string,
   ) => {
     const trimmed = newName.trim()
@@ -128,7 +128,7 @@ export function ListPropertyBuildings() {
       setEditingNameId(null)
       return
     }
-    updateBuilding.mutate(
+    updateStructure.mutate(
       {
         id: b.id,
         name: trimmed,
@@ -139,10 +139,10 @@ export function ListPropertyBuildings() {
     )
   }
 
-  const handleDeleteBuilding = (buildingId: number, buildingName: string) => {
-    if (!window.confirm(`Delete building "${buildingName}"?`)) return
-    deleteBuilding.mutate(
-      { id: buildingId },
+  const handleDeleteStructure = (structureId: number, structureName: string) => {
+    if (!window.confirm(`Delete structure "${structureName}"?`)) return
+    deleteStructure.mutate(
+      { id: structureId },
       {
         onSuccess: () => {
           setOpenForm(null)
@@ -153,15 +153,15 @@ export function ListPropertyBuildings() {
   }
 
   const handleAddRoom =
-    (b: { id: number; property_id: number; name: string; category: BuildingCategory }) =>
+    (b: { id: number; property_id: number; name: string; category: StructureCategory }) =>
     (data: RoomData) => {
       createRoom.mutate(
-        { ...data, building_id: b.id },
+        { ...data, structure_id: b.id },
         {
           onSuccess: () => {
             setOpenForm(null)
             if (b.category !== "habitable") {
-              updateBuilding.mutate({
+              updateStructure.mutate({
                 id: b.id,
                 name: b.name,
                 property_id: b.property_id,
@@ -174,16 +174,16 @@ export function ListPropertyBuildings() {
     }
 
   const handleEditRoom =
-    (roomId: number, buildingId: number) => (data: RoomData) => {
+    (roomId: number, structureId: number) => (data: RoomData) => {
       updateRoom.mutate(
-        { id: roomId, building_id: buildingId, ...data },
+        { id: roomId, structure_id: structureId, ...data },
         { onSuccess: () => { setOpenForm(null) } },
       )
     }
 
   const handleDeleteRoom = (
     room: { id: number; name: string },
-    building: { id: number; property_id: number; name: string; category: BuildingCategory },
+    structure: { id: number; property_id: number; name: string; category: StructureCategory },
     isLastRoom: boolean,
   ) => {
     if (!window.confirm(`Delete room "${room.name}"?`)) return
@@ -192,11 +192,11 @@ export function ListPropertyBuildings() {
       {
         onSuccess: () => {
           setOpenForm(null)
-          if (isLastRoom && building.category !== "non_habitable") {
-            updateBuilding.mutate({
-              id: building.id,
-              name: building.name,
-              property_id: building.property_id,
+          if (isLastRoom && structure.category !== "non_habitable") {
+            updateStructure.mutate({
+              id: structure.id,
+              name: structure.name,
+              property_id: structure.property_id,
               category: "non_habitable",
             })
           }
@@ -208,7 +208,7 @@ export function ListPropertyBuildings() {
   if (!selectedProperty) {
     return (
       <section>
-        <h3>Buildings</h3>
+        <h3>Structures</h3>
         <p>No property selected. Pick one from the header.</p>
       </section>
     )
@@ -216,7 +216,7 @@ export function ListPropertyBuildings() {
 
   return (
     <section>
-      <h3>Buildings for {selectedProperty.name}</h3>
+      <h3>Structures for {selectedProperty.name}</h3>
 
       <Switch
         label="Edit mode"
@@ -244,15 +244,15 @@ export function ListPropertyBuildings() {
           padding: 0,
         }}
       >
-          {propertyBuildings.map(b => {
-            const buildingRooms = roomsByBuilding.get(b.id) ?? []
+          {propertyStructures.map(b => {
+            const structureRooms = roomsByStructure.get(b.id) ?? []
             const isExpanded = expandedId === b.id
             const isEditingName = editingNameId === b.id
             const addRoomOpen =
-              openForm?.kind === "addRoom" && openForm.buildingId === b.id
+              openForm?.kind === "addRoom" && openForm.structureId === b.id
             const editingRoom =
               openForm?.kind === "editRoom"
-                ? buildingRooms.find(r => r.id === openForm.roomId) ?? null
+                ? structureRooms.find(r => r.id === openForm.roomId) ?? null
                 : null
 
             return (
@@ -286,8 +286,8 @@ export function ListPropertyBuildings() {
                           type="text"
                           defaultValue={b.name}
                           autoFocus
-                          aria-label="Building name"
-                          disabled={updateBuilding.isPending}
+                          aria-label="structure name"
+                          disabled={updateStructure.isPending}
                           onBlur={e => { handleNameSave(b, e.currentTarget.value) }}
                           onKeyDown={e => {
                             if (e.key === "Enter") {
@@ -351,11 +351,11 @@ export function ListPropertyBuildings() {
                             }}
                             onSubmit={handleEditRoom(
                               editingRoom.id,
-                              editingRoom.building_id,
+                              editingRoom.structure_id,
                             )}
                             onCancel={() => { setOpenForm(null) }}
                           />
-                        ) : buildingRooms.length === 0 ? (
+                        ) : structureRooms.length === 0 ? (
                           <p>No rooms yet.</p>
                         ) : (
                           <ul
@@ -367,7 +367,7 @@ export function ListPropertyBuildings() {
                               gap: "0.5rem",
                             }}
                           >
-                            {buildingRooms.map(r => (
+                            {structureRooms.map(r => (
                               <li
                                 key={r.id}
                                 style={{
@@ -396,7 +396,7 @@ export function ListPropertyBuildings() {
                                     handleDeleteRoom(
                                       r,
                                       b,
-                                      buildingRooms.length === 1,
+                                      structureRooms.length === 1,
                                     )
                                   }}
                                 >
@@ -430,9 +430,9 @@ export function ListPropertyBuildings() {
                           variant="secondary"
                           data-color="danger"
                           disabled={pending}
-                          onClick={() => { handleDeleteBuilding(b.id, b.name) }}
+                          onClick={() => { handleDeleteStructure(b.id, b.name) }}
                         >
-                          Delete building
+                          Delete structure
                         </Button>
 
                         <Button
@@ -461,7 +461,7 @@ export function ListPropertyBuildings() {
                         disabled={pending}
                         onClick={() => { setExpandedId(b.id) }}
                       >
-                        Edit building
+                        Edit structure
                       </Button>
                     )}
                   </Card.Block>
@@ -489,8 +489,8 @@ export function ListPropertyBuildings() {
               >
                 {isAdding ? (
                   <>
-                    <strong>Add building</strong>
-                    <AddBuildingFlow
+                    <strong>Add structure</strong>
+                    <AddStructureFlow
                       onAdded={() => { setIsAdding(false) }}
                       onCancel={() => { setIsAdding(false) }}
                     />
@@ -505,7 +505,7 @@ export function ListPropertyBuildings() {
                     }}
                     onClick={() => { setIsAdding(true) }}
                   >
-                    + Add building
+                    + Add structure
                   </Button>
                 )}
               </Card.Block>

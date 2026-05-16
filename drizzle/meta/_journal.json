@@ -267,6 +267,13 @@
       "when": 1778782595381,
       "tag": "0037_outgoing_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1778959730700,
+      "tag": "0038_rename_domain_terms",
+      "breakpoints": true
     }
   ]
 }

@@ -17,7 +17,7 @@ type Props = {
   propertyName: string
 }
 
-type Place = {
+type Infrastructure = {
   id: number
   name: string
   description: string
@@ -29,30 +29,30 @@ function fdString(fd: FormData, key: string): string {
   return typeof v === "string" ? v : ""
 }
 
-export function PlacesPanel({ propertyId, propertyName }: Props) {
+export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
-  const { data: places } = useSuspenseQuery(
-    trpc.place.listForProperty.queryOptions({ property_id: propertyId }),
+  const { data: infrastructure } = useSuspenseQuery(
+    trpc.infrastructure.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
   const invalidate = () => {
     void qc.invalidateQueries({
-      queryKey: trpc.place.listForProperty.queryKey({
+      queryKey: trpc.infrastructure.listForProperty.queryKey({
         property_id: propertyId,
       }),
     })
   }
 
-  const createPlace = useMutation(
-    trpc.place.create.mutationOptions({ onSuccess: invalidate }),
+  const createInfrastructure = useMutation(
+    trpc.infrastructure.create.mutationOptions({ onSuccess: invalidate }),
   )
-  const updatePlace = useMutation(
-    trpc.place.update.mutationOptions({ onSuccess: invalidate }),
+  const updateInfrastructure = useMutation(
+    trpc.infrastructure.update.mutationOptions({ onSuccess: invalidate }),
   )
-  const deletePlace = useMutation(
-    trpc.place.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteInfrastructure = useMutation(
+    trpc.infrastructure.delete.mutationOptions({ onSuccess: invalidate }),
   )
 
   const [editMode, setEditMode] = useState(false)
@@ -60,12 +60,12 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
   const [isAdding, setIsAdding] = useState(false)
 
   const lastError =
-    createPlace.error ?? updatePlace.error ?? deletePlace.error
+    createInfrastructure.error ?? updateInfrastructure.error ?? deleteInfrastructure.error
   const pending =
-    createPlace.isPending || updatePlace.isPending || deletePlace.isPending
+    createInfrastructure.isPending || updateInfrastructure.isPending || deleteInfrastructure.isPending
 
-  const editingPlace = editingId
-    ? places.find(p => p.id === editingId) ?? null
+  const editingInfrastructure = editingId
+    ? infrastructure.find(p => p.id === editingId) ?? null
     : null
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
@@ -75,7 +75,7 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
     const name = fdString(fd, "name").trim()
     const description = fdString(fd, "description").trim()
     if (!name || !description) return
-    createPlace.mutate(
+    createInfrastructure.mutate(
       { name, description, property_id: propertyId },
       {
         onSuccess: () => {
@@ -87,21 +87,21 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
   }
 
   const handleSave =
-    (p: Place) => (e: SyntheticEvent<HTMLFormElement>) => {
+    (p: Infrastructure) => (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const name = fdString(fd, "name").trim()
       const description = fdString(fd, "description").trim()
       if (!name || !description) return
-      updatePlace.mutate(
+      updateInfrastructure.mutate(
         { id: p.id, name, description, property_id: propertyId },
         { onSuccess: () => { setEditingId(null) } },
       )
     }
 
-  const handleDelete = (p: Place) => {
-    if (!window.confirm(`Delete place "${p.name}"?`)) return
-    deletePlace.mutate(
+  const handleDelete = (p: Infrastructure) => {
+    if (!window.confirm(`Delete infrastructure "${p.name}"?`)) return
+    deleteInfrastructure.mutate(
       { id: p.id },
       { onSuccess: () => { setEditingId(null) } },
     )
@@ -109,7 +109,7 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
 
   return (
     <section>
-      <h3>Places at {propertyName}</h3>
+      <h3>Infrastructure at {propertyName}</h3>
 
       <Switch
         label="Edit mode"
@@ -126,10 +126,10 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
-      {editingPlace ? (
+      {editingInfrastructure ? (
         <form
-          onSubmit={handleSave(editingPlace)}
-          key={`edit-${String(editingPlace.id)}`}
+          onSubmit={handleSave(editingInfrastructure)}
+          key={`edit-${String(editingInfrastructure.id)}`}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -141,15 +141,15 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
             name="name"
             required
             autoFocus
-            defaultValue={editingPlace.name}
-            disabled={updatePlace.isPending}
+            defaultValue={editingInfrastructure.name}
+            disabled={updateInfrastructure.isPending}
           />
           <Textfield
             label="Description"
             name="description"
             required
-            defaultValue={editingPlace.description}
-            disabled={updatePlace.isPending}
+            defaultValue={editingInfrastructure.description}
+            disabled={updateInfrastructure.isPending}
           />
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <Button type="submit" disabled={pending}>
@@ -160,7 +160,7 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
               variant="secondary"
               data-color="danger"
               disabled={pending}
-              onClick={() => { handleDelete(editingPlace) }}
+              onClick={() => { handleDelete(editingInfrastructure) }}
             >
               Delete
             </Button>
@@ -184,7 +184,7 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
             gap: "0.5rem",
           }}
         >
-          {places.map(p => (
+          {infrastructure.map(p => (
             <Card asChild key={p.id}>
               <li>
                 <Card.Block
@@ -232,7 +232,7 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
               >
                 {isAdding ? (
                   <>
-                    <strong>Add place</strong>
+                    <strong>Add infrastructure</strong>
                     <form
                       onSubmit={handleAdd}
                       style={{
@@ -246,13 +246,13 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
                         name="name"
                         required
                         autoFocus
-                        disabled={createPlace.isPending}
+                        disabled={createInfrastructure.isPending}
                       />
                       <Textfield
                         label="Description"
                         name="description"
                         required
-                        disabled={createPlace.isPending}
+                        disabled={createInfrastructure.isPending}
                       />
                       <div
                         style={{
@@ -261,13 +261,13 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
                           flexWrap: "wrap",
                         }}
                       >
-                        <Button type="submit" disabled={createPlace.isPending}>
-                          Add place
+                        <Button type="submit" disabled={createInfrastructure.isPending}>
+                          Add infrastructure
                         </Button>
                         <Button
                           type="button"
                           variant="tertiary"
-                          disabled={createPlace.isPending}
+                          disabled={createInfrastructure.isPending}
                           onClick={() => { setIsAdding(false) }}
                         >
                           Cancel
@@ -286,7 +286,7 @@ export function PlacesPanel({ propertyId, propertyName }: Props) {
                     disabled={pending}
                     onClick={() => { setIsAdding(true) }}
                   >
-                    + Add place
+                    + Add infrastructure
                   </Button>
                 )}
               </Card.Block>

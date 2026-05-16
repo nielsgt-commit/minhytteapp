@@ -25,15 +25,15 @@ import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 import { Route as AuthedManagepropertyIndexRouteImport } from './routes/_authed/manageproperty/index'
 import { Route as AuthedManagepropertyUsergroupsRouteImport } from './routes/_authed/manageproperty/usergroups'
+import { Route as AuthedManagepropertyStructuresRouteImport } from './routes/_authed/manageproperty/structures'
 import { Route as AuthedManagepropertySplitPolicyRouteImport } from './routes/_authed/manageproperty/split-policy'
 import { Route as AuthedManagepropertySettingsRouteImport } from './routes/_authed/manageproperty/settings'
 import { Route as AuthedManagepropertyRegisterRouteImport } from './routes/_authed/manageproperty/register'
-import { Route as AuthedManagepropertyPlacesRouteImport } from './routes/_authed/manageproperty/places'
 import { Route as AuthedManagepropertyOwnershipRouteImport } from './routes/_authed/manageproperty/ownership'
-import { Route as AuthedManagepropertyInventoryRouteImport } from './routes/_authed/manageproperty/inventory'
+import { Route as AuthedManagepropertyInfrastructureRouteImport } from './routes/_authed/manageproperty/infrastructure'
 import { Route as AuthedManagepropertyInfoRouteImport } from './routes/_authed/manageproperty/info'
+import { Route as AuthedManagepropertyEquipmentRouteImport } from './routes/_authed/manageproperty/equipment'
 import { Route as AuthedManagepropertyContactsRouteImport } from './routes/_authed/manageproperty/contacts'
-import { Route as AuthedManagepropertyBuildingsRouteImport } from './routes/_authed/manageproperty/buildings'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/_onboarding',
@@ -114,6 +114,12 @@ const AuthedManagepropertyUsergroupsRoute =
     path: '/usergroups',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
+const AuthedManagepropertyStructuresRoute =
+  AuthedManagepropertyStructuresRouteImport.update({
+    id: '/structures',
+    path: '/structures',
+    getParentRoute: () => AuthedManagepropertyRoute,
+  } as any)
 const AuthedManagepropertySplitPolicyRoute =
   AuthedManagepropertySplitPolicyRouteImport.update({
     id: '/split-policy',
@@ -132,22 +138,16 @@ const AuthedManagepropertyRegisterRoute =
     path: '/register',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
-const AuthedManagepropertyPlacesRoute =
-  AuthedManagepropertyPlacesRouteImport.update({
-    id: '/places',
-    path: '/places',
-    getParentRoute: () => AuthedManagepropertyRoute,
-  } as any)
 const AuthedManagepropertyOwnershipRoute =
   AuthedManagepropertyOwnershipRouteImport.update({
     id: '/ownership',
     path: '/ownership',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
-const AuthedManagepropertyInventoryRoute =
-  AuthedManagepropertyInventoryRouteImport.update({
-    id: '/inventory',
-    path: '/inventory',
+const AuthedManagepropertyInfrastructureRoute =
+  AuthedManagepropertyInfrastructureRouteImport.update({
+    id: '/infrastructure',
+    path: '/infrastructure',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
 const AuthedManagepropertyInfoRoute =
@@ -156,16 +156,16 @@ const AuthedManagepropertyInfoRoute =
     path: '/info',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
+const AuthedManagepropertyEquipmentRoute =
+  AuthedManagepropertyEquipmentRouteImport.update({
+    id: '/equipment',
+    path: '/equipment',
+    getParentRoute: () => AuthedManagepropertyRoute,
+  } as any)
 const AuthedManagepropertyContactsRoute =
   AuthedManagepropertyContactsRouteImport.update({
     id: '/contacts',
     path: '/contacts',
-    getParentRoute: () => AuthedManagepropertyRoute,
-  } as any)
-const AuthedManagepropertyBuildingsRoute =
-  AuthedManagepropertyBuildingsRouteImport.update({
-    id: '/buildings',
-    path: '/buildings',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
 
@@ -181,15 +181,15 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingOnboardingRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/manageproperty/buildings': typeof AuthedManagepropertyBuildingsRoute
   '/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
+  '/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/manageproperty/info': typeof AuthedManagepropertyInfoRoute
-  '/manageproperty/inventory': typeof AuthedManagepropertyInventoryRoute
+  '/manageproperty/infrastructure': typeof AuthedManagepropertyInfrastructureRoute
   '/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
-  '/manageproperty/places': typeof AuthedManagepropertyPlacesRoute
   '/manageproperty/register': typeof AuthedManagepropertyRegisterRoute
   '/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
+  '/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
@@ -204,15 +204,15 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingOnboardingRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/manageproperty/buildings': typeof AuthedManagepropertyBuildingsRoute
   '/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
+  '/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/manageproperty/info': typeof AuthedManagepropertyInfoRoute
-  '/manageproperty/inventory': typeof AuthedManagepropertyInventoryRoute
+  '/manageproperty/infrastructure': typeof AuthedManagepropertyInfrastructureRoute
   '/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
-  '/manageproperty/places': typeof AuthedManagepropertyPlacesRoute
   '/manageproperty/register': typeof AuthedManagepropertyRegisterRoute
   '/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
+  '/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/manageproperty': typeof AuthedManagepropertyIndexRoute
 }
@@ -232,15 +232,15 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_marketing/': typeof MarketingIndexRoute
-  '/_authed/manageproperty/buildings': typeof AuthedManagepropertyBuildingsRoute
   '/_authed/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
+  '/_authed/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/_authed/manageproperty/info': typeof AuthedManagepropertyInfoRoute
-  '/_authed/manageproperty/inventory': typeof AuthedManagepropertyInventoryRoute
+  '/_authed/manageproperty/infrastructure': typeof AuthedManagepropertyInfrastructureRoute
   '/_authed/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
-  '/_authed/manageproperty/places': typeof AuthedManagepropertyPlacesRoute
   '/_authed/manageproperty/register': typeof AuthedManagepropertyRegisterRoute
   '/_authed/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/_authed/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
+  '/_authed/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/_authed/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/_authed/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
@@ -258,15 +258,15 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/auth/callback'
     | '/invite/$token'
-    | '/manageproperty/buildings'
     | '/manageproperty/contacts'
+    | '/manageproperty/equipment'
     | '/manageproperty/info'
-    | '/manageproperty/inventory'
+    | '/manageproperty/infrastructure'
     | '/manageproperty/ownership'
-    | '/manageproperty/places'
     | '/manageproperty/register'
     | '/manageproperty/settings'
     | '/manageproperty/split-policy'
+    | '/manageproperty/structures'
     | '/manageproperty/usergroups'
     | '/manageproperty/'
   fileRoutesByTo: FileRoutesByTo
@@ -281,15 +281,15 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/auth/callback'
     | '/invite/$token'
-    | '/manageproperty/buildings'
     | '/manageproperty/contacts'
+    | '/manageproperty/equipment'
     | '/manageproperty/info'
-    | '/manageproperty/inventory'
+    | '/manageproperty/infrastructure'
     | '/manageproperty/ownership'
-    | '/manageproperty/places'
     | '/manageproperty/register'
     | '/manageproperty/settings'
     | '/manageproperty/split-policy'
+    | '/manageproperty/structures'
     | '/manageproperty/usergroups'
     | '/manageproperty'
   id:
@@ -308,15 +308,15 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/invite/$token'
     | '/_marketing/'
-    | '/_authed/manageproperty/buildings'
     | '/_authed/manageproperty/contacts'
+    | '/_authed/manageproperty/equipment'
     | '/_authed/manageproperty/info'
-    | '/_authed/manageproperty/inventory'
+    | '/_authed/manageproperty/infrastructure'
     | '/_authed/manageproperty/ownership'
-    | '/_authed/manageproperty/places'
     | '/_authed/manageproperty/register'
     | '/_authed/manageproperty/settings'
     | '/_authed/manageproperty/split-policy'
+    | '/_authed/manageproperty/structures'
     | '/_authed/manageproperty/usergroups'
     | '/_authed/manageproperty/'
   fileRoutesById: FileRoutesById
@@ -443,6 +443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyUsergroupsRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
+    '/_authed/manageproperty/structures': {
+      id: '/_authed/manageproperty/structures'
+      path: '/structures'
+      fullPath: '/manageproperty/structures'
+      preLoaderRoute: typeof AuthedManagepropertyStructuresRouteImport
+      parentRoute: typeof AuthedManagepropertyRoute
+    }
     '/_authed/manageproperty/split-policy': {
       id: '/_authed/manageproperty/split-policy'
       path: '/split-policy'
@@ -464,13 +471,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyRegisterRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
-    '/_authed/manageproperty/places': {
-      id: '/_authed/manageproperty/places'
-      path: '/places'
-      fullPath: '/manageproperty/places'
-      preLoaderRoute: typeof AuthedManagepropertyPlacesRouteImport
-      parentRoute: typeof AuthedManagepropertyRoute
-    }
     '/_authed/manageproperty/ownership': {
       id: '/_authed/manageproperty/ownership'
       path: '/ownership'
@@ -478,11 +478,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyOwnershipRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
-    '/_authed/manageproperty/inventory': {
-      id: '/_authed/manageproperty/inventory'
-      path: '/inventory'
-      fullPath: '/manageproperty/inventory'
-      preLoaderRoute: typeof AuthedManagepropertyInventoryRouteImport
+    '/_authed/manageproperty/infrastructure': {
+      id: '/_authed/manageproperty/infrastructure'
+      path: '/infrastructure'
+      fullPath: '/manageproperty/infrastructure'
+      preLoaderRoute: typeof AuthedManagepropertyInfrastructureRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
     '/_authed/manageproperty/info': {
@@ -492,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyInfoRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
+    '/_authed/manageproperty/equipment': {
+      id: '/_authed/manageproperty/equipment'
+      path: '/equipment'
+      fullPath: '/manageproperty/equipment'
+      preLoaderRoute: typeof AuthedManagepropertyEquipmentRouteImport
+      parentRoute: typeof AuthedManagepropertyRoute
+    }
     '/_authed/manageproperty/contacts': {
       id: '/_authed/manageproperty/contacts'
       path: '/contacts'
@@ -499,40 +506,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyContactsRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
-    '/_authed/manageproperty/buildings': {
-      id: '/_authed/manageproperty/buildings'
-      path: '/buildings'
-      fullPath: '/manageproperty/buildings'
-      preLoaderRoute: typeof AuthedManagepropertyBuildingsRouteImport
-      parentRoute: typeof AuthedManagepropertyRoute
-    }
   }
 }
 
 interface AuthedManagepropertyRouteChildren {
-  AuthedManagepropertyBuildingsRoute: typeof AuthedManagepropertyBuildingsRoute
   AuthedManagepropertyContactsRoute: typeof AuthedManagepropertyContactsRoute
+  AuthedManagepropertyEquipmentRoute: typeof AuthedManagepropertyEquipmentRoute
   AuthedManagepropertyInfoRoute: typeof AuthedManagepropertyInfoRoute
-  AuthedManagepropertyInventoryRoute: typeof AuthedManagepropertyInventoryRoute
+  AuthedManagepropertyInfrastructureRoute: typeof AuthedManagepropertyInfrastructureRoute
   AuthedManagepropertyOwnershipRoute: typeof AuthedManagepropertyOwnershipRoute
-  AuthedManagepropertyPlacesRoute: typeof AuthedManagepropertyPlacesRoute
   AuthedManagepropertyRegisterRoute: typeof AuthedManagepropertyRegisterRoute
   AuthedManagepropertySettingsRoute: typeof AuthedManagepropertySettingsRoute
   AuthedManagepropertySplitPolicyRoute: typeof AuthedManagepropertySplitPolicyRoute
+  AuthedManagepropertyStructuresRoute: typeof AuthedManagepropertyStructuresRoute
   AuthedManagepropertyUsergroupsRoute: typeof AuthedManagepropertyUsergroupsRoute
   AuthedManagepropertyIndexRoute: typeof AuthedManagepropertyIndexRoute
 }
 
 const AuthedManagepropertyRouteChildren: AuthedManagepropertyRouteChildren = {
-  AuthedManagepropertyBuildingsRoute: AuthedManagepropertyBuildingsRoute,
   AuthedManagepropertyContactsRoute: AuthedManagepropertyContactsRoute,
+  AuthedManagepropertyEquipmentRoute: AuthedManagepropertyEquipmentRoute,
   AuthedManagepropertyInfoRoute: AuthedManagepropertyInfoRoute,
-  AuthedManagepropertyInventoryRoute: AuthedManagepropertyInventoryRoute,
+  AuthedManagepropertyInfrastructureRoute:
+    AuthedManagepropertyInfrastructureRoute,
   AuthedManagepropertyOwnershipRoute: AuthedManagepropertyOwnershipRoute,
-  AuthedManagepropertyPlacesRoute: AuthedManagepropertyPlacesRoute,
   AuthedManagepropertyRegisterRoute: AuthedManagepropertyRegisterRoute,
   AuthedManagepropertySettingsRoute: AuthedManagepropertySettingsRoute,
   AuthedManagepropertySplitPolicyRoute: AuthedManagepropertySplitPolicyRoute,
+  AuthedManagepropertyStructuresRoute: AuthedManagepropertyStructuresRoute,
   AuthedManagepropertyUsergroupsRoute: AuthedManagepropertyUsergroupsRoute,
   AuthedManagepropertyIndexRoute: AuthedManagepropertyIndexRoute,
 }

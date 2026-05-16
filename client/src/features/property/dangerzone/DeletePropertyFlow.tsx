@@ -85,7 +85,7 @@ export function DeletePropertyFlow() {
       <p role="alert">
         <strong>Warning:</strong> This action cannot be undone. Deleting{" "}
         <strong>{selectedProperty.name}</strong> will permanently remove the
-        property along with all its buildings, rooms, bookings, and history.
+        property along with all its Structures, rooms, bookings, and history.
       </p>
 
       <form onSubmit={handleDelete}>

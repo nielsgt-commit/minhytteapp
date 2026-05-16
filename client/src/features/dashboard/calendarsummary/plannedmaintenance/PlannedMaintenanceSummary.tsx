@@ -29,8 +29,8 @@ type Props = {
 export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const trpc = useTRPC()
   const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.listForProperty.queryOptions({ property_id: propertyId }),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: items } = useSuspenseQuery(
     trpc.maintenance.listForProperty.queryOptions({ property_id: propertyId }),
@@ -53,25 +53,25 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
       ? pending.filter(i => inWeek(i.due_at))
       : pending.filter(i => !inWeek(i.due_at))
 
-  const itemsByBuilding = new Map<number, typeof filtered>()
+  const itemsByStructure = new Map<number, typeof filtered>()
   for (const it of filtered) {
-    if (it.building_id == null) continue
-    const bucket = itemsByBuilding.get(it.building_id) ?? []
+    if (it.structure_id == null) continue
+    const bucket = itemsByStructure.get(it.structure_id) ?? []
     bucket.push(it)
-    itemsByBuilding.set(it.building_id, bucket)
+    itemsByStructure.set(it.structure_id, bucket)
   }
 
-  const buildingsWithItems = buildings.filter(b => itemsByBuilding.has(b.id))
+  const structuresWithItems = structures.filter(b => itemsByStructure.has(b.id))
 
   return (
     <>
       <Heading level={6} size="medium">Planned Maintenance</Heading>
-      {buildingsWithItems.length === 0 ? (
+      {structuresWithItems.length === 0 ? (
         <p>No planned maintenance.</p>
       ) : (
         <ul style={{ display: "flex", flexWrap: "wrap", gap: "1rem", listStyle: "none", padding: 0 }}>
-          {buildingsWithItems.map(b => {
-            const bucket = itemsByBuilding.get(b.id) ?? []
+          {structuresWithItems.map(b => {
+            const bucket = itemsByStructure.get(b.id) ?? []
             return (
               <Tag key={b.id} data-color={severityColor(bucket)}>
                 {b.name} ({bucket.length} open)
