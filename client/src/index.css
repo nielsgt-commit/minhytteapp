@@ -17,9 +17,13 @@ code {
 }
 
 ds-tabs,
-ds-tabpanel,
-u-tabs,
-u-tabpanel {
+u-tabs {
+  display: block;
+  min-width: 0;
+}
+
+ds-tabpanel:not([hidden]),
+u-tabpanel:not([hidden]) {
   display: block;
   min-width: 0;
 }

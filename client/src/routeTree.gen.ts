@@ -17,7 +17,6 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as OnboardingOnboardingRouteImport } from './routes/_onboarding/onboarding'
 import { Route as AuthedUsersettingsRouteImport } from './routes/_authed/usersettings'
-import { Route as AuthedUsergroupsRouteImport } from './routes/_authed/usergroups'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
 import { Route as AuthedManagepropertyRouteImport } from './routes/_authed/manageproperty'
 import { Route as AuthedMaintenanceRouteImport } from './routes/_authed/maintenance'
@@ -25,7 +24,9 @@ import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 import { Route as AuthedManagepropertyIndexRouteImport } from './routes/_authed/manageproperty/index'
+import { Route as AuthedManagepropertyUsergroupsRouteImport } from './routes/_authed/manageproperty/usergroups'
 import { Route as AuthedManagepropertySplitPolicyRouteImport } from './routes/_authed/manageproperty/split-policy'
+import { Route as AuthedManagepropertySettingsRouteImport } from './routes/_authed/manageproperty/settings'
 import { Route as AuthedManagepropertyRegisterRouteImport } from './routes/_authed/manageproperty/register'
 import { Route as AuthedManagepropertyPlacesRouteImport } from './routes/_authed/manageproperty/places'
 import { Route as AuthedManagepropertyOwnershipRouteImport } from './routes/_authed/manageproperty/ownership'
@@ -71,11 +72,6 @@ const AuthedUsersettingsRoute = AuthedUsersettingsRouteImport.update({
   path: '/usersettings',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedUsergroupsRoute = AuthedUsergroupsRouteImport.update({
-  id: '/usergroups',
-  path: '/usergroups',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedSettlementRoute = AuthedSettlementRouteImport.update({
   id: '/settlement',
   path: '/settlement',
@@ -112,10 +108,22 @@ const AuthedManagepropertyIndexRoute =
     path: '/',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
+const AuthedManagepropertyUsergroupsRoute =
+  AuthedManagepropertyUsergroupsRouteImport.update({
+    id: '/usergroups',
+    path: '/usergroups',
+    getParentRoute: () => AuthedManagepropertyRoute,
+  } as any)
 const AuthedManagepropertySplitPolicyRoute =
   AuthedManagepropertySplitPolicyRouteImport.update({
     id: '/split-policy',
     path: '/split-policy',
+    getParentRoute: () => AuthedManagepropertyRoute,
+  } as any)
+const AuthedManagepropertySettingsRoute =
+  AuthedManagepropertySettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
 const AuthedManagepropertyRegisterRoute =
@@ -169,7 +177,6 @@ export interface FileRoutesByFullPath {
   '/maintenance': typeof AuthedMaintenanceRoute
   '/manageproperty': typeof AuthedManagepropertyRouteWithChildren
   '/settlement': typeof AuthedSettlementRoute
-  '/usergroups': typeof AuthedUsergroupsRoute
   '/usersettings': typeof AuthedUsersettingsRoute
   '/onboarding': typeof OnboardingOnboardingRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -181,7 +188,9 @@ export interface FileRoutesByFullPath {
   '/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
   '/manageproperty/places': typeof AuthedManagepropertyPlacesRoute
   '/manageproperty/register': typeof AuthedManagepropertyRegisterRoute
+  '/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
+  '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRoutesByTo {
@@ -191,7 +200,6 @@ export interface FileRoutesByTo {
   '/expenses': typeof AuthedExpensesRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/settlement': typeof AuthedSettlementRoute
-  '/usergroups': typeof AuthedUsergroupsRoute
   '/usersettings': typeof AuthedUsersettingsRoute
   '/onboarding': typeof OnboardingOnboardingRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -203,7 +211,9 @@ export interface FileRoutesByTo {
   '/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
   '/manageproperty/places': typeof AuthedManagepropertyPlacesRoute
   '/manageproperty/register': typeof AuthedManagepropertyRegisterRoute
+  '/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
+  '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/manageproperty': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRoutesById {
@@ -217,7 +227,6 @@ export interface FileRoutesById {
   '/_authed/maintenance': typeof AuthedMaintenanceRoute
   '/_authed/manageproperty': typeof AuthedManagepropertyRouteWithChildren
   '/_authed/settlement': typeof AuthedSettlementRoute
-  '/_authed/usergroups': typeof AuthedUsergroupsRoute
   '/_authed/usersettings': typeof AuthedUsersettingsRoute
   '/_onboarding/onboarding': typeof OnboardingOnboardingRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -230,7 +239,9 @@ export interface FileRoutesById {
   '/_authed/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
   '/_authed/manageproperty/places': typeof AuthedManagepropertyPlacesRoute
   '/_authed/manageproperty/register': typeof AuthedManagepropertyRegisterRoute
+  '/_authed/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/_authed/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
+  '/_authed/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/_authed/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRouteTypes {
@@ -243,7 +254,6 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/manageproperty'
     | '/settlement'
-    | '/usergroups'
     | '/usersettings'
     | '/onboarding'
     | '/auth/callback'
@@ -255,7 +265,9 @@ export interface FileRouteTypes {
     | '/manageproperty/ownership'
     | '/manageproperty/places'
     | '/manageproperty/register'
+    | '/manageproperty/settings'
     | '/manageproperty/split-policy'
+    | '/manageproperty/usergroups'
     | '/manageproperty/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -265,7 +277,6 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/maintenance'
     | '/settlement'
-    | '/usergroups'
     | '/usersettings'
     | '/onboarding'
     | '/auth/callback'
@@ -277,7 +288,9 @@ export interface FileRouteTypes {
     | '/manageproperty/ownership'
     | '/manageproperty/places'
     | '/manageproperty/register'
+    | '/manageproperty/settings'
     | '/manageproperty/split-policy'
+    | '/manageproperty/usergroups'
     | '/manageproperty'
   id:
     | '__root__'
@@ -290,7 +303,6 @@ export interface FileRouteTypes {
     | '/_authed/maintenance'
     | '/_authed/manageproperty'
     | '/_authed/settlement'
-    | '/_authed/usergroups'
     | '/_authed/usersettings'
     | '/_onboarding/onboarding'
     | '/auth/callback'
@@ -303,7 +315,9 @@ export interface FileRouteTypes {
     | '/_authed/manageproperty/ownership'
     | '/_authed/manageproperty/places'
     | '/_authed/manageproperty/register'
+    | '/_authed/manageproperty/settings'
     | '/_authed/manageproperty/split-policy'
+    | '/_authed/manageproperty/usergroups'
     | '/_authed/manageproperty/'
   fileRoutesById: FileRoutesById
 }
@@ -373,13 +387,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedUsersettingsRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/usergroups': {
-      id: '/_authed/usergroups'
-      path: '/usergroups'
-      fullPath: '/usergroups'
-      preLoaderRoute: typeof AuthedUsergroupsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/settlement': {
       id: '/_authed/settlement'
       path: '/settlement'
@@ -429,11 +436,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyIndexRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
+    '/_authed/manageproperty/usergroups': {
+      id: '/_authed/manageproperty/usergroups'
+      path: '/usergroups'
+      fullPath: '/manageproperty/usergroups'
+      preLoaderRoute: typeof AuthedManagepropertyUsergroupsRouteImport
+      parentRoute: typeof AuthedManagepropertyRoute
+    }
     '/_authed/manageproperty/split-policy': {
       id: '/_authed/manageproperty/split-policy'
       path: '/split-policy'
       fullPath: '/manageproperty/split-policy'
       preLoaderRoute: typeof AuthedManagepropertySplitPolicyRouteImport
+      parentRoute: typeof AuthedManagepropertyRoute
+    }
+    '/_authed/manageproperty/settings': {
+      id: '/_authed/manageproperty/settings'
+      path: '/settings'
+      fullPath: '/manageproperty/settings'
+      preLoaderRoute: typeof AuthedManagepropertySettingsRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
     '/_authed/manageproperty/register': {
@@ -496,7 +517,9 @@ interface AuthedManagepropertyRouteChildren {
   AuthedManagepropertyOwnershipRoute: typeof AuthedManagepropertyOwnershipRoute
   AuthedManagepropertyPlacesRoute: typeof AuthedManagepropertyPlacesRoute
   AuthedManagepropertyRegisterRoute: typeof AuthedManagepropertyRegisterRoute
+  AuthedManagepropertySettingsRoute: typeof AuthedManagepropertySettingsRoute
   AuthedManagepropertySplitPolicyRoute: typeof AuthedManagepropertySplitPolicyRoute
+  AuthedManagepropertyUsergroupsRoute: typeof AuthedManagepropertyUsergroupsRoute
   AuthedManagepropertyIndexRoute: typeof AuthedManagepropertyIndexRoute
 }
 
@@ -508,7 +531,9 @@ const AuthedManagepropertyRouteChildren: AuthedManagepropertyRouteChildren = {
   AuthedManagepropertyOwnershipRoute: AuthedManagepropertyOwnershipRoute,
   AuthedManagepropertyPlacesRoute: AuthedManagepropertyPlacesRoute,
   AuthedManagepropertyRegisterRoute: AuthedManagepropertyRegisterRoute,
+  AuthedManagepropertySettingsRoute: AuthedManagepropertySettingsRoute,
   AuthedManagepropertySplitPolicyRoute: AuthedManagepropertySplitPolicyRoute,
+  AuthedManagepropertyUsergroupsRoute: AuthedManagepropertyUsergroupsRoute,
   AuthedManagepropertyIndexRoute: AuthedManagepropertyIndexRoute,
 }
 
@@ -522,7 +547,6 @@ interface AuthedRouteChildren {
   AuthedMaintenanceRoute: typeof AuthedMaintenanceRoute
   AuthedManagepropertyRoute: typeof AuthedManagepropertyRouteWithChildren
   AuthedSettlementRoute: typeof AuthedSettlementRoute
-  AuthedUsergroupsRoute: typeof AuthedUsergroupsRoute
   AuthedUsersettingsRoute: typeof AuthedUsersettingsRoute
 }
 
@@ -533,7 +557,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedMaintenanceRoute: AuthedMaintenanceRoute,
   AuthedManagepropertyRoute: AuthedManagepropertyRouteWithChildren,
   AuthedSettlementRoute: AuthedSettlementRoute,
-  AuthedUsergroupsRoute: AuthedUsergroupsRoute,
   AuthedUsersettingsRoute: AuthedUsersettingsRoute,
 }
 

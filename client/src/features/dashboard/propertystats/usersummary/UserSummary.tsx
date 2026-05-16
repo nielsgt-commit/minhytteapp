@@ -46,7 +46,7 @@ export default function UserSummary() {
             </List.Unordered>
           )}
           <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
-            <Link to="/usergroups">Manage user groups</Link>
+            <Link to="/manageproperty/usergroups">Manage user groups</Link>
           </Button>
         </Card.Block>
       </section>
