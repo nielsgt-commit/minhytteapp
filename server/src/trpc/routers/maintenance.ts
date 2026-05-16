@@ -2,8 +2,8 @@ import { asc, eq, or } from "drizzle-orm"
 import { z } from "zod"
 import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
 import {
-  buildingsTable,
-  placeTable,
+  structuresTable,
+  infrastructureTable,
 } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
@@ -12,8 +12,8 @@ const maintenanceFields = {
   instructions: z.string().optional(),
   added_by: z.number().int().positive(),
   assigned_to_id: z.number().int().positive().optional(),
-  building_id: z.number().int().positive().optional(),
-  place_id: z.number().int().positive().optional(),
+  structure_id: z.number().int().positive().optional(),
+  infrastructure_id: z.number().int().positive().optional(),
   category: z.enum(["maintenance", "repair"]),
   severity: z.enum(["major", "minor", "patch"]),
   status: z.enum(["todo", "doing", "done"]),
@@ -21,10 +21,10 @@ const maintenanceFields = {
 }
 
 const locationXor = {
-  check: (v: { building_id?: number; place_id?: number }) =>
-    (v.building_id != null) !== (v.place_id != null),
-  error: "exactly one of building_id or place_id must be set",
-  path: ["place_id"] as const,
+  check: (v: { structure_id?: number; infrastructure_id?: number }) =>
+    (v.structure_id != null) !== (v.infrastructure_id != null),
+  error: "exactly one of structure_id or infrastructure_id must be set",
+  path: ["infrastructure_id"] as const,
 }
 
 const createInput = z
@@ -56,14 +56,14 @@ export const maintenanceRouter = router({
         .select({ m: maintenanceTable })
         .from(maintenanceTable)
         .leftJoin(
-          buildingsTable,
-          eq(buildingsTable.id, maintenanceTable.building_id),
+          structuresTable,
+          eq(structuresTable.id, maintenanceTable.structure_id),
         )
-        .leftJoin(placeTable, eq(placeTable.id, maintenanceTable.place_id))
+        .leftJoin(infrastructureTable, eq(infrastructureTable.id, maintenanceTable.infrastructure_id))
         .where(
           or(
-            eq(buildingsTable.property_id, input.property_id),
-            eq(placeTable.property_id, input.property_id),
+            eq(structuresTable.property_id, input.property_id),
+            eq(infrastructureTable.property_id, input.property_id),
           ),
         )
         .orderBy(asc(maintenanceTable.created_at))

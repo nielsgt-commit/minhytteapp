@@ -1,14 +1,14 @@
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import {
-  buildingsTable,
+  structuresTable,
   roomTable,
 } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const roomFields = {
   name: z.string().min(1, { error: "name is required" }),
-  building_id: z.number().int().positive(),
+  structure_id: z.number().int().positive(),
   beds_sm: z.number().int().nonnegative(),
   beds_lg: z.number().int().nonnegative(),
   beds_double: z.number().int().nonnegative(),
@@ -30,8 +30,8 @@ export const roomRouter = router({
       .select({
         id: roomTable.id,
         name: roomTable.name,
-        building_id: roomTable.building_id,
-        building_name: buildingsTable.name,
+        structure_id: roomTable.structure_id,
+        structure_name: structuresTable.name,
         beds_sm: roomTable.beds_sm,
         beds_lg: roomTable.beds_lg,
         beds_double: roomTable.beds_double,
@@ -40,7 +40,7 @@ export const roomRouter = router({
         travel_cot: roomTable.travel_cot,
       })
       .from(roomTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomTable.building_id))
+      .leftJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
       .orderBy(asc(roomTable.id))
     return rows
   }),
@@ -52,8 +52,8 @@ export const roomRouter = router({
         .select({
           id: roomTable.id,
           name: roomTable.name,
-          building_id: roomTable.building_id,
-          building_name: buildingsTable.name,
+          structure_id: roomTable.structure_id,
+          structure_name: structuresTable.name,
           beds_sm: roomTable.beds_sm,
           beds_lg: roomTable.beds_lg,
           beds_double: roomTable.beds_double,
@@ -62,8 +62,8 @@ export const roomRouter = router({
           travel_cot: roomTable.travel_cot,
         })
         .from(roomTable)
-        .innerJoin(buildingsTable, eq(buildingsTable.id, roomTable.building_id))
-        .where(eq(buildingsTable.property_id, input.property_id))
+        .innerJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
+        .where(eq(structuresTable.property_id, input.property_id))
         .orderBy(asc(roomTable.id))
     }),
 

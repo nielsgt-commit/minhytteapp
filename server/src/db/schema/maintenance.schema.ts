@@ -10,7 +10,7 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core"
-import { buildingsTable, placeTable, propertyTable } from "./property.schema.ts"
+import { infrastructureTable, propertyTable, structuresTable } from "./property.schema.ts"
 import { usersTable } from "./users.schema.ts"
 
 export const routinesTable = pgTable("routines", {
@@ -25,9 +25,9 @@ export const equipmentTable = pgTable("equipment", {
   property_id: integer("property_id")
     .notNull()
     .references(() => propertyTable.id),
-  building_id: integer("building_id")
+  structure_id: integer("structure_id")
     .notNull()
-    .references(() => buildingsTable.id),
+    .references(() => structuresTable.id),
   category: varchar("category", { length: 32 }),
   notes: varchar("notes", { length: 255 }),
   created_at: timestamp("created_at").notNull().defaultNow(),
@@ -43,8 +43,8 @@ export const maintenanceTable = pgTable(
       .notNull()
       .references(() => usersTable.id),
     assigned_to_id: integer("assigned_to_id").references(() => usersTable.id),
-    building_id: integer("building_id").references(() => buildingsTable.id),
-    place_id: integer("place_id").references(() => placeTable.id),
+    structure_id: integer("structure_id").references(() => structuresTable.id),
+    infrastructure_id: integer("infrastructure_id").references(() => infrastructureTable.id),
     category: varchar("category", {
       length: 11,
       enum: ["maintenance", "repair"],
@@ -79,7 +79,7 @@ export const maintenanceTable = pgTable(
   (t) => [
     check(
       "maintenance_location_xor",
-      sql`(${t.building_id} IS NOT NULL) <> (${t.place_id} IS NOT NULL)`,
+      sql`(${t.structure_id} IS NOT NULL) <> (${t.infrastructure_id} IS NOT NULL)`,
     ),
     check(
       "maintenance_done_has_timestamp",
@@ -96,8 +96,8 @@ export const inspectionsTable = pgTable(
   "inspections",
   {
     id: serial("id").primaryKey(),
-    building_id: integer("building_id").references(() => buildingsTable.id),
-    place_id: integer("place_id").references(() => placeTable.id),
+    structure_id: integer("structure_id").references(() => structuresTable.id),
+    infrastructure_id: integer("infrastructure_id").references(() => infrastructureTable.id),
     equipment_id: integer("equipment_id").references(() => equipmentTable.id),
     started_by_user_id: integer("started_by_user_id")
       .notNull()
@@ -115,8 +115,8 @@ export const inspectionsTable = pgTable(
     check(
       "inspection_target_exclusive",
       sql`(
-        (CASE WHEN ${t.building_id} IS NOT NULL THEN 1 ELSE 0 END)
-        + (CASE WHEN ${t.place_id} IS NOT NULL THEN 1 ELSE 0 END)
+        (CASE WHEN ${t.structure_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.infrastructure_id} IS NOT NULL THEN 1 ELSE 0 END)
         + (CASE WHEN ${t.equipment_id} IS NOT NULL THEN 1 ELSE 0 END)
       ) = 1`,
     ),
