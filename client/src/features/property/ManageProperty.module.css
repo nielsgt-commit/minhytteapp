@@ -6,6 +6,25 @@
 
 .title { margin: 0; }
 
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.content {
+  min-width: 0;
+}
+
+.desktopNav { display: block; }
+.mobileNav { display: none; }
+
 @media (max-width: 640px) {
-  .summaries { display: none; }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .desktopNav { display: none; }
+  .mobileNav { display: block; }
 }

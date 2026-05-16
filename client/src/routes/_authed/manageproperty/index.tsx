@@ -1,8 +1,6 @@
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
+import PropertyStats from "@/features/dashboard/propertystats/PropertyStats"
 
 export const Route = createFileRoute("/_authed/manageproperty/")({
-  beforeLoad: () => {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    throw redirect({ to: "/manageproperty/info" })
-  },
+  component: PropertyStats,
 })

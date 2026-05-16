@@ -19,7 +19,6 @@ export default function PropertyStats() {
 
   return (
     <>
-      <Heading level={4}> {selectedProperty?.name ?? ""} at a glance</Heading>
       <div className={styles.grid}>
         <UserSummary />
         <BuildingSummary />

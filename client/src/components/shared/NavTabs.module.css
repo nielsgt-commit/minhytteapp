@@ -2,6 +2,14 @@
   overflow-x: auto;
 }
 
+.noActive {
+  border-bottom-color: transparent;
+}
+
+.noActive > [role="tab"]::after {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .list {
     display: none;
