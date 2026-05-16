@@ -1,38 +1,32 @@
-import { Suspense, useState } from "react"
+import { Suspense } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Divider } from "@digdir/designsystemet-react"
-import PropertyInfo from "@/features/property/propertyinfo/PropertyInfo.tsx"
-import PropertyContacts from "@/features/property/propertyinfo/PropertyContacts.tsx"
+import { Divider, Tabs } from "@digdir/designsystemet-react"
+import { Link, Outlet, useLocation } from "@tanstack/react-router"
 import styles from "./ManageProperty.module.css"
-import { ListPropertyBuildings } from "@/features/property/testform/ListPropertyBuildings.tsx"
 import { DangerZone } from "@/features/property/dangerzone/DangerZone.tsx"
-import { PropertyOwnersPanel } from "@/features/property/owners/PropertyOwnersPanel.tsx"
-import { PlacesPanel } from "@/features/property/places/PlacesPanel.tsx"
-import { EquipmentPanel } from "@/features/property/equipment/EquipmentPanel.tsx"
-import { PropertyRegister } from "@/features/property/register/PropertyRegister.tsx"
-import { SplitPolicyBuilder } from "@/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx"
-import {
-  PropertyManagerFilter,
-  type PropertyPanel,
-} from "@/features/property/PropertyManagerFilter.tsx"
 import PropertyStats from "@/features/dashboard/propertystats/PropertyStats"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
+const TABS = [
+  { slug: "info", label: "Info" },
+  { slug: "buildings", label: "Buildings" },
+  { slug: "places", label: "Places" },
+  { slug: "inventory", label: "Inventory" },
+  { slug: "contacts", label: "Contacts" },
+  { slug: "ownership", label: "Ownership" },
+  { slug: "register", label: "Register" },
+  { slug: "split-policy", label: "Split policy" },
+] as const
+
+const BASE = "/manageproperty"
+
 export function ManageProperty() {
   const trpc = useTRPC()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
-  const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
-  )
-
-  const [activePanel, setActivePanel] = useState<PropertyPanel>("info")
-
-  const selectedProperty =
-    selectedPropertyId != null
-      ? properties.find(p => p.id === selectedPropertyId)
-      : undefined
+  useSuspenseQuery(trpc.property.list.queryOptions())
+  const { pathname } = useLocation()
 
   if (selectedPropertyId == null) {
     return (
@@ -43,6 +37,9 @@ export function ManageProperty() {
     )
   }
 
+  const activeSlug =
+    TABS.find(t => pathname.startsWith(`${BASE}/${t.slug}`))?.slug ?? "info"
+
   return (
     <section className={styles.page}>
       <h1 className={styles.title}>Manage Property</h1>
@@ -52,30 +49,25 @@ export function ManageProperty() {
         </Suspense>
       </div>
 
-      <PropertyManagerFilter value={activePanel} onChange={setActivePanel} />
-
-      {activePanel === "info" && <PropertyInfo />}
-      {activePanel === "buildings" && <ListPropertyBuildings />}
-      {activePanel === "places" && selectedProperty && (
-        <PlacesPanel
-          propertyId={selectedProperty.id}
-          propertyName={selectedProperty.name}
-        />
-      )}
-      {activePanel === "inventory" && selectedProperty && (
-        <EquipmentPanel
-          propertyId={selectedProperty.id}
-          propertyName={selectedProperty.name}
-        />
-      )}
-      {activePanel === "contacts" && <PropertyContacts />}
-      {activePanel === "ownership" && <PropertyOwnersPanel />}
-      {activePanel === "register" && <PropertyRegister />}
-      {activePanel === "split_policy" && (
-        <Suspense fallback={<p>Loading…</p>}>
-          <SplitPolicyBuilder />
-        </Suspense>
-      )}
+      <Tabs key={pathname} defaultValue={activeSlug}>
+        <Tabs.List>
+          {TABS.map(tab => (
+            <Tabs.Tab key={tab.slug} value={tab.slug} style={{ position: "relative" }}>
+              {tab.label}
+              <Link
+                to={`${BASE}/${tab.slug}`}
+                aria-label={tab.label}
+                style={{ position: "absolute", inset: 0 }}
+              />
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+        <Tabs.Panel value={activeSlug}>
+          <Suspense fallback={<p>Loading…</p>}>
+            <Outlet />
+          </Suspense>
+        </Tabs.Panel>
+      </Tabs>
 
       <Divider />
       <DangerZone />
