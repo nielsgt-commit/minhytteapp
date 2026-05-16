@@ -7,11 +7,11 @@ import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
-export const Route = createFileRoute("/_authed/manageproperty/inventory")({
+export const Route = createFileRoute("/_authed/manageproperty/equipment")({
   loader: ({ context }) => {
     const propertyId = selectSelectedPropertyId(store.getState())
     return Promise.all([
-      context.queryClient.ensureQueryData(trpc.building.list.queryOptions()),
+      context.queryClient.ensureQueryData(trpc.structure.list.queryOptions()),
       propertyId == null
         ? undefined
         : context.queryClient.ensureQueryData(
@@ -21,10 +21,10 @@ export const Route = createFileRoute("/_authed/manageproperty/inventory")({
           ),
     ])
   },
-  component: InventoryRoute,
+  component: EquipmentRoute,
 })
 
-function InventoryRoute() {
+function EquipmentRoute() {
   const trpc = useTRPC()
   const propertyId = useAppSelector(selectSelectedPropertyId)
   const { data: properties } = useSuspenseQuery(

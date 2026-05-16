@@ -1,5 +1,5 @@
 import styles from "./Maintenance.module.css"
-import { BuildingStats } from "@/features/maintenance/BuildingStats.tsx"
+import { StructureStats } from "@/features/maintenance/StructureStats.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 
@@ -10,7 +10,7 @@ export function Maintenance() {
     return (
       <section className={styles.page}>
         <h2 className={styles.title}>Maintenance</h2>
-        <p>Add or select a property to log issues, plan upkeep, and track work across buildings.</p>
+        <p>Add or select a property to log issues, plan upkeep, and track work across Structures.</p>
       </section>
     )
   }
@@ -18,7 +18,7 @@ export function Maintenance() {
   return (
     <section className={styles.page}>
       <h2 className={styles.title}>Maintenance</h2>
-      <BuildingStats />
+      <StructureStats />
     </section>
   )
 }

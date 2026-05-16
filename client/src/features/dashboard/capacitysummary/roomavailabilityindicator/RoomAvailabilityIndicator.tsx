@@ -10,8 +10,8 @@ type RoomBeds = {
 }
 
 type Room = RoomBeds & {
-  building_id: number
-  building_name?: string | null
+  structure_id: number
+  structure_name?: string | null
 }
 
 function totalBeds(r: RoomBeds) {
@@ -53,9 +53,9 @@ export default function RoomAvailabilityIndicator({
     >
       {Array.from(
         rooms.reduce((acc, r) => {
-          const prev = acc.get(r.building_id)
-          acc.set(r.building_id, {
-            name: r.building_name ?? `Building #${String(r.building_id)}`,
+          const prev = acc.get(r.structure_id)
+          acc.set(r.structure_id, {
+            name: r.structure_name ?? `Structure #${String(r.structure_id)}`,
             beds: (prev?.beds ?? 0) + totalBeds(r),
           })
           return acc

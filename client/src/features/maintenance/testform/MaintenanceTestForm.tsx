@@ -26,8 +26,8 @@ type FormState = {
   description: string
   instructions: string
   assigned_to_id: string
-  building_id: string
-  place_id: string
+  structure_id: string
+  infrastructure_id: string
   category: Category
   severity: Severity
   status: Status
@@ -56,8 +56,8 @@ const initialFormState: FormState = {
   description: "",
   instructions: "",
   assigned_to_id: "",
-  building_id: "",
-  place_id: "",
+  structure_id: "",
+  infrastructure_id: "",
   category: "maintenance",
   severity: "minor",
   status: "todo",
@@ -69,7 +69,7 @@ type EditableField = Exclude<keyof FormState, "id">
 
 type FormAction =
   | { type: "setField"; field: EditableField; value: string }
-  | { type: "setLocation"; kind: "building" | "place" | "none"; id: string }
+  | { type: "setLocation"; kind: "structure" | "infrastructure" | "none"; id: string }
   | { type: "reset" }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -77,13 +77,13 @@ function formReducer(state: FormState, action: FormAction): FormState {
     case "setField":
       return { ...state, [action.field]: action.value }
     case "setLocation":
-      if (action.kind === "building") {
-        return { ...state, building_id: action.id, place_id: "" }
+      if (action.kind === "structure") {
+        return { ...state, structure_id: action.id, infrastructure_id: "" }
       }
-      if (action.kind === "place") {
-        return { ...state, building_id: "", place_id: action.id }
+      if (action.kind === "infrastructure") {
+        return { ...state, structure_id: "", infrastructure_id: action.id }
       }
-      return { ...state, building_id: "", place_id: "" }
+      return { ...state, structure_id: "", infrastructure_id: "" }
     case "reset":
       return initialFormState
   }
@@ -97,8 +97,8 @@ function buildPayload(state: FormState, addedBy: number) {
     assigned_to_id: state.assigned_to_id
       ? Number(state.assigned_to_id)
       : undefined,
-    building_id: state.building_id ? Number(state.building_id) : undefined,
-    place_id: state.place_id ? Number(state.place_id) : undefined,
+    structure_id: state.structure_id ? Number(state.structure_id) : undefined,
+    infrastructure_id: state.infrastructure_id ? Number(state.infrastructure_id) : undefined,
     category: state.category,
     severity: state.severity,
     status: state.status,
@@ -120,14 +120,14 @@ export function MaintenanceTestForm() {
       { enabled: selectedPropertyId != null },
     ),
   )
-  const { data: buildings = [] } = useQuery(
-    trpc.building.listForProperty.queryOptions(
+  const { data: structures = [] } = useQuery(
+    trpc.structure.listForProperty.queryOptions(
       { property_id: selectedPropertyId ?? 0 },
       { enabled: selectedPropertyId != null },
     ),
   )
-  const { data: places = [] } = useQuery(
-    trpc.place.listForProperty.queryOptions(
+  const { data: infrastructure = [] } = useQuery(
+    trpc.infrastructure.listForProperty.queryOptions(
       { property_id: selectedPropertyId ?? 0 },
       { enabled: selectedPropertyId != null },
     ),
@@ -153,7 +153,7 @@ export function MaintenanceTestForm() {
       }))
   })()
 
-  const propertyBuildings = buildings
+  const propertyStructures = structures
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
@@ -187,13 +187,13 @@ export function MaintenanceTestForm() {
   const canSubmit =
     selectedUserId != null &&
     selectedPropertyId != null &&
-    (state.building_id !== "" || state.place_id !== "")
+    (state.structure_id !== "" || state.infrastructure_id !== "")
 
   const locationValue =
-    state.building_id !== ""
-      ? `b:${state.building_id}`
-      : state.place_id !== ""
-        ? `p:${state.place_id}`
+    state.structure_id !== ""
+      ? `b:${state.structure_id}`
+      : state.infrastructure_id !== ""
+        ? `p:${state.infrastructure_id}`
         : ""
 
   return (
@@ -319,26 +319,26 @@ export function MaintenanceTestForm() {
                     }
                     const [prefix, id] = raw.split(":")
                     if (prefix === "b") {
-                      dispatch({ type: "setLocation", kind: "building", id })
+                      dispatch({ type: "setLocation", kind: "structure", id })
                     } else if (prefix === "p") {
-                      dispatch({ type: "setLocation", kind: "place", id })
+                      dispatch({ type: "setLocation", kind: "infrastructure", id })
                     }
                   }}
                   required
                 >
                   <Select.Option value="">(select location)</Select.Option>
-                  {propertyBuildings.length > 0 && (
-                    <Select.Optgroup label="Buildings">
-                      {propertyBuildings.map(b => (
+                  {propertyStructures.length > 0 && (
+                    <Select.Optgroup label="Structures">
+                      {propertyStructures.map(b => (
                         <Select.Option key={`b-${String(b.id)}`} value={`b:${String(b.id)}`}>
                           #{b.id} {b.name}
                         </Select.Option>
                       ))}
                     </Select.Optgroup>
                   )}
-                  {places.length > 0 && (
-                    <Select.Optgroup label="Places">
-                      {places.map(p => (
+                  {infrastructure.length > 0 && (
+                    <Select.Optgroup label="Infrastructure">
+                      {infrastructure.map(p => (
                         <Select.Option key={`p-${String(p.id)}`} value={`p:${String(p.id)}`}>
                           #{p.id} {p.name}
                         </Select.Option>

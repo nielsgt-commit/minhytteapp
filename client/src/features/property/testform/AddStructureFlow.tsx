@@ -19,7 +19,7 @@ type Props = {
   onCancel?: () => void
 }
 
-export function AddBuildingFlow({ onAdded, onCancel }: Props) {
+export function AddStructureFlow({ onAdded, onCancel }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -29,24 +29,24 @@ export function AddBuildingFlow({ onAdded, onCancel }: Props) {
     trpc.property.list.queryOptions(),
   )
 
-  const invalidateBuildings = () => {
-    void qc.invalidateQueries({ queryKey: trpc.building.list.queryKey() })
+  const invalidateStructures = () => {
+    void qc.invalidateQueries({ queryKey: trpc.structure.list.queryKey() })
   }
 
-  const createBuilding = useMutation(
-    trpc.building.create.mutationOptions({ onSuccess: invalidateBuildings }),
+  const createStructure = useMutation(
+    trpc.structure.create.mutationOptions({ onSuccess: invalidateStructures }),
   )
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
-  const handleAddBuilding = (e: SyntheticEvent<HTMLFormElement>) => {
+  const handleAddStructure = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!selectedProperty) return
     const form = e.currentTarget
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
     if (!name) return
-    createBuilding.mutate(
+    createStructure.mutate(
       { name, property_id: selectedProperty.id },
       {
         onSuccess: () => {
@@ -63,12 +63,12 @@ export function AddBuildingFlow({ onAdded, onCancel }: Props) {
 
   return (
     <>
-      {createBuilding.error && (
-        <p role="alert">Error: {createBuilding.error.message}</p>
+      {createStructure.error && (
+        <p role="alert">Error: {createStructure.error.message}</p>
       )}
 
       <form
-        onSubmit={handleAddBuilding}
+        onSubmit={handleAddStructure}
         style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
       >
         <Textfield
@@ -76,17 +76,17 @@ export function AddBuildingFlow({ onAdded, onCancel }: Props) {
           name="name"
           required
           autoFocus
-          disabled={createBuilding.isPending}
+          disabled={createStructure.isPending}
         />
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <Button type="submit" disabled={createBuilding.isPending}>
-            Add building
+          <Button type="submit" disabled={createStructure.isPending}>
+            Add structure
           </Button>
           {onCancel && (
             <Button
               type="button"
               variant="tertiary"
-              disabled={createBuilding.isPending}
+              disabled={createStructure.isPending}
               onClick={onCancel}
             >
               Cancel

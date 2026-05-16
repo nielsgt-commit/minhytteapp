@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Chip, Heading, Tabs } from "@digdir/designsystemet-react"
-import styles from "./BuildingStats.module.css"
+import styles from "./StructureStats.module.css"
 import { Equipment } from "@/features/maintenance/Equipment.tsx"
 import {
   MaintenanceCard,
@@ -12,7 +12,7 @@ import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
-type TabValue = "buildings" | "places" | "inventory"
+type TabValue = "structures" | "infrastructure" | "equipment"
 
 function CategoryFrame({
   isMobile,
@@ -36,25 +36,25 @@ function CategoryFrame({
   )
 }
 
-export function BuildingStats() {
+export function StructureStats() {
   const trpc = useTRPC()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
   const isMobile = useIsMobile()
 
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.listForProperty.queryOptions({
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.listForProperty.queryOptions({
       property_id: selectedPropertyId ?? 0,
     }),
   )
-  const { data: places } = useSuspenseQuery(
-    trpc.place.listForProperty.queryOptions({
+  const { data: infrastructure } = useSuspenseQuery(
+    trpc.infrastructure.listForProperty.queryOptions({
       property_id: selectedPropertyId ?? 0,
     }),
   )
 
-  const [activeTab, setActiveTab] = useState<TabValue>("buildings")
-  const [buildingFilter, setBuildingFilter] = useState<Set<number>>(new Set())
-  const [placeFilter, setPlaceFilter] = useState<Set<number>>(new Set())
+  const [activeTab, setActiveTab] = useState<TabValue>("structures")
+  const [structureFilter, setStructureFilter] = useState<Set<number>>(new Set())
+  const [infrastructureFilter, setInfrastructureFilter] = useState<Set<number>>(new Set())
 
   const toggle = (set: Set<number>, id: number): Set<number> => {
     const next = new Set(set)
@@ -63,12 +63,12 @@ export function BuildingStats() {
     return next
   }
 
-  const visibleBuildings =
-    buildingFilter.size === 0
-      ? buildings
-      : buildings.filter(b => buildingFilter.has(b.id))
-  const visiblePlaces =
-    placeFilter.size === 0 ? places : places.filter(p => placeFilter.has(p.id))
+  const visibleStructures =
+    structureFilter.size === 0
+      ? structures
+      : structures.filter(b => structureFilter.has(b.id))
+  const visibleInfrastructure =
+    infrastructureFilter.size === 0 ? infrastructure : infrastructure.filter(p => infrastructureFilter.has(p.id))
 
   return (
     <Tabs
@@ -78,31 +78,31 @@ export function BuildingStats() {
       }}
     >
       <Tabs.List>
-        <Tabs.Tab value="buildings">Buildings</Tabs.Tab>
-        <Tabs.Tab value="places">Places</Tabs.Tab>
-        <Tabs.Tab value="inventory">Inventory</Tabs.Tab>
+        <Tabs.Tab value="structures">Structures</Tabs.Tab>
+        <Tabs.Tab value="infrastructure">Infrastructure</Tabs.Tab>
+        <Tabs.Tab value="equipment">Equipment</Tabs.Tab>
       </Tabs.List>
 
-      <Tabs.Panel value="buildings" className={styles.panel}>
-        {activeTab === "buildings" && (
-          <CategoryFrame isMobile={isMobile} title="Buildings">
-            {buildings.length === 0 ? (
-              <p>No buildings yet.</p>
+      <Tabs.Panel value="structures" className={styles.panel}>
+        {activeTab === "structures" && (
+          <CategoryFrame isMobile={isMobile} title="Structures">
+            {structures.length === 0 ? (
+              <p>No Structures yet.</p>
             ) : (
               <div className={styles.wrap}>
                 <div
                   className={styles.filter}
                   role="group"
-                  aria-label="Filter buildings"
+                  aria-label="Filter Structures"
                 >
-                  {buildings.map(b => (
+                  {structures.map(b => (
                     <Chip.Checkbox
                       key={b.id}
-                      name="building-filter"
+                      name="structure-filter"
                       value={String(b.id)}
-                      checked={buildingFilter.has(b.id)}
+                      checked={structureFilter.has(b.id)}
                       onChange={() => {
-                        setBuildingFilter(prev => toggle(prev, b.id))
+                        setStructureFilter(prev => toggle(prev, b.id))
                       }}
                     >
                       {b.name}
@@ -110,9 +110,9 @@ export function BuildingStats() {
                   ))}
                 </div>
                 <div className={styles.cards}>
-                  {visibleBuildings.map(b => {
+                  {visibleStructures.map(b => {
                     const scope: MaintenanceScope = {
-                      kind: "building",
+                      kind: "structure",
                       id: b.id,
                       name: b.name,
                     }
@@ -125,26 +125,26 @@ export function BuildingStats() {
         )}
       </Tabs.Panel>
 
-      <Tabs.Panel value="places" className={styles.panel}>
-        {activeTab === "places" && (
-          <CategoryFrame isMobile={isMobile} title="Places">
-            {places.length === 0 ? (
-              <p>No places yet.</p>
+      <Tabs.Panel value="infrastructure" className={styles.panel}>
+        {activeTab === "infrastructure" && (
+          <CategoryFrame isMobile={isMobile} title="Infrastructure">
+            {infrastructure.length === 0 ? (
+              <p>No Infrastructure yet.</p>
             ) : (
               <div className={styles.wrap}>
                 <div
                   className={styles.filter}
                   role="group"
-                  aria-label="Filter places"
+                  aria-label="Filter Infrastructure"
                 >
-                  {places.map(p => (
+                  {infrastructure.map(p => (
                     <Chip.Checkbox
                       key={p.id}
-                      name="place-filter"
+                      name="infrastructure-filter"
                       value={String(p.id)}
-                      checked={placeFilter.has(p.id)}
+                      checked={infrastructureFilter.has(p.id)}
                       onChange={() => {
-                        setPlaceFilter(prev => toggle(prev, p.id))
+                        setInfrastructureFilter(prev => toggle(prev, p.id))
                       }}
                     >
                       {p.name}
@@ -152,9 +152,9 @@ export function BuildingStats() {
                   ))}
                 </div>
                 <div className={styles.cards}>
-                  {visiblePlaces.map(p => {
+                  {visibleInfrastructure.map(p => {
                     const scope: MaintenanceScope = {
-                      kind: "place",
+                      kind: "infrastructure",
                       id: p.id,
                       name: p.name,
                     }
@@ -167,8 +167,8 @@ export function BuildingStats() {
         )}
       </Tabs.Panel>
 
-      <Tabs.Panel value="inventory" className={styles.panel}>
-        {activeTab === "inventory" && <Equipment />}
+      <Tabs.Panel value="equipment" className={styles.panel}>
+        {activeTab === "equipment" && <Equipment />}
       </Tabs.Panel>
     </Tabs>
   )

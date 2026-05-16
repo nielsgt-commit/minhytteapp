@@ -51,7 +51,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
 
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
-  const { data: buildings } = useSuspenseQuery(trpc.building.list.queryOptions())
+  const { data: structures } = useSuspenseQuery(trpc.structure.list.queryOptions())
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
@@ -76,10 +76,10 @@ export function A3Body({ propertyId }: { propertyId: number }) {
 
   const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
 
-  const propertyBuildings = buildings.filter(b => b.property_id === propertyId)
-  const propertyBuildingIds = new Set(propertyBuildings.map(b => b.id))
-  const propertyRooms = rooms.filter(r => propertyBuildingIds.has(r.building_id))
-  const buildingNameById = new Map(propertyBuildings.map(b => [b.id, b.name]))
+  const propertyStructures = structures.filter(b => b.property_id === propertyId)
+  const propertyStructureIds = new Set(propertyStructures.map(b => b.id))
+  const propertyRooms = rooms.filter(r => propertyStructureIds.has(r.structure_id))
+  const structureNameById = new Map(propertyStructures.map(b => [b.id, b.name]))
   const otherUsers = users.filter(u => u.id !== selectedUserId)
 
   const {
@@ -91,7 +91,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
     overlappingBookings,
     existingOccupantsByRoom,
     roomOverCapacityDays,
-  } = useOccupancyData({ bookings, draft, propertyRooms, propertyBuildings, conflicts })
+  } = useOccupancyData({ bookings, draft, propertyRooms, propertyStructures, conflicts })
 
   const draftYear = draft.start_date ? parseInt(draft.start_date.slice(0, 4)) : new Date().getFullYear()
   const { data: priorityData } = useQuery({
@@ -284,20 +284,20 @@ export function A3Body({ propertyId }: { propertyId: number }) {
         )}
 
         <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {propertyBuildings.map(building => {
-            const buildingRooms = propertyRooms.filter(r => r.building_id === building.id)
-            if (buildingRooms.length === 0) return null
+          {propertyStructures.map(structure => {
+            const structureRooms = propertyRooms.filter(r => r.structure_id === structure.id)
+            if (structureRooms.length === 0) return null
             return (
-              <li key={building.id}>
+              <li key={structure.id}>
                 <Label data-size="sm" style={{ textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ds-color-neutral-text-subtle)", display: "block", marginBottom: "0.25rem" }}>
-                  {building.name}
+                  {structure.name}
                 </Label>
                 <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {buildingRooms.map(r => (
+                  {structureRooms.map(r => (
                     <li key={r.id}>
                       <RoomCapacityMeter
                         room={r}
-                        buildingName={building.name}
+                        structureName={structure.name}
                         occupantsInRoom={occupantsByRoom.get(r.id) ?? []}
                         existingOccupantsInRoom={existingOccupantsByRoom.get(r.id) ?? []}
                         users={users}
@@ -344,15 +344,15 @@ export function A3Body({ propertyId }: { propertyId: number }) {
               if (!u) return `#${String(o.user_id)}`
               return `${u.name}${u.is_child ? " (child)" : ""}${o.queued ? " (queued)" : ""}`
             })
-          const roomEntries = propertyBuildings.flatMap(b =>
+          const roomEntries = propertyStructures.flatMap(b =>
             propertyRooms
-              .filter(r => r.building_id === b.id)
+              .filter(r => r.structure_id === b.id)
               .map(r => {
                 const occs = (occupantsByRoom.get(r.id) ?? []).map(o => {
                   const u = users.find(x => x.id === o.user_id)
                   return u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`
                 })
-                return { buildingName: b.name, roomName: r.name, occupants: occs }
+                return { structureName: b.name, roomName: r.name, occupants: occs }
               })
               .filter(e => e.occupants.length > 0),
           )
@@ -381,8 +381,8 @@ export function A3Body({ propertyId }: { propertyId: number }) {
                 {roomEntries.length > 0 && (
                   <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
                     {roomEntries.map(e => (
-                      <li key={`${e.buildingName}-${e.roomName}`}>
-                        {e.buildingName} · {e.roomName}: {e.occupants.join(", ")}
+                      <li key={`${e.structureName}-${e.roomName}`}>
+                        {e.structureName} · {e.roomName}: {e.occupants.join(", ")}
                       </li>
                     ))}
                   </ul>

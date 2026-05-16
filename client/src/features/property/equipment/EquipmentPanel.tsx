@@ -28,7 +28,7 @@ type Equipment = {
   id: number
   name: string
   property_id: number
-  building_id: number
+  structure_id: number
   category: string | null
   notes: string | null
 }
@@ -40,11 +40,11 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
   const { data: equipment } = useSuspenseQuery(
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
   )
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
 
-  const propertyBuildings = buildings.filter(
+  const propertyStructures = structures.filter(
     b => b.property_id === propertyId,
   )
 
@@ -86,16 +86,16 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     const form = e.currentTarget
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
-    const buildingRaw = fdString(fd, "building_id").trim()
+    const buildingRaw = fdString(fd, "structure_id").trim()
     const category = fdString(fd, "category").trim()
     const notes = fdString(fd, "notes").trim()
-    const building_id = Number(buildingRaw)
-    if (!name || !buildingRaw || !Number.isFinite(building_id)) return
+    const structure_id = Number(buildingRaw)
+    if (!name || !buildingRaw || !Number.isFinite(structure_id)) return
     createEquipment.mutate(
       {
         name,
         property_id: propertyId,
-        building_id,
+        structure_id,
         category: category || undefined,
         notes: notes || undefined,
       },
@@ -113,17 +113,17 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const name = fdString(fd, "name").trim()
-      const buildingRaw = fdString(fd, "building_id").trim()
+      const buildingRaw = fdString(fd, "structure_id").trim()
       const category = fdString(fd, "category").trim()
       const notes = fdString(fd, "notes").trim()
-      const building_id = Number(buildingRaw)
-      if (!name || !buildingRaw || !Number.isFinite(building_id)) return
+      const structure_id = Number(buildingRaw)
+      if (!name || !buildingRaw || !Number.isFinite(structure_id)) return
       updateEquipment.mutate(
         {
           id: item.id,
           name,
           property_id: propertyId,
-          building_id,
+          structure_id,
           category: category || undefined,
           notes: notes || undefined,
         },
@@ -139,7 +139,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     )
   }
 
-  const canAdd = propertyBuildings.length > 0
+  const canAdd = propertyStructures.length > 0
 
   return (
     <section>
@@ -185,17 +185,17 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               gap: "0.25rem",
             }}
           >
-            <Label htmlFor={`edit-building-${String(editingItem.id)}`}>
-              Building
+            <Label htmlFor={`edit-structure-${String(editingItem.id)}`}>
+              Structure
             </Label>
             <Select
-              id={`edit-building-${String(editingItem.id)}`}
-              name="building_id"
+              id={`edit-structure-${String(editingItem.id)}`}
+              name="structure_id"
               required
-              defaultValue={String(editingItem.building_id)}
+              defaultValue={String(editingItem.structure_id)}
               disabled={updateEquipment.isPending}
             >
-              {propertyBuildings.map(b => (
+              {propertyStructures.map(b => (
                 <Select.Option key={b.id} value={String(b.id)}>
                   {b.name}
                 </Select.Option>
@@ -321,18 +321,18 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           gap: "0.25rem",
                         }}
                       >
-                        <Label htmlFor="add-equipment-building">Building</Label>
+                        <Label htmlFor="add-equipment-structure">Structure</Label>
                         <Select
-                          id="add-equipment-building"
-                          name="building_id"
+                          id="add-equipment-structure"
+                          name="structure_id"
                           required
                           defaultValue=""
                           disabled={createEquipment.isPending}
                         >
                           <Select.Option value="" disabled>
-                            (select building)
+                            (select structure)
                           </Select.Option>
-                          {propertyBuildings.map(b => (
+                          {propertyStructures.map(b => (
                             <Select.Option key={b.id} value={String(b.id)}>
                               {b.name}
                             </Select.Option>
@@ -382,7 +382,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                       alignSelf: "stretch",
                     }}
                     disabled={pending || !canAdd}
-                    title={canAdd ? undefined : "Add a building first"}
+                    title={canAdd ? undefined : "Add a structure first"}
                     onClick={() => { setIsAdding(true) }}
                   >
                     + Add equipment

@@ -35,8 +35,8 @@ function fdNumber(fd: FormData, key: string): number {
 }
 
 type PropertyFormSlot = { id: number | null } | null
-type BuildingFormSlot = { propertyId: number; id: number | null } | null
-type RoomFormSlot = { buildingId: number; id: number | null } | null
+type StructureFormSlot = { propertyId: number; id: number | null } | null
+type RoomFormSlot = { structureId: number; id: number | null } | null
 
 export function PropertyFlow() {
   const trpc = useTRPC()
@@ -45,14 +45,14 @@ export function PropertyFlow() {
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
 
   const invalidateAll = () => {
     void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
-    void qc.invalidateQueries({ queryKey: trpc.building.list.queryKey() })
+    void qc.invalidateQueries({ queryKey: trpc.structure.list.queryKey() })
     void qc.invalidateQueries({ queryKey: trpc.room.list.queryKey() })
   }
 
@@ -66,14 +66,14 @@ export function PropertyFlow() {
     trpc.property.delete.mutationOptions({ onSuccess: invalidateAll }),
   )
 
-  const createBuilding = useMutation(
-    trpc.building.create.mutationOptions({ onSuccess: invalidateAll }),
+  const createStructure = useMutation(
+    trpc.structure.create.mutationOptions({ onSuccess: invalidateAll }),
   )
-  const updateBuilding = useMutation(
-    trpc.building.update.mutationOptions({ onSuccess: invalidateAll }),
+  const updateStructure = useMutation(
+    trpc.structure.update.mutationOptions({ onSuccess: invalidateAll }),
   )
-  const deleteBuilding = useMutation(
-    trpc.building.delete.mutationOptions({ onSuccess: invalidateAll }),
+  const deleteStructure = useMutation(
+    trpc.structure.delete.mutationOptions({ onSuccess: invalidateAll }),
   )
 
   const createRoom = useMutation(
@@ -90,9 +90,9 @@ export function PropertyFlow() {
     createProperty.error ??
     updateProperty.error ??
     deleteProperty.error ??
-    createBuilding.error ??
-    updateBuilding.error ??
-    deleteBuilding.error ??
+    createStructure.error ??
+    updateStructure.error ??
+    deleteStructure.error ??
     createRoom.error ??
     updateRoom.error ??
     deleteRoom.error
@@ -101,39 +101,39 @@ export function PropertyFlow() {
     createProperty.isPending ||
     updateProperty.isPending ||
     deleteProperty.isPending
-  const buildingPending =
-    createBuilding.isPending ||
-    updateBuilding.isPending ||
-    deleteBuilding.isPending
+  const structurePending =
+    createStructure.isPending ||
+    updateStructure.isPending ||
+    deleteStructure.isPending
   const roomPending =
     createRoom.isPending || updateRoom.isPending || deleteRoom.isPending
 
   const [propertyForm, setPropertyForm] = useState<PropertyFormSlot>(null)
-  const [buildingForm, setBuildingForm] = useState<BuildingFormSlot>(null)
+  const [structureForm, setStructureForm] = useState<StructureFormSlot>(null)
   const [roomForm, setRoomForm] = useState<RoomFormSlot>(null)
 
   const closePropertyForm = () => {
     setPropertyForm(null)
   }
-  const closeBuildingForm = () => {
-    setBuildingForm(null)
+  const closeStructureForm = () => {
+    setStructureForm(null)
   }
   const closeRoomForm = () => {
     setRoomForm(null)
   }
 
-  const buildingsByProperty = new Map<number, typeof buildings>()
-  for (const b of buildings) {
-    const list = buildingsByProperty.get(b.property_id) ?? []
+  const structuresByProperty = new Map<number, typeof structures>()
+  for (const b of structures) {
+    const list = structuresByProperty.get(b.property_id) ?? []
     list.push(b)
-    buildingsByProperty.set(b.property_id, list)
+    structuresByProperty.set(b.property_id, list)
   }
 
-  const roomsByBuilding = new Map<number, typeof rooms>()
+  const roomsByStructure = new Map<number, typeof rooms>()
   for (const r of rooms) {
-    const list = roomsByBuilding.get(r.building_id) ?? []
+    const list = roomsByStructure.get(r.structure_id) ?? []
     list.push(r)
-    roomsByBuilding.set(r.building_id, list)
+    roomsByStructure.set(r.structure_id, list)
   }
 
   const handlePropertySubmit = (e: SyntheticEvent<HTMLFormElement>) => {
@@ -155,24 +155,24 @@ export function PropertyFlow() {
     else updateProperty.mutate({ id, ...payload }, opts)
   }
 
-  const handleBuildingSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+  const handleStructureSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!buildingForm) return
+    if (!structureForm) return
     const form = e.currentTarget
     const fd = new FormData(form)
     const payload = {
       name: fdString(fd, "name"),
-      property_id: buildingForm.propertyId,
+      property_id: structureForm.propertyId,
     }
-    const id = buildingForm.id
+    const id = structureForm.id
     const opts = {
       onSuccess: () => {
         form.reset()
-        setBuildingForm(null)
+        setStructureForm(null)
       },
     }
-    if (id == null) createBuilding.mutate(payload, opts)
-    else updateBuilding.mutate({ id, ...payload }, opts)
+    if (id == null) createStructure.mutate(payload, opts)
+    else updateStructure.mutate({ id, ...payload }, opts)
   }
 
   const handleRoomSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
@@ -182,7 +182,7 @@ export function PropertyFlow() {
     const fd = new FormData(form)
     const payload = {
       name: fdString(fd, "name"),
-      building_id: roomForm.buildingId,
+      structure_id: roomForm.structureId,
       beds_sm: fdNumber(fd, "beds_sm"),
       beds_lg: fdNumber(fd, "beds_lg"),
       beds_double: fdNumber(fd, "beds_double"),
@@ -205,9 +205,9 @@ export function PropertyFlow() {
     if (!window.confirm("Delete this property?")) return
     deleteProperty.mutate({ id })
   }
-  const handleDeleteBuilding = (id: number) => {
-    if (!window.confirm("Delete this building?")) return
-    deleteBuilding.mutate({ id })
+  const handleDeleteStructure = (id: number) => {
+    if (!window.confirm("Delete this structure?")) return
+    deleteStructure.mutate({ id })
   }
   const handleDeleteRoom = (id: number) => {
     if (!window.confirm("Delete this room?")) return
@@ -217,12 +217,12 @@ export function PropertyFlow() {
   const isCreatePropertyOpen = propertyForm?.id === null
   const editingPropertyId = propertyForm?.id ?? null
 
-  const isCreateBuildingOpenFor = (pid: number) =>
-    buildingForm?.propertyId === pid && buildingForm.id === null
-  const editingBuildingId = buildingForm?.id ?? null
+  const isCreateStructureOpenFor = (pid: number) =>
+    structureForm?.propertyId === pid && structureForm.id === null
+  const editingStructureId = structureForm?.id ?? null
 
   const isCreateRoomOpenFor = (bid: number) =>
-    roomForm?.buildingId === bid && roomForm.id === null
+    roomForm?.structureId === bid && roomForm.id === null
   const editingRoomId = roomForm?.id ?? null
 
   return (
@@ -257,9 +257,9 @@ export function PropertyFlow() {
 
       <ul>
         {properties.map(p => {
-          const propBuildings = buildingsByProperty.get(p.id) ?? []
-          const propRooms = propBuildings.flatMap(
-            b => roomsByBuilding.get(b.id) ?? [],
+          const propStructures = structuresByProperty.get(p.id) ?? []
+          const propRooms = propStructures.flatMap(
+            b => roomsByStructure.get(b.id) ?? [],
           )
           const totalBeds = propRooms.reduce((s, r) => s + roomBeds(r), 0)
           const propertyIsEditing = editingPropertyId === p.id
@@ -269,7 +269,7 @@ export function PropertyFlow() {
                 {p.name} <small>({p.address})</small>
               </h4>
               <p>
-                {propBuildings.length} building(s), {propRooms.length} room(s),{" "}
+                {propStructures.length} structure(s), {propRooms.length} room(s),{" "}
                 {totalBeds} bed(s) total
               </p>
 
@@ -297,16 +297,16 @@ export function PropertyFlow() {
                 <button
                   type="button"
                   onClick={() => {
-                    setBuildingForm(v =>
+                    setStructureForm(v =>
                       v?.propertyId === p.id && v.id === null
                         ? null
                         : { propertyId: p.id, id: null },
                     )
                   }}
                 >
-                  {isCreateBuildingOpenFor(p.id)
+                  {isCreateStructureOpenFor(p.id)
                     ? "Cancel"
-                    : "Add building to property"}
+                    : "Add structure to property"}
                 </button>
               </div>
 
@@ -322,55 +322,55 @@ export function PropertyFlow() {
                 />
               )}
 
-              {isCreateBuildingOpenFor(p.id) && (
+              {isCreateStructureOpenFor(p.id) && (
                 <NameOnlyForm
-                  key={`building-create-${String(p.id)}`}
-                  legend={`New building in ${p.name}`}
-                  submitLabel="Create building"
-                  pending={buildingPending}
-                  onSubmit={handleBuildingSubmit}
-                  onCancel={closeBuildingForm}
+                  key={`structure-create-${String(p.id)}`}
+                  legend={`New structure in ${p.name}`}
+                  submitLabel="Create structure"
+                  pending={structurePending}
+                  onSubmit={handleStructureSubmit}
+                  onCancel={closeStructureForm}
                 />
               )}
 
-              {propBuildings.length === 0 ? (
-                <p>No buildings yet.</p>
+              {propStructures.length === 0 ? (
+                <p>No Structures yet.</p>
               ) : (
                 <ul>
-                  {propBuildings.map(b => {
-                    const buildingRooms = roomsByBuilding.get(b.id) ?? []
-                    const buildingBeds = buildingRooms.reduce(
+                  {propStructures.map(b => {
+                    const structureRooms = roomsByStructure.get(b.id) ?? []
+                    const buildingBeds = structureRooms.reduce(
                       (s, r) => s + roomBeds(r),
                       0,
                     )
-                    const buildingIsEditing = editingBuildingId === b.id
+                    const buildingIsEditing = editingStructureId === b.id
                     return (
                       <li key={b.id}>
                         <h5>{b.name}</h5>
                         <p>
-                          {buildingRooms.length} room(s), {buildingBeds} bed(s)
+                          {structureRooms.length} room(s), {buildingBeds} bed(s)
                         </p>
 
                         <div>
                           <button
                             type="button"
                             onClick={() => {
-                              setBuildingForm(v =>
+                              setStructureForm(v =>
                                 v?.id === b.id
                                   ? null
                                   : { propertyId: b.property_id, id: b.id },
                               )
                             }}
-                            disabled={buildingPending}
+                            disabled={structurePending}
                           >
                             {buildingIsEditing ? "Cancel edit" : "Edit"}
                           </button>
                           <button
                             type="button"
                             onClick={() => {
-                              handleDeleteBuilding(b.id)
+                              handleDeleteStructure(b.id)
                             }}
-                            disabled={buildingPending}
+                            disabled={structurePending}
                           >
                             Delete
                           </button>
@@ -378,9 +378,9 @@ export function PropertyFlow() {
                             type="button"
                             onClick={() => {
                               setRoomForm(v =>
-                                v?.buildingId === b.id && v.id === null
+                                v?.structureId === b.id && v.id === null
                                   ? null
-                                  : { buildingId: b.id, id: null },
+                                  : { structureId: b.id, id: null },
                               )
                             }}
                           >
@@ -390,13 +390,13 @@ export function PropertyFlow() {
 
                         {buildingIsEditing && (
                           <NameOnlyForm
-                            key={`building-edit-${String(b.id)}`}
-                            legend={`Edit building #${String(b.id)}`}
-                            submitLabel="Update building"
-                            pending={buildingPending}
+                            key={`structure-edit-${String(b.id)}`}
+                            legend={`Edit structure #${String(b.id)}`}
+                            submitLabel="Update structure"
+                            pending={structurePending}
                             defaults={{ name: b.name }}
-                            onSubmit={handleBuildingSubmit}
-                            onCancel={closeBuildingForm}
+                            onSubmit={handleStructureSubmit}
+                            onCancel={closeStructureForm}
                           />
                         )}
 
@@ -411,9 +411,9 @@ export function PropertyFlow() {
                           />
                         )}
 
-                        {buildingRooms.length > 0 && (
+                        {structureRooms.length > 0 && (
                           <ul>
-                            {buildingRooms.map(r => {
+                            {structureRooms.map(r => {
                               const roomIsEditing = editingRoomId === r.id
                               return (
                                 <li key={r.id}>
@@ -427,7 +427,7 @@ export function PropertyFlow() {
                                           v?.id === r.id
                                             ? null
                                             : {
-                                                buildingId: r.building_id,
+                                                structureId: r.structure_id,
                                                 id: r.id,
                                               },
                                         )

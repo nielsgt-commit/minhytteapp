@@ -59,7 +59,7 @@ export function WipeDbFlow() {
 
       <p role="alert">
         <strong>Warning:</strong> This deletes every row in every table —
-        properties, buildings, bookings, expenses, invites, users, the lot.
+        properties, structures, bookings, expenses, invites, users, the lot.
         After the wipe the page will reload.
       </p>
 

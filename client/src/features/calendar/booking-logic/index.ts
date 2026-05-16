@@ -22,7 +22,7 @@
 //
 // Pure helpers:
 //   bedCapacity(room)
-//   propertyCapacity(rooms, buildings)
+//   propertyCapacity(rooms, structures)
 //   expandRange(start_date, end_date)
 //   groupConsecutive(isos)
 //   isoWeekNumber(date)

@@ -22,7 +22,7 @@ const BED_KEYS = ["beds_sm", "beds_lg", "beds_double", "beds_kid", "travel_cot",
 
 export function RoomCapacityMeter({
   room,
-  buildingName,
+  structureName,
   occupantsInRoom,
   existingOccupantsInRoom,
   users,
@@ -35,7 +35,7 @@ export function RoomCapacityMeter({
   onToggle,
 }: {
   room: RoomShape
-  buildingName: string
+  structureName: string
   occupantsInRoom: { user_id: number; queued: boolean }[]
   existingOccupantsInRoom: ExistingOccupant[]
   users: { id: number; name: string; is_child: boolean | null }[]
@@ -68,9 +68,9 @@ export function RoomCapacityMeter({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <span>{room.name}</span>
-              {buildingName && (
+              {structureName && (
                 <div style={{ fontSize: "0.75rem", color: "var(--ds-color-neutral-text-subtle)" }}>
-                  {buildingName}
+                  {structureName}
                 </div>
               )}
             </div>

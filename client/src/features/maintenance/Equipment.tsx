@@ -34,8 +34,8 @@ export function Equipment() {
       { enabled: selectedPropertyId != null },
     ),
   )
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
   const { data: maintenanceItems = [] } = useQuery(
     trpc.maintenance.listForProperty.queryOptions(
@@ -50,7 +50,7 @@ export function Equipment() {
     ),
   )
 
-  const buildingNameById = new Map(buildings.map(b => [b.id, b.name]))
+  const structureNameById = new Map(structures.map(b => [b.id, b.name]))
 
   const invalidate = () => {
     void qc.invalidateQueries({
@@ -133,9 +133,9 @@ export function Equipment() {
                 const isScheduling = schedulingId === item.id
                 const isInspecting = inspectingId === item.id
                 const isHistoryOpen = historyOpenId === item.id
-                const buildingName =
-                  buildingNameById.get(item.building_id)
-                  ?? `#${String(item.building_id)}`
+                const structureName =
+                  structureNameById.get(item.structure_id)
+                  ?? `#${String(item.structure_id)}`
                 const itemMaintenance = maintenanceItems
                   .filter(
                     m => m.equipment_id === item.id && m.status === "done",
@@ -184,10 +184,10 @@ export function Equipment() {
                           {item.name}
                         </Paragraph>
                         <Paragraph
-                          className={styles.building}
+                          className={styles.structure}
                           data-size="sm"
                         >
-                          {buildingName}
+                          {structureName}
                         </Paragraph>
                         <Paragraph
                           className={styles.category}

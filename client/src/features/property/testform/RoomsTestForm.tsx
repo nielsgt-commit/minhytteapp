@@ -9,8 +9,8 @@ import { useTRPC } from "@/trpc/trpc.ts"
 type RoomRecord = {
   id: number
   name: string
-  building_id: number
-  building_name: string | null
+  structure_id: number
+  structure_name: string | null
   beds_sm: number
   beds_lg: number
   beds_double: number
@@ -22,7 +22,7 @@ type RoomRecord = {
 type FormState = {
   id: number | null
   name: string
-  building_id: string
+  structure_id: string
   beds_sm: string
   beds_lg: string
   beds_double: string
@@ -34,7 +34,7 @@ type FormState = {
 const initialFormState: FormState = {
   id: null,
   name: "",
-  building_id: "",
+  structure_id: "",
   beds_sm: "0",
   beds_lg: "0",
   beds_double: "0",
@@ -59,7 +59,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
       return {
         id: r.id,
         name: r.name,
-        building_id: String(r.building_id),
+        structure_id: String(r.structure_id),
         beds_sm: String(r.beds_sm),
         beds_lg: String(r.beds_lg),
         beds_double: String(r.beds_double),
@@ -76,7 +76,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
 function buildPayload(state: FormState) {
   return {
     name: state.name,
-    building_id: Number(state.building_id),
+    structure_id: Number(state.structure_id),
     beds_sm: Number(state.beds_sm),
     beds_lg: Number(state.beds_lg),
     beds_double: Number(state.beds_double),
@@ -92,8 +92,8 @@ export function RoomsTestForm() {
   const [state, dispatch] = useReducer(formReducer, initialFormState)
 
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
 
   const invalidate = () =>
@@ -168,14 +168,14 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Building
+              Structure
               <select
-                value={state.building_id}
-                onChange={e => { set("building_id")(e.target.value); }}
+                value={state.structure_id}
+                onChange={e => { set("structure_id")(e.target.value); }}
                 required
               >
-                <option value="">(select building)</option>
-                {buildings.map(b => (
+                <option value="">(select structure)</option>
+                {structures.map(b => (
                   <option key={b.id} value={b.id}>
                     #{b.id} {b.name}
                   </option>
@@ -285,7 +285,7 @@ export function RoomsTestForm() {
           <tr>
             <th>id</th>
             <th>name</th>
-            <th>building</th>
+            <th>structure</th>
             <th>beds_sm</th>
             <th>beds_lg</th>
             <th>beds_double</th>
@@ -301,7 +301,7 @@ export function RoomsTestForm() {
               <td>{r.id}</td>
               <td>{r.name}</td>
               <td>
-                #{r.building_id} {r.building_name ?? ""}
+                #{r.structure_id} {r.structure_name ?? ""}
               </td>
               <td>{r.beds_sm}</td>
               <td>{r.beds_lg}</td>

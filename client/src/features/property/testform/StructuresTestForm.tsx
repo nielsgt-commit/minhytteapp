@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
 
-type BuildingRecord = {
+type StructureRecord = {
   id: number
   name: string
   property_id: number
@@ -29,7 +29,7 @@ type EditableField = Exclude<keyof FormState, "id">
 
 type FormAction =
   | { type: "setField"; field: EditableField; value: string }
-  | { type: "loadForEdit"; record: BuildingRecord }
+  | { type: "loadForEdit"; record: StructureRecord }
   | { type: "reset" }
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -56,23 +56,23 @@ function buildPayload(state: FormState) {
   }
 }
 
-export function BuildingsTestForm() {
+export function StructuresTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
 
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
 
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.building.list.queryKey() })
+    qc.invalidateQueries({ queryKey: trpc.structure.list.queryKey() })
 
   const createMutation = useMutation(
-    trpc.building.create.mutationOptions({
+    trpc.structure.create.mutationOptions({
       onSuccess: () => {
         dispatch({ type: "reset" })
         void invalidate()
@@ -81,7 +81,7 @@ export function BuildingsTestForm() {
   )
 
   const updateMutation = useMutation(
-    trpc.building.update.mutationOptions({
+    trpc.structure.update.mutationOptions({
       onSuccess: () => {
         dispatch({ type: "reset" })
         void invalidate()
@@ -90,7 +90,7 @@ export function BuildingsTestForm() {
   )
 
   const deleteMutation = useMutation(
-    trpc.building.delete.mutationOptions({
+    trpc.structure.delete.mutationOptions({
       onSuccess: () => {
         void invalidate()
       },
@@ -120,7 +120,7 @@ export function BuildingsTestForm() {
 
   return (
     <section>
-      <h3>Buildings Test Form</h3>
+      <h3>Structures Test Form</h3>
 
       <form onSubmit={handleSubmit}>
         <fieldset>
@@ -185,7 +185,7 @@ export function BuildingsTestForm() {
           </tr>
         </thead>
         <tbody>
-          {buildings.map(b => (
+          {structures.map(b => (
             <tr key={b.id}>
               <td>{b.id}</td>
               <td>{b.name}</td>
@@ -197,7 +197,7 @@ export function BuildingsTestForm() {
                   onClick={() =>
                     { dispatch({
                       type: "loadForEdit",
-                      record: b as BuildingRecord,
+                      record: b as StructureRecord,
                     }); }
                   }
                   disabled={pending}

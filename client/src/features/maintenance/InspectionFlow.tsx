@@ -24,11 +24,11 @@ import { selectSelectedUserId } from "@/features/user/userSlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export type InspectionScope =
-  | { kind: "building"; id: number; name: string }
-  | { kind: "place"; id: number; name: string }
+  | { kind: "structure"; id: number; name: string }
+  | { kind: "infrastructure"; id: number; name: string }
   | { kind: "equipment"; id: number; name: string }
 
-// MaintenanceScope is a subset (building | place) — accept either via the wider type.
+// MaintenanceScope is a subset (structure | infrastructure) — accept either via the wider type.
 
 type Recurrence = "once" | "yearly" | "5year"
 type ItemStatus = "ok" | "followup"
@@ -69,10 +69,10 @@ export function InspectionFlow(props: {
     return maintenanceItems
       .filter(m => {
         if (!m.is_pinned) return false
-        if (scope.kind === "building") {
-          return m.building_id === scope.id && m.equipment_id == null
+        if (scope.kind === "structure") {
+          return m.structure_id === scope.id && m.equipment_id == null
         }
-        if (scope.kind === "place") return m.place_id === scope.id
+        if (scope.kind === "infrastructure") return m.infrastructure_id === scope.id
         return m.equipment_id === scope.id
       })
       .slice()
@@ -212,8 +212,8 @@ export function InspectionFlow(props: {
       }))
 
     recordMutation.mutate({
-      ...(scope.kind === "building" ? { building_id: scope.id } : {}),
-      ...(scope.kind === "place" ? { place_id: scope.id } : {}),
+      ...(scope.kind === "structure" ? { structure_id: scope.id } : {}),
+      ...(scope.kind === "infrastructure" ? { infrastructure_id: scope.id } : {}),
       ...(scope.kind === "equipment" ? { equipment_id: scope.id } : {}),
       started_by_user_id: selectedUserId,
       added_by: selectedUserId,

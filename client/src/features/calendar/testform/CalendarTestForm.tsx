@@ -24,7 +24,7 @@ const SEASON_MAX = `${String(SEASON_YEAR)}-08-31`
 type Room = {
   id: number
   name: string
-  building_id: number
+  structure_id: number
   beds_sm: number
   beds_lg: number
   beds_double: number
@@ -213,8 +213,8 @@ export function CalendarTestForm() {
       : trpc.booking.list.queryOptions(),
   )
   const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
-  const { data: buildings } = useSuspenseQuery(
-    trpc.building.list.queryOptions(),
+  const { data: structures } = useSuspenseQuery(
+    trpc.structure.list.queryOptions(),
   )
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
 
@@ -223,15 +223,15 @@ export function CalendarTestForm() {
       ? bookings.filter(b => b.property_id === selectedPropertyId)
       : []
 
-  const propertyBuildingIds = new Set(
+  const propertyStructureIds = new Set(
     selectedPropertyId != null
-      ? buildings
+      ? structures
           .filter(b => b.property_id === selectedPropertyId)
           .map(b => b.id)
       : [],
   )
   const propertyRooms = rooms.filter(r =>
-    propertyBuildingIds.has(r.building_id),
+    propertyStructureIds.has(r.structure_id),
   )
 
   const invalidate = () =>

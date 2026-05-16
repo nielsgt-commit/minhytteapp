@@ -98,23 +98,23 @@ export function bedCapacity(room: BedCounts): number {
   )
 }
 
-type RoomRow = BedCounts & { building_id: number }
-type BuildingRow = { id: number; category: string }
+type RoomRow = BedCounts & { structure_id: number }
+type StructureRow = { id: number; category: string }
 
 /**
  * Total person-capacity across habitable rooms for a property.
  */
 export function propertyCapacity(
   rooms: RoomRow[],
-  buildings: BuildingRow[],
+  Structures: StructureRow[],
 ): number {
-  const habitableBuildingIds = new Set(
-    buildings
+  const habitableStructureIds = new Set(
+    Structures
       .filter(b => b.category === "habitable")
       .map(b => b.id),
   )
   return rooms
-    .filter(r => habitableBuildingIds.has(r.building_id))
+    .filter(r => habitableStructureIds.has(r.structure_id))
     .reduce((sum, r) => sum + bedCapacity(r), 0)
 }
 

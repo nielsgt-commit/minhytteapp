@@ -7,13 +7,13 @@
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr auto auto auto;
-  grid-template-areas: "name building category actions inspect";
+  grid-template-areas: "name structure category actions inspect";
   align-items: baseline;
   gap: 1rem;
 }
 
 .name     { grid-area: name; margin: 0; }
-.building { grid-area: building; margin: 0; }
+.structure { grid-area: structure; margin: 0; }
 .category { grid-area: category; margin: 0; }
 .inspect  { grid-area: inspect; }
 .actions {
@@ -39,7 +39,7 @@
     grid-template-columns: 1fr auto;
     grid-template-areas:
       "name       inspect"
-      "building   category"
+      "structure   category"
       "actions    actions";
     row-gap: 0.25rem;
     column-gap: 0.5rem;
