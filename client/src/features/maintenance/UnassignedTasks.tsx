@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
-import { Button, Switch, Textfield } from "@digdir/designsystemet-react"
+import { Button, Fieldset, Switch, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -104,8 +104,8 @@ export function UnassignedTasks() {
               return (
                 <li key={t.id}>
                   <form onSubmit={handleEditSubmit(t)}>
-                    <fieldset>
-                      <legend>Edit task</legend>
+                    <Fieldset>
+                      <Fieldset.Legend>Edit task</Fieldset.Legend>
                       <Textfield
                         label="Task"
                         name="description"
@@ -125,7 +125,7 @@ export function UnassignedTasks() {
                       >
                         Cancel
                       </Button>
-                    </fieldset>
+                    </Fieldset>
                   </form>
                 </li>
               )

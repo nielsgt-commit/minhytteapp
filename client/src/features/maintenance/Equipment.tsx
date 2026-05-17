@@ -5,16 +5,13 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Heading,
-  Paragraph,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Card, Heading } from "@digdir/designsystemet-react"
 import styles from "./Equipment.module.css"
-import { InspectionCard } from "@/features/maintenance/InspectionCard.tsx"
-import { InspectionFlow } from "@/features/maintenance/InspectionFlow.tsx"
+import {
+  EquipmentCard,
+  type ModalState,
+} from "@/features/maintenance/EquipmentCard.tsx"
+import { type EquipmentHistoryEntryData } from "@/features/maintenance/EquipmentHistoryEntry.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
@@ -59,14 +56,12 @@ export function Equipment() {
     void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
   }
 
-  const [schedulingId, setSchedulingId] = useState<number | null>(null)
-  const [inspectingId, setInspectingId] = useState<number | null>(null)
-  const [historyOpenId, setHistoryOpenId] = useState<number | null>(null)
+  const [modalState, setModalState] = useState<ModalState>({ kind: "none" })
 
   const scheduleMutation = useMutation(
     trpc.equipment.scheduleMaintenance.mutationOptions({
       onSuccess: () => {
-        setSchedulingId(null)
+        setModalState({ kind: "none" })
         invalidate()
       },
     }),
@@ -123,215 +118,59 @@ export function Equipment() {
   const body = (
     <>
       {scheduleMutation.error && (
-            <p role="alert">Error: {scheduleMutation.error.message}</p>
-          )}
-          {sortedEquipment.length === 0 ? (
-            <p>No equipment registered for this property yet.</p>
-          ) : (
-            <div className={styles.list}>
-              {sortedEquipment.map(item => {
-                const isScheduling = schedulingId === item.id
-                const isInspecting = inspectingId === item.id
-                const isHistoryOpen = historyOpenId === item.id
-                const structureName =
-                  structureNameById.get(item.structure_id)
-                  ?? `#${String(item.structure_id)}`
-                const itemMaintenance = maintenanceItems
-                  .filter(
-                    m => m.equipment_id === item.id && m.status === "done",
-                  )
-                  .slice()
-                  .sort((a, b) => {
-                    const aT = a.completed_at
-                      ? new Date(a.completed_at).getTime()
-                      : 0
-                    const bT = b.completed_at
-                      ? new Date(b.completed_at).getTime()
-                      : 0
-                    return bT - aT
-                  })
-                const itemInspections = inspections.filter(
-                  i => i.equipment_id === item.id && i.completed_at != null,
-                )
-                type Entry =
-                  | {
-                      kind: "maintenance"
-                      t: number
-                      m: (typeof itemMaintenance)[number]
-                    }
-                  | {
-                      kind: "inspection"
-                      t: number
-                      i: (typeof itemInspections)[number]
-                    }
-                const historyEntries: Entry[] = [
-                  ...itemMaintenance.map(m => ({
-                    kind: "maintenance" as const,
-                    t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
-                    m,
-                  })),
-                  ...itemInspections.map(i => ({
-                    kind: "inspection" as const,
-                    t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
-                    i,
-                  })),
-                ].sort((a, b) => b.t - a.t)
-                return (
-                  <Card asChild key={item.id}>
-                    <article>
-                      <Card.Block className={styles.row} data-size="sm">
-                        <Paragraph className={styles.name} data-size="sm">
-                          {item.name}
-                        </Paragraph>
-                        <Paragraph
-                          className={styles.structure}
-                          data-size="sm"
-                        >
-                          {structureName}
-                        </Paragraph>
-                        <Paragraph
-                          className={styles.category}
-                          data-size="sm"
-                        >
-                          {item.category ?? ""}
-                        </Paragraph>
-                        {!isInspecting && (
-                          <Button
-                            className={styles.inspect}
-                            variant="secondary"
-                            data-size="sm"
-                            onClick={() => { setInspectingId(item.id) }}
-                          >
-                            Start inspection
-                          </Button>
-                        )}
-                        <div className={styles.actions}>
-                          {!isScheduling && !isInspecting && (
-                            <Button
-                              variant="tertiary"
-                              data-size="sm"
-                              onClick={() => {
-                                setSchedulingId(item.id)
-                              }}
-                            >
-                              Schedule maintenance
-                            </Button>
-                          )}
-                          {!isInspecting && (
-                            <Button
-                              variant="tertiary"
-                              data-size="sm"
-                              onClick={() => {
-                                setHistoryOpenId(prev =>
-                                  prev === item.id ? null : item.id,
-                                )
-                              }}
-                            >
-                              {isHistoryOpen ? "Hide history" : "Show history"}
-                            </Button>
-                          )}
-                        </div>
-                      </Card.Block>
-                      {isScheduling && !isInspecting && (
-                        <Card.Block>
-                          <form
-                            onSubmit={handleSubmit(item.id)}
-                            className={styles.schedule}
-                          >
-                            <Textfield
-                              label="Task"
-                              name="description"
-                              defaultValue={`Service ${item.name}`}
-                              required
-                            />
-                            <Textfield
-                              label="Due"
-                              type="date"
-                              name="due_at"
-                            />
-                            <div className={styles.scheduleActions}>
-                              <Button
-                                type="submit"
-                                data-size="sm"
-                                disabled={
-                                  scheduleMutation.isPending
-                                  || selectedUserId == null
-                                }
-                              >
-                                Schedule
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                data-size="sm"
-                                disabled={scheduleMutation.isPending}
-                                onClick={() => {
-                                  setSchedulingId(null)
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </form>
-                        </Card.Block>
-                      )}
-                      {isHistoryOpen && !isInspecting && (
-                        <Card.Block>
-                          {historyEntries.length === 0 ? (
-                            <Paragraph data-size="sm">
-                              No history yet.
-                            </Paragraph>
-                          ) : (
-                            <div className={styles.list}>
-                              {historyEntries.map(entry => {
-                                if (entry.kind === "inspection") {
-                                  return (
-                                    <InspectionCard
-                                      key={`i-${String(entry.i.id)}`}
-                                      inspection={entry.i}
-                                    />
-                                  )
-                                }
-                                const m = entry.m
-                                return (
-                                  <Card asChild key={`m-${String(m.id)}`}>
-                                    <article>
-                                      <Card.Block data-size="sm">
-                                        <Paragraph data-size="sm">
-                                          {m.completed_at
-                                            ? new Date(
-                                                m.completed_at,
-                                              ).toLocaleDateString()
-                                            : ""}{" "}
-                                          — {m.description}
-                                        </Paragraph>
-                                      </Card.Block>
-                                    </article>
-                                  </Card>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </Card.Block>
-                      )}
-                      {isInspecting && (
-                        <Card.Block>
-                          <InspectionFlow
-                            scope={{
-                              kind: "equipment",
-                              id: item.id,
-                              name: item.name,
-                            }}
-                            open={isInspecting}
-                            onClose={() => { setInspectingId(null) }}
-                          />
-                        </Card.Block>
-                      )}
-                    </article>
-                  </Card>
-                )
-              })}
-            </div>
-          )}
+        <p role="alert">Error: {scheduleMutation.error.message}</p>
+      )}
+      {sortedEquipment.length === 0 ? (
+        <p>No equipment registered for this property yet.</p>
+      ) : (
+        <div className={styles.list}>
+          {sortedEquipment.map(item => {
+            const structureName =
+              structureNameById.get(item.structure_id)
+              ?? `#${String(item.structure_id)}`
+            const itemMaintenance = maintenanceItems
+              .filter(m => m.equipment_id === item.id && m.status === "done")
+              .slice()
+              .sort((a, b) => {
+                const aT = a.completed_at
+                  ? new Date(a.completed_at).getTime()
+                  : 0
+                const bT = b.completed_at
+                  ? new Date(b.completed_at).getTime()
+                  : 0
+                return bT - aT
+              })
+            const itemInspections = inspections.filter(
+              i => i.equipment_id === item.id && i.completed_at != null,
+            )
+            const historyEntries: EquipmentHistoryEntryData[] = [
+              ...itemMaintenance.map(m => ({
+                kind: "maintenance" as const,
+                t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
+                m,
+              })),
+              ...itemInspections.map(i => ({
+                kind: "inspection" as const,
+                t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
+                i,
+              })),
+            ].sort((a, b) => b.t - a.t)
+            return (
+              <EquipmentCard
+                key={item.id}
+                item={item}
+                structureName={structureName}
+                historyEntries={historyEntries}
+                modalState={modalState}
+                setModalState={setModalState}
+                onScheduleSubmit={handleSubmit}
+                schedulePending={scheduleMutation.isPending}
+                canSubmitSchedule={selectedUserId != null}
+              />
+            )
+          })}
+        </div>
+      )}
     </>
   )
 

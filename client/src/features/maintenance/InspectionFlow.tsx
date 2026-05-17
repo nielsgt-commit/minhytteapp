@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useEffect, useMemo, useState } from "react"
+import { type SyntheticEvent, useEffect, useState } from "react"
 import {
   useMutation,
   useQuery,
@@ -6,19 +6,25 @@ import {
 } from "@tanstack/react-query"
 import {
   Button,
-  Card,
   Field,
-  Fieldset,
   Heading,
   Label,
   Paragraph,
-  Radio,
-  Select,
-  Switch,
   Textarea,
-  Textfield,
 } from "@digdir/designsystemet-react"
 import styles from "./InspectionFlow.module.css"
+import {
+  FindingsSection,
+  type AdHoc,
+} from "@/features/maintenance/FindingsSection.tsx"
+import {
+  MetadataSection,
+  type Recurrence,
+} from "@/features/maintenance/MetadataSection.tsx"
+import {
+  ProcedureSection,
+  type ProcedureState,
+} from "@/features/maintenance/ProcedureSection.tsx"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -28,22 +34,7 @@ export type InspectionScope =
   | { kind: "infrastructure"; id: number; name: string }
   | { kind: "equipment"; id: number; name: string }
 
-// MaintenanceScope is a subset (structure | infrastructure) — accept either via the wider type.
-
-type Recurrence = "once" | "yearly" | "5year"
-type ItemStatus = "ok" | "followup"
-
-type ProcedureState = {
-  status: ItemStatus
-  description: string
-}
-
-type AdHoc = {
-  key: string
-  description: string
-  pin: boolean
-  committed: boolean
-}
+// MaintenanceScope is a subset (building | infrastructure) — accept either via the wider type.
 
 export function InspectionFlow(props: {
   scope: InspectionScope
@@ -64,27 +55,24 @@ export function InspectionFlow(props: {
 
   const currentUser = users?.find(u => u.id === selectedUserId)
 
-  const procedureItems = useMemo(() => {
-    if (!maintenanceItems) return []
-    return maintenanceItems
-      .filter(m => {
-        if (!m.is_pinned) return false
-        if (scope.kind === "structure") {
-          return m.structure_id === scope.id && m.equipment_id == null
-        }
-        if (scope.kind === "infrastructure") return m.infrastructure_id === scope.id
-        return m.equipment_id === scope.id
-      })
-      .slice()
-      .sort((a, b) => {
-        const aP = a.procedure_position ?? Number.MAX_SAFE_INTEGER
-        const bP = b.procedure_position ?? Number.MAX_SAFE_INTEGER
-        if (aP !== bP) return aP - bP
-        const aT = new Date(a.created_at).getTime()
-        const bT = new Date(b.created_at).getTime()
-        return aT - bT
-      })
-  }, [maintenanceItems, scope])
+  const procedureItems = (maintenanceItems ?? [])
+    .filter(m => {
+      if (!m.is_pinned) return false
+      if (scope.kind === "structure") {
+        return m.structure_id === scope.id && m.equipment_id == null
+      }
+      if (scope.kind === "infrastructure") return m.infrastructure_id === scope.id
+      return m.equipment_id === scope.id
+    })
+    .slice()
+    .sort((a, b) => {
+      const aP = a.procedure_position ?? Number.MAX_SAFE_INTEGER
+      const bP = b.procedure_position ?? Number.MAX_SAFE_INTEGER
+      if (aP !== bP) return aP - bP
+      const aT = new Date(a.created_at).getTime()
+      const bT = new Date(b.created_at).getTime()
+      return aT - bT
+    })
 
   const [inspectedBy, setInspectedBy] = useState("")
   const [recurrence, setRecurrence] = useState<Recurrence>("yearly")
@@ -232,198 +220,29 @@ export function InspectionFlow(props: {
     <form onSubmit={handleSubmit} className={styles.wrap}>
       <Heading data-size="xs">Inspect {scope.name}</Heading>
 
-      <div className={styles.section}>
-        <Textfield
-          label="Inspected by"
-          name="inspected_by"
-          value={inspectedBy}
-          onChange={e => { setInspectedBy(e.target.value) }}
-          required
-        />
-        <Field>
-          <Label>Cadence</Label>
-          <Select
-            value={recurrence}
-            onChange={e => { setRecurrence(e.target.value as Recurrence) }}
-          >
-            <Select.Option value="once">Once</Select.Option>
-            <Select.Option value="yearly">Yearly</Select.Option>
-            <Select.Option value="5year">Every 5 years</Select.Option>
-          </Select>
-        </Field>
-      </div>
+      <MetadataSection
+        inspectedBy={inspectedBy}
+        setInspectedBy={setInspectedBy}
+        recurrence={recurrence}
+        setRecurrence={setRecurrence}
+      />
 
-      <div className={styles.section}>
-        <Heading data-size="2xs">Procedure</Heading>
-        {procedureItems.length === 0 ? (
-          <Paragraph data-size="sm">
-            No pinned items yet. Add ad-hoc findings below and pin any that
-            should recur next time.
-          </Paragraph>
-        ) : (
-          procedureItems.map((item, idx) => {
-            const state = getProc(item.id, item.description)
-            const isFirst = idx === 0
-            const isLast = idx === procedureItems.length - 1
-            return (
-              <Card key={item.id} asChild>
-                <article>
-                  <Card.Block>
-                    <div className={styles.procHeader}>
-                      <Heading
-                        data-size="2xs"
-                        className={styles.procTitle}
-                      >
-                        {item.description}
-                      </Heading>
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        aria-label="Move up"
-                        disabled={isFirst || reorderMutation.isPending}
-                        onClick={() => { moveProcedureItem(item.id, -1) }}
-                      >
-                        ↑
-                      </Button>
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        aria-label="Move down"
-                        disabled={isLast || reorderMutation.isPending}
-                        onClick={() => { moveProcedureItem(item.id, 1) }}
-                      >
-                        ↓
-                      </Button>
-                    </div>
-                    <Fieldset>
-                      <Fieldset.Legend>Status</Fieldset.Legend>
-                      <div className={styles.procActions}>
-                        <Radio
-                          label="OK"
-                          name={`procedure-${String(item.id)}`}
-                          value="ok"
-                          checked={state.status === "ok"}
-                          onChange={() => {
-                            setProc(item.id, { status: "ok" })
-                          }}
-                        />
-                        <Radio
-                          label="Needs followup"
-                          name={`procedure-${String(item.id)}`}
-                          value="followup"
-                          checked={state.status === "followup"}
-                          onChange={() => {
-                            setProc(item.id, { status: "followup" })
-                          }}
-                        />
-                      </div>
-                    </Fieldset>
-                  </Card.Block>
-                  {state.status === "followup" && (
-                    <Card.Block>
-                      <Textfield
-                        label="Followup description"
-                        value={state.description}
-                        onChange={e => {
-                          setProc(item.id, { description: e.target.value })
-                        }}
-                      />
-                    </Card.Block>
-                  )}
-                </article>
-              </Card>
-            )
-          })
-        )}
-      </div>
+      <ProcedureSection
+        items={procedureItems}
+        getProc={getProc}
+        setProc={setProc}
+        moveProcedureItem={moveProcedureItem}
+        reorderPending={reorderMutation.isPending}
+      />
 
-      <div className={styles.section}>
-        <Heading data-size="2xs">Findings</Heading>
-        {adHocs.map(a =>
-          a.committed ? (
-            <Card key={a.key} asChild>
-              <article>
-                <Card.Block>
-                  <div className={styles.committedRow}>
-                    <Paragraph
-                      className={styles.committedDescription}
-                      data-size="sm"
-                    >
-                      {a.description}
-                      {a.pin ? " (pinned)" : ""}
-                    </Paragraph>
-                    <Button
-                      variant="tertiary"
-                      data-size="sm"
-                      onClick={() => { editAdHoc(a.key) }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      onClick={() => { removeAdHoc(a.key) }}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </Card.Block>
-              </article>
-            </Card>
-          ) : (
-            <Card key={a.key} asChild>
-              <article>
-                <Card.Block>
-                  <Fieldset>
-                    <Fieldset.Legend>New finding</Fieldset.Legend>
-                    <div className={styles.adHocRow}>
-                      <div className={styles.adHocDescription}>
-                        <Textfield
-                          label="Description"
-                          value={a.description}
-                          onChange={e => {
-                            updateAdHoc(a.key, { description: e.target.value })
-                          }}
-                        />
-                      </div>
-                      <Button
-                        data-size="sm"
-                        disabled={a.description.trim().length === 0}
-                        onClick={() => { commitAdHoc(a.key) }}
-                      >
-                        Add
-                      </Button>
-                      <Button
-                        variant="tertiary"
-                        data-color="danger"
-                        data-size="sm"
-                        onClick={() => { removeAdHoc(a.key) }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                    <Switch
-                      label="Pin to procedure (recurs each inspection)"
-                      checked={a.pin}
-                      onChange={e => {
-                        updateAdHoc(a.key, { pin: e.target.checked })
-                      }}
-                    />
-                  </Fieldset>
-                </Card.Block>
-              </article>
-            </Card>
-          ),
-        )}
-        <Button
-          variant="secondary"
-          data-size="sm"
-          onClick={addAdHoc}
-        >
-          Add finding
-        </Button>
-      </div>
+      <FindingsSection
+        adHocs={adHocs}
+        addAdHoc={addAdHoc}
+        updateAdHoc={updateAdHoc}
+        commitAdHoc={commitAdHoc}
+        editAdHoc={editAdHoc}
+        removeAdHoc={removeAdHoc}
+      />
 
       <Field>
         <Label>Notes</Label>
