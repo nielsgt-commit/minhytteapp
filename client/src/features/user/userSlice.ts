@@ -2,6 +2,7 @@ import type { PayloadAction } from "@reduxjs/toolkit"
 import { createAppSlice } from "@/app/createAppSlice"
 
 export type UserSliceState = {
+  /** Current "acting as" identity chosen in the header user menu; used as booker/actor id for bookings, maintenance actions, and to scope property/group queries. */
   selectedUserId: number | null
 }
 
