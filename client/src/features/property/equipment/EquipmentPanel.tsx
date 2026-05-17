@@ -7,17 +7,15 @@ import {
 import {
   Button,
   Card,
+  Fieldset,
   Label,
   Select,
   Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
+import { fdString } from "@/utils/formData"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 
 type Props = {
   propertyId: number
@@ -70,12 +68,11 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
 
-  const lastError =
-    createEquipment.error ?? updateEquipment.error ?? deleteEquipment.error
-  const pending =
-    createEquipment.isPending ||
-    updateEquipment.isPending ||
-    deleteEquipment.isPending
+  const { pending, error: lastError } = useMutationsStatus(
+    createEquipment,
+    updateEquipment,
+    deleteEquipment,
+  )
 
   const editingItem = editingId
     ? equipment.find(e => e.id === editingId) ?? null
@@ -86,11 +83,11 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     const form = e.currentTarget
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
-    const buildingRaw = fdString(fd, "structure_id").trim()
+    const structureRaw = fdString(fd, "structure_id").trim()
     const category = fdString(fd, "category").trim()
     const notes = fdString(fd, "notes").trim()
-    const structure_id = Number(buildingRaw)
-    if (!name || !buildingRaw || !Number.isFinite(structure_id)) return
+    const structure_id = Number(structureRaw)
+    if (!name || !structureRaw || !Number.isFinite(structure_id)) return
     createEquipment.mutate(
       {
         name,
@@ -113,11 +110,11 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const name = fdString(fd, "name").trim()
-      const buildingRaw = fdString(fd, "structure_id").trim()
+      const structureRaw = fdString(fd, "structure_id").trim()
       const category = fdString(fd, "category").trim()
       const notes = fdString(fd, "notes").trim()
-      const structure_id = Number(buildingRaw)
-      if (!name || !buildingRaw || !Number.isFinite(structure_id)) return
+      const structure_id = Number(structureRaw)
+      if (!name || !structureRaw || !Number.isFinite(structure_id)) return
       updateEquipment.mutate(
         {
           id: item.id,
@@ -170,75 +167,78 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
             gap: "0.5rem",
           }}
         >
-          <Textfield
-            label="Name"
-            name="name"
-            required
-            autoFocus
-            defaultValue={editingItem.name}
-            disabled={updateEquipment.isPending}
-          />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
-          >
-            <Label htmlFor={`edit-structure-${String(editingItem.id)}`}>
-              Structure
-            </Label>
-            <Select
-              id={`edit-structure-${String(editingItem.id)}`}
-              name="structure_id"
+          <Fieldset>
+            <Fieldset.Legend>Edit equipment</Fieldset.Legend>
+            <Textfield
+              label="Name"
+              name="name"
               required
-              defaultValue={String(editingItem.structure_id)}
+              autoFocus
+              defaultValue={editingItem.name}
               disabled={updateEquipment.isPending}
+            />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.25rem",
+              }}
             >
-              {propertyStructures.map(b => (
-                <Select.Option key={b.id} value={String(b.id)}>
-                  {b.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
-          <Textfield
-            label="Category"
-            name="category"
-            maxLength={32}
-            placeholder="appliance, tool, boat…"
-            defaultValue={editingItem.category ?? ""}
-            disabled={updateEquipment.isPending}
-          />
-          <Textfield
-            label="Notes"
-            name="notes"
-            maxLength={255}
-            defaultValue={editingItem.notes ?? ""}
-            disabled={updateEquipment.isPending}
-          />
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Button type="submit" disabled={pending}>
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              data-color="danger"
-              disabled={pending}
-              onClick={() => { handleDelete(editingItem) }}
-            >
-              Delete
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              disabled={pending}
-              onClick={() => { setEditingId(null) }}
-            >
-              Cancel
-            </Button>
-          </div>
+              <Label htmlFor={`edit-structure-${String(editingItem.id)}`}>
+                Structure
+              </Label>
+              <Select
+                id={`edit-structure-${String(editingItem.id)}`}
+                name="structure_id"
+                required
+                defaultValue={String(editingItem.structure_id)}
+                disabled={updateEquipment.isPending}
+              >
+                {propertyStructures.map(b => (
+                  <Select.Option key={b.id} value={String(b.id)}>
+                    {b.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+            <Textfield
+              label="Category"
+              name="category"
+              maxLength={32}
+              placeholder="appliance, tool, boat…"
+              defaultValue={editingItem.category ?? ""}
+              disabled={updateEquipment.isPending}
+            />
+            <Textfield
+              label="Notes"
+              name="notes"
+              maxLength={255}
+              defaultValue={editingItem.notes ?? ""}
+              disabled={updateEquipment.isPending}
+            />
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <Button type="submit" disabled={pending}>
+                Save
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                data-color="danger"
+                disabled={pending}
+                onClick={() => { handleDelete(editingItem) }}
+              >
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="tertiary"
+                disabled={pending}
+                onClick={() => { setEditingId(null) }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Fieldset>
         </form>
       ) : (
         <ul
@@ -307,70 +307,73 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                         gap: "0.5rem",
                       }}
                     >
-                      <Textfield
-                        label="Name"
-                        name="name"
-                        required
-                        autoFocus
-                        disabled={createEquipment.isPending}
-                      />
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.25rem",
-                        }}
-                      >
-                        <Label htmlFor="add-equipment-structure">Structure</Label>
-                        <Select
-                          id="add-equipment-structure"
-                          name="structure_id"
+                      <Fieldset>
+                        <Fieldset.Legend>New equipment</Fieldset.Legend>
+                        <Textfield
+                          label="Name"
+                          name="name"
                           required
-                          defaultValue=""
+                          autoFocus
                           disabled={createEquipment.isPending}
+                        />
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.25rem",
+                          }}
                         >
-                          <Select.Option value="" disabled>
-                            (select structure)
-                          </Select.Option>
-                          {propertyStructures.map(b => (
-                            <Select.Option key={b.id} value={String(b.id)}>
-                              {b.name}
+                          <Label htmlFor="add-equipment-structure">Structure</Label>
+                          <Select
+                            id="add-equipment-structure"
+                            name="structure_id"
+                            required
+                            defaultValue=""
+                            disabled={createEquipment.isPending}
+                          >
+                            <Select.Option value="" disabled>
+                              (select structure)
                             </Select.Option>
-                          ))}
-                        </Select>
-                      </div>
-                      <Textfield
-                        label="Category"
-                        name="category"
-                        maxLength={32}
-                        placeholder="appliance, tool, boat…"
-                        disabled={createEquipment.isPending}
-                      />
-                      <Textfield
-                        label="Notes"
-                        name="notes"
-                        maxLength={255}
-                        disabled={createEquipment.isPending}
-                      />
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.5rem",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <Button type="submit" disabled={createEquipment.isPending}>
-                          Add equipment
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="tertiary"
+                            {propertyStructures.map(b => (
+                              <Select.Option key={b.id} value={String(b.id)}>
+                                {b.name}
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </div>
+                        <Textfield
+                          label="Category"
+                          name="category"
+                          maxLength={32}
+                          placeholder="appliance, tool, boat…"
                           disabled={createEquipment.isPending}
-                          onClick={() => { setIsAdding(false) }}
+                        />
+                        <Textfield
+                          label="Notes"
+                          name="notes"
+                          maxLength={255}
+                          disabled={createEquipment.isPending}
+                        />
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.5rem",
+                            flexWrap: "wrap",
+                          }}
                         >
-                          Cancel
-                        </Button>
-                      </div>
+                          <Button type="submit" disabled={createEquipment.isPending}>
+                            Add equipment
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="tertiary"
+                            disabled={createEquipment.isPending}
+                            onClick={() => { setIsAdding(false) }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </Fieldset>
                     </form>
                   </>
                 ) : (

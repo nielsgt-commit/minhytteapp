@@ -5,6 +5,10 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { fdString } from "@/utils/formData"
+import { PropertyFormSection } from "./PropertyFormSection.tsx"
+import { StructureFormSection } from "./StructureFormSection.tsx"
+import { RoomFormSection } from "./RoomFormSection.tsx"
 
 function roomBeds(r: {
   beds_sm: number
@@ -24,11 +28,8 @@ function roomBeds(r: {
   )
 }
 
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
+// Local fdNumber variant: returns 0 (not NaN) for invalid input so empty bed
+// fields fall back to 0 rather than failing server-side validation.
 function fdNumber(fd: FormData, key: string): number {
   const v = fd.get(key)
   return typeof v === "string" ? Number(v) : 0
@@ -66,13 +67,13 @@ export function PropertyFlow() {
     trpc.property.delete.mutationOptions({ onSuccess: invalidateAll }),
   )
 
-  const createStructure = useMutation(
+  const createBuilding = useMutation(
     trpc.structure.create.mutationOptions({ onSuccess: invalidateAll }),
   )
-  const updateStructure = useMutation(
+  const updateBuilding = useMutation(
     trpc.structure.update.mutationOptions({ onSuccess: invalidateAll }),
   )
-  const deleteStructure = useMutation(
+  const deleteBuilding = useMutation(
     trpc.structure.delete.mutationOptions({ onSuccess: invalidateAll }),
   )
 
@@ -90,9 +91,9 @@ export function PropertyFlow() {
     createProperty.error ??
     updateProperty.error ??
     deleteProperty.error ??
-    createStructure.error ??
-    updateStructure.error ??
-    deleteStructure.error ??
+    createBuilding.error ??
+    updateBuilding.error ??
+    deleteBuilding.error ??
     createRoom.error ??
     updateRoom.error ??
     deleteRoom.error
@@ -102,9 +103,9 @@ export function PropertyFlow() {
     updateProperty.isPending ||
     deleteProperty.isPending
   const structurePending =
-    createStructure.isPending ||
-    updateStructure.isPending ||
-    deleteStructure.isPending
+    createBuilding.isPending ||
+    updateBuilding.isPending ||
+    deleteBuilding.isPending
   const roomPending =
     createRoom.isPending || updateRoom.isPending || deleteRoom.isPending
 
@@ -115,7 +116,7 @@ export function PropertyFlow() {
   const closePropertyForm = () => {
     setPropertyForm(null)
   }
-  const closeStructureForm = () => {
+  const closeBuildingForm = () => {
     setStructureForm(null)
   }
   const closeRoomForm = () => {
@@ -129,11 +130,11 @@ export function PropertyFlow() {
     structuresByProperty.set(b.property_id, list)
   }
 
-  const roomsByStructure = new Map<number, typeof rooms>()
+  const roomsByBuilding = new Map<number, typeof rooms>()
   for (const r of rooms) {
-    const list = roomsByStructure.get(r.structure_id) ?? []
+    const list = roomsByBuilding.get(r.structure_id) ?? []
     list.push(r)
-    roomsByStructure.set(r.structure_id, list)
+    roomsByBuilding.set(r.structure_id, list)
   }
 
   const handlePropertySubmit = (e: SyntheticEvent<HTMLFormElement>) => {
@@ -155,7 +156,7 @@ export function PropertyFlow() {
     else updateProperty.mutate({ id, ...payload }, opts)
   }
 
-  const handleStructureSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+  const handleBuildingSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!structureForm) return
     const form = e.currentTarget
@@ -171,8 +172,8 @@ export function PropertyFlow() {
         setStructureForm(null)
       },
     }
-    if (id == null) createStructure.mutate(payload, opts)
-    else updateStructure.mutate({ id, ...payload }, opts)
+    if (id == null) createBuilding.mutate(payload, opts)
+    else updateBuilding.mutate({ id, ...payload }, opts)
   }
 
   const handleRoomSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
@@ -205,9 +206,9 @@ export function PropertyFlow() {
     if (!window.confirm("Delete this property?")) return
     deleteProperty.mutate({ id })
   }
-  const handleDeleteStructure = (id: number) => {
+  const handleDeleteBuilding = (id: number) => {
     if (!window.confirm("Delete this structure?")) return
-    deleteStructure.mutate({ id })
+    deleteBuilding.mutate({ id })
   }
   const handleDeleteRoom = (id: number) => {
     if (!window.confirm("Delete this room?")) return
@@ -217,9 +218,9 @@ export function PropertyFlow() {
   const isCreatePropertyOpen = propertyForm?.id === null
   const editingPropertyId = propertyForm?.id ?? null
 
-  const isCreateStructureOpenFor = (pid: number) =>
+  const isCreateBuildingOpenFor = (pid: number) =>
     structureForm?.propertyId === pid && structureForm.id === null
-  const editingStructureId = structureForm?.id ?? null
+  const editingBuildingId = structureForm?.id ?? null
 
   const isCreateRoomOpenFor = (bid: number) =>
     roomForm?.structureId === bid && roomForm.id === null
@@ -241,7 +242,7 @@ export function PropertyFlow() {
       </div>
 
       {isCreatePropertyOpen && (
-        <NameAddressForm
+        <PropertyFormSection
           key="property-create"
           legend="New property"
           submitLabel="Create property"
@@ -259,7 +260,7 @@ export function PropertyFlow() {
         {properties.map(p => {
           const propStructures = structuresByProperty.get(p.id) ?? []
           const propRooms = propStructures.flatMap(
-            b => roomsByStructure.get(b.id) ?? [],
+            b => roomsByBuilding.get(b.id) ?? [],
           )
           const totalBeds = propRooms.reduce((s, r) => s + roomBeds(r), 0)
           const propertyIsEditing = editingPropertyId === p.id
@@ -304,14 +305,14 @@ export function PropertyFlow() {
                     )
                   }}
                 >
-                  {isCreateStructureOpenFor(p.id)
+                  {isCreateBuildingOpenFor(p.id)
                     ? "Cancel"
                     : "Add structure to property"}
                 </button>
               </div>
 
               {propertyIsEditing && (
-                <NameAddressForm
+                <PropertyFormSection
                   key={`property-edit-${String(p.id)}`}
                   legend={`Edit property #${String(p.id)}`}
                   submitLabel="Update property"
@@ -322,33 +323,33 @@ export function PropertyFlow() {
                 />
               )}
 
-              {isCreateStructureOpenFor(p.id) && (
-                <NameOnlyForm
+              {isCreateBuildingOpenFor(p.id) && (
+                <StructureFormSection
                   key={`structure-create-${String(p.id)}`}
                   legend={`New structure in ${p.name}`}
                   submitLabel="Create structure"
                   pending={structurePending}
-                  onSubmit={handleStructureSubmit}
-                  onCancel={closeStructureForm}
+                  onSubmit={handleBuildingSubmit}
+                  onCancel={closeBuildingForm}
                 />
               )}
 
               {propStructures.length === 0 ? (
-                <p>No Structures yet.</p>
+                <p>No structures yet.</p>
               ) : (
                 <ul>
                   {propStructures.map(b => {
-                    const structureRooms = roomsByStructure.get(b.id) ?? []
-                    const buildingBeds = structureRooms.reduce(
+                    const buildingRooms = roomsByBuilding.get(b.id) ?? []
+                    const buildingBeds = buildingRooms.reduce(
                       (s, r) => s + roomBeds(r),
                       0,
                     )
-                    const buildingIsEditing = editingStructureId === b.id
+                    const buildingIsEditing = editingBuildingId === b.id
                     return (
                       <li key={b.id}>
                         <h5>{b.name}</h5>
                         <p>
-                          {structureRooms.length} room(s), {buildingBeds} bed(s)
+                          {buildingRooms.length} room(s), {buildingBeds} bed(s)
                         </p>
 
                         <div>
@@ -368,7 +369,7 @@ export function PropertyFlow() {
                           <button
                             type="button"
                             onClick={() => {
-                              handleDeleteStructure(b.id)
+                              handleDeleteBuilding(b.id)
                             }}
                             disabled={structurePending}
                           >
@@ -389,19 +390,19 @@ export function PropertyFlow() {
                         </div>
 
                         {buildingIsEditing && (
-                          <NameOnlyForm
+                          <StructureFormSection
                             key={`structure-edit-${String(b.id)}`}
                             legend={`Edit structure #${String(b.id)}`}
                             submitLabel="Update structure"
                             pending={structurePending}
                             defaults={{ name: b.name }}
-                            onSubmit={handleStructureSubmit}
-                            onCancel={closeStructureForm}
+                            onSubmit={handleBuildingSubmit}
+                            onCancel={closeBuildingForm}
                           />
                         )}
 
                         {isCreateRoomOpenFor(b.id) && (
-                          <RoomFormBlock
+                          <RoomFormSection
                             key={`room-create-${String(b.id)}`}
                             legend={`New room in ${b.name}`}
                             submitLabel="Create room"
@@ -411,9 +412,9 @@ export function PropertyFlow() {
                           />
                         )}
 
-                        {structureRooms.length > 0 && (
+                        {buildingRooms.length > 0 && (
                           <ul>
-                            {structureRooms.map(r => {
+                            {buildingRooms.map(r => {
                               const roomIsEditing = editingRoomId === r.id
                               return (
                                 <li key={r.id}>
@@ -447,7 +448,7 @@ export function PropertyFlow() {
                                     </button>
                                   </div>
                                   {roomIsEditing && (
-                                    <RoomFormBlock
+                                    <RoomFormSection
                                       key={`room-edit-${String(r.id)}`}
                                       legend={`Edit room #${String(r.id)}`}
                                       submitLabel="Update room"
@@ -480,231 +481,5 @@ export function PropertyFlow() {
         })}
       </ul>
     </section>
-  )
-}
-
-type NameOnlyDefaults = { name: string }
-
-function NameOnlyForm({
-  legend,
-  submitLabel,
-  pending,
-  defaults,
-  onSubmit,
-  onCancel,
-}: {
-  legend: string
-  submitLabel: string
-  pending: boolean
-  defaults?: NameOnlyDefaults
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
-  onCancel: () => void
-}) {
-  return (
-    <form onSubmit={onSubmit}>
-      <fieldset>
-        <legend>{legend}</legend>
-        <div>
-          <label>
-            Name
-            <input
-              type="text"
-              name="name"
-              defaultValue={defaults?.name ?? ""}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <button type="submit" disabled={pending}>
-            {submitLabel}
-          </button>
-          <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
-          </button>
-        </div>
-      </fieldset>
-    </form>
-  )
-}
-
-type NameAddressDefaults = { name: string; address: string }
-
-function NameAddressForm({
-  legend,
-  submitLabel,
-  pending,
-  defaults,
-  onSubmit,
-  onCancel,
-}: {
-  legend: string
-  submitLabel: string
-  pending: boolean
-  defaults?: NameAddressDefaults
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
-  onCancel: () => void
-}) {
-  return (
-    <form onSubmit={onSubmit}>
-      <fieldset>
-        <legend>{legend}</legend>
-        <div>
-          <label>
-            Name
-            <input
-              type="text"
-              name="name"
-              defaultValue={defaults?.name ?? ""}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Address
-            <input
-              type="text"
-              name="address"
-              defaultValue={defaults?.address ?? ""}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <button type="submit" disabled={pending}>
-            {submitLabel}
-          </button>
-          <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
-          </button>
-        </div>
-      </fieldset>
-    </form>
-  )
-}
-
-type RoomDefaults = {
-  name: string
-  beds_sm: number
-  beds_lg: number
-  beds_double: number
-  beds_kid: number
-  mattresses: number
-  travel_cot: number
-}
-
-function RoomFormBlock({
-  legend,
-  submitLabel,
-  pending,
-  defaults,
-  onSubmit,
-  onCancel,
-}: {
-  legend: string
-  submitLabel: string
-  pending: boolean
-  defaults?: RoomDefaults
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
-  onCancel: () => void
-}) {
-  return (
-    <form onSubmit={onSubmit}>
-      <fieldset>
-        <legend>{legend}</legend>
-        <div>
-          <label>
-            Name
-            <input
-              type="text"
-              name="name"
-              defaultValue={defaults?.name ?? ""}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (single)
-            <input
-              type="number"
-              name="beds_sm"
-              min={0}
-              defaultValue={defaults?.beds_sm ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (large)
-            <input
-              type="number"
-              name="beds_lg"
-              min={0}
-              defaultValue={defaults?.beds_lg ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (double)
-            <input
-              type="number"
-              name="beds_double"
-              min={0}
-              defaultValue={defaults?.beds_double ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Beds (kid)
-            <input
-              type="number"
-              name="beds_kid"
-              min={0}
-              defaultValue={defaults?.beds_kid ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Mattresses
-            <input
-              type="number"
-              name="mattresses"
-              min={0}
-              defaultValue={defaults?.mattresses ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Travel cot
-            <input
-              type="number"
-              name="travel_cot"
-              min={0}
-              defaultValue={defaults?.travel_cot ?? 0}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <button type="submit" disabled={pending}>
-            {submitLabel}
-          </button>
-          <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
-          </button>
-        </div>
-      </fieldset>
-    </form>
   )
 }

@@ -1,0 +1,101 @@
+import { type SyntheticEvent } from "react"
+import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+
+type Contact = {
+  id: number
+  property_id: number
+  name: string
+  phone: string | null
+  email: string | null
+  info: string | null
+}
+
+type Props = {
+  contact: Contact
+  pending: boolean
+  updatePending: boolean
+  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onDelete: () => void
+  onCancel: () => void
+}
+
+export function ContactEditForm({
+  contact,
+  pending,
+  updatePending,
+  onSubmit,
+  onDelete,
+  onCancel,
+}: Props) {
+  return (
+    <form
+      onSubmit={onSubmit}
+      key={`edit-${String(contact.id)}`}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+      }}
+    >
+      <Fieldset>
+        <Fieldset.Legend>Edit contact</Fieldset.Legend>
+        <Textfield
+          label="Name"
+          name="name"
+          required
+          autoFocus
+          maxLength={255}
+          defaultValue={contact.name}
+          disabled={updatePending}
+        />
+        <Textfield
+          label="Phone"
+          name="phone"
+          type="tel"
+          maxLength={64}
+          defaultValue={contact.phone ?? ""}
+          disabled={updatePending}
+        />
+        <Textfield
+          label="Email"
+          name="email"
+          type="email"
+          maxLength={255}
+          defaultValue={contact.email ?? ""}
+          disabled={updatePending}
+        />
+        <Textfield
+          label="Info"
+          name="info"
+          multiline
+          rows={3}
+          maxLength={1024}
+          defaultValue={contact.info ?? ""}
+          disabled={updatePending}
+        />
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <Button type="submit" disabled={pending}>
+            Save
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            data-color="danger"
+            disabled={pending}
+            onClick={onDelete}
+          >
+            Remove
+          </Button>
+          <Button
+            type="button"
+            variant="tertiary"
+            disabled={pending}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        </div>
+      </Fieldset>
+    </form>
+  )
+}

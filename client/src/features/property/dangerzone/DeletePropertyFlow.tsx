@@ -4,6 +4,12 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Checkbox,
+  Fieldset,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useAppDispatch, useAppSelector } from "@/app/hooks.ts"
 import {
   selectSelectedPropertyId,
@@ -71,9 +77,9 @@ export function DeletePropertyFlow() {
           Permanently delete <strong>{selectedProperty.name}</strong> and all
           data associated with it.
         </p>
-        <button type="button" onClick={() => { setIsArmed(true) }}>
+        <Button type="button" onClick={() => { setIsArmed(true) }}>
           Delete this property…
-        </button>
+        </Button>
       </div>
     )
   }
@@ -89,51 +95,50 @@ export function DeletePropertyFlow() {
       </p>
 
       <form onSubmit={handleDelete}>
-        <fieldset>
-          <legend>Confirm deletion</legend>
+        <Fieldset>
+          <Fieldset.Legend>Confirm deletion</Fieldset.Legend>
 
           <div>
-            <label>
-              Type <strong>{selectedProperty.name}</strong> to confirm
-              <input
-                type="text"
-                value={typedName}
-                onChange={e => { setTypedName(e.target.value) }}
-                autoComplete="off"
-                autoFocus
-                required
-              />
-            </label>
+            <Textfield
+              label={
+                <>
+                  Type <strong>{selectedProperty.name}</strong> to confirm
+                </>
+              }
+              type="text"
+              value={typedName}
+              onChange={e => { setTypedName(e.target.value) }}
+              autoComplete="off"
+              autoFocus
+              required
+            />
           </div>
 
           <div>
-            <label>
-              <input
-                type="checkbox"
-                checked={acknowledged}
-                onChange={e => { setAcknowledged(e.target.checked) }}
-              />
-              I understand that this action is permanent and cannot be undone.
-            </label>
+            <Checkbox
+              label="I understand that this action is permanent and cannot be undone."
+              checked={acknowledged}
+              onChange={e => { setAcknowledged(e.target.checked) }}
+            />
           </div>
 
           <div>
-            <button type="submit" disabled={!canDelete}>
+            <Button type="submit" disabled={!canDelete}>
               Permanently delete {selectedProperty.name}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={reset}
               disabled={deleteProperty.isPending}
             >
               Cancel
-            </button>
+            </Button>
           </div>
 
           {deleteProperty.error && (
             <p role="alert">Error: {deleteProperty.error.message}</p>
           )}
-        </fieldset>
+        </Fieldset>
       </form>
     </div>
   )

@@ -4,19 +4,20 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Chip,
-  Label,
-  Select,
-  Switch,
-  Tag,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Switch } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { fdNumber } from "@/utils/formData"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import {
+  ownerLabel,
+  ownershipOffBy,
+  totalOwnershipPct,
+} from "./ownershipCalculations.ts"
+import { OwnerListView } from "./OwnerListView.tsx"
+import { OwnerEditForm } from "./OwnerEditForm.tsx"
+import { OwnerAddForm } from "./OwnerAddForm.tsx"
 
 type AddKind = "user" | "group"
 
@@ -27,13 +28,6 @@ type Owner = {
   user_name: string | null
   user_group_name: string | null
   ownership_pct: number | string
-}
-
-function fdNumber(fd: FormData, key: string): number {
-  const v = fd.get(key)
-  if (typeof v !== "string" || v === "") return NaN
-  const n = Number(v)
-  return Number.isFinite(n) ? n : NaN
 }
 
 export function PropertyOwnersPanel() {
@@ -85,6 +79,13 @@ export function PropertyOwnersPanel() {
   const [isAdding, setIsAdding] = useState(false)
   const [addKind, setAddKind] = useState<AddKind>("user")
 
+  const { pending, error: lastError } = useMutationsStatus(
+    addUser,
+    addGroup,
+    updatePct,
+    removeOwner,
+  )
+
   if (selectedPropertyId == null) {
     return (
       <section>
@@ -96,16 +97,8 @@ export function PropertyOwnersPanel() {
 
   const owners = ownersQuery.data
 
-  const lastError =
-    addUser.error ?? addGroup.error ?? updatePct.error ?? removeOwner.error
-  const pending =
-    addUser.isPending ||
-    addGroup.isPending ||
-    updatePct.isPending ||
-    removeOwner.isPending
-
-  const totalPct = owners.reduce((s, o) => s + Number(o.ownership_pct), 0)
-  const offBy = Math.abs(totalPct - 100)
+  const totalPct = totalOwnershipPct(owners)
+  const offBy = ownershipOffBy(owners)
 
   const takenUserIds = new Set(
     owners.filter(o => o.user_id != null).map(o => o.user_id as number),
@@ -117,13 +110,6 @@ export function PropertyOwnersPanel() {
   )
   const availableUsers = users.filter(u => !takenUserIds.has(u.id))
   const availableGroups = groups.filter(g => !takenGroupIds.has(g.id))
-
-  const ownerLabel = (o: Owner) => {
-    const isUser = o.user_id != null
-    return isUser
-      ? (o.user_name ?? `user #${String(o.user_id)}`)
-      : (o.user_group_name ?? `group #${String(o.user_group_id)}`)
-  }
 
   const editingOwner = editingId
     ? owners.find(o => o.id === editingId) ?? null
@@ -219,250 +205,35 @@ export function PropertyOwnersPanel() {
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       {editingOwner ? (
-        <form
+        <OwnerEditForm
+          owner={editingOwner}
+          pending={pending}
+          updatePending={updatePct.isPending}
           onSubmit={handleEditSubmit(editingOwner)}
-          key={`edit-${String(editingOwner.id)}`}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
-        >
-          <p>
-            <strong>{ownerLabel(editingOwner)}</strong>
-          </p>
-          <Textfield
-            label="Ownership %"
-            name="ownership_pct"
-            type="number"
-            min={0}
-            max={100}
-            step={0.01}
-            defaultValue={editingOwner.ownership_pct}
-            required
-            autoFocus
-            disabled={updatePct.isPending}
-          />
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Button type="submit" disabled={pending}>
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              data-color="danger"
-              disabled={pending}
-              onClick={() => { handleRemove(editingOwner) }}
-            >
-              Remove
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              disabled={pending}
-              onClick={() => { setEditingId(null) }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+          onRemove={() => { handleRemove(editingOwner) }}
+          onCancel={() => { setEditingId(null) }}
+        />
       ) : isAdding ? (
-        <form
+        <OwnerAddForm
+          addKind={addKind}
+          pending={pending}
+          addDisabled={addDisabled}
+          availableUsers={availableUsers}
+          availableGroups={availableGroups}
+          totalGroups={groups.length}
+          onKindChange={kind => { setAddKind(kind) }}
           onSubmit={handleAddSubmit}
-          key={`add-${addKind}`}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
-        >
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Chip.Radio
-              name="kind"
-              value="user"
-              checked={addKind === "user"}
-              onChange={() => { setAddKind("user") }}
-            >
-              User
-            </Chip.Radio>
-            <Chip.Radio
-              name="kind"
-              value="group"
-              checked={addKind === "group"}
-              onChange={() => { setAddKind("group") }}
-            >
-              Group
-            </Chip.Radio>
-          </div>
-
-          {addKind === "user" ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
-              }}
-            >
-              <Label htmlFor="add-owner-user">User</Label>
-              <Select
-                id="add-owner-user"
-                name="user_id"
-                required
-                defaultValue=""
-                disabled={pending || availableUsers.length === 0}
-              >
-                <Select.Option value="" disabled>
-                  Select user
-                </Select.Option>
-                {availableUsers.map(u => (
-                  <Select.Option key={u.id} value={String(u.id)}>
-                    {u.name}
-                  </Select.Option>
-                ))}
-              </Select>
-              {availableUsers.length === 0 && (
-                <p>
-                  <em>All users are already owners.</em>
-                </p>
-              )}
-            </div>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
-              }}
-            >
-              <Label htmlFor="add-owner-group">Group</Label>
-              <Select
-                id="add-owner-group"
-                name="user_group_id"
-                required
-                defaultValue=""
-                disabled={pending || availableGroups.length === 0}
-              >
-                <Select.Option value="" disabled>
-                  Select group
-                </Select.Option>
-                {availableGroups.map(g => (
-                  <Select.Option key={g.id} value={String(g.id)}>
-                    {g.name} ({g.members.length} member
-                    {g.members.length === 1 ? "" : "s"})
-                  </Select.Option>
-                ))}
-              </Select>
-              {availableGroups.length === 0 && (
-                <p>
-                  <em>
-                    No available groups.{" "}
-                    {groups.length === 0
-                      ? "Create one from Manage user groups."
-                      : "All groups are already owners."}
-                  </em>
-                </p>
-              )}
-            </div>
-          )}
-
-          <Textfield
-            label="Ownership %"
-            name="ownership_pct"
-            type="number"
-            min={0}
-            max={100}
-            step={0.01}
-            defaultValue={0}
-            required
-            disabled={pending}
-          />
-
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <Button type="submit" disabled={addDisabled}>
-              Add owner
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              disabled={pending}
-              onClick={() => { setIsAdding(false) }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+          onCancel={() => { setIsAdding(false) }}
+        />
       ) : (
-        <>
-          {owners.length === 0 ? (
-            <p>No owners yet.</p>
-          ) : (
-            <ul
-              style={{
-                listStyle: "none",
-                padding: 0,
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-              }}
-            >
-              {owners.map(o => {
-                const isUser = o.user_id != null
-                return (
-                  <Card asChild key={o.id}>
-                    <li>
-                      <Card.Block
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <span style={{ flex: 1, minWidth: 0 }}>
-                          {ownerLabel(o)}
-                        </span>
-                        <Tag data-color={isUser ? "info" : "neutral"}>
-                          {isUser ? "User" : "Group"}
-                        </Tag>
-                        <span>{o.ownership_pct}%</span>
-                        {editMode && (
-                          <>
-                            <Button
-                              variant="tertiary"
-                              data-size="sm"
-                              disabled={pending}
-                              onClick={() => { setEditingId(o.id) }}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="tertiary"
-                              data-color="danger"
-                              data-size="sm"
-                              disabled={pending}
-                              onClick={() => { handleRemove(o) }}
-                            >
-                              Delete
-                            </Button>
-                          </>
-                        )}
-                      </Card.Block>
-                    </li>
-                  </Card>
-                )
-              })}
-            </ul>
-          )}
-
-          {editMode && (
-            <Button
-              variant="secondary"
-              disabled={pending}
-              onClick={() => { setIsAdding(true) }}
-            >
-              + Add owner
-            </Button>
-          )}
-        </>
+        <OwnerListView
+          owners={owners}
+          editMode={editMode}
+          pending={pending}
+          onEdit={id => { setEditingId(id) }}
+          onRemove={handleRemove}
+          onStartAdd={() => { setIsAdding(true) }}
+        />
       )}
     </section>
   )

@@ -1,5 +1,11 @@
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  Button,
+  Checkbox,
+  Fieldset,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 const CONFIRM_PHRASE = "wipe"
@@ -46,9 +52,9 @@ export function WipeDbFlow() {
           Truncate every data table and (optionally) reseed with the default
           Owner / Member / Hytta state. For dev use only.
         </p>
-        <button type="button" onClick={() => { setIsArmed(true) }}>
+        <Button type="button" onClick={() => { setIsArmed(true) }}>
           Wipe database…
-        </button>
+        </Button>
       </div>
     )
   }
@@ -64,60 +70,56 @@ export function WipeDbFlow() {
       </p>
 
       <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>Confirm wipe</legend>
+        <Fieldset>
+          <Fieldset.Legend>Confirm wipe</Fieldset.Legend>
 
           <div>
-            <label>
-              Type <strong>{CONFIRM_PHRASE}</strong> to confirm
-              <input
-                type="text"
-                value={typed}
-                onChange={e => { setTyped(e.target.value) }}
-                autoComplete="off"
-                autoFocus
-                required
-              />
-            </label>
+            <Textfield
+              label={
+                <>
+                  Type <strong>{CONFIRM_PHRASE}</strong> to confirm
+                </>
+              }
+              type="text"
+              value={typed}
+              onChange={e => { setTyped(e.target.value) }}
+              autoComplete="off"
+              autoFocus
+              required
+            />
           </div>
 
           <div>
-            <label>
-              <input
-                type="checkbox"
-                checked={reseed}
-                onChange={e => { setReseed(e.target.checked) }}
-              />
-              Reseed with Owner / Member / Hytta after wipe
-            </label>
+            <Checkbox
+              label="Reseed with Owner / Member / Hytta after wipe"
+              checked={reseed}
+              onChange={e => { setReseed(e.target.checked) }}
+            />
           </div>
 
           <div>
-            <label>
-              <input
-                type="checkbox"
-                checked={acknowledged}
-                onChange={e => { setAcknowledged(e.target.checked) }}
-              />
-              I understand all data will be permanently destroyed.
-            </label>
+            <Checkbox
+              label="I understand all data will be permanently destroyed."
+              checked={acknowledged}
+              onChange={e => { setAcknowledged(e.target.checked) }}
+            />
           </div>
 
           <div>
-            <button type="submit" disabled={!canWipe}>
+            <Button type="submit" disabled={!canWipe}>
               {wipe.isPending ? "Wiping…" : "Wipe everything"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={reset}
               disabled={wipe.isPending}
             >
               Cancel
-            </button>
+            </Button>
           </div>
 
           {wipe.error && <p role="alert">Error: {wipe.error.message}</p>}
-        </fieldset>
+        </Fieldset>
       </form>
     </div>
   )

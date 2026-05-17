@@ -4,6 +4,11 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Fieldset,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type PropertyRecord = {
@@ -119,46 +124,42 @@ export function PropertyTestForm() {
       <h3>Property Test Form</h3>
 
       <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
+        <Fieldset>
+          <Fieldset.Legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</Fieldset.Legend>
 
           <div>
-            <label>
-              Name
-              <input
-                type="text"
-                value={state.name}
-                onChange={e => { set("name")(e.target.value); }}
-                required
-              />
-            </label>
+            <Textfield
+              label="Name"
+              type="text"
+              value={state.name}
+              onChange={e => { set("name")(e.target.value); }}
+              required
+            />
           </div>
 
           <div>
-            <label>
-              Address
-              <input
-                type="text"
-                value={state.address}
-                onChange={e => { set("address")(e.target.value); }}
-                required
-              />
-            </label>
+            <Textfield
+              label="Address"
+              type="text"
+              value={state.address}
+              onChange={e => { set("address")(e.target.value); }}
+              required
+            />
           </div>
 
           <div>
-            <button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending}>
               {isEditing ? "Update" : "Create"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
               Reset
-            </button>
+            </Button>
           </div>
-        </fieldset>
+        </Fieldset>
       </form>
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}

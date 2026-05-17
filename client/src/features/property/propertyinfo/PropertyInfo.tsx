@@ -13,11 +13,7 @@ import {
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
+import { fdString } from "@/utils/formData"
 
 export default function PropertyInfo() {
   const trpc = useTRPC()
@@ -52,7 +48,7 @@ export default function PropertyInfo() {
     )
   }
 
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+  const handleSavePropertyInfo = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const fd = new FormData(form)
@@ -82,7 +78,7 @@ export default function PropertyInfo() {
           {updateProperty.error && (
             <p role="alert">Error: {updateProperty.error.message}</p>
           )}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSavePropertyInfo}>
             <Fieldset>
               <Fieldset.Legend>Edit property</Fieldset.Legend>
               <div>
