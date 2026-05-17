@@ -100,10 +100,12 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
 
   if (selectedPropertyId == null) {
     return (
-      <section>
-        <Heading level={3} data-size="xs">Split policy builder</Heading>
-        <Paragraph>Select a property to design custom split policies.</Paragraph>
-      </section>
+      <Card asChild>
+        <section>
+          <Heading level={3} data-size="xs">Split policy builder</Heading>
+          <Paragraph>Select a property to design custom split policies.</Paragraph>
+        </section>
+      </Card>
     )
   }
 
@@ -289,7 +291,8 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
   )
 
   return (
-    <section>
+    <Card asChild>
+      <section>
       <Heading level={3} data-size="xs">Split policy builder</Heading>
       <Paragraph data-size="sm">
         Build a policy as an ordered list of rules. Each expense is matched
@@ -509,6 +512,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
           deleteMutation.mutate({ id, property_id: propId })
         }}
       />
-    </section>
+      </section>
+    </Card>
   )
 }

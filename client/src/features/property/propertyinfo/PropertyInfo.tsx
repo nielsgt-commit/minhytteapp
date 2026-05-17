@@ -8,12 +8,45 @@ import {
   Button,
   Card,
   Fieldset,
+  Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
+import {
+  AddressLookup,
+  type GeonorgeAddress,
+} from "@/features/property/register/AddressLookup"
+
+type MatrikkelDraft = {
+  address: string
+  adressekode: number | null
+  kommunenummer: string | null
+  kommunenavn: string | null
+  postnummer: string | null
+  poststed: string | null
+  gardsnummer: number | null
+  bruksnummer: number | null
+  festenummer: number | null
+  undernummer: number | null
+}
+
+function draftFromAddress(a: GeonorgeAddress): MatrikkelDraft {
+  return {
+    address: a.adressetekst,
+    adressekode: a.adressekode,
+    kommunenummer: a.kommunenummer,
+    kommunenavn: a.kommunenavn,
+    postnummer: a.postnummer,
+    poststed: a.poststed,
+    gardsnummer: a.gardsnummer,
+    bruksnummer: a.bruksnummer,
+    festenummer: a.festenummer,
+    undernummer: a.undernummer,
+  }
+}
 
 export default function PropertyInfo() {
   const trpc = useTRPC()
@@ -34,6 +67,8 @@ export default function PropertyInfo() {
   )
 
   const [isEditing, setIsEditing] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
+  const [draft, setDraft] = useState<MatrikkelDraft | null>(null)
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
@@ -53,8 +88,9 @@ export default function PropertyInfo() {
     const form = e.currentTarget
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
-    const address = fdString(fd, "address").trim()
-    if (!name || !address) return
+    if (!name) return
+    const address = (draft?.address ?? selectedProperty.address).trim()
+    if (!address) return
     const linkRaw = fdString(fd, "link").trim()
     const parkingRaw = fdString(fd, "parking_spots").trim()
     const parkingNum = parkingRaw === "" ? 0 : Number(parkingRaw)
@@ -65,12 +101,30 @@ export default function PropertyInfo() {
         address,
         link: linkRaw === "" ? null : linkRaw,
         parking_spots: Number.isFinite(parkingNum) ? parkingNum : 0,
+        adressekode: draft?.adressekode ?? selectedProperty.adressekode,
+        kommunenummer: draft?.kommunenummer ?? selectedProperty.kommunenummer,
+        gardsnummer: draft?.gardsnummer ?? selectedProperty.gardsnummer,
+        bruksnummer: draft?.bruksnummer ?? selectedProperty.bruksnummer,
+        festenummer: draft?.festenummer ?? selectedProperty.festenummer,
+        undernummer: draft?.undernummer ?? selectedProperty.undernummer,
       },
-      { onSuccess: () => { setIsEditing(false) } },
+      {
+        onSuccess: () => {
+          setIsEditing(false)
+          setDraft(null)
+        },
+      },
     )
   }
 
+  const hasMatrikkel =
+    selectedProperty.adressekode != null ||
+    selectedProperty.kommunenummer != null ||
+    selectedProperty.gardsnummer != null ||
+    selectedProperty.bruksnummer != null
+
   if (isEditing) {
+    const previewAddress = draft?.address ?? selectedProperty.address
     return (
       <Card>
         <Card.Block>
@@ -91,13 +145,19 @@ export default function PropertyInfo() {
                 />
               </div>
               <div>
-                <Textfield
-                  label="Address"
-                  type="text"
-                  name="address"
-                  defaultValue={selectedProperty.address}
-                  required
+                <Paragraph data-size="sm">
+                  Current address: {previewAddress}
+                </Paragraph>
+                <AddressLookup
+                  label="Search a new address"
+                  onSelect={a => { setDraft(draftFromAddress(a)) }}
                 />
+                {draft && (
+                  <Paragraph data-size="sm">
+                    Will save: {draft.address} ({draft.postnummer}{" "}
+                    {draft.poststed})
+                  </Paragraph>
+                )}
               </div>
               <div>
                 <Textfield
@@ -124,7 +184,10 @@ export default function PropertyInfo() {
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => { setIsEditing(false) }}
+                  onClick={() => {
+                    setIsEditing(false)
+                    setDraft(null)
+                  }}
                   disabled={updateProperty.isPending}
                 >
                   Cancel
@@ -142,7 +205,35 @@ export default function PropertyInfo() {
       <Card.Block>
         <h1>Property Info</h1>
         <p>{selectedProperty.name}</p>
-        <p>{selectedProperty.address}</p>
+        <p>
+          {selectedProperty.address}{" "}
+          {hasMatrikkel && (
+            <Button
+              type="button"
+              variant="tertiary"
+              data-size="sm"
+              onClick={() => { setShowRegister(v => !v) }}
+            >
+              {showRegister ? "Hide register" : "Show register"}
+            </Button>
+          )}
+        </p>
+        {showRegister && hasMatrikkel && (
+          <dl>
+            <dt>Adressekode</dt>
+            <dd>{selectedProperty.adressekode ?? "—"}</dd>
+            <dt>Kommunenummer</dt>
+            <dd>{selectedProperty.kommunenummer ?? "—"}</dd>
+            <dt>Gnr</dt>
+            <dd>{selectedProperty.gardsnummer ?? "—"}</dd>
+            <dt>Bnr</dt>
+            <dd>{selectedProperty.bruksnummer ?? "—"}</dd>
+            <dt>Fnr</dt>
+            <dd>{selectedProperty.festenummer ?? "—"}</dd>
+            <dt>Snr</dt>
+            <dd>{selectedProperty.undernummer ?? "—"}</dd>
+          </dl>
+        )}
         <p>
           Link:{" "}
           {selectedProperty.link != null && selectedProperty.link !== "" ? (
@@ -153,7 +244,6 @@ export default function PropertyInfo() {
             <em>none</em>
           )}
         </p>
-        <p> coordinates / matrix </p>
         <p> Property description </p>
         <p>Parking spots: {selectedProperty.parking_spots}</p>
 
