@@ -5,6 +5,7 @@ export type What =
 export type How =
   | { kind: "equally" }
   | { kind: "weighted_by_occupancy" }
+  | { kind: "by_ownership_pct" }
 
 export type Who =
   | { kind: "all_users" }

@@ -47,7 +47,6 @@ export function PriorityWeekRow({
         return (
           <Table.Cell key={o.property_owner_id}>
             <Radio
-              label=""
               aria-label={`W${String(week)} – ${o.user_name}`}
               name={`priority-week-owner-${String(o.property_owner_id)}`}
               value={String(week)}

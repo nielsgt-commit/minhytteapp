@@ -6,7 +6,9 @@
       "Bash(rm -rf drizzle/)",
       "Bash(docker compose *)",
       "mcp__ide__getDiagnostics",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

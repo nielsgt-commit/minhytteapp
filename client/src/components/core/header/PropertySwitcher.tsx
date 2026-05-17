@@ -16,7 +16,6 @@ type Props = {
   onAddOpenChange: (open: boolean) => void
   onAdd: (name: string) => void
   onManageProperty: () => void
-  onUserGroups: () => void
   isAddPending?: boolean
   addError?: string | null
 }
@@ -29,7 +28,6 @@ export default function PropertySwitcher({
   onAddOpenChange,
   onAdd,
   onManageProperty,
-  onUserGroups,
   isAddPending,
   addError,
 }: Props) {
@@ -126,11 +124,6 @@ export default function PropertySwitcher({
               <Dropdown.Item>
                 <Dropdown.Button onClick={onManageProperty}>
                   Manage Property
-                </Dropdown.Button>
-              </Dropdown.Item>
-              <Dropdown.Item>
-                <Dropdown.Button onClick={onUserGroups}>
-                  User groups
                 </Dropdown.Button>
               </Dropdown.Item>
             </Dropdown.List>

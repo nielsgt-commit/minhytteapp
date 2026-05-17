@@ -82,7 +82,6 @@ export default function PropertyMenu() {
         onAddOpenChange={setIsAddOpen}
         onAdd={name => { createProperty.mutate({ name, address: "—" }) }}
         onManageProperty={() => { void navigate({ to: "/manageproperty" }) }}
-        onUserGroups={() => { void navigate({ to: "/manageproperty/usergroups" }) }}
         isAddPending={createProperty.isPending}
         addError={createProperty.error?.message ?? null}
       />
