@@ -274,6 +274,13 @@
       "when": 1778959730700,
       "tag": "0038_rename_domain_terms",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1779045919209,
+      "tag": "0039_add_property_matrikkel_keys",
+      "breakpoints": true
     }
   ]
 }

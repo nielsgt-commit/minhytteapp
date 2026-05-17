@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query"
 import {
   Button,
+  Card,
   Checkbox,
   Heading,
   Textfield,
@@ -69,7 +70,8 @@ export function ListUsers() {
   }
 
   return (
-    <section>
+    <Card asChild>
+      <section>
       <Heading level={2}>Users</Heading>
       <p>
         Edit user details or remove a user. Deletion is blocked while the user
@@ -201,6 +203,7 @@ export function ListUsers() {
           </tbody>
         </table>
       )}
-    </section>
+      </section>
+    </Card>
   )
 }

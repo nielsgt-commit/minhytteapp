@@ -4,7 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Checkbox, Heading } from "@digdir/designsystemet-react"
+import { Button, Card, Checkbox, Heading } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -150,7 +150,8 @@ export function UserGroupsFlow() {
   }
 
   return (
-    <section>
+    <Card asChild>
+      <section>
       <Heading level={2}>User groups</Heading>
       <p>
         Groups bundle users so you can assign group ownership on a property and
@@ -252,6 +253,7 @@ export function UserGroupsFlow() {
           })}
         </ul>
       )}
-    </section>
+      </section>
+    </Card>
   )
 }

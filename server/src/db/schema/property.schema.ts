@@ -21,6 +21,12 @@ export const propertyTable = pgTable(
     address: varchar("address", { length: 255 }).notNull(),
     link: varchar("link", { length: 255 }),
     parking_spots: integer("parking_spots").notNull().default(0),
+    adressekode: integer("adressekode"),
+    kommunenummer: varchar("kommunenummer", { length: 4 }),
+    gardsnummer: integer("gardsnummer"),
+    bruksnummer: integer("bruksnummer"),
+    festenummer: integer("festenummer"),
+    undernummer: integer("undernummer"),
   },
   (t) => [check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`)],
 )

@@ -1,12 +1,65 @@
 import { Suspense } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Outlet } from "@tanstack/react-router"
+import { Outlet, useLocation } from "@tanstack/react-router"
+import { Card } from "@digdir/designsystemet-react"
 import styles from "./ManageProperty.module.css"
 import { SideNav } from "@/components/shared/SideNav"
 import { GroupTabs } from "@/components/shared/GroupTabs"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+
+const BANNERS = new Map<string, { title: string; description: string }>([
+  ["/manageproperty/info", {
+    title: "Info",
+    description: "Name, address, link, and basic facts about the property.",
+  }],
+  ["/manageproperty/contacts", {
+    title: "Contacts",
+    description: "People to call for the property — caretakers, neighbours, service providers.",
+  }],
+  ["/manageproperty/ownership", {
+    title: "Ownership",
+    description: "Who owns what share of the property.",
+  }],
+  ["/manageproperty/usergroups", {
+    title: "User groups",
+    description: "Group users together to share access, costs, or bookings.",
+  }],
+  ["/manageproperty/structures", {
+    title: "Structures",
+    description: "Buildings on the property and the rooms inside them.",
+  }],
+  ["/manageproperty/infrastructure", {
+    title: "Infrastructure",
+    description: "Water, power, heating, network, and other systems serving the property.",
+  }],
+  ["/manageproperty/equipment", {
+    title: "Equipment",
+    description: "Tools, appliances, and gear kept at the property.",
+  }],
+  ["/manageproperty/split-policy", {
+    title: "Split policy",
+    description: "Rules for how shared costs are split across owners and users.",
+  }],
+  ["/manageproperty/settings", {
+    title: "Settings",
+    description: "Per-property preferences and danger zone actions.",
+  }],
+])
+
+function RouteBanner({ pathname }: { pathname: string }) {
+  const banner = BANNERS.get(pathname)
+  if (!banner) return null
+  return (
+    <Card asChild>
+      <header>
+        <h2>{banner.title}</h2>
+        <p>{banner.description}</p>
+      </header>
+    </Card>
+  )
+}
 
 const DESKTOP_GROUPS = [
   { label: "Identity", items: [
@@ -21,7 +74,6 @@ const DESKTOP_GROUPS = [
     { to: "/manageproperty/equipment", label: "Equipment" },
   ]},
   { label: "Admin", items: [
-    { to: "/manageproperty/register", label: "Register" },
     { to: "/manageproperty/split-policy", label: "Split policy" },
     { to: "/manageproperty/settings", label: "Settings" },
   ]},
@@ -42,7 +94,6 @@ const MOBILE_GROUPS = [
     { to: "/manageproperty/usergroups", label: "User groups" },
   ]},
   { label: "Admin", items: [
-    { to: "/manageproperty/register", label: "Register" },
     { to: "/manageproperty/split-policy", label: "Split policy" },
     { to: "/manageproperty/settings", label: "Settings" },
   ]},
@@ -51,6 +102,7 @@ const MOBILE_GROUPS = [
 export function ManageProperty() {
   const trpc = useTRPC()
   const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const { pathname } = useLocation()
   useSuspenseQuery(trpc.property.list.queryOptions())
 
   if (selectedPropertyId == null) {
@@ -74,6 +126,7 @@ export function ManageProperty() {
           <GroupTabs groups={MOBILE_GROUPS} />
         </div>
         <div className={styles.content}>
+          <RouteBanner pathname={pathname} />
           <Suspense fallback={<p>Loading…</p>}>
             <Outlet />
           </Suspense>
