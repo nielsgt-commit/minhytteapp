@@ -1,27 +1,15 @@
 import type { Action, ThunkAction } from "@reduxjs/toolkit"
 import { combineSlices, configureStore } from "@reduxjs/toolkit"
 import { setupListeners } from "@reduxjs/toolkit/query"
-import { calendarSlice } from "@/features/calendar/calendarSlice"
-import { dashboardSlice } from "@/features/dashboard/dashboardSlice"
-import { expensesSlice } from "@/features/expenses/expensesSlice"
-import { homeSlice } from "@/features/home/homeSlice"
-import { maintenanceSlice } from "@/features/maintenance/maintenanceSlice"
 import { prioritySlice } from "@/features/priority/prioritySlice"
 import { propertySlice } from "@/features/property/propertySlice"
-import { settlementSlice } from "@/features/settlement/settlementSlice"
 import { userSlice } from "@/features/user/userSlice"
 
 // `combineSlices` automatically combines the reducers using
 // their `reducerPath`s, therefore we no longer need to call `combineReducers`.
 const rootReducer = combineSlices(
-  calendarSlice,
-  dashboardSlice,
-  expensesSlice,
-  homeSlice,
-  maintenanceSlice,
   prioritySlice,
   propertySlice,
-  settlementSlice,
   userSlice,
 )
 // Infer the `RootState` type from the root reducer
