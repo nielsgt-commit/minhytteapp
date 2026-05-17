@@ -1,12 +1,16 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Checkbox, Heading } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { CreateGroupForm } from "./CreateGroupForm.tsx"
+import { GroupCard } from "./GroupCard.tsx"
 import styles from "./UserGroupsFlow.module.css"
 
 type OpenForm =
@@ -14,24 +18,6 @@ type OpenForm =
   | { kind: "rename"; groupId: number }
   | { kind: "addMember"; groupId: number }
   | null
-
-const ADD_USER_SENTINEL = "__add__"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
-function fdBoolean(fd: FormData, key: string): boolean {
-  return fd.get(key) === "on"
-}
-
-function fdNumber(fd: FormData, key: string): number {
-  const v = fd.get(key)
-  if (typeof v !== "string" || v === "") return NaN
-  const n = Number(v)
-  return Number.isFinite(n) ? n : NaN
-}
 
 export function UserGroupsFlow() {
   const trpc = useTRPC()
@@ -80,47 +66,31 @@ export function UserGroupsFlow() {
   )
   const [editMode, setEditMode] = useState(false)
 
-  const lastError =
-    createGroup.error ??
-    updateGroup.error ??
-    deleteGroup.error ??
-    addMember.error ??
-    removeMember.error ??
-    createUser.error
-  const pending =
-    createGroup.isPending ||
-    updateGroup.isPending ||
-    deleteGroup.isPending ||
-    addMember.isPending ||
-    removeMember.isPending ||
-    createUser.isPending
+  const { pending, error: lastError } = useMutationsStatus(
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    addMember,
+    removeMember,
+    createUser,
+  )
 
-  const handleCreate = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const name = fdString(fd, "name").trim()
-    if (!name) return
-    createGroup.mutate(
-      { name, is_main: fdBoolean(fd, "is_main") },
-      {
-        onSuccess: () => {
-          form.reset()
-          setOpenForm(null)
-        },
+  const handleCreate = (
+    input: { name: string; is_main: boolean },
+    reset: () => void,
+  ) => {
+    createGroup.mutate(input, {
+      onSuccess: () => {
+        reset()
+        setOpenForm(null)
       },
-    )
+    })
   }
 
   const handleRename = (groupId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const name = fdString(fd, "name").trim()
-      if (!name) return
+    (input: { name: string; is_main: boolean }) => {
       updateGroup.mutate(
-        { id: groupId, name, is_main: fdBoolean(fd, "is_main") },
+        { id: groupId, ...input },
         { onSuccess: () => { setOpenForm(null) } },
       )
     }
@@ -134,17 +104,12 @@ export function UserGroupsFlow() {
   }
 
   const handleAddMember = (groupId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const user_id = fdNumber(fd, "user_id")
-      if (!Number.isFinite(user_id)) return
+    (user_id: number, reset: () => void) => {
       addMember.mutate(
         { user_group_id: groupId, user_id },
         {
           onSuccess: () => {
-            form.reset()
+            reset()
             setOpenForm(null)
           },
         },
@@ -152,12 +117,7 @@ export function UserGroupsFlow() {
     }
 
   const handleCreateAndAddMember = (groupId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const name = fdString(fd, "name").trim()
-      if (!name) return
+    (name: string, reset: () => void) => {
       const email = `pending-${String(Date.now())}@example.local`
       createUser.mutate(
         { name, email },
@@ -169,7 +129,7 @@ export function UserGroupsFlow() {
               { user_group_id: groupId, user_id: created.id },
               {
                 onSuccess: () => {
-                  form.reset()
+                  reset()
                   setAddingUserForGroup(null)
                   setOpenForm(null)
                 },
@@ -191,33 +151,30 @@ export function UserGroupsFlow() {
 
   return (
     <section>
-      <h2>User groups</h2>
+      <Heading level={2}>User groups</Heading>
       <p>
         Groups bundle users so you can assign group ownership on a property and
         roll up settlements. Deleting a group is blocked while it is in use.
       </p>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={editMode}
-          onChange={e => {
-            const next = e.currentTarget.checked
-            setEditMode(next)
-            if (!next) {
-              setOpenForm(null)
-              setAddingUserForGroup(null)
-            }
-          }}
-        />
-        Edit mode
-      </label>
+      <Checkbox
+        label="Edit mode"
+        checked={editMode}
+        onChange={e => {
+          const next = e.currentTarget.checked
+          setEditMode(next)
+          if (!next) {
+            setOpenForm(null)
+            setAddingUserForGroup(null)
+          }
+        }}
+      />
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       {editMode && (
         <div>
-          <button
+          <Button
             type="button"
             disabled={pending}
             onClick={() => {
@@ -227,40 +184,16 @@ export function UserGroupsFlow() {
             }}
           >
             {openForm?.kind === "create" ? "Cancel" : "New group"}
-          </button>
+          </Button>
         </div>
       )}
 
       {openForm?.kind === "create" && (
-        <form onSubmit={handleCreate}>
-          <fieldset>
-            <legend>New group</legend>
-            <div>
-              <label>
-                Name
-                <input type="text" name="name" required autoFocus />
-              </label>
-            </div>
-            <div>
-              <label>
-                <input type="checkbox" name="is_main" />
-                Main
-              </label>
-            </div>
-            <div>
-              <button type="submit" disabled={createGroup.isPending}>
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => { setOpenForm(null) }}
-                disabled={createGroup.isPending}
-              >
-                Cancel
-              </button>
-            </div>
-          </fieldset>
-        </form>
+        <CreateGroupForm
+          pending={createGroup.isPending}
+          onSubmit={handleCreate}
+          onCancel={() => { setOpenForm(null) }}
+        />
       )}
 
       {groups.length === 0 ? (
@@ -275,217 +208,46 @@ export function UserGroupsFlow() {
             const isAddingMember =
               openForm?.kind === "addMember" && openForm.groupId === g.id
             return (
-              <li key={g.id}>
-                <h3>
-                  {g.name}
-                  {g.is_main && <small> (main)</small>}
-                </h3>
-                <p>
-                  {g.members.length} member
-                  {g.members.length === 1 ? "" : "s"}
-                </p>
-
-                {editMode && (
-                  <div>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => {
-                        setOpenForm(v =>
-                          v?.kind === "rename" && v.groupId === g.id
-                            ? null
-                            : { kind: "rename", groupId: g.id },
-                        )
-                      }}
-                    >
-                      {isRenaming ? "Cancel" : "Rename"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => {
-                        setOpenForm(v =>
-                          v?.kind === "addMember" && v.groupId === g.id
-                            ? null
-                            : { kind: "addMember", groupId: g.id },
-                        )
-                      }}
-                    >
-                      {isAddingMember ? "Cancel" : "Add member"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => { handleDelete(g.id, g.name) }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-
-                {isRenaming && (
-                  <form
-                    onSubmit={handleRename(g.id)}
-                    key={`rename-${String(g.id)}`}
-                  >
-                    <fieldset>
-                      <legend>Edit group</legend>
-                      <div>
-                        <label>
-                          Name
-                          <input
-                            type="text"
-                            name="name"
-                            defaultValue={g.name}
-                            required
-                          />
-                        </label>
-                      </div>
-                      <div>
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="is_main"
-                            defaultChecked={g.is_main}
-                          />
-                          Main
-                        </label>
-                      </div>
-                      <div>
-                        <button type="submit" disabled={updateGroup.isPending}>
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setOpenForm(null) }}
-                          disabled={updateGroup.isPending}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </fieldset>
-                  </form>
-                )}
-
-                {isAddingMember && addingUserForGroup !== g.id && (
-                  <form
-                    onSubmit={handleAddMember(g.id)}
-                    key={`add-member-${String(g.id)}`}
-                  >
-                    <fieldset>
-                      <legend>Add member to {g.name}</legend>
-                      <div>
-                        <label>
-                          User
-                          <select
-                            name="user_id"
-                            required
-                            defaultValue=""
-                            onChange={e => {
-                              if (e.currentTarget.value === ADD_USER_SENTINEL) {
-                                setAddingUserForGroup(g.id)
-                              }
-                            }}
-                          >
-                            <option value="" disabled>
-                              Select user
-                            </option>
-                            {availableUsers.map(u => (
-                              <option key={u.id} value={u.id}>
-                                {u.name}
-                              </option>
-                            ))}
-                            <option value={ADD_USER_SENTINEL}>
-                              + Add user
-                            </option>
-                          </select>
-                        </label>
-                      </div>
-                      <div>
-                        <button
-                          type="submit"
-                          disabled={
-                            addMember.isPending || availableUsers.length === 0
-                          }
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setOpenForm(null) }}
-                          disabled={addMember.isPending}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </fieldset>
-                  </form>
-                )}
-
-                {isAddingMember && addingUserForGroup === g.id && (
-                  <form
-                    onSubmit={handleCreateAndAddMember(g.id)}
-                    key={`create-user-${String(g.id)}`}
-                  >
-                    <fieldset>
-                      <legend>Create user and add to {g.name}</legend>
-                      <div>
-                        <label>
-                          Name
-                          <input
-                            type="text"
-                            name="name"
-                            required
-                            autoFocus
-                          />
-                        </label>
-                      </div>
-                      <div>
-                        <button
-                          type="submit"
-                          disabled={
-                            createUser.isPending || addMember.isPending
-                          }
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setAddingUserForGroup(null) }}
-                          disabled={
-                            createUser.isPending || addMember.isPending
-                          }
-                        >
-                          Back
-                        </button>
-                      </div>
-                    </fieldset>
-                  </form>
-                )}
-
-                {g.members.length === 0 ? (
-                  <p>No members yet.</p>
-                ) : (
-                  <ul>
-                    {g.members.map(m => (
-                      <li key={m.user_id}>
-                        {m.user_name}
-                        {editMode && (
-                          <button
-                            type="button"
-                            disabled={pending}
-                            onClick={() => {
-                              handleRemoveMember(g.id, m.user_id, m.user_name)
-                            }}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
+              <GroupCard
+                key={g.id}
+                group={g}
+                availableUsers={availableUsers}
+                editMode={editMode}
+                isRenaming={isRenaming}
+                isAddingMember={isAddingMember}
+                isCreatingUser={addingUserForGroup === g.id}
+                pending={pending}
+                renamePending={updateGroup.isPending}
+                addMemberPending={addMember.isPending}
+                createUserPending={
+                  createUser.isPending || addMember.isPending
+                }
+                onToggleRename={() => {
+                  setOpenForm(v =>
+                    v?.kind === "rename" && v.groupId === g.id
+                      ? null
+                      : { kind: "rename", groupId: g.id },
+                  )
+                }}
+                onToggleAddMember={() => {
+                  setOpenForm(v =>
+                    v?.kind === "addMember" && v.groupId === g.id
+                      ? null
+                      : { kind: "addMember", groupId: g.id },
+                  )
+                }}
+                onDelete={() => { handleDelete(g.id, g.name) }}
+                onRenameSubmit={handleRename(g.id)}
+                onAddMember={handleAddMember(g.id)}
+                onCreateAndAddMember={handleCreateAndAddMember(g.id)}
+                onSwitchToCreateUser={() => { setAddingUserForGroup(g.id) }}
+                onBackFromCreateUser={() => { setAddingUserForGroup(null) }}
+                onCancelRename={() => { setOpenForm(null) }}
+                onCancelAddMember={() => { setOpenForm(null) }}
+                onRemoveMember={(userId, userName) => {
+                  handleRemoveMember(g.id, userId, userName)
+                }}
+              />
             )
           })}
         </ul>

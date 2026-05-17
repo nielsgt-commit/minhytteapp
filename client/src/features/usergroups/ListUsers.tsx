@@ -4,18 +4,17 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import {
+  Button,
+  Checkbox,
+  Heading,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
-function fdBoolean(fd: FormData, key: string): boolean {
-  return fd.get(key) === "on"
-}
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { fdBoolean, fdString } from "@/utils/formData"
 
 export function ListUsers() {
   const trpc = useTRPC()
@@ -42,8 +41,7 @@ export function ListUsers() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editMode, setEditMode] = useState(false)
 
-  const lastError = updateUser.error ?? deleteUser.error
-  const pending = updateUser.isPending || deleteUser.isPending
+  const { pending, error: lastError } = useMutationsStatus(updateUser, deleteUser)
 
   const handleSubmit = (userId: number) =>
     (e: SyntheticEvent<HTMLFormElement>) => {
@@ -72,24 +70,21 @@ export function ListUsers() {
 
   return (
     <section>
-      <h2>Users</h2>
+      <Heading level={2}>Users</Heading>
       <p>
         Edit user details or remove a user. Deletion is blocked while the user
         is referenced by any group, ownership, booking, or expense.
       </p>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={editMode}
-          onChange={e => {
-            const next = e.currentTarget.checked
-            setEditMode(next)
-            if (!next) setEditingId(null)
-          }}
-        />
-        Edit mode
-      </label>
+      <Checkbox
+        label="Edit mode"
+        checked={editMode}
+        onChange={e => {
+          const next = e.currentTarget.checked
+          setEditMode(next)
+          if (!next) setEditingId(null)
+        }}
+      />
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
@@ -120,22 +115,24 @@ export function ListUsers() {
                     <td>{roles}</td>
                     {editMode && (
                       <td>
-                        <button
+                        <Button
                           type="button"
+                          variant="secondary"
                           disabled={pending}
                           onClick={() => {
                             setEditingId(v => (v === u.id ? null : u.id))
                           }}
                         >
                           {editing ? "Cancel" : "Edit"}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="secondary"
                           disabled={pending}
                           onClick={() => { handleDelete(u.id, u.name) }}
                         >
                           Delete
-                        </button>
+                        </Button>
                       </td>
                     )}
                   </tr>
@@ -146,61 +143,52 @@ export function ListUsers() {
                           <fieldset>
                             <legend>Edit user</legend>
                             <div>
-                              <label>
-                                Name
-                                <input
-                                  type="text"
-                                  name="name"
-                                  defaultValue={u.name}
-                                  required
-                                />
-                              </label>
+                              <Textfield
+                                label="Name"
+                                type="text"
+                                name="name"
+                                defaultValue={u.name}
+                                required
+                              />
                             </div>
                             <div>
-                              <label>
-                                Email
-                                <input
-                                  type="email"
-                                  name="email"
-                                  defaultValue={u.email}
-                                  required
-                                />
-                              </label>
+                              <Textfield
+                                label="Email"
+                                type="email"
+                                name="email"
+                                defaultValue={u.email}
+                                required
+                              />
                             </div>
                             <div>
-                              <label>
-                                <input
-                                  type="checkbox"
-                                  name="is_admin"
-                                  defaultChecked={u.is_admin}
-                                />
-                                Admin
-                              </label>
+                              <Checkbox
+                                label="Admin"
+                                name="is_admin"
+                                defaultChecked={u.is_admin}
+                              />
                             </div>
                             <div>
-                              <label>
-                                <input
-                                  type="checkbox"
-                                  name="is_child"
-                                  defaultChecked={u.is_child ?? false}
-                                />
-                                Child
-                              </label>
+                              <Checkbox
+                                label="Child"
+                                name="is_child"
+                                defaultChecked={u.is_child ?? false}
+                              />
                             </div>
                             <div>
-                              <button
+                              <Button
                                 type="submit"
                                 disabled={updateUser.isPending}
                               >
                                 Save
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
+                                variant="secondary"
                                 onClick={() => { setEditingId(null) }}
                                 disabled={updateUser.isPending}
                               >
                                 Cancel
-                              </button>
+                              </Button>
                             </div>
                           </fieldset>
                         </form>

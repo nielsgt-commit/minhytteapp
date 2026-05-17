@@ -4,22 +4,12 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Card } from "@digdir/designsystemet-react"
+import { Button, Card, Textfield } from "@digdir/designsystemet-react"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
-function fdNumber(fd: FormData, key: string): number {
-  const v = fd.get(key)
-  if (typeof v !== "string" || v === "") return NaN
-  const n = Number(v)
-  return Number.isFinite(n) ? n : NaN
-}
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { fdNumber, fdString } from "@/utils/formData"
 
 function inviteUrl(token: string): string {
   return `${window.location.origin}/invite/${token}`
@@ -54,6 +44,8 @@ export function PropertyInvitesPanel() {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState<number | null>(null)
 
+  const { pending, error: lastError } = useMutationsStatus(create, revoke)
+
   if (propertyId == null) {
     return (
       <Card asChild>
@@ -68,8 +60,6 @@ export function PropertyInvitesPanel() {
   }
 
   const invites = invitesQuery.data
-  const lastError = create.error ?? revoke.error
-  const pending = create.isPending || revoke.isPending
 
   const handleCreate = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -126,19 +116,21 @@ export function PropertyInvitesPanel() {
                 <em>{status}</em>
                 {!inv.used_at && !expired && (
                   <div>
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={() => { handleCopy(inv.id, inv.token) }}
                     >
                       {copied === inv.id ? "Copied!" : "Copy invite link"}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="secondary"
                       disabled={pending}
                       onClick={() => { handleRevoke(inv.id, inv.email) }}
                     >
                       Revoke
-                    </button>
+                    </Button>
                   </div>
                 )}
               </li>
@@ -148,13 +140,13 @@ export function PropertyInvitesPanel() {
       )}
 
       <div>
-        <button
+        <Button
           type="button"
           disabled={pending}
           onClick={() => { setOpen(v => !v) }}
         >
           {open ? "Cancel" : "Create invite"}
-        </button>
+        </Button>
       </div>
 
       {open && (
@@ -162,36 +154,38 @@ export function PropertyInvitesPanel() {
           <fieldset>
             <legend>New invite</legend>
             <div>
-              <label>
-                Email
-                <input type="email" name="email" required autoFocus />
-              </label>
+              <Textfield
+                label="Email"
+                type="email"
+                name="email"
+                required
+                autoFocus
+              />
             </div>
             <div>
-              <label>
-                Ownership %
-                <input
-                  type="number"
-                  name="ownership_pct"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  defaultValue={0}
-                  required
-                />
-              </label>
+              <Textfield
+                label="Ownership %"
+                type="number"
+                name="ownership_pct"
+                min={0}
+                max={100}
+                step={0.01}
+                defaultValue={0}
+                required
+              />
             </div>
             <div>
-              <button type="submit" disabled={create.isPending}>
+              <Button type="submit" disabled={create.isPending}>
                 Create
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => { setOpen(false) }}
                 disabled={create.isPending}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </fieldset>
         </form>
