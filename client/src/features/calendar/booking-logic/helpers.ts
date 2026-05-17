@@ -106,15 +106,15 @@ type StructureRow = { id: number; category: string }
  */
 export function propertyCapacity(
   rooms: RoomRow[],
-  Structures: StructureRow[],
+  structures: StructureRow[],
 ): number {
-  const habitableStructureIds = new Set(
-    Structures
+  const habitableBuildingIds = new Set(
+    structures
       .filter(b => b.category === "habitable")
       .map(b => b.id),
   )
   return rooms
-    .filter(r => habitableStructureIds.has(r.structure_id))
+    .filter(r => habitableBuildingIds.has(r.structure_id))
     .reduce((sum, r) => sum + bedCapacity(r), 0)
 }
 

@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { bedCapacity, propertyCapacity } from "@/features/calendar/booking-logic"
 import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
 import type { RoomShape, ExistingOccupant } from "../types"
@@ -28,12 +27,9 @@ export function useOccupancyData({
   propertyStructures: Structure[]
   conflicts: PreviewConflicts | undefined
 }) {
-  const totalBeds = useMemo(
-    () => propertyCapacity(propertyRooms, propertyStructures),
-    [propertyRooms, propertyStructures],
-  )
+  const totalBeds = propertyCapacity(propertyRooms, propertyStructures)
 
-  const occupiedBeds = useMemo(() => {
+  const occupiedBeds = (() => {
     if (!draft.start_date || !draft.end_date) return null
     let peak = 0
     const cur = new Date(draft.start_date)
@@ -50,50 +46,38 @@ export function useOccupancyData({
       cur.setUTCDate(cur.getUTCDate() + 1)
     }
     return peak
-  }, [bookings, draft.start_date, draft.end_date])
+  })()
 
-  const occupantsByRoom = useMemo(() => {
-    const byRoom = new Map<number | null, { user_id: number; queued: boolean }[]>()
-    for (const o of draft.occupants) {
-      const key = o.room_id ?? null
-      const list = byRoom.get(key) ?? []
-      list.push(o)
-      byRoom.set(key, list)
-    }
-    return byRoom
-  }, [draft.occupants])
+  const occupantsByRoom = new Map<number | null, { user_id: number; queued: boolean }[]>()
+  for (const o of draft.occupants) {
+    const key = o.room_id ?? null
+    const list = occupantsByRoom.get(key) ?? []
+    list.push(o)
+    occupantsByRoom.set(key, list)
+  }
 
   const unassigned = occupantsByRoom.get(null) ?? []
 
-  const adultInKidOnlyByRoom = useMemo(() => {
-    const map = new Map<number, number[]>()
-    for (const r of conflicts?.perRoom ?? []) {
-      map.set(r.room_id, r.adultInKidOnlyUserIds)
+  const adultInKidOnlyByRoom = new Map<number, number[]>()
+  for (const r of conflicts?.perRoom ?? []) {
+    adultInKidOnlyByRoom.set(r.room_id, r.adultInKidOnlyUserIds)
+  }
+
+  const overlappingBookings = (!draft.start_date || !draft.end_date)
+    ? []
+    : bookings.filter(b => b.status !== "cancelled" && b.start_date <= draft.end_date! && b.end_date >= draft.start_date!)
+
+  const existingOccupantsByRoom = new Map<number, ExistingOccupant[]>()
+  for (const b of overlappingBookings) {
+    for (const o of b.occupants) {
+      if (o.room_id == null) continue
+      const list = existingOccupantsByRoom.get(o.room_id) ?? []
+      list.push({ user_id: o.user_id, user_name: o.user_name, queued: o.queued })
+      existingOccupantsByRoom.set(o.room_id, list)
     }
-    return map
-  }, [conflicts])
+  }
 
-  const overlappingBookings = useMemo(() => {
-    if (!draft.start_date || !draft.end_date) return []
-    const s = draft.start_date
-    const e = draft.end_date
-    return bookings.filter(b => b.status !== "cancelled" && b.start_date <= e && b.end_date >= s)
-  }, [bookings, draft.start_date, draft.end_date])
-
-  const existingOccupantsByRoom = useMemo(() => {
-    const map = new Map<number, ExistingOccupant[]>()
-    for (const b of overlappingBookings) {
-      for (const o of b.occupants) {
-        if (o.room_id == null) continue
-        const list = map.get(o.room_id) ?? []
-        list.push({ user_id: o.user_id, user_name: o.user_name, queued: o.queued })
-        map.set(o.room_id, list)
-      }
-    }
-    return map
-  }, [overlappingBookings])
-
-  const roomOverCapacityDays = useMemo(() => {
+  const roomOverCapacityDays = (() => {
     const map = new Map<number, string[]>()
     if (!draft.start_date || !draft.end_date) return map
 
@@ -133,7 +117,7 @@ export function useOccupancyData({
       cur.setUTCDate(cur.getUTCDate() + 1)
     }
     return map
-  }, [bookings, draft.occupants, draft.start_date, draft.end_date, propertyRooms])
+  })()
 
   return {
     totalBeds,

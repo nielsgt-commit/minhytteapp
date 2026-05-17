@@ -1,35 +1,16 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Field,
-  Heading,
-  Label,
-  Paragraph,
-  Select,
-  EXPERIMENTAL_Suggestion as Suggestion,
-  Tag,
-  Textfield,
-} from "@digdir/designsystemet-react"
-import type { SuggestionItem } from "@digdir/designsystemet-react"
+import { Button, Paragraph } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedUserId } from "@/features/user/userSlice"
-import {
-  addOccupant,
-  assignOccupantToRoom,
-  markOccupantQueued,
-  removeOccupant,
-  setNotes,
-  setStatus,
-} from "@/features/calendar/booking-logic"
-import { RoomCapacityMeter } from "./components/RoomCapacityMeter"
-import { UnassignedPanel } from "./components/UnassignedPanel"
-import { ConfirmStep } from "./components/ConfirmStep"
 import { useFlatpickr } from "./hooks/useFlatpickr"
 import { useBookingForm } from "./hooks/useBookingForm"
 import { useOccupancyData } from "./hooks/useOccupancyData"
+import { StepDates } from "./StepDates"
+import { StepGuests } from "./StepGuests"
+import { StepRooms } from "./StepRooms"
+import { StepConfirm } from "./StepConfirm"
 import styles from "./A3Body.module.css"
 
 const STEP_LABELS = ["Dates", "Guests", "Rooms", "Confirm"] as const
@@ -60,18 +41,8 @@ export function A3Body({ propertyId }: { propertyId: number }) {
   const [currentStep, setCurrentStep] = useState(1)
 
   const {
-    draft,
-    dispatch,
-    confirmStep,
-    setConfirmStep,
-    submitError,
-    conflicts,
-    isFetching,
-    hasWarnings,
-    doMutate,
-    handleSubmit,
-    canSubmit,
-    isPending,
+    draft, dispatch, confirmStep, setConfirmStep, submitError, conflicts,
+    isFetching, hasWarnings, doMutate, handleSubmit, canSubmit, isPending,
   } = useBookingForm(propertyId, selectedUserId, () => { setCurrentStep(1) })
 
   const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
@@ -79,19 +50,9 @@ export function A3Body({ propertyId }: { propertyId: number }) {
   const propertyStructures = structures.filter(b => b.property_id === propertyId)
   const propertyStructureIds = new Set(propertyStructures.map(b => b.id))
   const propertyRooms = rooms.filter(r => propertyStructureIds.has(r.structure_id))
-  const structureNameById = new Map(propertyStructures.map(b => [b.id, b.name]))
   const otherUsers = users.filter(u => u.id !== selectedUserId)
 
-  const {
-    totalBeds,
-    occupiedBeds,
-    occupantsByRoom,
-    unassigned,
-    adultInKidOnlyByRoom,
-    overlappingBookings,
-    existingOccupantsByRoom,
-    roomOverCapacityDays,
-  } = useOccupancyData({ bookings, draft, propertyRooms, propertyStructures, conflicts })
+  const occupancy = useOccupancyData({ bookings, draft, propertyRooms, propertyStructures, conflicts })
 
   const draftYear = draft.start_date ? parseInt(draft.start_date.slice(0, 4)) : new Date().getFullYear()
   const { data: priorityData } = useQuery({
@@ -99,7 +60,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
     enabled: draft.start_date != null && draft.end_date != null,
   })
 
-  const overlappingPriorityWeeks = useMemo(() => {
+  const overlappingPriorityWeeks = (() => {
     if (!draft.start_date || !draft.end_date || !priorityData) return []
     const ownerNameById = new Map(priorityData.eligibleOwners.map(o => [o.property_owner_id, o.user_name]))
     return priorityData.assignments
@@ -110,7 +71,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
         return weekStart.toISOString().slice(0, 10) <= draft.end_date! && weekEnd.toISOString().slice(0, 10) >= draft.start_date!
       })
       .map(a => ({ iso_week: a.iso_week, owner_name: ownerNameById.get(a.property_owner_id) ?? `#${String(a.property_owner_id)}` }))
-  }, [draft.start_date, draft.end_date, priorityData])
+  })()
 
   const goToStep = (n: number) => {
     if (n < 1 || n > TOTAL_STEPS) return
@@ -118,23 +79,23 @@ export function A3Body({ propertyId }: { propertyId: number }) {
   }
 
   return (
-
     <section>
       <nav className={styles.stepper} aria-label="Booking steps">
         {STEP_LABELS.map((label, i) => {
           const stepNum = i + 1
           const isActive = stepNum === currentStep
           return (
-            <button
+            <Button
               key={label}
               type="button"
+              variant="tertiary"
               className={`${styles.stepperItem} ${isActive ? styles.stepperItemActive : ""}`}
               onClick={() => { goToStep(stepNum) }}
               aria-current={isActive ? "step" : undefined}
             >
               <span className={styles.stepperBadge}>{stepNum}</span>
               <span>{label}</span>
-            </button>
+            </Button>
           )
         })}
       </nav>
@@ -143,315 +104,73 @@ export function A3Body({ propertyId }: { propertyId: number }) {
         <Paragraph role="alert">No user selected — pick one from the header.</Paragraph>
       )}
 
-      {/* Step 1: flatpickr stands alone; availability info in a sibling Card */}
-      <div className={`${styles.step} ${currentStep === 1 ? styles.stepActive : ""}`}>
-      <Heading level={4} style={{ marginTop: 0 }}> </Heading>
-      <div
-        className="fp-row"
-        ref={rowRef}
-        style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "1rem" }}
-      >
-        <div className="fp-container" style={{ maxWidth: "100%" }}>
-          <input ref={inputRef} type="text" style={{ display: "none" }} readOnly />
-        </div>
+      <StepDates
+        isActive={currentStep === 1}
+        rowRef={rowRef}
+        inputRef={inputRef}
+        totalBeds={occupancy.totalBeds}
+        occupiedBeds={occupancy.occupiedBeds}
+        overlappingBookings={occupancy.overlappingBookings}
+        overlappingPriorityWeeks={overlappingPriorityWeeks}
+        hasStartDate={draft.start_date != null}
+        stepClass={styles.step}
+        stepActiveClass={styles.stepActive}
+      />
 
-        <div className="fp-right-panel" style={{ flex: 1, minWidth: "15rem" }}>
-          <Card>
-            <Card.Block>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                {occupiedBeds !== null ? (
-                  (() => {
-                    const ratio = totalBeds > 0 ? (totalBeds - occupiedBeds) / totalBeds : 1
-                    const [color, label]: ["danger" | "warning" | "neutral" | "success", string] =
-                      ratio <= 0 ? ["danger", "At capacity"] :
-                      ratio <= 0.3 ? ["warning", "Almost at capacity"] :
-                      ratio <= 0.6 ? ["neutral", "Limited availability"] :
-                      ["success", "High availability"]
-                    return <Tag data-color={color}>{label}</Tag>
-                  })()
-                ) : (
-                  <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
-                    Pick dates to see availability.
-                  </Paragraph>
-                )}
+      <StepGuests
+        isActive={currentStep === 2}
+        users={users}
+        otherUsers={otherUsers}
+        selectedUserId={selectedUserId}
+        draft={draft}
+        dispatch={dispatch}
+        guestInputRef={guestInputRef}
+        stepClass={styles.step}
+        stepActiveClass={styles.stepActive}
+      />
 
-                {overlappingPriorityWeeks.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", justifyContent: "flex-end" }}>
-                    {overlappingPriorityWeeks.map(pw => (
-                      <Tag key={pw.iso_week} data-color="neutral">
-                        W{pw.iso_week} priority: {pw.owner_name}
-                      </Tag>
-                    ))}
-                  </div>
-                )}
-              </div>
+      <StepRooms
+        isActive={currentStep === 3}
+        isFetching={isFetching}
+        propertyStructures={propertyStructures}
+        propertyRooms={propertyRooms}
+        users={users}
+        occupantsByRoom={occupancy.occupantsByRoom}
+        existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
+        adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
+        unassigned={occupancy.unassigned}
+        draft={draft}
+        dispatch={dispatch}
+        selectedUserId={selectedUserId}
+        expandedRoomId={expandedRoomId}
+        setExpandedRoomId={setExpandedRoomId}
+        conflicts={conflicts}
+        stepClass={styles.step}
+        stepActiveClass={styles.stepActive}
+      />
 
-              {overlappingBookings.length > 0 && (
-                <div>
-                  <Label data-size="sm" style={{ display: "block", marginBottom: "0.25rem" }}>
-                    During this period:
-                  </Label>
-                  <Paragraph data-size="sm" style={{ margin: 0 }}>
-                    {(() => {
-                      const seen = new Map<number, { name: string; queued: boolean }>()
-                      for (const o of overlappingBookings.flatMap(b => b.occupants)) {
-                        if (!seen.has(o.user_id) || (!o.queued && seen.get(o.user_id)!.queued)) {
-                          seen.set(o.user_id, { name: o.user_name ?? `#${String(o.user_id)}`, queued: o.queued })
-                        }
-                      }
-                      const confirmed = Array.from(seen.values()).filter(o => !o.queued).map(o => o.name)
-                      const queued = Array.from(seen.values()).filter(o => o.queued).map(o => `${o.name}?`)
-                      return queued.length > 0
-                        ? `${confirmed.join(", ")} (+ ${queued.join(", ")})`
-                        : confirmed.join(", ")
-                    })()}
-                  </Paragraph>
-                </div>
-              )}
-
-              {draft.start_date != null && overlappingBookings.length === 0 && occupiedBeds !== null && (
-                <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
-                  No other bookings in this period.
-                </Paragraph>
-              )}
-            </Card.Block>
-          </Card>
-        </div>
-      </div>
-      </div>
-
-      {/* Step 2: guests */}
-      <div className={`${styles.step} ${currentStep === 2 ? styles.stepActive : ""}`}>
-      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}></Heading>
-
-        <Paragraph data-size="sm" style={{ marginBottom: "0.5rem" }}>
-          Booker: {users.find(u => u.id === selectedUserId)?.name ?? "(select user)"}
-        </Paragraph>
-        <Field>
-          <Label>Add guests</Label>
-          <Suggestion
-            multiple
-            selected={draft.occupants
-              .filter(o => o.user_id !== selectedUserId)
-              .map(o => {
-                const u = users.find(x => x.id === o.user_id)
-                return {
-                  value: String(o.user_id),
-                  label: u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`,
-                }
-              })}
-            onSelectedChange={(newItems: SuggestionItem[]) => {
-              const newIds = new Set(newItems.map(i => Number(i.value)))
-              const currentIds = new Set(
-                draft.occupants.filter(o => o.user_id !== selectedUserId).map(o => o.user_id),
-              )
-              let added = false
-              for (const item of newItems) {
-                const uid = Number(item.value)
-                if (!currentIds.has(uid)) { dispatch(addOccupant(uid, null)); added = true }
-              }
-              for (const uid of currentIds) {
-                if (!newIds.has(uid)) dispatch(removeOccupant(uid))
-              }
-              if (added && guestInputRef.current) {
-                guestInputRef.current.value = ""
-                guestInputRef.current.dispatchEvent(new Event("input", { bubbles: true }))
-              }
-            }}
-          >
-            <Suggestion.Input ref={guestInputRef} placeholder="Search guests…" />
-            <Suggestion.Clear />
-            <Suggestion.List>
-              <Suggestion.Empty>No guests found</Suggestion.Empty>
-              {otherUsers.map(u => (
-                <Suggestion.Option key={u.id} value={String(u.id)}>
-                  {u.name}{u.is_child ? " (child)" : ""}
-                </Suggestion.Option>
-              ))}
-            </Suggestion.List>
-          </Suggestion>
-        </Field>
-      </div>
-      </div>
-
-      {/* Step 3: room assignment */}
-      <div className={`${styles.step} ${currentStep === 3 ? styles.stepActive : ""}`}>
-      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}></Heading>
-        {isFetching && (
-          <Paragraph style={{ color: "#666", fontSize: "0.85rem" }}>Checking conflicts…</Paragraph>
-        )}
-
-        <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {propertyStructures.map(structure => {
-            const structureRooms = propertyRooms.filter(r => r.structure_id === structure.id)
-            if (structureRooms.length === 0) return null
-            return (
-              <li key={structure.id}>
-                <Label data-size="sm" style={{ textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ds-color-neutral-text-subtle)", display: "block", marginBottom: "0.25rem" }}>
-                  {structure.name}
-                </Label>
-                <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {structureRooms.map(r => (
-                    <li key={r.id}>
-                      <RoomCapacityMeter
-                        room={r}
-                        structureName={structure.name}
-                        occupantsInRoom={occupantsByRoom.get(r.id) ?? []}
-                        existingOccupantsInRoom={existingOccupantsByRoom.get(r.id) ?? []}
-                        users={users}
-                        adultInKidOnlyUserIds={adultInKidOnlyByRoom.get(r.id) ?? []}
-                        unassignedOccupants={unassigned}
-                        onAssign={(uid, roomId) => { dispatch(assignOccupantToRoom(uid, roomId)) }}
-                        onRemove={uid => { dispatch(removeOccupant(uid)) }}
-                        isBooker={uid => uid === selectedUserId}
-                        isExpanded={expandedRoomId === r.id}
-                        onToggle={() => { setExpandedRoomId(prev => prev === r.id ? null : r.id) }}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            )
-          })}
-          {draft.occupants.length > 0 && (
-            <li>
-              <UnassignedPanel
-                occupants={unassigned}
-                conflicts={conflicts}
-                onQueue={(uid, q) => { dispatch(markOccupantQueued(uid, q)) }}
-              />
-            </li>
-          )}
-        </ul>
-      </div>
-      </div>
-
-      {/* Step 4: details + submit */}
-      <div className={`${styles.step} ${currentStep === 4 ? styles.stepActive : ""}`}>
-      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>Review request</Heading>
-        {(() => {
-          const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
-          const nights = draft.start_date && draft.end_date
-            ? Math.round((new Date(draft.end_date).getTime() - new Date(draft.start_date).getTime()) / 86400000)
-            : null
-          const guestNames = draft.occupants
-            .filter(o => o.user_id !== draft.booker_id)
-            .map(o => {
-              const u = users.find(x => x.id === o.user_id)
-              if (!u) return `#${String(o.user_id)}`
-              return `${u.name}${u.is_child ? " (child)" : ""}${o.queued ? " (queued)" : ""}`
-            })
-          const roomEntries = propertyStructures.flatMap(b =>
-            propertyRooms
-              .filter(r => r.structure_id === b.id)
-              .map(r => {
-                const occs = (occupantsByRoom.get(r.id) ?? []).map(o => {
-                  const u = users.find(x => x.id === o.user_id)
-                  return u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`
-                })
-                return { structureName: b.name, roomName: r.name, occupants: occs }
-              })
-              .filter(e => e.occupants.length > 0),
-          )
-          const unassignedNames = unassigned.map(o => {
-            const u = users.find(x => x.id === o.user_id)
-            return u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`
-          })
-          return (
-            <dl style={{ margin: 0 }}>
-              <dt><strong>When</strong></dt>
-              <dd style={{ margin: "0 0 0.5rem 0" }}>
-                {draft.start_date && draft.end_date
-                  ? `${draft.start_date} → ${draft.end_date} (${String(nights)} night${nights === 1 ? "" : "s"})`
-                  : "Dates not selected"}
-              </dd>
-
-              <dt><strong>Who</strong></dt>
-              <dd style={{ margin: "0 0 0.5rem 0" }}>
-                {bookerName} (booker)
-                {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
-              </dd>
-
-              <dt><strong>Where</strong></dt>
-              <dd style={{ margin: "0 0 0.5rem 0" }}>
-                {roomEntries.length === 0 && unassignedNames.length === 0 && "No occupants yet"}
-                {roomEntries.length > 0 && (
-                  <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
-                    {roomEntries.map(e => (
-                      <li key={`${e.structureName}-${e.roomName}`}>
-                        {e.structureName} · {e.roomName}: {e.occupants.join(", ")}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {unassignedNames.length > 0 && (
-                  <div>Unassigned: {unassignedNames.join(", ")}</div>
-                )}
-              </dd>
-
-              <dt><strong>Status</strong></dt>
-              <dd style={{ margin: 0, textTransform: "capitalize" }}>{draft.status}</dd>
-            </dl>
-          )
-        })()}
-      </div>
-
-      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>Details</Heading>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Field>
-            <Label>Status</Label>
-            <Select
-              value={draft.status}
-              onChange={e => {
-                dispatch(setStatus(e.target.value as "pending" | "confirmed" | "cancelled"))
-              }}
-            >
-              <Select.Option value="pending">Pending</Select.Option>
-              <Select.Option value="confirmed">Confirmed</Select.Option>
-              <Select.Option value="cancelled">Cancelled</Select.Option>
-            </Select>
-          </Field>
-          <Textfield
-            label="Notes"
-            value={draft.notes}
-            onChange={e => { dispatch(setNotes(e.target.value)) }}
-            style={{ width: "100%" }}
-          />
-        </div>
-      </div>
-
-      {/* Submit */}
-      {!confirmStep && (
-        <Button disabled={!canSubmit} onClick={handleSubmit}>
-          {isPending
-            ? "Saving…"
-            : hasWarnings
-              ? "Request stay (warnings present)"
-              : "Request stay"}
-        </Button>
-      )}
-
-      {confirmStep && conflicts && (
-        <ConfirmStep
-          conflicts={conflicts}
-          draft={draft}
-          isMutating={isPending}
-          onConfirm={doMutate}
-          onCancel={() => { setConfirmStep(false) }}
-          roomOverCapacityDays={roomOverCapacityDays}
-        />
-      )}
-
-      {submitError && (
-        <Paragraph data-color="danger" role="alert" style={{ marginTop: "0.5rem" }}>
-          Error: {submitError}
-        </Paragraph>
-      )}
-      </div>
+      <StepConfirm
+        isActive={currentStep === 4}
+        draft={draft}
+        dispatch={dispatch}
+        users={users}
+        propertyStructures={propertyStructures}
+        propertyRooms={propertyRooms}
+        occupantsByRoom={occupancy.occupantsByRoom}
+        unassigned={occupancy.unassigned}
+        conflicts={conflicts}
+        confirmStep={confirmStep}
+        setConfirmStep={setConfirmStep}
+        submitError={submitError}
+        hasWarnings={hasWarnings}
+        canSubmit={canSubmit}
+        isPending={isPending}
+        handleSubmit={handleSubmit}
+        doMutate={doMutate}
+        roomOverCapacityDays={occupancy.roomOverCapacityDays}
+        stepClass={styles.step}
+        stepActiveClass={styles.stepActive}
+      />
 
       <div className={styles.navButtons}>
         <Button

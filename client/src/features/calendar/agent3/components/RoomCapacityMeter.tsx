@@ -1,4 +1,4 @@
-import { Card, Label, Paragraph, Select, Tag } from "@digdir/designsystemet-react"
+import { Button, Card, Label, Paragraph, Select, Tag } from "@digdir/designsystemet-react"
 import { bedCapacity } from "@/features/calendar/booking-logic"
 import { BED_LABELS } from "../constants"
 import { BedIconRow } from "./BedIcons"
@@ -64,7 +64,7 @@ export function RoomCapacityMeter({
       <Card.Block>
 
         {/* Always visible: toggle header */}
-        <button type="button" onClick={onToggle} style={toggleButtonStyle} aria-expanded={isExpanded}>
+        <Button type="button" variant="tertiary" onClick={onToggle} style={toggleButtonStyle} aria-expanded={isExpanded}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <span>{room.name}</span>
@@ -89,7 +89,7 @@ export function RoomCapacityMeter({
             </div>
           </div>
 
-        </button>
+        </Button>
 
         {/* Expanded content */}
         {isExpanded && (
@@ -130,8 +130,9 @@ export function RoomCapacityMeter({
                           {isAdultKidOnly ? " !" : ""}
                         </Tag>
                         {!isBooker(o.user_id) && (
-                          <button
+                          <Button
                             type="button"
+                            variant="tertiary"
                             onClick={() => { onRemove(o.user_id) }}
                             aria-label={`Remove ${u?.name ?? String(o.user_id)}`}
                             style={{
@@ -144,7 +145,7 @@ export function RoomCapacityMeter({
                             }}
                           >
                             ×
-                          </button>
+                          </Button>
                         )}
                       </div>
                     )

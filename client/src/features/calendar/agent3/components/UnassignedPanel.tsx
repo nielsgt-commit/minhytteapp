@@ -1,4 +1,4 @@
-import { Card, Field, Label, Tag } from "@digdir/designsystemet-react"
+import { Card, Checkbox, Label, Tag } from "@digdir/designsystemet-react"
 import type { PreviewConflicts } from "@/features/calendar/booking-logic"
 
 export function UnassignedPanel({
@@ -21,19 +21,14 @@ export function UnassignedPanel({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Label data-size="sm">Unassigned</Label>
           <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-            <Field>
-              <Label data-size="sm">
-                <input
-                  type="checkbox"
-                  checked={allQueued}
-                  disabled={occupants.length === 0}
-                  onChange={e => {
-                    for (const o of occupants) onQueue(o.user_id, e.target.checked)
-                  }}
-                />
-                {" "}Queue
-              </Label>
-            </Field>
+            <Checkbox
+              label="Queue"
+              checked={allQueued}
+              disabled={occupants.length === 0}
+              onChange={e => {
+                for (const o of occupants) onQueue(o.user_id, e.target.checked)
+              }}
+            />
             <Tag data-color={isOverCap ? "warning" : "neutral"}>{occupants.length}</Tag>
           </div>
         </div>
