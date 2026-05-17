@@ -16,6 +16,8 @@ import {
 } from "@digdir/designsystemet-react"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
 import { FolderIcon } from "@navikt/aksel-icons"
+import styles from "./AddNewExpenseFlow.module.css"
+import { useExpenseEditor } from "./useExpenseEditor"
 import { useTRPC } from "@/trpc/trpc"
 
 export type ExpenseDraft = {
@@ -45,8 +47,7 @@ export function AddNewExpenseFlow({
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
   const [drafts, setDrafts] = useState<ExpenseDraft[]>([])
-  const [openCategory, setOpenCategory] = useState<string | null>(null)
-  const [amount, setAmount] = useState("")
+  const editor = useExpenseEditor()
   const [description, setDescription] = useState("")
   const [editMode, setEditMode] = useState(false)
   const [selectedCats, setSelectedCats] = useState<SuggestionItem[]>(
@@ -73,29 +74,19 @@ export function AddNewExpenseFlow({
   )
 
   const total = drafts.reduce((sum, d) => sum + d.amount, 0)
-  const parsedAmount = Number(amount)
-
-  const openEditor = (categoryName: string) => {
-    setOpenCategory(categoryName)
-    setAmount("")
-  }
-
-  const cancelEditor = () => {
-    setOpenCategory(null)
-    setAmount("")
-  }
+  const parsedAmount = Number(editor.amount)
 
   const addDraft = () => {
-    if (openCategory == null || !Number.isFinite(parsedAmount) || parsedAmount <= 0) return
+    if (editor.openCategory == null || !Number.isFinite(parsedAmount) || parsedAmount <= 0) return
     setDrafts(prev => [
       ...prev,
       {
         id: `${String(Date.now())}-${String(Math.random())}`,
-        category: openCategory,
+        category: editor.openCategory ?? "",
         amount: Math.floor(parsedAmount),
       },
     ])
-    cancelEditor()
+    editor.close()
   }
 
   const removeDraft = (id: string) => {
@@ -104,8 +95,7 @@ export function AddNewExpenseFlow({
 
   const resetForm = () => {
     setDrafts([])
-    setOpenCategory(null)
-    setAmount("")
+    editor.close()
     setDescription("")
   }
 
@@ -147,31 +137,14 @@ export function AddNewExpenseFlow({
     <Card asChild>
       <form onSubmit={handleSubmit}>
         <Card.Block>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-          >
+          <div className={styles.container}>
             <Heading level={3} data-size="sm">Add expense</Heading>
 
             {drafts.length > 0 && (
-              <ul
-                style={{
-                  listStyle: "none",
-                  padding: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.25rem",
-                }}
-              >
+              <ul className={styles.draftList}>
                 {drafts.map(d => (
-                  <li
-                    key={d.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <span style={{ flex: 1, minWidth: 0 }}>
+                  <li key={d.id} className={styles.draftItem}>
+                    <span className={styles.draftLabel}>
                       {d.category} — {d.amount}
                     </span>
                     <Button
@@ -186,13 +159,7 @@ export function AddNewExpenseFlow({
                     </Button>
                   </li>
                 ))}
-                <li
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    paddingTop: "0.25rem",
-                  }}
-                >
+                <li className={styles.totalRow}>
                   <strong>Total</strong>
                   <strong>{total}</strong>
                 </li>
@@ -207,8 +174,7 @@ export function AddNewExpenseFlow({
                   const next = e.target.checked
                   setEditMode(next)
                   if (next) {
-                    setOpenCategory(null)
-                    setAmount("")
+                    editor.close()
                   }
                 }}
               />
@@ -234,19 +200,13 @@ export function AddNewExpenseFlow({
                 </Suggestion.List>
               </Suggestion>
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "0.5rem",
-                }}
-              >
+              <div className={styles.chipGroup}>
                 {categories.map(c => (
                   <Chip.Button
                     key={c.id}
                     type="button"
-                    disabled={pending || openCategory === c.name}
-                    onClick={() => { openEditor(c.name) }}
+                    disabled={pending || editor.openCategory === c.name}
+                    onClick={() => { editor.open(c.name) }}
                   >
                     {c.name}
                   </Chip.Button>
@@ -265,21 +225,15 @@ export function AddNewExpenseFlow({
               </ValidationMessage>
             )}
 
-            {!editMode && openCategory != null && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                }}
-              >
+            {!editMode && editor.openCategory != null && (
+              <div className={styles.editor}>
                 <Textfield
-                  label={`Amount for ${openCategory}`}
+                  label={`Amount for ${editor.openCategory}`}
                   type="number"
                   min={1}
                   step={1}
-                  value={amount}
-                  onChange={e => { setAmount(e.target.value) }}
+                  value={editor.amount}
+                  onChange={e => { editor.setAmount(e.target.value) }}
                   onKeyDown={e => {
                     if (e.key === "Enter") {
                       e.preventDefault()
@@ -288,13 +242,7 @@ export function AddNewExpenseFlow({
                   }}
                   autoFocus
                 />
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
+                <div className={styles.editorActions}>
                   <FolderIcon aria-hidden fontSize="1.25rem" />
                   <Button
                     type="button"
@@ -312,7 +260,7 @@ export function AddNewExpenseFlow({
                     Upload receipt
                   </Button>
                 </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div className={styles.editorButtons}>
                   <Button
                     type="button"
                     variant="secondary"
@@ -325,7 +273,7 @@ export function AddNewExpenseFlow({
                     type="button"
                     variant="tertiary"
                     disabled={pending}
-                    onClick={cancelEditor}
+                    onClick={editor.close}
                   >
                     Cancel
                   </Button>
@@ -343,7 +291,7 @@ export function AddNewExpenseFlow({
             )}
 
             {drafts.length > 0 && (
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <div className={styles.submitRow}>
                 <Button type="submit" disabled={pending}>
                   Submit
                 </Button>
