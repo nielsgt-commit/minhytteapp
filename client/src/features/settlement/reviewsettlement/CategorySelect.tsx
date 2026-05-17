@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Select } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 
 export function CategorySelect({
@@ -14,15 +15,15 @@ export function CategorySelect({
   )
   const known = categories.some(c => c.name === value)
   return (
-    <select
+    <Select
       value={value}
       onChange={e => { onChange(e.target.value) }}
     >
-      <option value="">(none)</option>
-      {!known && value !== "" && <option value={value}>{value}</option>}
+      <Select.Option value="">(none)</Select.Option>
+      {!known && value !== "" && <Select.Option value={value}>{value}</Select.Option>}
       {categories.map(c => (
-        <option key={c.id} value={c.name}>{c.name}</option>
+        <Select.Option key={c.id} value={c.name}>{c.name}</Select.Option>
       ))}
-    </select>
+    </Select>
   )
 }

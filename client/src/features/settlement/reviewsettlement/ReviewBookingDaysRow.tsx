@@ -3,13 +3,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
   Card,
-  Chip,
   Heading,
   Paragraph,
   Switch,
   Tag,
 } from "@digdir/designsystemet-react"
 import styles from "./ReviewBookingDays.module.css"
+import {
+  type DraftOccupant,
+  EditActions,
+  EditDates,
+  OccupantChipInput,
+  type UserOption,
+} from "./ReviewBookingDaysRowEditor"
 import { useTRPC } from "@/trpc/trpc"
 
 type BookingOccupant = {
@@ -29,12 +35,6 @@ type Booking = {
   notes: string | null
   occupants: BookingOccupant[]
 }
-
-type UserOption = { id: number; name: string }
-
-type DraftOccupant =
-  | { kind: "user"; user_id: number; name: string; room_id: number | null }
-  | { kind: "guest"; name: string }
 
 function inclusiveDayCount(startIso: string, endIso: string) {
   const s = Date.parse(`${startIso}T00:00:00Z`)
@@ -60,6 +60,33 @@ function buildDrafts(b: Booking, extras: string[]): DraftOccupant[] {
     })),
     ...extras.map(name => ({ kind: "guest" as const, name })),
   ]
+}
+
+function commitOccupantInput(
+  inputValue: string,
+  drafts: DraftOccupant[],
+  users: UserOption[],
+): { drafts: DraftOccupant[]; inputValue: string } {
+  const trimmed = inputValue.trim()
+  if (trimmed === "") return { drafts, inputValue }
+  const match = users.find(
+    u => u.name.toLowerCase() === trimmed.toLowerCase(),
+  )
+  const next: DraftOccupant = match
+    ? {
+        kind: "user",
+        user_id: match.id,
+        name: match.name,
+        room_id: null,
+      }
+    : { kind: "guest", name: trimmed }
+  if (
+    next.kind === "user"
+    && drafts.some(d => d.kind === "user" && d.user_id === next.user_id)
+  ) {
+    return { drafts, inputValue: "" }
+  }
+  return { drafts: [...drafts, next], inputValue: "" }
 }
 
 export function ReviewBookingDaysRow({
@@ -133,28 +160,9 @@ export function ReviewBookingDaysRow({
   }
 
   const commitInput = () => {
-    const trimmed = inputValue.trim()
-    if (trimmed === "") return
-    const match = users.find(
-      u => u.name.toLowerCase() === trimmed.toLowerCase(),
-    )
-    const next: DraftOccupant = match
-      ? {
-          kind: "user",
-          user_id: match.id,
-          name: match.name,
-          room_id: null,
-        }
-      : { kind: "guest", name: trimmed }
-    if (
-      next.kind === "user"
-      && drafts.some(d => d.kind === "user" && d.user_id === next.user_id)
-    ) {
-      setInputValue("")
-      return
-    }
-    setDrafts([...drafts, next])
-    setInputValue("")
+    const next = commitOccupantInput(inputValue, drafts, users)
+    setDrafts(next.drafts)
+    setInputValue(next.inputValue)
   }
 
   const save = () => {
@@ -212,26 +220,12 @@ export function ReviewBookingDaysRow({
       <article>
         <Card.Block data-size="sm">
           {editing ? (
-            <div className={styles.editDates}>
-              <label className={styles.dateField}>
-                <span>From</span>
-                <input
-                  type="date"
-                  value={draftStart}
-                  onChange={e => { setDraftStart(e.target.value) }}
-                />
-              </label>
-              <label className={styles.dateField}>
-                <span>To</span>
-                <input
-                  type="date"
-                  value={draftEnd}
-                  max={undefined}
-                  min={draftStart}
-                  onChange={e => { setDraftEnd(e.target.value) }}
-                />
-              </label>
-            </div>
+            <EditDates
+              draftStart={draftStart}
+              draftEnd={draftEnd}
+              onChangeStart={setDraftStart}
+              onChangeEnd={setDraftEnd}
+            />
           ) : (
             <Heading level={4} data-size="2xs">
               {formatDate(booking.start_date)} – {formatDate(booking.end_date)}
@@ -247,50 +241,15 @@ export function ReviewBookingDaysRow({
               </Tag>
             </Paragraph>
             {editing ? (
-              <div className={styles.chipInput}>
-                {drafts.map((d, i) => (
-                  <span
-                    key={`${d.kind}-${d.kind === "user" ? String(d.user_id) : d.name}-${String(i)}`}
-                    data-color={d.kind === "user" ? "neutral" : "warning"}
-                    className={styles.chipWrap}
-                  >
-                    <Chip.Removable
-                      aria-label={`Remove ${d.name}`}
-                      data-size="sm"
-                      onClick={() => { removeDraftAt(i) }}
-                    >
-                      {d.name}
-                    </Chip.Removable>
-                  </span>
-                ))}
-                <input
-                  className={styles.chipInputField}
-                  type="text"
-                  list={datalistId}
-                  value={inputValue}
-                  placeholder="Add occupant…"
-                  onChange={e => { setInputValue(e.target.value) }}
-                  onKeyDown={e => {
-                    if (e.key === "Enter" || e.key === ",") {
-                      e.preventDefault()
-                      commitInput()
-                    } else if (
-                      e.key === "Backspace"
-                      && inputValue === ""
-                      && drafts.length > 0
-                    ) {
-                      e.preventDefault()
-                      removeDraftAt(drafts.length - 1)
-                    }
-                  }}
-                  onBlur={() => { commitInput() }}
-                />
-                <datalist id={datalistId}>
-                  {users.map(u => (
-                    <option key={u.id} value={u.name} />
-                  ))}
-                </datalist>
-              </div>
+              <OccupantChipInput
+                drafts={drafts}
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                users={users}
+                datalistId={datalistId}
+                onRemoveAt={removeDraftAt}
+                onCommit={commitInput}
+              />
             ) : (
               <div className={styles.occupants}>
                 <Paragraph data-size="sm">Occupants:</Paragraph>
@@ -349,26 +308,12 @@ export function ReviewBookingDaysRow({
               }}
             />
             {editing ? (
-              <div className={styles.editButtons}>
-                <Button
-                  variant="secondary"
-                  data-size="sm"
-                  type="button"
-                  onClick={() => { save() }}
-                  disabled={updateBooking.isPending || bookerMissing}
-                >
-                  Save
-                </Button>
-                <Button
-                  variant="tertiary"
-                  data-size="sm"
-                  type="button"
-                  onClick={() => { cancelEdit() }}
-                  disabled={updateBooking.isPending}
-                >
-                  Cancel
-                </Button>
-              </div>
+              <EditActions
+                onSave={save}
+                onCancel={cancelEdit}
+                saving={updateBooking.isPending}
+                bookerMissing={bookerMissing}
+              />
             ) : (
               <Button
                 variant="tertiary"

@@ -3,6 +3,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 
 type Props = {
@@ -60,21 +61,21 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
 
   return (
     <section>
-      <h3>
+      <Heading level={3} data-size="xs">
         Closed settlement: {String(data.year)}
         {data.season ? ` (${data.season})` : ""}
-      </h3>
-      <p>Closed at: {formatDateTime(data.closed_at)}</p>
+      </Heading>
+      <Paragraph>Closed at: {formatDateTime(data.closed_at)}</Paragraph>
 
-      <h4>Split policy</h4>
-      <p>
+      <Heading level={4} data-size="2xs">Split policy</Heading>
+      <Paragraph>
         <strong>{policyLabel}</strong>
-      </p>
-      <p>{policyExplanation}</p>
+      </Paragraph>
+      <Paragraph>{policyExplanation}</Paragraph>
 
-      <h4>Per group</h4>
+      <Heading level={4} data-size="2xs">Per group</Heading>
       {data.groups.length === 0 ? (
-        <p>No group totals.</p>
+        <Paragraph>No group totals.</Paragraph>
       ) : (
         <table>
           <thead>
@@ -98,9 +99,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
         </table>
       )}
 
-      <h4>Transfers</h4>
+      <Heading level={4} data-size="2xs">Transfers</Heading>
       {data.transfers.length === 0 ? (
-        <p>No transfers.</p>
+        <Paragraph>No transfers.</Paragraph>
       ) : (
         <ul>
           {data.transfers.map(t => (
@@ -118,15 +119,16 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
               {t.can_mark_paid && (
                 <>
                   {" "}
-                  <button
+                  <Button
                     type="button"
+                    data-size="sm"
                     disabled={markTransferPaid.isPending}
                     onClick={() => {
                       markTransferPaid.mutate({ transferId: t.id })
                     }}
                   >
                     Mark paid
-                  </button>
+                  </Button>
                 </>
               )}
             </li>

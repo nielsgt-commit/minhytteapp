@@ -1,0 +1,107 @@
+import { Suspense } from "react"
+import {
+  Button,
+  Card,
+  Heading,
+  Paragraph,
+} from "@digdir/designsystemet-react"
+import styles from "./CreateSettlementFlow.module.css"
+import { ClosedSettlementSummary } from "@/features/settlement/ClosedSettlementSummary.tsx"
+
+type Status = "open" | "closed"
+type Season = "winter" | "spring" | "summer" | "autumn"
+
+export type SettlementRow = {
+  id: number
+  year: number
+  season: Season | null
+  status: Status
+  split_policy: "shares" | "groups_equal" | "occupancy_days"
+  split_policy_id: number | null
+  closed_at: string | Date | null
+}
+
+type Props = {
+  settlements: SettlementRow[]
+  expandedId: number | null
+  setExpandedId: (id: number | null) => void
+  isHead: boolean
+  pending: boolean
+  onEdit: (s: SettlementRow) => void
+  onDelete: (id: number) => void
+}
+
+export function ClosedSettlementsList({
+  settlements,
+  expandedId,
+  setExpandedId,
+  isHead,
+  pending,
+  onEdit,
+  onDelete,
+}: Props) {
+  if (settlements.length === 0) {
+    return <Paragraph data-size="sm">No closed settlements yet.</Paragraph>
+  }
+  return (
+    <ul className={styles.list}>
+      {settlements.map(s => {
+        const expanded = expandedId === s.id
+        return (
+          <li key={s.id}>
+            <Card asChild>
+              <article>
+                <Card.Block className={styles.cardRow} data-size="sm">
+                  <Heading level={4} data-size="2xs">
+                    {String(s.year)}
+                    {s.season != null ? ` (${s.season})` : ""}
+                  </Heading>
+                  <div className={styles.actions}>
+                    <Button
+                      type="button"
+                      data-size="sm"
+                      onClick={() => {
+                        setExpandedId(expanded ? null : s.id)
+                      }}
+                    >
+                      {expanded ? "Hide" : "View"}
+                    </Button>
+                    {isHead && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="tertiary"
+                          data-size="sm"
+                          onClick={() => { onEdit(s) }}
+                          disabled={pending}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="tertiary"
+                          data-size="sm"
+                          onClick={() => { onDelete(s.id) }}
+                          disabled={pending}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </Card.Block>
+                {expanded && (
+                  <Card.Block data-size="sm">
+                    <Suspense fallback={<p>Loading closed settlement…</p>}>
+                      <ClosedSettlementSummary settlementId={s.id} />
+                    </Suspense>
+                  </Card.Block>
+                )}
+              </article>
+            </Card>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}

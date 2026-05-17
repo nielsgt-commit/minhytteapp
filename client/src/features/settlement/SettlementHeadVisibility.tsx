@@ -1,3 +1,5 @@
+import { Checkbox, Fieldset } from "@digdir/designsystemet-react"
+
 type Head = { id: number; name: string }
 
 type Props = {
@@ -13,18 +15,16 @@ export function SettlementHeadVisibility({
 }: Props) {
   if (others.length === 0) return null
   return (
-    <fieldset>
-      <legend>Show other heads</legend>
+    <Fieldset>
+      <Fieldset.Legend>Show other heads</Fieldset.Legend>
       {others.map(h => (
-        <label key={h.id}>
-          <input
-            type="checkbox"
-            checked={visibleIds.has(h.id)}
-            onChange={() => { onToggle(h.id) }}
-          />
-          {h.name}
-        </label>
+        <Checkbox
+          key={h.id}
+          label={h.name}
+          checked={visibleIds.has(h.id)}
+          onChange={() => { onToggle(h.id) }}
+        />
       ))}
-    </fieldset>
+    </Fieldset>
   )
 }

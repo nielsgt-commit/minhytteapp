@@ -1,7 +1,6 @@
 import { type SyntheticEvent, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import {
-  Button,
   Card,
   Dialog,
   Divider,
@@ -13,7 +12,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { ReceiptIcon } from "@navikt/aksel-icons"
 import styles from "./SettlementExpenseRow.module.css"
-import { CategorySelect } from "./CategorySelect"
+import { EditExpenseDialog } from "./EditExpenseDialog"
 import type { ExpenseRow } from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
 
@@ -166,65 +165,18 @@ export function SettlementExpenseRow({
                 onChange={e => { toggleIncluded(e.target.checked) }}
               />
             </span>
-            <Dialog.TriggerContext>
-              <Dialog.Trigger
-                variant="secondary"
-                data-size="sm"
-                disabled={!editable || updateExpense.isPending}
-                onClick={() => { setEditOpen(true) }}
-              >
-                Edit
-              </Dialog.Trigger>
-              <Dialog
-                open={editOpen}
-                onClose={() => { setEditOpen(false) }}
-              >
-                <Dialog.Block>
-                  <Heading level={3} data-size="xs">Edit category</Heading>
-                </Dialog.Block>
-                <Dialog.Block>
-                  <form
-                    id={`edit-expense-${String(expense.id)}`}
-                    className={styles.editForm}
-                    onSubmit={submitCategory}
-                  >
-                    <label>
-                      Category
-                      <CategorySelect
-                        value={category}
-                        onChange={setCategory}
-                      />
-                    </label>
-                  </form>
-                </Dialog.Block>
-                <Dialog.Block>
-                  <div className={styles.editActions}>
-                    <Button
-                      variant="tertiary"
-                      data-size="sm"
-                      type="button"
-                      onClick={() => { setEditOpen(false) }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="primary"
-                      data-size="sm"
-                      type="submit"
-                      form={`edit-expense-${String(expense.id)}`}
-                      disabled={updateExpense.isPending}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                  {updateExpense.error && (
-                    <Paragraph role="alert">
-                      Error: {updateExpense.error.message}
-                    </Paragraph>
-                  )}
-                </Dialog.Block>
-              </Dialog>
-            </Dialog.TriggerContext>
+            <EditExpenseDialog
+              expenseId={expense.id}
+              open={editOpen}
+              onOpen={() => { setEditOpen(true) }}
+              onClose={() => { setEditOpen(false) }}
+              category={category}
+              setCategory={setCategory}
+              onSubmit={submitCategory}
+              saving={updateExpense.isPending}
+              errorMessage={updateExpense.error?.message ?? null}
+              editable={editable}
+            />
           </div>
         </Card.Block>
       </article>
