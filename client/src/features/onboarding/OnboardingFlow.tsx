@@ -1,4 +1,3 @@
-import { type SyntheticEvent } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -7,15 +6,8 @@ import {
 import { Link } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
 import { loadAuth } from "@/auth/oauth"
-
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
-function fdBoolean(fd: FormData, key: string): boolean {
-  return fd.get(key) === "on"
-}
+import { UserCreationForm } from "./UserCreationForm"
+import { PropertyCreationForm } from "./PropertyCreationForm"
 
 type Step = "user" | "property" | "done"
 
@@ -53,26 +45,6 @@ export function OnboardingFlow() {
   const step: Step =
     anyUser == null ? "user" : firstProperty == null ? "property" : "done"
 
-  const handleUserSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    createUser.mutate({
-      name: fdString(fd, "name"),
-      email: fdString(fd, "email"),
-      is_admin: true,
-      is_child: fdBoolean(fd, "is_child"),
-    })
-  }
-
-  const handlePropertySubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    createProperty.mutate({
-      name: fdString(fd, "name"),
-      address: fdString(fd, "address"),
-    })
-  }
-
   return (
     <section>
       <h2>Welcome</h2>
@@ -104,59 +76,17 @@ export function OnboardingFlow() {
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
       {step === "user" && (
-        <form onSubmit={handleUserSubmit}>
-          <fieldset>
-            <legend>Step 1 – Create your admin account</legend>
-            <div>
-              <label>
-                Name
-                <input type="text" name="name" required />
-              </label>
-            </div>
-            <div>
-              <label>
-                Email
-                <input type="email" name="email" required />
-              </label>
-            </div>
-            <div>
-              <label>
-                <input type="checkbox" name="is_child" />
-                Is child
-              </label>
-            </div>
-            <div>
-              <button type="submit" disabled={pending}>
-                Create admin
-              </button>
-            </div>
-          </fieldset>
-        </form>
+        <UserCreationForm
+          pending={pending}
+          onSubmit={input => { createUser.mutate({ ...input, is_admin: true }) }}
+        />
       )}
 
       {step === "property" && (
-        <form onSubmit={handlePropertySubmit}>
-          <fieldset>
-            <legend>Step 2 – Add the property</legend>
-            <div>
-              <label>
-                Name
-                <input type="text" name="name" required />
-              </label>
-            </div>
-            <div>
-              <label>
-                Address
-                <input type="text" name="address" required />
-              </label>
-            </div>
-            <div>
-              <button type="submit" disabled={pending}>
-                Create property
-              </button>
-            </div>
-          </fieldset>
-        </form>
+        <PropertyCreationForm
+          pending={pending}
+          onSubmit={input => { createProperty.mutate(input) }}
+        />
       )}
 
       {step === "done" && (
