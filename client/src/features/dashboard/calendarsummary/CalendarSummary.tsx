@@ -8,13 +8,7 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { Card, Heading } from "@digdir/designsystemet-react"
-
-function startOfSunday(d: Date) {
-  const out = new Date(d)
-  out.setHours(0, 0, 0, 0)
-  out.setDate(out.getDate() - out.getDay())
-  return out
-}
+import { startOfSunday } from "@/utils/dateUtils"
 
 
 export default function CalendarSummary() {

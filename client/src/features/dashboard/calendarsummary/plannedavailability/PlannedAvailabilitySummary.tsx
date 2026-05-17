@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import {
-  Badge,
   Button,
   Card,
   Paragraph,
@@ -9,48 +8,19 @@ import {
 } from "@digdir/designsystemet-react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import styles from "./PlannedAvailabilitySummary.module.css"
+import DayCard from "./DayCard"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import {
+  addDays,
+  isoWeekNumber,
+  isoWeekYear,
+  toIso,
+} from "@/utils/dateUtils"
 
 const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0")
-}
-
-function toIso(d: Date) {
-  return `${String(d.getFullYear())}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
-}
-
-function startOfSunday(d: Date) {
-  const out = new Date(d)
-  out.setHours(0, 0, 0, 0)
-  out.setDate(out.getDate() - out.getDay())
-  return out
-}
-
-function addDays(d: Date, n: number) {
-  const out = new Date(d)
-  out.setDate(out.getDate() + n)
-  return out
-}
-
-function isoWeekNumber(d: Date) {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = t.getUTCDay() || 7
-  t.setUTCDate(t.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1))
-  return Math.ceil(((t.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
-}
-
-function isoWeekYear(d: Date) {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = t.getUTCDay() || 7
-  t.setUTCDate(t.getUTCDate() + 4 - dayNum)
-  return t.getUTCFullYear()
-}
 
 type Props = {
   weekStart: Date
@@ -226,75 +196,24 @@ export default function PlannedAvailabilitySummary({
         ) : days.map((d, i) => {
           const iso = toIso(d)
           const isSelected = selectedDay === iso
-          const isToday = iso === todayIso
-          const hasBirthday = birthdayGuestsOnDay(iso).length > 0
-          const names = guestNamesOnDay(iso)
           const count = guestsOnDay(iso)
-          const isClickable = count > 0
           const toggle = () => {
-            if (!isClickable) return
+            if (count === 0) return
             setSelectedDay(isSelected ? null : iso)
           }
           return (
-            <Card asChild key={iso}>
-              <li>
-                <Card.Block
-                  role={isClickable ? "button" : undefined}
-                  tabIndex={isClickable ? 0 : undefined}
-                  aria-expanded={isClickable ? isSelected : undefined}
-                  onClick={isClickable ? toggle : undefined}
-                  onKeyDown={isClickable ? e => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault()
-                      toggle()
-                    }
-                  } : undefined}
-                  className={styles.dayCardBlock}
-                  style={isClickable ? undefined : { cursor: "default" }}
-                >
-                  <div className={styles.dayRow}>
-                    <div className={styles.dayLabel}>
-                      {hasBirthday ? (
-                        <Badge.Position placement="top-right">
-                          <Badge data-color="warning" />
-                          <span>
-                            <strong>{WEEKDAY_LABELS[i]}</strong>{" "}
-                            {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
-                            {isToday && " · Today"}
-                          </span>
-                        </Badge.Position>
-                      ) : (
-                        <span>
-                          <strong>{WEEKDAY_LABELS[i]}</strong>{" "}
-                          {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
-                          {isToday && " · Today"}
-                        </span>
-                      )}
-                    </div>
-                    <div className={styles.dayCount}>
-                      {count > 0 ? (
-                        <strong>
-                          {count} guest{count === 1 ? "" : "s"}
-                        </strong>
-                      ) : (
-                        <span>No guests</span>
-                      )}
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <div className={styles.guestList}>
-                      {names.length > 0 ? (
-                        names.map(n => (
-                          <Tag key={n} data-color="info">{n}</Tag>
-                        ))
-                      ) : (
-                        <Paragraph>No guests</Paragraph>
-                      )}
-                    </div>
-                  )}
-                </Card.Block>
-              </li>
-            </Card>
+            <DayCard
+              key={iso}
+              date={d}
+              weekdayLabel={WEEKDAY_LABELS[i]}
+              iso={iso}
+              isSelected={isSelected}
+              isToday={iso === todayIso}
+              hasBirthday={birthdayGuestsOnDay(iso).length > 0}
+              count={count}
+              names={guestNamesOnDay(iso)}
+              onToggle={toggle}
+            />
           )
         })}
       </ul>

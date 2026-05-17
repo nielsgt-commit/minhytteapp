@@ -1,4 +1,5 @@
 import { Heading, Tag } from "@digdir/designsystemet-react"
+import styles from "./RoomAvailabilityIndicator.module.css"
 
 type RoomBeds = {
   beds_sm: number
@@ -41,34 +42,26 @@ export default function RoomAvailabilityIndicator({
 }) {
   return (
     <>
-    <Heading level={6} size="medium">Available beds</Heading>
-    <ul
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "1rem",
-        listStyle: "none",
-        padding: 0,
-      }}
-    >
-      {Array.from(
-        rooms.reduce((acc, r) => {
-          const prev = acc.get(r.structure_id)
-          acc.set(r.structure_id, {
-            name: r.structure_name ?? `Structure #${String(r.structure_id)}`,
-            beds: (prev?.beds ?? 0) + totalBeds(r),
-          })
-          return acc
-        }, new Map<number, { name: string; beds: number }>()),
-      ).map(([id, b]) => {
-        const available = b.beds
-        return (
-          <Tag key={id} data-color={availabilityColor(available, b.beds)}>
-            {b.name}
-          </Tag>
-        )
-      })}
-    </ul>
-  </>
-      )
+      <Heading level={6} size="medium">Available beds</Heading>
+      <ul className={styles.list}>
+        {Array.from(
+          rooms.reduce((acc, r) => {
+            const prev = acc.get(r.structure_id)
+            acc.set(r.structure_id, {
+              name: r.structure_name ?? `Structure #${String(r.structure_id)}`,
+              beds: (prev?.beds ?? 0) + totalBeds(r),
+            })
+            return acc
+          }, new Map<number, { name: string; beds: number }>()),
+        ).map(([id, b]) => {
+          const available = b.beds
+          return (
+            <Tag key={id} data-color={availabilityColor(available, b.beds)}>
+              {b.name}
+            </Tag>
+          )
+        })}
+      </ul>
+    </>
+  )
 }

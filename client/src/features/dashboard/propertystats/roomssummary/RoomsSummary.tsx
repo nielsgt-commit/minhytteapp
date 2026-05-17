@@ -1,17 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import {
-  Badge,
   Button,
-  Card,
-  Divider,
-  Heading,
   List,
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
+import StatCard from "@/features/dashboard/propertystats/StatCard"
 
 export default function RoomsSummary() {
   const trpc = useTRPC()
@@ -41,49 +38,44 @@ export default function RoomsSummary() {
   )
 
   return (
-    <Card asChild>
-      <section style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <Card.Block style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <Heading level={4} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
-            <span>Bedrooms</span>
-            <Badge count={rooms.length} />
-          </Heading>
-          <Divider />
-          {rooms.length === 0 ? (
-            <Paragraph>No rooms yet.</Paragraph>
-          ) : (
-            <List.Unordered style={{ listStyle: "none", padding: 0 }}>
-              <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <span>Beds (single)</span>
-                <span>{totals.beds_sm}</span>
-              </List.Item>
-              <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <span>Beds (large)</span>
-                <span>{totals.beds_lg}</span>
-              </List.Item>
-              <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <span>Beds (double)</span>
-                <span>{totals.beds_double}</span>
-              </List.Item>
-              <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <span>Beds (kid)</span>
-                <span>{totals.beds_kid}</span>
-              </List.Item>
-              <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <span>Mattresses</span>
-                <span>{totals.mattresses}</span>
-              </List.Item>
-              <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <span>Travel cots</span>
-                <span>{totals.travel_cot}</span>
-              </List.Item>
-            </List.Unordered>
-          )}
-          <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
-            <Link to="/manageproperty">Manage rooms</Link>
-          </Button>
-        </Card.Block>
-      </section>
-    </Card>
+    <StatCard
+      title="Bedrooms"
+      count={rooms.length}
+      content={rooms.length === 0 ? (
+        <Paragraph>No rooms yet.</Paragraph>
+      ) : (
+        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
+          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+            <span>Beds (single)</span>
+            <span>{totals.beds_sm}</span>
+          </List.Item>
+          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+            <span>Beds (large)</span>
+            <span>{totals.beds_lg}</span>
+          </List.Item>
+          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+            <span>Beds (double)</span>
+            <span>{totals.beds_double}</span>
+          </List.Item>
+          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+            <span>Beds (kid)</span>
+            <span>{totals.beds_kid}</span>
+          </List.Item>
+          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+            <span>Mattresses</span>
+            <span>{totals.mattresses}</span>
+          </List.Item>
+          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+            <span>Travel cots</span>
+            <span>{totals.travel_cot}</span>
+          </List.Item>
+        </List.Unordered>
+      )}
+      footer={(
+        <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
+          <Link to="/manageproperty">Manage rooms</Link>
+        </Button>
+      )}
+    />
   )
 }

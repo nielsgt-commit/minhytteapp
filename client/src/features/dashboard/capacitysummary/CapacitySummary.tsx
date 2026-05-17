@@ -1,12 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
-import CheckIn from "@/components/core/header/CheckIn.tsx"
+import { Card, Divider, Heading } from "@digdir/designsystemet-react"
+import styles from "./CapacitySummary.module.css"
 import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "./availableparking/AvailableParking.tsx"
 import RoomAvailabilityIndicator from "./roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
-import { Card, Divider, Heading } from "@digdir/designsystemet-react"
+import { useTRPC } from "@/trpc/trpc.ts"
+import { useAppSelector } from "@/app/hooks"
+import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export function CapacitySummary() {
   const trpc = useTRPC()
@@ -19,44 +19,22 @@ export function CapacitySummary() {
     trpc.property.list.queryOptions(),
   )
 
-
   const propertyName =
     properties.find(p => p.id === propertyId)?.name ?? "property"
-
-
-
-
-
 
   return (
     <Card asChild>
       <section>
         <Card.Block>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: "1rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: "1.5rem",
-                alignSelf: "stretch",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className={styles.stack}>
+            <div className={styles.header}>
+              <div className={styles.headerLeft}>
                 <Heading level={6} size="medium">{propertyName} now</Heading>
                 <AtPropertyNow />
               </div>
               <AvailableParking />
             </div>
-            <Divider style={{ alignSelf: "stretch" }} />
+            <Divider className={styles.divider} />
             <RoomAvailabilityIndicator rooms={rooms} />
           </div>
         </Card.Block>

@@ -1,17 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import {
-  Badge,
   Button,
-  Card,
-  Divider,
-  Heading,
   List,
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
+import StatCard from "@/features/dashboard/propertystats/StatCard"
 
 const CATEGORIES = ["Boat", "Appliance", "Tool"] as const
 
@@ -34,34 +31,29 @@ export default function EquipmentSummary() {
   }
 
   return (
-    <Card asChild>
-      <section style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <Card.Block style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <Heading level={4} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
-            <span>Equipment</span>
-            <Badge count={CATEGORIES.length} />
-          </Heading>
-          <Divider />
-          {equipment.length === 0 ? (
-            <Paragraph>No equipment yet.</Paragraph>
-          ) : (
-            <List.Unordered style={{ listStyle: "none", padding: 0 }}>
-              {CATEGORIES.map(cat => {
-                const count = countByCategory.get(cat) ?? 0
-                return (
-                  <List.Item key={cat} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                    <span>{cat}</span>
-                    <span>{count}</span>
-                  </List.Item>
-                )
-              })}
-            </List.Unordered>
-          )}
-          <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
-            <Link to="/manageproperty">Manage equipment</Link>
-          </Button>
-        </Card.Block>
-      </section>
-    </Card>
+    <StatCard
+      title="Equipment"
+      count={CATEGORIES.length}
+      content={equipment.length === 0 ? (
+        <Paragraph>No equipment yet.</Paragraph>
+      ) : (
+        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
+          {CATEGORIES.map(cat => {
+            const count = countByCategory.get(cat) ?? 0
+            return (
+              <List.Item key={cat} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                <span>{cat}</span>
+                <span>{count}</span>
+              </List.Item>
+            )
+          })}
+        </List.Unordered>
+      )}
+      footer={(
+        <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
+          <Link to="/manageproperty">Manage equipment</Link>
+        </Button>
+      )}
+    />
   )
 }
