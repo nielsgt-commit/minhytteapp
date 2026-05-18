@@ -1,30 +1,23 @@
-import { type SyntheticEvent, useEffect, useRef, useState } from "react"
+import { type SyntheticEvent, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
-import {
-  Button,
   Card,
-  Chip,
-  EXPERIMENTAL_Suggestion as Suggestion,
   Heading,
   Switch,
   Textfield,
   ValidationMessage,
 } from "@digdir/designsystemet-react"
-import type { SuggestionItem } from "@digdir/designsystemet-react"
-import { FolderIcon } from "@navikt/aksel-icons"
 import styles from "./AddNewExpenseFlow.module.css"
 import { useExpenseEditor } from "./useExpenseEditor"
+import { useExpenseDrafts, type ExpenseDraft } from "./useExpenseDrafts.ts"
+import { useCategoryMutations } from "./useCategoryMutations.ts"
+import { DraftList } from "./DraftList.tsx"
+import { CategoryPicker } from "./CategoryPicker.tsx"
+import { AmountEditor } from "./AmountEditor.tsx"
+import { SubmitRow } from "./SubmitRow.tsx"
 import { useTRPC } from "@/trpc/trpc"
 
-export type ExpenseDraft = {
-  id: string
-  category: string
-  amount: number
-}
+export type { ExpenseDraft } from "./useExpenseDrafts.ts"
 
 type Props = {
   categories: { id: number; name: string }[]
@@ -33,9 +26,6 @@ type Props = {
   onCancel: () => void
 }
 
-const toSuggestionItems = (cats: { id: number; name: string }[]): SuggestionItem[] =>
-  cats.map(c => ({ label: c.name, value: String(c.id) }))
-
 export function AddNewExpenseFlow({
   categories,
   pending,
@@ -43,93 +33,39 @@ export function AddNewExpenseFlow({
   onCancel,
 }: Props) {
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
-  const [drafts, setDrafts] = useState<ExpenseDraft[]>([])
+  const drafts = useExpenseDrafts()
   const editor = useExpenseEditor()
   const [description, setDescription] = useState("")
   const [editMode, setEditMode] = useState(false)
-  const [selectedCats, setSelectedCats] = useState<SuggestionItem[]>(
-    toSuggestionItems(categories),
-  )
   const suggestionInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    setSelectedCats(toSuggestionItems(categories))
-  }, [categories])
+  const {
+    selectedCats,
+    handleCategoriesChange,
+    createError,
+    archiveError,
+  } = useCategoryMutations(categories, suggestionInputRef)
 
-  const invalidateCategories = () =>
-    qc.invalidateQueries({ queryKey: trpc.expenseCategory.list.queryKey() })
-
-  const createCategoryMutation = useMutation(
-    trpc.expenseCategory.create.mutationOptions({
-      onSuccess: () => { void invalidateCategories() },
-    }),
-  )
-  const archiveCategoryMutation = useMutation(
-    trpc.expenseCategory.archive.mutationOptions({
-      onSuccess: () => { void invalidateCategories() },
-    }),
-  )
-
-  const total = drafts.reduce((sum, d) => sum + d.amount, 0)
   const parsedAmount = Number(editor.amount)
 
   const addDraft = () => {
     if (editor.openCategory == null || !Number.isFinite(parsedAmount) || parsedAmount <= 0) return
-    setDrafts(prev => [
-      ...prev,
-      {
-        id: `${String(Date.now())}-${String(Math.random())}`,
-        category: editor.openCategory ?? "",
-        amount: Math.floor(parsedAmount),
-      },
-    ])
+    drafts.add(editor.openCategory, Math.floor(parsedAmount))
     editor.close()
   }
 
-  const removeDraft = (id: string) => {
-    setDrafts(prev => prev.filter(d => d.id !== id))
-  }
-
   const resetForm = () => {
-    setDrafts([])
+    drafts.reset()
     editor.close()
     setDescription("")
   }
 
-  const handleCategoriesChange = (next: SuggestionItem[]) => {
-    const prevValues = new Set(selectedCats.map(s => s.value))
-    const nextValues = new Set(next.map(s => s.value))
-    for (const item of selectedCats) {
-      if (nextValues.has(item.value)) continue
-      const id = Number(item.value)
-      if (Number.isInteger(id) && id > 0) {
-        archiveCategoryMutation.mutate({ id })
-      }
-    }
-    let created = false
-    for (const item of next) {
-      if (prevValues.has(item.value)) continue
-      const name = item.label.trim()
-      if (name.length > 0) {
-        createCategoryMutation.mutate({ name })
-        created = true
-      }
-    }
-    setSelectedCats(next)
-    if (created && suggestionInputRef.current) {
-      const input = suggestionInputRef.current
-      input.value = ""
-      input.dispatchEvent(new Event("input", { bubbles: true }))
-    }
-  }
-
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (drafts.length === 0) return
-    onSubmit(drafts, description.trim())
+    if (drafts.drafts.length === 0) return
+    onSubmit(drafts.drafts, description.trim())
     resetForm()
   }
 
@@ -138,33 +74,14 @@ export function AddNewExpenseFlow({
       <form onSubmit={handleSubmit}>
         <Card.Block>
           <div className={styles.container}>
-            <Heading level={3} data-size="sm">Add expense</Heading>
+            <Heading level={2} data-size="sm">Add expense</Heading>
 
-            {drafts.length > 0 && (
-              <ul className={styles.draftList}>
-                {drafts.map(d => (
-                  <li key={d.id} className={styles.draftItem}>
-                    <span className={styles.draftLabel}>
-                      {d.category} — {d.amount}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      disabled={pending}
-                      onClick={() => { removeDraft(d.id) }}
-                    >
-                      Remove
-                    </Button>
-                  </li>
-                ))}
-                <li className={styles.totalRow}>
-                  <strong>Total</strong>
-                  <strong>{total}</strong>
-                </li>
-              </ul>
-            )}
+            <DraftList
+              drafts={drafts.drafts}
+              total={drafts.total}
+              pending={pending}
+              onRemove={drafts.remove}
+            />
 
             {me?.is_head && (
               <Switch
@@ -180,108 +97,40 @@ export function AddNewExpenseFlow({
               />
             )}
 
-            {editMode ? (
-              <Suggestion
-                multiple
-                creatable
-                selected={selectedCats}
-                onSelectedChange={handleCategoriesChange}
-              >
-                <Suggestion.Input
-                  ref={suggestionInputRef}
-                  placeholder="Add or remove categories"
-                />
-                <Suggestion.List>
-                  {categories.map(c => (
-                    <Suggestion.Option key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </Suggestion.Option>
-                  ))}
-                </Suggestion.List>
-              </Suggestion>
-            ) : (
-              <div className={styles.chipGroup}>
-                {categories.map(c => (
-                  <Chip.Button
-                    key={c.id}
-                    type="button"
-                    disabled={pending || editor.openCategory === c.name}
-                    onClick={() => { editor.open(c.name) }}
-                  >
-                    {c.name}
-                  </Chip.Button>
-                ))}
-              </div>
-            )}
+            <CategoryPicker
+              categories={categories}
+              editMode={editMode}
+              selectedCats={selectedCats}
+              onCategoriesChange={handleCategoriesChange}
+              suggestionInputRef={suggestionInputRef}
+              pending={pending}
+              openCategory={editor.openCategory}
+              onOpenCategory={editor.open}
+            />
 
-            {createCategoryMutation.error && (
+            {createError && (
               <ValidationMessage>
-                Error: {createCategoryMutation.error.message}
+                Error: {createError.message}
               </ValidationMessage>
             )}
-            {archiveCategoryMutation.error && (
+            {archiveError && (
               <ValidationMessage>
-                Error: {archiveCategoryMutation.error.message}
+                Error: {archiveError.message}
               </ValidationMessage>
             )}
 
             {!editMode && editor.openCategory != null && (
-              <div className={styles.editor}>
-                <Textfield
-                  label={`Amount for ${editor.openCategory}`}
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={editor.amount}
-                  onChange={e => { editor.setAmount(e.target.value) }}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addDraft()
-                    }
-                  }}
-                  autoFocus
-                />
-                <div className={styles.editorActions}>
-                  <FolderIcon aria-hidden fontSize="1.25rem" />
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    data-color="danger"
-                    disabled={pending}
-                  >
-                    Remove
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    disabled={pending}
-                  >
-                    Upload receipt
-                  </Button>
-                </div>
-                <div className={styles.editorButtons}>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={pending}
-                    onClick={addDraft}
-                  >
-                    Add
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    disabled={pending}
-                    onClick={editor.close}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+              <AmountEditor
+                category={editor.openCategory}
+                amount={editor.amount}
+                onAmountChange={editor.setAmount}
+                onAdd={addDraft}
+                onCancel={editor.close}
+                pending={pending}
+              />
             )}
 
-            {drafts.length > 0 && (
+            {drafts.drafts.length > 0 && (
               <Textfield
                 label="Description"
                 description="Optional"
@@ -290,20 +139,8 @@ export function AddNewExpenseFlow({
               />
             )}
 
-            {drafts.length > 0 && (
-              <div className={styles.submitRow}>
-                <Button type="submit" disabled={pending}>
-                  Submit
-                </Button>
-                <Button
-                  type="button"
-                  variant="tertiary"
-                  onClick={onCancel}
-                  disabled={pending}
-                >
-                  Cancel
-                </Button>
-              </div>
+            {drafts.drafts.length > 0 && (
+              <SubmitRow pending={pending} onCancel={onCancel} />
             )}
           </div>
         </Card.Block>

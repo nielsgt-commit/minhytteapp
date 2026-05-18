@@ -1,23 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
+import type { ExpenseRow } from "./types.ts"
 import { useAppSelector } from "@/app/hooks"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
-
-type Status = "draft" | "submitted" | "reimbursed" | "rejected"
-type ExpenseType = "food" | "gas" | "maintenance" | "capex" | "opex" | "fixed"
-
-type ExpenseRow = {
-  id: number
-  description: string
-  amount: number
-  payer_id: number
-  payer_name: string | null
-  reimbursed_by_id: number | null
-  date: string
-  status: Status
-  receipt_url: string | null
-  expense_types: ExpenseType[]
-}
 
 export function RecurringPropertyFees() {
   const trpc = useTRPC()
