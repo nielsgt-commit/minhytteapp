@@ -54,7 +54,7 @@ export function StepRooms({
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}></Heading>
+        <Heading level={4}>Rooms</Heading>
         {isFetching && (
           <Paragraph style={{ color: "#666", fontSize: "0.85rem" }}>Checking conflicts…</Paragraph>
         )}

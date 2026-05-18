@@ -31,7 +31,7 @@ export function ProcedureSection(props: {
   const { items, getProc, setProc, moveProcedureItem, reorderPending } = props
   return (
     <div className={styles.section}>
-      <Heading data-size="2xs">Procedure</Heading>
+      <Heading level={5} data-size="2xs">Procedure</Heading>
       {items.length === 0 ? (
         <Paragraph data-size="sm">
           No pinned items yet. Add ad-hoc findings below and pin any that
@@ -48,6 +48,7 @@ export function ProcedureSection(props: {
                 <Card.Block>
                   <div className={styles.procHeader}>
                     <Heading
+                      level={6}
                       data-size="2xs"
                       className={styles.procTitle}
                     >

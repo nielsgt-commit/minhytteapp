@@ -46,7 +46,7 @@ export function ConfirmStep({
         marginTop: "1rem",
       }}
     >
-      <Heading level={5}>Warnings — confirm to proceed</Heading>
+      <Heading level={4}>Warnings — confirm to proceed</Heading>
 
       {conflicts.property.overCapacityBy > 0 && (
         <Paragraph>

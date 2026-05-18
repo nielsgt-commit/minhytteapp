@@ -1,8 +1,8 @@
 import { Button, Card, Label, Paragraph, Select, Tag } from "@digdir/designsystemet-react"
 import { bedCapacity } from "@/features/calendar/booking-logic"
-import { BED_LABELS } from "../constants"
-import { BedIconRow } from "./BedIcons"
-import type { RoomShape, ExistingOccupant } from "../types"
+import { BED_LABELS } from "../constants.ts"
+import { BedIconRow } from "./BedIcons.tsx"
+import type { RoomShape, ExistingOccupant } from "../types.ts"
 
 const toggleButtonStyle: React.CSSProperties = {
   background: "none",

@@ -36,7 +36,7 @@ export function StepGuests({
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}></Heading>
+        <Heading level={4}>Guests</Heading>
 
         <Paragraph data-size="sm" style={{ marginBottom: "0.5rem" }}>
           Booker: {users.find(u => u.id === selectedUserId)?.name ?? "(select user)"}

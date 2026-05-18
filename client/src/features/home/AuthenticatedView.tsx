@@ -1,15 +1,11 @@
 import { Button } from "@digdir/designsystemet-react"
-import { logout } from "@/auth/oauth"
+import { loadAuth } from "@/auth/oauth"
+import { useLogoutAction } from "./useLogoutAction"
 
-type AuthenticatedViewProps = {
-  userName: string
-}
-
-export function AuthenticatedView({ userName }: AuthenticatedViewProps) {
-  const handleLogout = () => {
-    logout()
-    window.location.replace("/")
-  }
+export function AuthenticatedView() {
+  const auth = loadAuth()
+  const userName = auth.user?.name ?? ""
+  const handleLogout = useLogoutAction()
 
   return (
     <>

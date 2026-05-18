@@ -83,7 +83,7 @@ export function StepConfirm({
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>Review request</Heading>
+        <Heading level={4}>Review request</Heading>
         <dl style={{ margin: 0 }}>
           <dt><strong>When</strong></dt>
           <dd style={{ margin: "0 0 0.5rem 0" }}>
@@ -121,7 +121,7 @@ export function StepConfirm({
       </div>
 
       <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
-        <Heading level={5}>Details</Heading>
+        <Heading level={4}>Details</Heading>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <Field>
             <Label>Status</Label>

@@ -34,7 +34,7 @@ export function FindingsSection(props: {
   } = props
   return (
     <div className={styles.section}>
-      <Heading data-size="2xs">Findings</Heading>
+      <Heading level={5} data-size="2xs">Findings</Heading>
       {adHocs.map(a =>
         a.committed ? (
           <Card key={a.key} asChild>

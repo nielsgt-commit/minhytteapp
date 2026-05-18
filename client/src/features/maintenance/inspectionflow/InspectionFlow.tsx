@@ -218,7 +218,7 @@ export function InspectionFlow(props: {
 
   return (
     <form onSubmit={handleSubmit} className={styles.wrap}>
-      <Heading data-size="xs">Inspect {scope.name}</Heading>
+      <Heading level={4} data-size="xs">Inspect {scope.name}</Heading>
 
       <MetadataSection
         inspectedBy={inspectedBy}

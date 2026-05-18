@@ -1,5 +1,5 @@
 import { BedFillIcon, BedIcon } from "@navikt/aksel-icons"
-import { BED_ICON_COLOR, MAX_BED_ICONS } from "../constants"
+import { BED_ICON_COLOR, MAX_BED_ICONS } from "../constants.ts"
 
 function BedSvg({ variant }: { variant: "empty" | "existing" | "draft" | "over" }) {
   const color = BED_ICON_COLOR[variant]
