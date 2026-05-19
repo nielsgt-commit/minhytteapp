@@ -5,6 +5,7 @@ import styles from "./CapacitySummary.module.css"
 import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "./availableparking/AvailableParking.tsx"
 import RoomAvailabilityIndicator from "./roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
+import NowWeather from "../weather/NowWeather.tsx"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function CapacitySummary() {
@@ -28,7 +29,9 @@ export function CapacitySummary() {
           <div className={styles.stack}>
             <div className={styles.header}>
               <div className={styles.headerLeft}>
-                <Heading level={6} size="medium">{propertyName} now</Heading>
+                <Heading level={6} size="medium">
+                  {propertyName} now <NowWeather />
+                </Heading>
                 <AtPropertyNow />
               </div>
               <AvailableParking />

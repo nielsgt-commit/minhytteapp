@@ -281,6 +281,13 @@
       "when": 1779045919209,
       "tag": "0039_add_property_matrikkel_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1779189874008,
+      "tag": "0040_add_property_lat_lon",
+      "breakpoints": true
     }
   ]
 }

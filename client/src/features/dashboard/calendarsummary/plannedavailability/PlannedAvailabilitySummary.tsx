@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useEffect, useState } from "react"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -41,6 +41,15 @@ export default function PlannedAvailabilitySummary({
   )
   const { data: atProperty } = useSuspenseQuery(
     trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
+  )
+  const { data: weather } = useQuery(
+    trpc.weather.forProperty.queryOptions(
+      { property_id: propertyId, week_start: toIso(weekStart) },
+      { staleTime: 10 * 60_000, gcTime: 30 * 60_000 },
+    ),
+  )
+  const forecastByIso = new Map(
+    (weather?.days ?? []).map(d => [d.iso, d]),
   )
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
@@ -211,6 +220,7 @@ export default function PlannedAvailabilitySummary({
               hasBirthday={birthdayGuestsOnDay(iso).length > 0}
               count={count}
               names={guestNamesOnDay(iso)}
+              forecast={forecastByIso.get(iso)}
               onToggle={toggle}
             />
           )

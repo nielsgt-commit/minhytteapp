@@ -6,6 +6,7 @@ import {
   propertyTable,
 } from "../../db/schema/property.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
+import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import { adminProcedure, router } from "../init.ts"
 
 const isDev = process.env.NODE_ENV !== "production"
@@ -54,9 +55,11 @@ export const devRouter = router({
         oauth_sub: "Member",
         is_admin: false,
       })
+      const address = "Neholmveien 99"
+      const coords = await geocodeNorwayAddress(address)
       const [property] = await ctx.db
         .insert(propertyTable)
-        .values({ name: "Hytta", address: "Fjellveien 1" })
+        .values({ name: "Hytta", address, ...coords })
         .returning()
       await ctx.db.insert(propertyOwnersTable).values({
         property_id: property.id,

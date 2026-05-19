@@ -27,6 +27,8 @@ export const propertyTable = pgTable(
     bruksnummer: integer("bruksnummer"),
     festenummer: integer("festenummer"),
     undernummer: integer("undernummer"),
+    latitude: numeric("latitude", { precision: 7, scale: 4 }),
+    longitude: numeric("longitude", { precision: 7, scale: 4 }),
   },
   (t) => [check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`)],
 )

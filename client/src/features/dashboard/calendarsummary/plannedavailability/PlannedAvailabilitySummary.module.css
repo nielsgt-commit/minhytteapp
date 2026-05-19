@@ -55,6 +55,14 @@
   color: var(--ds-color-neutral-text-subtle);
 }
 
+.dayWeather {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--ds-color-neutral-text-subtle);
+  font-size: 0.875rem;
+}
+
 .guestList {
   display: flex;
   flex-wrap: wrap;

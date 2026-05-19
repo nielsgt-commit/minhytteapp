@@ -2,6 +2,13 @@ import { Badge, Card } from "@digdir/designsystemet-react"
 import { pad2 } from "@/utils/dateUtils"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import GuestListView from "./GuestListView"
+import WeatherSymbol from "../../weather/WeatherSymbol"
+
+type Forecast = {
+  min_c: number
+  max_c: number
+  symbol_code: string | null
+}
 
 type Props = {
   date: Date
@@ -12,6 +19,7 @@ type Props = {
   hasBirthday: boolean
   count: number
   names: string[]
+  forecast?: Forecast
   onToggle: () => void
 }
 
@@ -23,6 +31,7 @@ export default function DayCard({
   hasBirthday,
   count,
   names,
+  forecast,
   onToggle,
 }: Props) {
   const isClickable = count > 0
@@ -72,6 +81,14 @@ export default function DayCard({
               )}
             </div>
           </div>
+          {forecast && (
+            <div className={styles.dayWeather}>
+              <WeatherSymbol code={forecast.symbol_code} size={18} />
+              <span>
+                {Math.round(forecast.min_c)}° / {Math.round(forecast.max_c)}°
+              </span>
+            </div>
+          )}
           {isSelected && <GuestListView names={names} />}
         </Card.Block>
       </li>

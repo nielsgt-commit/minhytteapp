@@ -5,6 +5,7 @@ import {
   propertyTable,
 } from "../../db/schema/property.schema.ts"
 import { userGroupMembersTable } from "../../db/schema/users.schema.ts"
+import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const propertyFields = {
@@ -51,6 +52,8 @@ export const propertyRouter = router({
           bruksnummer: propertyTable.bruksnummer,
           festenummer: propertyTable.festenummer,
           undernummer: propertyTable.undernummer,
+          latitude: propertyTable.latitude,
+          longitude: propertyTable.longitude,
         })
         .from(propertyTable)
         .innerJoin(
@@ -76,10 +79,11 @@ export const propertyRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
+      const coords = await geocodeNorwayAddress(input.address)
       return ctx.db.transaction(async tx => {
         const [created] = await tx
           .insert(propertyTable)
-          .values(input)
+          .values({ ...input, ...coords })
           .returning()
         await tx.insert(propertyOwnersTable).values({
           property_id: created.id,
@@ -94,9 +98,10 @@ export const propertyRouter = router({
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
+      const coords = await geocodeNorwayAddress(rest.address)
       const [updated] = await ctx.db
         .update(propertyTable)
-        .set(rest)
+        .set({ ...rest, ...coords })
         .where(eq(propertyTable.id, id))
         .returning()
       return updated

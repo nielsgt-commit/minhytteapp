@@ -22,6 +22,7 @@ import { stayRouter } from "./stay.ts"
 import { structureRouter } from "./structure.ts"
 import { userRouter } from "./user.ts"
 import { userGroupRouter } from "./userGroup.ts"
+import { weatherRouter } from "./weather.ts"
 
 export const appRouter = router({
   booking: bookingRouter,
@@ -47,6 +48,7 @@ export const appRouter = router({
   structure: structureRouter,
   user: userRouter,
   userGroup: userGroupRouter,
+  weather: weatherRouter,
 })
 
 export type AppRouter = typeof appRouter

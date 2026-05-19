@@ -33,7 +33,7 @@ export default function AvailableParking() {
 
   return (
     <div className={styles.wrap}>
-      <Heading level={6} size="medium">Cars</Heading>
+      <Heading level={6} size="medium">Available parking</Heading>
       <div className={styles.slots}>
         {Array.from({ length: total }, (_, slot) => {
           const occupant = claimedBySlot.get(slot)
