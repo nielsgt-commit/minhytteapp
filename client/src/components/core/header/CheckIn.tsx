@@ -1,11 +1,10 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import {
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { loadAuth } from "@/auth/oauth"
 
 import { Switch } from '@digdir/designsystemet-react';
@@ -14,7 +13,7 @@ export default function CheckIn() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const auth = loadAuth()
-  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = useSelectedPropertyId()
 
   const enabled = auth.isAuthenticated && propertyId != null
   const { data, isLoading } = useQuery(

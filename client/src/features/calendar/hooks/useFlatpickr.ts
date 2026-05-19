@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useSyncExternalStore } from "react"
 import type React from "react"
 import flatpickr from "flatpickr"
 import "flatpickr/dist/flatpickr.min.css"
@@ -6,6 +6,18 @@ import "../flatpickr-digdir.css"
 import { SEASON_MIN, SEASON_MAX } from "../constants"
 import { setDates, toIso } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction } from "@/features/calendar/booking-logic"
+
+const WIDE_QUERY = "(min-width: 640px)"
+
+function subscribeWide(callback: () => void) {
+  const mq = window.matchMedia(WIDE_QUERY)
+  mq.addEventListener("change", callback)
+  return () => { mq.removeEventListener("change", callback) }
+}
+
+function getShowMonthsSnapshot() {
+  return window.matchMedia(WIDE_QUERY).matches ? 2 : 1
+}
 
 export function useFlatpickr(
   draft: Pick<BookingDraft, "start_date" | "end_date">,
@@ -18,14 +30,7 @@ export function useFlatpickr(
   const draftRef = useRef(draft)
   draftRef.current = draft
 
-  const [showMonths, setShowMonths] = useState(() => window.innerWidth >= 640 ? 2 : 1)
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)")
-    const handler = (e: MediaQueryListEvent) => { setShowMonths(e.matches ? 2 : 1) }
-    mq.addEventListener("change", handler)
-    return () => { mq.removeEventListener("change", handler) }
-  }, [])
+  const showMonths = useSyncExternalStore(subscribeWide, getShowMonthsSnapshot)
 
   useEffect(() => {
     if (!inputRef.current) return

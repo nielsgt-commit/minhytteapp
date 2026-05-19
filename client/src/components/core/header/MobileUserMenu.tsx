@@ -1,14 +1,12 @@
+import { useSelectedUserId } from "@/app/useSelectedIds"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Avatar, Divider, Dropdown, Tag } from "@digdir/designsystemet-react"
 import { ChevronDownIcon } from "@navikt/aksel-icons"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import {
-  selectSelectedUserId,
-  setSelectedUserId,
-} from "@/features/user/userSlice"
+import { useAppDispatch } from "@/app/hooks"
+import { setSelectedUserId } from "@/features/user/userSlice"
 import { loadAuth, logout } from "@/auth/oauth"
 import CheckIn from "./CheckIn"
 
@@ -30,7 +28,7 @@ export default function MobileUserMenu() {
   const { data: groups } = useQuery(
     trpc.userGroup.listWithMembers.queryOptions(),
   )
-  const selectedId = useAppSelector(selectSelectedUserId)
+  const selectedId = useSelectedUserId()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)

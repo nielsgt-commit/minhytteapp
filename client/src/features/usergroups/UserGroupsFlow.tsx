@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import {
   useMutation,
@@ -5,8 +6,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Card, Checkbox, Heading } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { CreateGroupForm } from "./CreateGroupForm.tsx"
@@ -22,7 +21,7 @@ type OpenForm =
 export function UserGroupsFlow() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
   const { data: groups } = useSuspenseQuery(

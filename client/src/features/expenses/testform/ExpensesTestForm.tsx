@@ -1,10 +1,9 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 import {
   AddNewExpenseFlow,
@@ -16,7 +15,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10)
 export function ExpensesTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: categories } = useSuspenseQuery(
     trpc.expenseCategory.list.queryOptions(),
   )

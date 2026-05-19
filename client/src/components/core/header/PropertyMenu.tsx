@@ -1,3 +1,4 @@
+import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useEffect, useState } from "react"
 import {
   useMutation,
@@ -6,12 +7,8 @@ import {
 } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import {
-  selectSelectedPropertyId,
-  setSelectedPropertyId,
-} from "@/features/property/propertySlice"
-import { selectSelectedUserId } from "@/features/user/userSlice"
+import { useAppDispatch } from "@/app/hooks"
+import { setSelectedPropertyId } from "@/features/property/propertySlice"
 import { loadAuth } from "@/auth/oauth"
 import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
@@ -20,14 +17,14 @@ export default function PropertyMenu() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const auth = loadAuth()
-  const selectedUserId = useAppSelector(selectSelectedUserId)
+  const selectedUserId = useSelectedUserId()
   const { data: properties, isLoading } = useQuery(
     trpc.property.listForUser.queryOptions(
       { user_id: selectedUserId ?? 0 },
       { enabled: auth.isAuthenticated && selectedUserId != null },
     ),
   )
-  const selectedId = useAppSelector(selectSelectedPropertyId)
+  const selectedId = useSelectedPropertyId()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 

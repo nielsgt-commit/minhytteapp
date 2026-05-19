@@ -1,12 +1,11 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { ListUsers } from "./ListUsers.tsx"
 import { UserGroupsFlow } from "./UserGroupsFlow.tsx"
 import { PropertyInvitesPanel } from "./PropertyInvitesPanel.tsx"
 import styles from "./UserGroups.module.css"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export function UserGroups() {
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   if (selectedPropertyId == null) {
     return (

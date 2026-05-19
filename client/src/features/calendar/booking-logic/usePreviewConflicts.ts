@@ -1,25 +1,7 @@
-import { useEffect, useRef, useState } from "react"
+import { useDeferredValue, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 import type { BookingDraft, PreviewConflicts } from "./types.ts"
-
-// Debounce delay in ms before firing the preview query
-const DEBOUNCE_MS = 400
-
-/**
- * Wraps trpc.booking.previewConflicts.
- *
- * Returns:
- *   data        — the PreviewConflicts result (or undefined while loading)
- *   isFetching  — true while a query is in-flight
- *   hasWarnings — true if any conflict/capacity issue exists
- *
- * The query is only enabled when the draft has a property_id, a valid
- * date range, and at least one occupant.
- *
- * NOTE: TanStack Query v5 does not natively debounce. We debounce by
- * delaying state updates so rapid changes don't fire a request per keystroke.
- */
 
 type PreviewInput = {
   property_id: number
@@ -61,6 +43,13 @@ function hasAnyWarning(data: PreviewConflicts | undefined): boolean {
   return false
 }
 
+const FALLBACK_INPUT: PreviewInput = {
+  property_id: 0,
+  start_date: "2000-01-01",
+  end_date: "2000-01-01",
+  occupants: [],
+}
+
 export function usePreviewConflicts(
   draft: BookingDraft,
   excludeBookingId?: number,
@@ -70,53 +59,16 @@ export function usePreviewConflicts(
   hasWarnings: boolean
 } {
   const trpc = useTRPC()
-  const [debouncedInput, setDebouncedInput] = useState<PreviewInput | null>(
+
+  const input = useMemo(
     () => extractInput(draft, excludeBookingId),
+    [draft.property_id, draft.start_date, draft.end_date, draft.occupants, excludeBookingId],
   )
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Serialise occupants for stable dep tracking
-  const occupantsKey = JSON.stringify(draft.occupants)
-
-  useEffect(() => {
-    const next = extractInput(draft, excludeBookingId)
-
-    if (timerRef.current != null) {
-      clearTimeout(timerRef.current)
-    }
-    timerRef.current = setTimeout(() => {
-      setDebouncedInput(next)
-    }, DEBOUNCE_MS)
-
-    return () => {
-      if (timerRef.current != null) {
-        clearTimeout(timerRef.current)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.property_id, draft.start_date, draft.end_date, occupantsKey, excludeBookingId])
-
-  // When input becomes null (draft is incomplete), clear immediately
-  useEffect(() => {
-    if (debouncedInput != null) return
-    if (extractInput(draft, excludeBookingId) == null) {
-      setDebouncedInput(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft.property_id, draft.start_date, draft.end_date, occupantsKey])
-
-  const fallbackInput: PreviewInput = {
-    property_id: 0,
-    start_date: "2000-01-01",
-    end_date: "2000-01-01",
-    occupants: [],
-  }
+  const deferredInput = useDeferredValue(input)
 
   const query = useQuery({
-    ...trpc.booking.previewConflicts.queryOptions(
-      debouncedInput ?? fallbackInput,
-    ),
-    enabled: debouncedInput != null,
+    ...trpc.booking.previewConflicts.queryOptions(deferredInput ?? FALLBACK_INPUT),
+    enabled: deferredInput != null,
     placeholderData: prev => prev,
   })
 

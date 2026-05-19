@@ -1,15 +1,14 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import styles from "./Calendar.module.css"
-import { Agent3Calendar } from "@/features/calendar/agent3/Agent3Calendar"
 import { PriorityWeeks } from "@/features/priority/PriorityWeeks"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
+import { AddStayFlow } from "@/features/calendar/addstayflow/AddStayFlow.tsx"
 
 export function Calendar() {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
   if (selectedPropertyId == null) {
@@ -23,9 +22,11 @@ export function Calendar() {
 
   return (
     <section className={styles.page}>
-      <Heading level={2} style={{ margin: 0 }}>Calendar</Heading>
+      <Heading level={2} style={{ margin: 0 }}>
+        Calendar
+      </Heading>
       <div className={styles.main}>
-        <Agent3Calendar />
+        <AddStayFlow propertyId={selectedPropertyId} />
       </div>
       {me?.is_head && (
         <details className={styles.priority}>

@@ -1,12 +1,11 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { Suspense } from "react"
 import styles from "./Expenses.module.css"
 import { ExpensesTestForm } from "@/features/expenses/testform/ExpensesTestForm.tsx"
 import { MyExpenses } from "@/features/expenses/myexpenses/MyExpenses.tsx"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export function Expenses() {
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   if (selectedPropertyId == null) {
     return (

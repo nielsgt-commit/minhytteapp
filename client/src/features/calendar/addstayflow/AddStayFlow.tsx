@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Paragraph } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -11,7 +11,7 @@ import { StepDates } from "./StepDates.tsx"
 import { StepGuests } from "./StepGuests.tsx"
 import { StepRooms } from "./StepRooms.tsx"
 import { StepConfirm } from "./StepConfirm.tsx"
-import styles from "./A3Body.module.css"
+import styles from "./AddStayFlow.module.css"
 
 const STEP_LABELS = ["Dates", "Guests", "Rooms", "Confirm"] as const
 const TOTAL_STEPS = STEP_LABELS.length
@@ -26,7 +26,7 @@ function isoWeekMonday(year: number, week: number): Date {
   return target
 }
 
-export function A3Body({ propertyId }: { propertyId: number }) {
+export function AddStayFlow({ propertyId }: { propertyId: number }) {
   const trpc = useTRPC()
   const selectedUserId = useAppSelector(selectSelectedUserId)
 
@@ -41,8 +41,8 @@ export function A3Body({ propertyId }: { propertyId: number }) {
   const [currentStep, setCurrentStep] = useState(1)
 
   const {
-    draft, dispatch, confirmStep, setConfirmStep, submitError, conflicts,
-    isFetching, hasWarnings, doMutate, handleSubmit, canSubmit, isPending,
+    draft, dispatch, conflicts, isFetching, hasWarnings,
+    submitState, submit, isPending, canSubmit,
   } = useBookingForm(propertyId, selectedUserId, () => { setCurrentStep(1) })
 
   const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
@@ -60,7 +60,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
     enabled: draft.start_date != null && draft.end_date != null,
   })
 
-  const overlappingPriorityWeeks = (() => {
+  const overlappingPriorityWeeks = useMemo(() => {
     if (!draft.start_date || !draft.end_date || !priorityData) return []
     const ownerNameById = new Map(priorityData.eligibleOwners.map(o => [o.property_owner_id, o.user_name]))
     return priorityData.assignments
@@ -71,7 +71,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
         return weekStart.toISOString().slice(0, 10) <= draft.end_date! && weekEnd.toISOString().slice(0, 10) >= draft.start_date!
       })
       .map(a => ({ iso_week: a.iso_week, owner_name: ownerNameById.get(a.property_owner_id) ?? `#${String(a.property_owner_id)}` }))
-  })()
+  }, [draft.start_date, draft.end_date, priorityData])
 
   const goToStep = (n: number) => {
     if (n < 1 || n > TOTAL_STEPS) return
@@ -80,6 +80,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
 
   return (
     <section>
+      <form action={() => { submit({ kind: "submit" }) }}>
       <nav className={styles.stepper} aria-label="Booking steps">
         {STEP_LABELS.map((label, i) => {
           const stepNum = i + 1
@@ -159,14 +160,11 @@ export function A3Body({ propertyId }: { propertyId: number }) {
         occupantsByRoom={occupancy.occupantsByRoom}
         unassigned={occupancy.unassigned}
         conflicts={conflicts}
-        confirmStep={confirmStep}
-        setConfirmStep={setConfirmStep}
-        submitError={submitError}
+        submitState={submitState}
+        submit={submit}
         hasWarnings={hasWarnings}
         canSubmit={canSubmit}
         isPending={isPending}
-        handleSubmit={handleSubmit}
-        doMutate={doMutate}
         roomOverCapacityDays={occupancy.roomOverCapacityDays}
         stepClass={styles.step}
         stepActiveClass={styles.stepActive}
@@ -174,6 +172,7 @@ export function A3Body({ propertyId }: { propertyId: number }) {
 
       <div className={styles.navButtons}>
         <Button
+          type="button"
           variant="secondary"
           disabled={currentStep === 1}
           onClick={() => { goToStep(currentStep - 1) }}
@@ -181,11 +180,12 @@ export function A3Body({ propertyId }: { propertyId: number }) {
           Back
         </Button>
         {currentStep < TOTAL_STEPS && (
-          <Button onClick={() => { goToStep(currentStep + 1) }}>
+          <Button type="button" onClick={() => { goToStep(currentStep + 1) }}>
             Next
           </Button>
         )}
       </div>
+      </form>
     </section>
   )
 }

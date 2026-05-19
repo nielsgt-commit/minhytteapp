@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -5,8 +6,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Switch } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -34,7 +33,7 @@ export function PropertyOwnersPanel() {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: groups } = useSuspenseQuery(

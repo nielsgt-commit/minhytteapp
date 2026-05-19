@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useEffect, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import {
@@ -10,8 +11,6 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import DayCard from "./DayCard"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import {
   addDays,
@@ -32,7 +31,7 @@ export default function PlannedAvailabilitySummary({
   onWeekStartChange,
 }: Props) {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
+  const propertyId = useSelectedPropertyId() ?? 0
   const isMobile = useIsMobile()
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),

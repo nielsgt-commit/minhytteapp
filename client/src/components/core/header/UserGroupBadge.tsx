@@ -1,14 +1,13 @@
+import { useSelectedUserId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { Tag } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedUserId } from "@/features/user/userSlice"
 import { useTRPC } from "@/trpc/trpc"
 
 
 
 export default function UserGroupBadge() {
   const trpc = useTRPC()
-  const selectedUserId = useAppSelector(selectSelectedUserId)
+  const selectedUserId = useSelectedUserId()
   const { data: groups } = useQuery(
     trpc.userGroup.listWithMembers.queryOptions(),
   )

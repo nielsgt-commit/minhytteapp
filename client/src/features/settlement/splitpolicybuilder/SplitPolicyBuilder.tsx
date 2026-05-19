@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -40,8 +41,6 @@ import {
   encodeWho,
   normalizeWho,
 } from "./types"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 type SplitPolicyBuilderProps = {
@@ -51,7 +50,7 @@ type SplitPolicyBuilderProps = {
 export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
 
   const { data: policies } = useSuspenseQuery(

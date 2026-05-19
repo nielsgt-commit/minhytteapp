@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import {
   useMutation,
@@ -11,8 +12,6 @@ import {
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { ReviewBookingDays } from "./ReviewBookingDays"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import {
   NEXT_PHASE,
   PREV_PHASE,
@@ -34,7 +33,7 @@ type Props = {
 export function BookingDaySummary({ settlementId, phase }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
   const [showDetails, setShowDetails] = useState(false)
 

@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -6,13 +7,11 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import styles from "./MaintenanceHistory.module.css"
-import { InspectionCard } from "@/features/maintenance/InspectionCard.tsx"
-import type { MaintenanceScope } from "@/features/maintenance/MaintenanceCard.tsx"
-import { MaintenanceHistoryEditForm } from "@/features/maintenance/MaintenanceHistoryEditForm.tsx"
-import { MaintenanceHistoryItemView } from "@/features/maintenance/MaintenanceHistoryItemView.tsx"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
+import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import { MaintenanceHistoryEditForm } from "@/features/maintenance/maintenancecard/MaintenanceHistoryEditForm.tsx"
+import { MaintenanceHistoryItemView } from "@/features/maintenance/maintenancecard/MaintenanceHistoryItemView.tsx"
 
 type EditingState = { id: number } | null
 type DeletingState = { id: number; typed: string } | null
@@ -20,7 +19,7 @@ type DeletingState = { id: number; typed: string } | null
 export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   const { data: items } = useSuspenseQuery(
     trpc.maintenance.listForProperty.queryOptions({

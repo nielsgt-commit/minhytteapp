@@ -1,8 +1,7 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Switch } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -27,7 +26,7 @@ function nullable(value: string) {
 export default function PropertyContacts() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const property_id = useAppSelector(selectSelectedPropertyId)
+  const property_id = useSelectedPropertyId()
 
   const { data: contacts } = useQuery(
     trpc.propertyContact.listForProperty.queryOptions(

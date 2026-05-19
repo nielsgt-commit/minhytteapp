@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -11,8 +12,6 @@ import {
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import {
@@ -52,7 +51,7 @@ export default function PropertyInfo() {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),

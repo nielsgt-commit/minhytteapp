@@ -1,10 +1,8 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import styles from "./Maintenance.module.css"
-import { StructureStats } from "@/features/maintenance/StructureStats.tsx"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
-
+import { StructureStats } from "@/features/maintenance/structure/StructureStats.tsx"
 export function Maintenance() {
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   if (selectedPropertyId == null) {
     return (

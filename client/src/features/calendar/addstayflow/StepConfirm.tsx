@@ -4,6 +4,7 @@ import { setNotes, setStatus } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
 import { ConfirmStep } from "./components/ConfirmStep"
 import type { RoomShape } from "./types"
+import type { SubmitAction, SubmitState } from "../hooks/useBookingForm"
 
 type User = { id: number; name: string; is_child: boolean | null }
 type Structure = { id: number; name: string }
@@ -19,14 +20,11 @@ export function StepConfirm({
   occupantsByRoom,
   unassigned,
   conflicts,
-  confirmStep,
-  setConfirmStep,
-  submitError,
+  submitState,
+  submit,
   hasWarnings,
   canSubmit,
   isPending,
-  handleSubmit,
-  doMutate,
   roomOverCapacityDays,
   stepClass,
   stepActiveClass,
@@ -40,14 +38,11 @@ export function StepConfirm({
   occupantsByRoom: Map<number | null, DraftOccupant[]>
   unassigned: DraftOccupant[]
   conflicts: PreviewConflicts | undefined
-  confirmStep: boolean
-  setConfirmStep: (v: boolean) => void
-  submitError: string | null
+  submitState: SubmitState
+  submit: (action: SubmitAction) => void
   hasWarnings: boolean
   canSubmit: boolean
   isPending: boolean
-  handleSubmit: () => void
-  doMutate: (d: BookingDraft) => void
   roomOverCapacityDays: Map<number, string[]>
   stepClass: string
   stepActiveClass: string
@@ -145,30 +140,32 @@ export function StepConfirm({
         </div>
       </div>
 
-      {!confirmStep && (
-        <Button disabled={!canSubmit} onClick={handleSubmit}>
-          {isPending
-            ? "Saving…"
-            : hasWarnings
-              ? "Request stay (warnings present)"
-              : "Request stay"}
-        </Button>
+      {!submitState.confirming && (
+        <form action={() => { submit({ kind: "submit" }) }}>
+          <Button type="submit" disabled={!canSubmit}>
+            {isPending
+              ? "Saving…"
+              : hasWarnings
+                ? "Request stay (warnings present)"
+                : "Request stay"}
+          </Button>
+        </form>
       )}
 
-      {confirmStep && conflicts && (
+      {submitState.confirming && conflicts && (
         <ConfirmStep
           conflicts={conflicts}
           draft={draft}
           isMutating={isPending}
-          onConfirm={doMutate}
-          onCancel={() => { setConfirmStep(false) }}
+          onConfirm={(d: BookingDraft) => { submit({ kind: "confirm", draft: d }) }}
+          onCancel={() => { submit({ kind: "cancel" }) }}
           roomOverCapacityDays={roomOverCapacityDays}
         />
       )}
 
-      {submitError && (
+      {submitState.error && (
         <Paragraph data-color="danger" role="alert" style={{ marginTop: "0.5rem" }}>
-          Error: {submitError}
+          Error: {submitState.error}
         </Paragraph>
       )}
     </div>

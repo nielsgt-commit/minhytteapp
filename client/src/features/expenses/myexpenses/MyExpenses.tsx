@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import {
   useMutation,
   useSuspenseQuery,
@@ -8,13 +9,11 @@ import { MyExpenseCard } from "./MyExpenseCard.tsx"
 import type { ExpenseRow } from "../types.ts"
 import { selectMyExpenses } from "../selectors.ts"
 import { useInvalidateExpenses } from "../useInvalidateExpenses.ts"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function MyExpenses() {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
   const { data: expenses } = useSuspenseQuery(
     trpc.expense.listForProperty.queryOptions({

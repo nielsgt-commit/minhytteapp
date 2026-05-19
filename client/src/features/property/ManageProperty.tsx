@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { Suspense } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Outlet, useLocation } from "@tanstack/react-router"
@@ -5,8 +6,6 @@ import { Card } from "@digdir/designsystemet-react"
 import styles from "./ManageProperty.module.css"
 import { SideNav } from "@/components/shared/SideNav"
 import { GroupTabs } from "@/components/shared/GroupTabs"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 const BANNERS = new Map<string, { title: string; description: string }>([
@@ -101,7 +100,7 @@ const MOBILE_GROUPS = [
 
 export function ManageProperty() {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { pathname } = useLocation()
   useSuspenseQuery(trpc.property.list.queryOptions())
 

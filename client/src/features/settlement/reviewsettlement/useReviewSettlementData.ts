@@ -1,6 +1,5 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 export type Status = "draft" | "submitted" | "reimbursed" | "rejected"
@@ -40,7 +39,7 @@ function inclusiveDayCount(startIso: string, endIso: string) {
 export function useReviewSettlementData(settlementId: number) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
   const { data: users } = useSuspenseQuery(

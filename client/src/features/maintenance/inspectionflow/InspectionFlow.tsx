@@ -1,3 +1,4 @@
+import { useSelectedUserId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useEffect, useState } from "react"
 import {
   useMutation,
@@ -16,17 +17,15 @@ import styles from "./InspectionFlow.module.css"
 import {
   FindingsSection,
   type AdHoc,
-} from "@/features/maintenance/FindingsSection.tsx"
+} from "@/features/maintenance/inspectionflow/FindingsSection.tsx"
 import {
   MetadataSection,
   type Recurrence,
-} from "@/features/maintenance/MetadataSection.tsx"
+} from "@/features/maintenance/inspectionflow/MetadataSection.tsx"
 import {
   ProcedureSection,
   type ProcedureState,
-} from "@/features/maintenance/ProcedureSection.tsx"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedUserId } from "@/features/user/userSlice.ts"
+} from "@/features/maintenance/inspectionflow/ProcedureSection.tsx"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export type InspectionScope =
@@ -44,7 +43,7 @@ export function InspectionFlow(props: {
   const { scope, open, onClose } = props
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedUserId = useAppSelector(selectSelectedUserId)
+  const selectedUserId = useSelectedUserId()
 
   const { data: maintenanceItems } = useQuery(
     trpc.maintenance.list.queryOptions(undefined, { enabled: open }),
