@@ -12,6 +12,7 @@ import {
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import {
@@ -48,6 +49,7 @@ function draftFromAddress(a: GeonorgeAddress): MatrikkelDraft {
 }
 
 export default function PropertyInfo() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -75,8 +77,8 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          <h1>Property Info</h1>
-          <p>No property selected. Pick one from the header.</p>
+          <h1>{t("Property Info")}</h1>
+          <p>{t("No property selected. Pick one from the header.")}</p>
         </Card.Block>
       </Card>
     )
@@ -127,16 +129,16 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          <h1>Property Info</h1>
+          <h1>{t("Property Info")}</h1>
           {updateProperty.error && (
-            <p role="alert">Error: {updateProperty.error.message}</p>
+            <p role="alert">{t("Error: {{message}}", { message: updateProperty.error.message })}</p>
           )}
           <form onSubmit={handleSavePropertyInfo}>
             <Fieldset>
-              <Fieldset.Legend>Edit property</Fieldset.Legend>
+              <Fieldset.Legend>{t("Edit property")}</Fieldset.Legend>
               <div>
                 <Textfield
-                  label="Name"
+                  label={t("Name")}
                   type="text"
                   name="name"
                   defaultValue={selectedProperty.name}
@@ -145,22 +147,25 @@ export default function PropertyInfo() {
               </div>
               <div>
                 <Paragraph data-size="sm">
-                  Current address: {previewAddress}
+                  {t("Current address: {{address}}", { address: previewAddress })}
                 </Paragraph>
                 <AddressLookup
-                  label="Search a new address"
+                  label={t("Search a new address")}
                   onSelect={a => { setDraft(draftFromAddress(a)) }}
                 />
                 {draft && (
                   <Paragraph data-size="sm">
-                    Will save: {draft.address} ({draft.postnummer}{" "}
-                    {draft.poststed})
+                    {t("Will save: {{address}} ({{postnummer}} {{poststed}})", {
+                      address: draft.address,
+                      postnummer: draft.postnummer ?? "",
+                      poststed: draft.poststed ?? "",
+                    })}
                   </Paragraph>
                 )}
               </div>
               <div>
                 <Textfield
-                  label="Link"
+                  label={t("Link")}
                   type="text"
                   name="link"
                   defaultValue={selectedProperty.link ?? ""}
@@ -168,7 +173,7 @@ export default function PropertyInfo() {
               </div>
               <div>
                 <Textfield
-                  label="Parking spots"
+                  label={t("Parking spots")}
                   type="number"
                   name="parking_spots"
                   min={0}
@@ -178,7 +183,7 @@ export default function PropertyInfo() {
               </div>
               <div>
                 <Button type="submit" disabled={updateProperty.isPending}>
-                  Save
+                  {t("Save")}
                 </Button>
                 <Button
                   type="button"
@@ -189,7 +194,7 @@ export default function PropertyInfo() {
                   }}
                   disabled={updateProperty.isPending}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
               </div>
             </Fieldset>
@@ -202,7 +207,7 @@ export default function PropertyInfo() {
   return (
     <Card>
       <Card.Block>
-        <h1>Property Info</h1>
+        <h1>{t("Property Info")}</h1>
         <p>{selectedProperty.name}</p>
         <p>
           {selectedProperty.address}{" "}
@@ -213,41 +218,41 @@ export default function PropertyInfo() {
               data-size="sm"
               onClick={() => { setShowRegister(v => !v) }}
             >
-              {showRegister ? "Hide register" : "Show register"}
+              {showRegister ? t("Hide register") : t("Show register")}
             </Button>
           )}
         </p>
         {showRegister && hasMatrikkel && (
           <dl>
-            <dt>Adressekode</dt>
+            <dt>{t("Adressekode")}</dt>
             <dd>{selectedProperty.adressekode ?? "—"}</dd>
-            <dt>Kommunenummer</dt>
+            <dt>{t("Kommunenummer")}</dt>
             <dd>{selectedProperty.kommunenummer ?? "—"}</dd>
-            <dt>Gnr</dt>
+            <dt>{t("Gnr")}</dt>
             <dd>{selectedProperty.gardsnummer ?? "—"}</dd>
-            <dt>Bnr</dt>
+            <dt>{t("Bnr")}</dt>
             <dd>{selectedProperty.bruksnummer ?? "—"}</dd>
-            <dt>Fnr</dt>
+            <dt>{t("Fnr")}</dt>
             <dd>{selectedProperty.festenummer ?? "—"}</dd>
-            <dt>Snr</dt>
+            <dt>{t("Snr")}</dt>
             <dd>{selectedProperty.undernummer ?? "—"}</dd>
           </dl>
         )}
         <p>
-          Link:{" "}
+          {t("Link:")}{" "}
           {selectedProperty.link != null && selectedProperty.link !== "" ? (
             <a href={selectedProperty.link} target="_blank" rel="noreferrer">
               {selectedProperty.link}
             </a>
           ) : (
-            <em>none</em>
+            <em>{t("none")}</em>
           )}
         </p>
-        <p> Property description </p>
-        <p>Parking spots: {selectedProperty.parking_spots}</p>
+        <p> {t("Property description")} </p>
+        <p>{t("Parking spots: {{count}}", { count: selectedProperty.parking_spots })}</p>
 
         <Button type="button" onClick={() => { setIsEditing(true) }}>
-          Edit property details
+          {t("Edit property details")}
         </Button>
       </Card.Block>
     </Card>

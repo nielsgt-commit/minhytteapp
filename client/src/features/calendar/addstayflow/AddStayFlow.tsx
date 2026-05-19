@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Paragraph } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useAppSelector } from "@/app/hooks.ts"
 import { selectSelectedUserId } from "@/features/user/userSlice.ts"
@@ -14,6 +15,7 @@ import { StepConfirm } from "./stepconfirm/StepConfirm.tsx"
 import styles from "./AddStayFlow.module.css"
 
 const STEP_LABELS = ["Dates", "Guests", "Rooms", "Confirm"] as const
+type StepLabel = (typeof STEP_LABELS)[number]
 const TOTAL_STEPS = STEP_LABELS.length
 
 function isoWeekMonday(year: number, week: number): Date {
@@ -27,6 +29,7 @@ function isoWeekMonday(year: number, week: number): Date {
 }
 
 export function AddStayFlow({ propertyId }: { propertyId: number }) {
+  const { t } = useTranslation("calendar")
   const trpc = useTRPC()
   const selectedUserId = useAppSelector(selectSelectedUserId)
 
@@ -81,8 +84,8 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
   return (
     <section>
       <form action={() => { submit({ kind: "submit" }) }}>
-      <nav className={styles.stepper} aria-label="Booking steps">
-        {STEP_LABELS.map((label, i) => {
+      <nav className={styles.stepper} aria-label={t("Booking steps")}>
+        {STEP_LABELS.map((label: StepLabel, i) => {
           const stepNum = i + 1
           const isActive = stepNum === currentStep
           return (
@@ -95,14 +98,14 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
               aria-current={isActive ? "step" : undefined}
             >
               <span className={styles.stepperBadge}>{stepNum}</span>
-              <span>{label}</span>
+              <span>{t(label)}</span>
             </Button>
           )
         })}
       </nav>
 
       {selectedUserId == null && (
-        <Paragraph role="alert">No user selected — pick one from the header.</Paragraph>
+        <Paragraph role="alert">{t("No user selected — pick one from the header.")}</Paragraph>
       )}
 
       <StepDates
@@ -177,11 +180,11 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
           disabled={currentStep === 1}
           onClick={() => { goToStep(currentStep - 1) }}
         >
-          Back
+          {t("Back")}
         </Button>
         {currentStep < TOTAL_STEPS && (
           <Button type="button" onClick={() => { goToStep(currentStep + 1) }}>
-            Next
+            {t("Next")}
           </Button>
         )}
       </div>

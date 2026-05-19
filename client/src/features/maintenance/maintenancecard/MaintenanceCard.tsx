@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Button, Card, Divider, Paragraph } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceCard.module.css"
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 import { MaintenanceHistory } from "@/features/maintenance/maintenancecard/MaintenanceHistory.tsx"
@@ -11,17 +12,18 @@ export type MaintenanceScope =
   | { kind: "infrastructure"; id: number; name: string }
 
 export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
+  const { t } = useTranslation("maintenance")
   const [showHistory, setShowHistory] = useState(false)
   const [showTodos, setShowTodos] = useState(false)
   const [inspecting, setInspecting] = useState(false)
   const isMobile = useIsMobile()
 
   const todosLabel = isMobile
-    ? "Todos"
-    : showTodos ? "Hide todos" : "Show todos"
+    ? t("Todos")
+    : showTodos ? t("Hide todos") : t("Show todos")
   const historyLabel = isMobile
-    ? "History"
-    : showHistory ? "Hide history" : "Show history"
+    ? t("History")
+    : showHistory ? t("Hide history") : t("Show history")
 
   return (
     <Card asChild>
@@ -37,7 +39,7 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               data-size="sm"
               onClick={() => { setInspecting(true) }}
             >
-              Start inspection
+              {t("Start inspection")}
             </Button>
           )}
           {!inspecting && (

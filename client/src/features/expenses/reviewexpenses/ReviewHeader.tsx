@@ -1,25 +1,27 @@
 import { Heading, Paragraph, Switch } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
 
 type Props = {
   stillAccepting: boolean
   disabled: boolean
-  switchWarning: string | null
+  warningCount: number | null
   onSwitchChange: (checked: boolean) => void
 }
 
 export function ReviewHeader({
   stillAccepting,
   disabled,
-  switchWarning,
+  warningCount,
   onSwitchChange,
 }: Props) {
+  const { t } = useTranslation("expenses")
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">Review expenses</Heading>
+        <Heading level={4} data-size="sm">{t("Review expenses")}</Heading>
         <Switch
-          label="Accept new expenses"
+          label={t("Accept new expenses")}
           position="end"
           data-size="sm"
           checked={stillAccepting}
@@ -27,8 +29,10 @@ export function ReviewHeader({
           onChange={e => { onSwitchChange(e.target.checked) }}
         />
       </div>
-      {switchWarning && (
-        <Paragraph role="alert" data-size="sm">{switchWarning}</Paragraph>
+      {warningCount != null && (
+        <Paragraph role="alert" data-size="sm">
+          {t("You still have {{count}} item to review — finish the list before continuing.", { count: warningCount })}
+        </Paragraph>
       )}
     </>
   )

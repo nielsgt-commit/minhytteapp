@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData.ts"
 
 type CreateUserFormProps = {
@@ -15,6 +16,7 @@ export function CreateUserForm({
   onSubmit,
   onBack,
 }: CreateUserFormProps) {
+  const { t } = useTranslation("usergroups")
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -27,13 +29,13 @@ export function CreateUserForm({
   return (
     <form onSubmit={handleSubmit}>
       <fieldset>
-        <legend>Create user and add to {groupName}</legend>
+        <legend>{t("Create user and add to {{groupName}}", { groupName })}</legend>
         <div>
-          <Textfield label="Name" type="text" name="name" required autoFocus />
+          <Textfield label={t("Name")} type="text" name="name" required autoFocus />
         </div>
         <div>
           <Button type="submit" disabled={pending}>
-            Save
+            {t("Save")}
           </Button>
           <Button
             type="button"
@@ -41,7 +43,7 @@ export function CreateUserForm({
             onClick={onBack}
             disabled={pending}
           >
-            Back
+            {t("Back")}
           </Button>
         </div>
       </fieldset>

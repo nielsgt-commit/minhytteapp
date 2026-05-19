@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type ReactNode, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Chip, Heading, Tabs } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./StructureStats.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
@@ -36,6 +37,7 @@ function CategoryFrame({
 }
 
 export function StructureStats() {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const isMobile = useIsMobile()
@@ -77,22 +79,22 @@ export function StructureStats() {
       }}
     >
       <Tabs.List>
-        <Tabs.Tab value="structures">Structures</Tabs.Tab>
-        <Tabs.Tab value="infrastructure">Infrastructure</Tabs.Tab>
-        <Tabs.Tab value="equipment">Equipment</Tabs.Tab>
+        <Tabs.Tab value="structures">{t("Structures")}</Tabs.Tab>
+        <Tabs.Tab value="infrastructure">{t("Infrastructure")}</Tabs.Tab>
+        <Tabs.Tab value="equipment">{t("Equipment")}</Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="structures" className={styles.panel}>
         {activeTab === "structures" && (
-          <CategoryFrame isMobile={isMobile} title="Structures">
+          <CategoryFrame isMobile={isMobile} title={t("Structures")}>
             {structures.length === 0 ? (
-              <p>No Structures yet.</p>
+              <p>{t("No Structures yet.")}</p>
             ) : (
               <div className={styles.wrap}>
                 <div
                   className={styles.filter}
                   role="group"
-                  aria-label="Filter Structures"
+                  aria-label={t("Filter Structures")}
                 >
                   {structures.map(b => (
                     <Chip.Checkbox
@@ -126,15 +128,15 @@ export function StructureStats() {
 
       <Tabs.Panel value="infrastructure" className={styles.panel}>
         {activeTab === "infrastructure" && (
-          <CategoryFrame isMobile={isMobile} title="Infrastructure">
+          <CategoryFrame isMobile={isMobile} title={t("Infrastructure")}>
             {infrastructure.length === 0 ? (
-              <p>No Infrastructure yet.</p>
+              <p>{t("No Infrastructure yet.")}</p>
             ) : (
               <div className={styles.wrap}>
                 <div
                   className={styles.filter}
                   role="group"
-                  aria-label="Filter Infrastructure"
+                  aria-label={t("Filter Infrastructure")}
                 >
                   {infrastructure.map(p => (
                     <Chip.Checkbox

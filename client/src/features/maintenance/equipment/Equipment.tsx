@@ -7,6 +7,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Card, Heading } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -19,6 +20,7 @@ import {
 } from "@/features/maintenance/equipment/EquipmentCard.tsx"
 
 export function Equipment() {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -93,7 +95,7 @@ export function Equipment() {
     if (isMobile) {
       return (
         <section>
-          <p>Select a property to see its equipment.</p>
+          <p>{t("Select a property to see its equipment.")}</p>
         </section>
       )
     }
@@ -101,8 +103,8 @@ export function Equipment() {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={3} data-size="xs">Equipment</Heading>
-            <p>Select a property to see its equipment.</p>
+            <Heading level={3} data-size="xs">{t("Equipment")}</Heading>
+            <p>{t("Select a property to see its equipment.")}</p>
           </Card.Block>
         </section>
       </Card>
@@ -118,10 +120,10 @@ export function Equipment() {
   const body = (
     <>
       {scheduleMutation.error && (
-        <p role="alert">Error: {scheduleMutation.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: scheduleMutation.error.message })}</p>
       )}
       {sortedEquipment.length === 0 ? (
-        <p>No equipment registered for this property yet.</p>
+        <p>{t("No equipment registered for this property yet.")}</p>
       ) : (
         <div className={styles.list}>
           {sortedEquipment.map(item => {
@@ -182,7 +184,7 @@ export function Equipment() {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading level={3} data-size="xs">Equipment</Heading>
+          <Heading level={3} data-size="xs">{t("Equipment")}</Heading>
         </Card.Block>
         <Card.Block>{body}</Card.Block>
       </section>

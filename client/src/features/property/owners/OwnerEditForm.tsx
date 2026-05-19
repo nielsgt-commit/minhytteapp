@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { ownerLabel } from "./ownershipCalculations.ts"
 import styles from "./OwnerEditForm.module.css"
 
@@ -29,6 +30,7 @@ export function OwnerEditForm({
   onRemove,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <form
       onSubmit={onSubmit}
@@ -36,12 +38,12 @@ export function OwnerEditForm({
       className={styles.form}
     >
       <Fieldset>
-        <Fieldset.Legend>Edit owner</Fieldset.Legend>
+        <Fieldset.Legend>{t("Edit owner")}</Fieldset.Legend>
         <p>
           <strong>{ownerLabel(owner)}</strong>
         </p>
         <Textfield
-          label="Ownership %"
+          label={t("Ownership %")}
           name="ownership_pct"
           type="number"
           min={0}
@@ -54,7 +56,7 @@ export function OwnerEditForm({
         />
         <div className={styles.actions}>
           <Button type="submit" disabled={pending}>
-            Save
+            {t("Save")}
           </Button>
           <Button
             type="button"
@@ -63,7 +65,7 @@ export function OwnerEditForm({
             disabled={pending}
             onClick={onRemove}
           >
-            Remove
+            {t("Remove")}
           </Button>
           <Button
             type="button"
@@ -71,7 +73,7 @@ export function OwnerEditForm({
             disabled={pending}
             onClick={onCancel}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       </Fieldset>

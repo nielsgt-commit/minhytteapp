@@ -6,11 +6,13 @@ import {
   List,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
 import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 export default function StructureSummary() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: structures } = useSuspenseQuery(
@@ -30,10 +32,10 @@ export default function StructureSummary() {
 
   return (
     <StatCard
-      title="Structures"
+      title={t("Structures")}
       count={structures.length}
       content={structures.length === 0 ? (
-        <Paragraph>No Structures yet.</Paragraph>
+        <Paragraph>{t("No Structures yet.")}</Paragraph>
       ) : (
         <List.Unordered className={styles.list}>
           {structures.map(b => {
@@ -41,7 +43,7 @@ export default function StructureSummary() {
             return (
               <List.Item key={b.id} className={styles.row}>
                 <span>{b.name}</span>
-                <span>{count} room{count === 1 ? "" : "s"}</span>
+                <span>{t("{{count}} room", { count })}</span>
               </List.Item>
             )
           })}
@@ -49,7 +51,7 @@ export default function StructureSummary() {
       )}
       footer={(
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty">Manage Structures</Link>
+          <Link to="/manageproperty">{t("Manage Structures")}</Link>
         </Button>
       )}
     />

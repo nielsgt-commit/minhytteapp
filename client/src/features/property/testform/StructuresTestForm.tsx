@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type StructureRecord = {
@@ -57,6 +58,7 @@ function buildPayload(state: FormState) {
 }
 
 export function StructuresTestForm() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
@@ -120,15 +122,15 @@ export function StructuresTestForm() {
 
   return (
     <section>
-      <h3>Structures Test Form</h3>
+      <h3>{t("Structures Test Form")}</h3>
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
+          <legend>{isEditing ? t("Editing #{{id}}", { id: state.id ?? 0 }) : t("New record")}</legend>
 
           <div>
             <label>
-              Name
+              {t("Name")}
               <input
                 type="text"
                 value={state.name}
@@ -140,13 +142,13 @@ export function StructuresTestForm() {
 
           <div>
             <label>
-              Property
+              {t("Property")}
               <select
                 value={state.property_id}
                 onChange={e => { set("property_id")(e.target.value); }}
                 required
               >
-                <option value="">(select property)</option>
+                <option value="">{t("(select property)")}</option>
                 {properties.map(p => (
                   <option key={p.id} value={p.id}>
                     #{p.id} {p.name}
@@ -158,30 +160,30 @@ export function StructuresTestForm() {
 
           <div>
             <button type="submit" disabled={pending}>
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? t("Update") : t("Create")}
             </button>
             <button
               type="button"
               onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
-              Reset
+              {t("Reset")}
             </button>
           </div>
         </fieldset>
       </form>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      <h4>Records</h4>
+      <h4>{t("Records")}</h4>
       <table>
         <thead>
           <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>property_id</th>
-            <th>property_name</th>
-            <th>actions</th>
+            <th>{t("id")}</th>
+            <th>{t("name")}</th>
+            <th>{t("property_id")}</th>
+            <th>{t("property_name")}</th>
+            <th>{t("actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -202,14 +204,14 @@ export function StructuresTestForm() {
                   }
                   disabled={pending}
                 >
-                  Edit
+                  {t("Edit")}
                 </button>
                 <button
                   type="button"
                   onClick={() => { deleteMutation.mutate({ id: b.id }); }}
                   disabled={pending}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
               </td>
             </tr>

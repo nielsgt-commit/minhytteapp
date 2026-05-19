@@ -1,4 +1,5 @@
 import { type SyntheticEvent } from "react"
+import { useTranslation } from "react-i18next"
 
 type RoomDefaults = {
   name: string
@@ -27,13 +28,14 @@ export function RoomFormSection({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <form onSubmit={onSubmit}>
       <fieldset>
         <legend>{legend}</legend>
         <div>
           <label>
-            Name
+            {t("Name")}
             <input
               type="text"
               name="name"
@@ -44,7 +46,7 @@ export function RoomFormSection({
         </div>
         <div>
           <label>
-            Beds (single)
+            {t("Beds (single)")}
             <input
               type="number"
               name="beds_sm"
@@ -56,7 +58,7 @@ export function RoomFormSection({
         </div>
         <div>
           <label>
-            Beds (large)
+            {t("Beds (large)")}
             <input
               type="number"
               name="beds_lg"
@@ -68,7 +70,7 @@ export function RoomFormSection({
         </div>
         <div>
           <label>
-            Beds (double)
+            {t("Beds (double)")}
             <input
               type="number"
               name="beds_double"
@@ -80,7 +82,7 @@ export function RoomFormSection({
         </div>
         <div>
           <label>
-            Beds (kid)
+            {t("Beds (kid)")}
             <input
               type="number"
               name="beds_kid"
@@ -92,7 +94,7 @@ export function RoomFormSection({
         </div>
         <div>
           <label>
-            Mattresses
+            {t("Mattresses")}
             <input
               type="number"
               name="mattresses"
@@ -104,7 +106,7 @@ export function RoomFormSection({
         </div>
         <div>
           <label>
-            Travel cot
+            {t("Travel cot")}
             <input
               type="number"
               name="travel_cot"
@@ -119,7 +121,7 @@ export function RoomFormSection({
             {submitLabel}
           </button>
           <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       </fieldset>

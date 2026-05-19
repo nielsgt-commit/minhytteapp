@@ -1,9 +1,11 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import type { ExpenseRow } from "./types.ts"
 import { useTRPC } from "@/trpc/trpc"
 
 export function RecurringPropertyFees() {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: expenses } = useSuspenseQuery(
@@ -21,18 +23,18 @@ export function RecurringPropertyFees() {
 
   return (
     <section>
-      <h3>Recurring property fees</h3>
+      <h3>{t("Recurring property fees")}</h3>
       {fixed.length === 0 ? (
-        <p>(no recurring fees)</p>
+        <p>{t("(no recurring fees)")}</p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Amount</th>
-              <th>Paid by</th>
-              <th>Status</th>
+              <th>{t("Date")}</th>
+              <th>{t("Description")}</th>
+              <th>{t("Amount")}</th>
+              <th>{t("Paid by")}</th>
+              <th>{t("Status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -49,7 +51,7 @@ export function RecurringPropertyFees() {
           <tfoot>
             <tr>
               <td colSpan={2}>
-                <strong>Total</strong>
+                <strong>{t("Total")}</strong>
               </td>
               <td>
                 <strong>{fixed.reduce((sum, e) => sum + e.amount, 0)}</strong>

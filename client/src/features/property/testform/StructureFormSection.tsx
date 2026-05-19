@@ -1,4 +1,5 @@
 import { type SyntheticEvent } from "react"
+import { useTranslation } from "react-i18next"
 
 type NameOnlyDefaults = { name: string }
 
@@ -19,13 +20,14 @@ export function StructureFormSection({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <form onSubmit={onSubmit}>
       <fieldset>
         <legend>{legend}</legend>
         <div>
           <label>
-            Name
+            {t("Name")}
             <input
               type="text"
               name="name"
@@ -39,7 +41,7 @@ export function StructureFormSection({
             {submitLabel}
           </button>
           <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       </fieldset>

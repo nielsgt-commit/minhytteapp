@@ -1,4 +1,5 @@
 import { type SyntheticEvent } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, List, Textfield } from "@digdir/designsystemet-react"
 
 type Category = { id: number; name: string }
@@ -32,12 +33,13 @@ export function CategoryListItem({
   onCancelEdit,
   onArchive,
 }: Props) {
+  const { t } = useTranslation("expenses")
   return (
     <List.Item>
       {isEditing ? (
         <form onSubmit={onRenameSubmit}>
           <Textfield
-            label="Category name"
+            label={t("Category name")}
             value={editingName}
             onChange={e => { onEditingNameChange(e.target.value) }}
             maxLength={64}
@@ -45,14 +47,14 @@ export function CategoryListItem({
             required
           />
           <Button type="submit" disabled={renamePending}>
-            Save
+            {t("Save")}
           </Button>
           <Button
             variant="secondary"
             disabled={renamePending}
             onClick={onCancelEdit}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </form>
       ) : (
@@ -64,7 +66,7 @@ export function CategoryListItem({
                 variant="tertiary"
                 onClick={onStartEdit}
               >
-                Rename
+                {t("Rename")}
               </Button>
               <Button
                 variant="tertiary"
@@ -72,7 +74,7 @@ export function CategoryListItem({
                 disabled={archivePending}
                 onClick={onArchive}
               >
-                Remove
+                {t("Remove")}
               </Button>
             </>
           )}

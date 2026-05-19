@@ -4,6 +4,7 @@ import {
   Paragraph,
   Tag,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./MyExpenses.module.css"
 import { STATUS_COLOR } from "../expenseStatus.ts"
 import type { ExpenseRow } from "../types.ts"
@@ -21,10 +22,11 @@ export function MyExpenseRow({
   onEdit,
   onDelete,
 }: Props) {
+  const { t } = useTranslation("expenses")
   const categoryLabel =
     expense.expense_types.length > 0
       ? expense.expense_types.join(", ")
-      : "(no category)"
+      : t("(no category)")
 
   return (
     <>
@@ -32,7 +34,7 @@ export function MyExpenseRow({
         <span className={styles.category}>{categoryLabel}</span>
       </Paragraph>
       <Paragraph className={styles.statusLabel} data-size="sm">
-        Status
+        {t("Status")}
       </Paragraph>
       <Tag
         className={styles.statusTag}
@@ -42,7 +44,7 @@ export function MyExpenseRow({
         {expense.status}
       </Tag>
       <Paragraph className={styles.sumLabel} data-size="sm">
-        Sum
+        {t("Sum")}
       </Paragraph>
       <div className={styles.amountGroup}>
         <Paragraph asChild data-size="sm">
@@ -60,7 +62,7 @@ export function MyExpenseRow({
           disabled={deletePending}
           onClick={onEdit}
         >
-          Edit
+          {t("Edit")}
         </Button>
         <Button
           variant="tertiary"
@@ -69,7 +71,7 @@ export function MyExpenseRow({
           disabled={deletePending}
           onClick={() => { onDelete() }}
         >
-          Delete
+          {t("Delete")}
         </Button>
       </div>
     </>

@@ -10,6 +10,7 @@ import {
   Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./InfrastructurePanel.module.css"
 
@@ -31,6 +32,7 @@ function fdString(fd: FormData, key: string): string {
 }
 
 export function InfrastructurePanel({ propertyId, propertyName }: Props) {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -101,7 +103,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     }
 
   const handleDelete = (p: Infrastructure) => {
-    if (!window.confirm(`Delete infrastructure "${p.name}"?`)) return
+    if (!window.confirm(t("Delete infrastructure \"{{name}}\"?", { name: p.name }))) return
     deleteInfrastructure.mutate(
       { id: p.id },
       { onSuccess: () => { setEditingId(null) } },
@@ -110,10 +112,10 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
 
   return (
     <section>
-      <h3>Infrastructure at {propertyName}</h3>
+      <h3>{t("Infrastructure at {{name}}", { name: propertyName })}</h3>
 
       <Switch
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.target.checked
@@ -125,7 +127,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {editingInfrastructure ? (
         <form
@@ -134,7 +136,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
           className={styles.editForm}
         >
           <Textfield
-            label="Name"
+            label={t("Name")}
             name="name"
             required
             autoFocus
@@ -142,7 +144,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
             disabled={updateInfrastructure.isPending}
           />
           <Textfield
-            label="Description"
+            label={t("Description")}
             name="description"
             required
             defaultValue={editingInfrastructure.description}
@@ -150,7 +152,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
           />
           <div className={styles.actions}>
             <Button type="submit" disabled={pending}>
-              Save
+              {t("Save")}
             </Button>
             <Button
               type="button"
@@ -159,7 +161,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
               disabled={pending}
               onClick={() => { handleDelete(editingInfrastructure) }}
             >
-              Delete
+              {t("Delete")}
             </Button>
             <Button
               type="button"
@@ -167,7 +169,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
               disabled={pending}
               onClick={() => { setEditingId(null) }}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
         </form>
@@ -186,7 +188,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                         disabled={pending}
                         onClick={() => { setEditingId(p.id) }}
                       >
-                        Edit
+                        {t("Edit")}
                       </Button>
                       <Button
                         variant="tertiary"
@@ -195,7 +197,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                         disabled={pending}
                         onClick={() => { handleDelete(p) }}
                       >
-                        Delete
+                        {t("Delete")}
                       </Button>
                     </>
                   )}
@@ -209,27 +211,27 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
               <Card.Block className={styles.addBlock}>
                 {isAdding ? (
                   <>
-                    <strong>Add infrastructure</strong>
+                    <strong>{t("Add infrastructure")}</strong>
                     <form
                       onSubmit={handleAdd}
                       className={styles.addForm}
                     >
                       <Textfield
-                        label="Name"
+                        label={t("Name")}
                         name="name"
                         required
                         autoFocus
                         disabled={createInfrastructure.isPending}
                       />
                       <Textfield
-                        label="Description"
+                        label={t("Description")}
                         name="description"
                         required
                         disabled={createInfrastructure.isPending}
                       />
                       <div className={styles.actions}>
                         <Button type="submit" disabled={createInfrastructure.isPending}>
-                          Add infrastructure
+                          {t("Add infrastructure")}
                         </Button>
                         <Button
                           type="button"
@@ -237,7 +239,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                           disabled={createInfrastructure.isPending}
                           onClick={() => { setIsAdding(false) }}
                         >
-                          Cancel
+                          {t("Cancel")}
                         </Button>
                       </div>
                     </form>
@@ -249,7 +251,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                     disabled={pending}
                     onClick={() => { setIsAdding(true) }}
                   >
-                    + Add infrastructure
+                    {t("+ Add infrastructure")}
                   </Button>
                 )}
               </Card.Block>

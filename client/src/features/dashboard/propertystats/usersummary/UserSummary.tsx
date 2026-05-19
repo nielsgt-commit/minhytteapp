@@ -6,11 +6,13 @@ import {
   List,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
 import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 export default function UserSummary() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: userGroups } = useSuspenseQuery(
@@ -21,17 +23,17 @@ export default function UserSummary() {
 
   return (
     <StatCard
-      title="User groups"
+      title={t("User groups")}
       count={userGroups.length}
       content={userGroups.length === 0 ? (
-        <Paragraph>No user groups yet.</Paragraph>
+        <Paragraph>{t("No user groups yet.")}</Paragraph>
       ) : (
         <List.Unordered className={styles.list}>
           {userGroups.map(g => (
             <List.Item key={g.id} className={styles.row}>
               <span>{g.name}</span>
               <span>
-                {g.members.length} member{g.members.length === 1 ? "" : "s"}
+                {t("{{count}} member", { count: g.members.length })}
               </span>
             </List.Item>
           ))}
@@ -39,7 +41,7 @@ export default function UserSummary() {
       )}
       footer={(
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty/usergroups">Manage user groups</Link>
+          <Link to="/manageproperty/usergroups">{t("Manage user groups")}</Link>
         </Button>
       )}
     />

@@ -1,8 +1,10 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 
 export function PreliminarySettlement() {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: users } = useSuspenseQuery(
@@ -30,15 +32,15 @@ export function PreliminarySettlement() {
 
   return (
     <section>
-      <h3>Preliminary settlement</h3>
+      <h3>{t("Preliminary settlement")}</h3>
       {rows.length === 0 ? (
-        <p>No heads.</p>
+        <p>{t("No heads.")}</p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Head</th>
-              <th>Reimbursed total</th>
+              <th>{t("Head")}</th>
+              <th>{t("Reimbursed total")}</th>
             </tr>
           </thead>
           <tbody>

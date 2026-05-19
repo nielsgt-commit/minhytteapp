@@ -4,11 +4,13 @@ import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Avatar, Divider, Dropdown, Tag } from "@digdir/designsystemet-react"
 import { ChevronDownIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch } from "@/app/hooks"
 import { setSelectedUserId } from "@/features/user/userSlice"
 import { loadAuth, logout } from "@/auth/oauth"
 import CheckIn from "./CheckIn"
+import ColorSchemeToggle from "./ColorSchemeToggle"
 
 function initials(name: string) {
   return name
@@ -20,6 +22,7 @@ function initials(name: string) {
 }
 
 export default function MobileUserMenu() {
+  const { t } = useTranslation("core")
   const trpc = useTRPC()
   const auth = loadAuth()
   const { data: me } = useQuery(
@@ -46,7 +49,7 @@ export default function MobileUserMenu() {
   if (!auth.user) return null
 
   const current = list.find(u => u.id === selectedId)
-  const name = current?.name ?? "Select user"
+  const name = current?.name ?? t("Select user")
 
   const mainGroup =
     selectedId != null && groups
@@ -65,7 +68,7 @@ export default function MobileUserMenu() {
       <Dropdown.Trigger
         variant="tertiary"
         data-color="neutral"
-        aria-label="User menu"
+        aria-label={t("User menu")}
         style={isOpen ? undefined : { border: "none" }}
       >
         {name}
@@ -100,15 +103,19 @@ export default function MobileUserMenu() {
             <CheckIn />
           </div>
           <Divider />
+          <div style={{ padding: "0.5rem 0.75rem" }}>
+            <ColorSchemeToggle />
+          </div>
+          <Divider />
           <Dropdown.List>
             <Dropdown.Item>
               <Dropdown.Button onClick={() => { void navigate({ to: "/usersettings" }) }}>
-                Settings
+                {t("Settings")}
               </Dropdown.Button>
             </Dropdown.Item>
             <Dropdown.Item>
               <Dropdown.Button data-color="danger" onClick={handleLogout}>
-                Log out
+                {t("Log out")}
               </Dropdown.Button>
             </Dropdown.Item>
           </Dropdown.List>

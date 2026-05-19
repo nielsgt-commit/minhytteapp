@@ -4,6 +4,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { loadAuth } from "@/auth/oauth"
 import { UserCreationForm } from "./UserCreationForm"
@@ -12,6 +13,7 @@ import { PropertyCreationForm } from "./PropertyCreationForm"
 type Step = "user" | "property" | "done"
 
 export function OnboardingFlow() {
+  const { t } = useTranslation("onboarding")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -47,23 +49,23 @@ export function OnboardingFlow() {
 
   return (
     <section>
-      <h2>Welcome</h2>
-      <p>Let's set up the basics. You can add more later.</p>
+      <h2>{t("Welcome")}</h2>
+      <p>{t("Let's set up the basics. You can add more later.")}</p>
 
       <ol>
         <li>
-          <strong>You{currentUser?.is_admin ? " (admin)" : ""}</strong>
+          <strong>{currentUser?.is_admin ? t("You (admin)") : t("You")}</strong>
           {currentUser ? (
             <span>
               {" "}
               – {currentUser.name} ({currentUser.email})
             </span>
           ) : (
-            <span> – not signed in</span>
+            <span> – {t("not signed in")}</span>
           )}
         </li>
         <li>
-          <strong>The property</strong>
+          <strong>{t("The property")}</strong>
           {firstProperty ? (
             <span>
               {" "}
@@ -73,7 +75,7 @@ export function OnboardingFlow() {
         </li>
       </ol>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {step === "user" && (
         <UserCreationForm
@@ -91,8 +93,8 @@ export function OnboardingFlow() {
 
       {step === "done" && (
         <div>
-          <p>All set. You can manage everything from the dashboard.</p>
-          <Link to="/dashboard">Go to dashboard</Link>
+          <p>{t("All set. You can manage everything from the dashboard.")}</p>
+          <Link to="/dashboard">{t("Go to dashboard")}</Link>
         </div>
       )}
     </section>

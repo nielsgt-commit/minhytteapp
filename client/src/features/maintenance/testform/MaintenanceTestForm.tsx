@@ -12,6 +12,7 @@ import {
   Select,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 
 type Category = "maintenance" | "repair"
@@ -105,6 +106,7 @@ function buildPayload(state: FormState, addedBy: number) {
 }
 
 export function MaintenanceTestForm() {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedUserId = useSelectedUserId()
@@ -196,13 +198,13 @@ export function MaintenanceTestForm() {
 
   return (
     <section>
-      <h3>Maintenance Test Form</h3>
+      <h3>{t("Maintenance Test Form")}</h3>
 
       {selectedUserId == null && (
-        <p role="alert">No user selected — pick one from the header.</p>
+        <p role="alert">{t("No user selected — pick one from the header.")}</p>
       )}
       {selectedPropertyId == null && (
-        <p role="alert">No property selected — pick one from the header.</p>
+        <p role="alert">{t("No property selected — pick one from the header.")}</p>
       )}
 
       <form
@@ -219,11 +221,11 @@ export function MaintenanceTestForm() {
       >
         <fieldset>
           <legend>
-            {isEditing ? `Editing #${String(state.id)}` : "New record"}
+            {isEditing ? t("Editing #{{id}}", { id: String(state.id) }) : t("New record")}
           </legend>
 
           <Textfield
-            label="Description"
+            label={t("Description")}
             value={state.description}
             onChange={e => {
               set("description")(e.target.value)
@@ -232,7 +234,7 @@ export function MaintenanceTestForm() {
           />
 
           <Textfield
-            label="Instructions"
+            label={t("Instructions")}
             value={state.instructions}
             onChange={e => {
               set("instructions")(e.target.value)
@@ -240,7 +242,7 @@ export function MaintenanceTestForm() {
           />
 
           <Field>
-            <Label>Status</Label>
+            <Label>{t("Status")}</Label>
             <Select
               value={state.status}
               onChange={e => {
@@ -256,21 +258,21 @@ export function MaintenanceTestForm() {
           </Field>
 
           <Field>
-            <Label>When</Label>
+            <Label>{t("When")}</Label>
             <Select
               value={state.when}
               onChange={e => {
                 set("when")(e.target.value)
               }}
             >
-              <Select.Option value="">(select)</Select.Option>
+              <Select.Option value="">{t("(select)")}</Select.Option>
               {priorityWhenOptions.map(o => (
                 <Select.Option key={o.value} value={o.value}>
                   {o.label}
                 </Select.Option>
               ))}
-              <Select.Option value="dugnad">dugnad</Select.Option>
-              <Select.Option value="just_in_time">just in time</Select.Option>
+              <Select.Option value="dugnad">{t("dugnad")}</Select.Option>
+              <Select.Option value="just_in_time">{t("just in time")}</Select.Option>
             </Select>
           </Field>
 
@@ -282,21 +284,21 @@ export function MaintenanceTestForm() {
               }}
               aria-expanded={showMore}
             >
-              {showMore ? "Hide details" : "Add more details"}
+              {showMore ? t("Hide details") : t("Add more details")}
             </Button>
           </div>
 
           {showMore && (
             <>
               <Field>
-                <Label>Assigned to</Label>
+                <Label>{t("Assigned to")}</Label>
                 <Select
                   value={state.assigned_to_id}
                   onChange={e => {
                     set("assigned_to_id")(e.target.value)
                   }}
                 >
-                  <Select.Option value="">(unassigned)</Select.Option>
+                  <Select.Option value="">{t("(unassigned)")}</Select.Option>
                   {users.map(u => (
                     <Select.Option key={u.id} value={u.id}>
                       #{u.id} {u.name}
@@ -306,7 +308,7 @@ export function MaintenanceTestForm() {
               </Field>
 
               <Field>
-                <Label>Location</Label>
+                <Label>{t("Location")}</Label>
                 <Select
                   value={locationValue}
                   onChange={e => {
@@ -324,9 +326,9 @@ export function MaintenanceTestForm() {
                   }}
                   required
                 >
-                  <Select.Option value="">(select location)</Select.Option>
+                  <Select.Option value="">{t("(select location)")}</Select.Option>
                   {propertyStructures.length > 0 && (
-                    <Select.Optgroup label="Structures">
+                    <Select.Optgroup label={t("Structures")}>
                       {propertyStructures.map(b => (
                         <Select.Option key={`b-${String(b.id)}`} value={`b:${String(b.id)}`}>
                           #{b.id} {b.name}
@@ -335,7 +337,7 @@ export function MaintenanceTestForm() {
                     </Select.Optgroup>
                   )}
                   {infrastructure.length > 0 && (
-                    <Select.Optgroup label="Infrastructure">
+                    <Select.Optgroup label={t("Infrastructure")}>
                       {infrastructure.map(p => (
                         <Select.Option key={`p-${String(p.id)}`} value={`p:${String(p.id)}`}>
                           #{p.id} {p.name}
@@ -347,7 +349,7 @@ export function MaintenanceTestForm() {
               </Field>
 
               <Field>
-                <Label>Category</Label>
+                <Label>{t("Category")}</Label>
                 <Select
                   value={state.category}
                   onChange={e => {
@@ -363,7 +365,7 @@ export function MaintenanceTestForm() {
               </Field>
 
               <Field>
-                <Label>Severity</Label>
+                <Label>{t("Severity")}</Label>
                 <Select
                   value={state.severity}
                   onChange={e => {
@@ -379,7 +381,7 @@ export function MaintenanceTestForm() {
               </Field>
 
               <Field>
-                <Label>Recurrence</Label>
+                <Label>{t("Recurrence")}</Label>
                 <Select
                   value={state.recurrence}
                   onChange={e => {
@@ -398,7 +400,7 @@ export function MaintenanceTestForm() {
 
           <div>
             <Button type="submit" disabled={pending || !canSubmit}>
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? t("Update") : t("Create")}
             </Button>
             <Button
               variant="secondary"
@@ -407,13 +409,13 @@ export function MaintenanceTestForm() {
               }}
               disabled={pending}
             >
-              Reset
+              {t("Reset")}
             </Button>
           </div>
         </fieldset>
       </form>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
     </section>
   )
 }

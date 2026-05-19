@@ -9,6 +9,7 @@ import {
   Tag,
 } from "@digdir/designsystemet-react"
 import { ReceiptIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
 import type { ExpenseRow } from "../types.ts"
 
@@ -25,13 +26,14 @@ export function ReviewExpenseCard({
   onReimburse,
   onReject,
 }: Props) {
+  const { t } = useTranslation("expenses")
   return (
     <Card asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
           <Paragraph asChild data-size="sm">
             <span className={styles.category}>
-              {expense.expense_types[0] ?? "(no category)"}
+              {expense.expense_types[0] ?? t("(no category)")}
             </span>
           </Paragraph>
           <span className={styles.receipt}>
@@ -41,13 +43,13 @@ export function ReviewExpenseCard({
                   variant="tertiary"
                   data-size="sm"
                   icon
-                  aria-label="View receipt"
+                  aria-label={t("View receipt")}
                 >
                   <ReceiptIcon aria-hidden fontSize="1.25rem" />
                 </Dialog.Trigger>
                 <Dialog>
                   <Dialog.Block>
-                    <Heading level={3} data-size="xs">Receipt</Heading>
+                    <Heading level={3} data-size="xs">{t("Receipt")}</Heading>
                   </Dialog.Block>
                   <Dialog.Block>
                     <Skeleton
@@ -60,7 +62,7 @@ export function ReviewExpenseCard({
             )}
           </span>
           <Paragraph className={styles.sumLabel} data-size="sm">
-            Sum
+            {t("Sum")}
           </Paragraph>
           <div className={styles.amountGroup}>
             <Paragraph asChild data-size="sm">
@@ -71,7 +73,7 @@ export function ReviewExpenseCard({
             </Paragraph>
           </div>
           <Paragraph className={styles.submittedByLabel} data-size="sm">
-            Submitted by
+            {t("Submitted by")}
           </Paragraph>
           <Tag className={styles.name} data-color="info" data-size="sm">
             {expense.payer_name ?? `#${String(expense.payer_id)}`}
@@ -84,7 +86,7 @@ export function ReviewExpenseCard({
               disabled={pending}
               onClick={() => { onReimburse(expense) }}
             >
-              Reimburse
+              {t("Reimburse")}
             </Button>
             <Button
               variant="tertiary"
@@ -93,7 +95,7 @@ export function ReviewExpenseCard({
               disabled={pending}
               onClick={() => { onReject(expense) }}
             >
-              Reject
+              {t("Reject")}
             </Button>
           </div>
         </Card.Block>

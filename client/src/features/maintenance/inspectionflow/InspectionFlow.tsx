@@ -13,6 +13,7 @@ import {
   Paragraph,
   Textarea,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 import {
   FindingsSection,
@@ -40,6 +41,7 @@ export function InspectionFlow(props: {
   open: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation("maintenance")
   const { scope, open, onClose } = props
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -217,7 +219,7 @@ export function InspectionFlow(props: {
 
   return (
     <form onSubmit={handleSubmit} className={styles.wrap}>
-      <Heading level={4} data-size="xs">Inspect {scope.name}</Heading>
+      <Heading level={4} data-size="xs">{t("Inspect {{name}}", { name: scope.name })}</Heading>
 
       <MetadataSection
         inspectedBy={inspectedBy}
@@ -244,7 +246,7 @@ export function InspectionFlow(props: {
       />
 
       <Field>
-        <Label>Notes</Label>
+        <Label>{t("Notes")}</Label>
         <Textarea
           value={notes}
           onChange={e => { setNotes(e.target.value) }}
@@ -264,10 +266,10 @@ export function InspectionFlow(props: {
           disabled={recordMutation.isPending}
           onClick={handleCancel}
         >
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button type="submit" disabled={disabled}>
-          Complete inspection
+          {t("Complete inspection")}
         </Button>
       </div>
     </form>

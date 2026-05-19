@@ -4,6 +4,7 @@ import {
   EXPERIMENTAL_Suggestion as Suggestion,
 } from "@digdir/designsystemet-react"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 
 type Category = { id: number; name: string }
@@ -29,6 +30,7 @@ export function CategoryPicker({
   openCategory,
   onOpenCategory,
 }: Props) {
+  const { t } = useTranslation("expenses")
   if (editMode) {
     return (
       <Suggestion
@@ -39,7 +41,7 @@ export function CategoryPicker({
       >
         <Suggestion.Input
           ref={suggestionInputRef}
-          placeholder="Add or remove categories"
+          placeholder={t("Add or remove categories")}
         />
         <Suggestion.List>
           {categories.map(c => (

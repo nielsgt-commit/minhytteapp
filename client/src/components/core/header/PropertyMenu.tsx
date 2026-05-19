@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch } from "@/app/hooks"
 import { setSelectedPropertyId } from "@/features/property/propertySlice"
@@ -14,6 +15,7 @@ import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
 
 export default function PropertyMenu() {
+  const { t } = useTranslation("core")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const auth = loadAuth()
@@ -61,11 +63,11 @@ export default function PropertyMenu() {
 
   let label: string
   if (isLoading) {
-    label = "Loading…"
+    label = t("Loading…")
   } else if (current) {
     label = ""
   } else {
-    label = "No property"
+    label = t("No property")
   }
 
   return (

@@ -11,11 +11,13 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import { useAppDispatch } from "@/app/hooks.ts"
 import { setSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function DeletePropertyFlow() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const dispatch = useAppDispatch()
@@ -45,7 +47,7 @@ export function DeletePropertyFlow() {
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
   if (!selectedProperty) {
-    return <p>No property selected.</p>
+    return <p>{t("No property selected.")}</p>
   }
 
   const nameMatches = typedName === selectedProperty.name
@@ -70,13 +72,17 @@ export function DeletePropertyFlow() {
   if (!isArmed) {
     return (
       <div>
-        <h4>Delete property</h4>
+        <h4>{t("Delete property")}</h4>
         <p>
-          Permanently delete <strong>{selectedProperty.name}</strong> and all
-          data associated with it.
+          <Trans
+            t={t}
+            i18nKey="Permanently delete <1>{{name}}</1> and all data associated with it."
+            values={{ name: selectedProperty.name }}
+            components={{ 1: <strong /> }}
+          />
         </p>
         <Button type="button" onClick={() => { setIsArmed(true) }}>
-          Delete this property…
+          {t("Delete this property…")}
         </Button>
       </div>
     )
@@ -84,24 +90,30 @@ export function DeletePropertyFlow() {
 
   return (
     <div>
-      <h4>Delete property</h4>
+      <h4>{t("Delete property")}</h4>
 
       <p role="alert">
-        <strong>Warning:</strong> This action cannot be undone. Deleting{" "}
-        <strong>{selectedProperty.name}</strong> will permanently remove the
-        property along with all its Structures, rooms, bookings, and history.
+        <Trans
+          t={t}
+          i18nKey="<1>Warning:</1> This action cannot be undone. Deleting <3>{{name}}</3> will permanently remove the property along with all its Structures, rooms, bookings, and history."
+          values={{ name: selectedProperty.name }}
+          components={{ 1: <strong />, 3: <strong /> }}
+        />
       </p>
 
       <form onSubmit={handleDelete}>
         <Fieldset>
-          <Fieldset.Legend>Confirm deletion</Fieldset.Legend>
+          <Fieldset.Legend>{t("Confirm deletion")}</Fieldset.Legend>
 
           <div>
             <Textfield
               label={
-                <>
-                  Type <strong>{selectedProperty.name}</strong> to confirm
-                </>
+                <Trans
+                  t={t}
+                  i18nKey="Type <1>{{name}}</1> to confirm"
+                  values={{ name: selectedProperty.name }}
+                  components={{ 1: <strong /> }}
+                />
               }
               type="text"
               value={typedName}
@@ -114,7 +126,7 @@ export function DeletePropertyFlow() {
 
           <div>
             <Checkbox
-              label="I understand that this action is permanent and cannot be undone."
+              label={t("I understand that this action is permanent and cannot be undone.")}
               checked={acknowledged}
               onChange={e => { setAcknowledged(e.target.checked) }}
             />
@@ -122,19 +134,19 @@ export function DeletePropertyFlow() {
 
           <div>
             <Button type="submit" disabled={!canDelete}>
-              Permanently delete {selectedProperty.name}
+              {t("Permanently delete {{name}}", { name: selectedProperty.name })}
             </Button>
             <Button
               type="button"
               onClick={reset}
               disabled={deleteProperty.isPending}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
 
           {deleteProperty.error && (
-            <p role="alert">Error: {deleteProperty.error.message}</p>
+            <p role="alert">{t("Error: {{message}}", { message: deleteProperty.error.message })}</p>
           )}
         </Fieldset>
       </form>

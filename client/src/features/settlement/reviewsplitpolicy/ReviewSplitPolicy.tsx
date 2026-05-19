@@ -10,6 +10,7 @@ import {
   Heading,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import { PREV_PHASE } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
 
@@ -18,6 +19,7 @@ type Props = {
 }
 
 export function ReviewSplitPolicy({ settlementId }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const previewQuery = useQuery({
@@ -47,22 +49,25 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
   )
 
   if (previewQuery.isPending) {
-    return <Paragraph>Loading split preview…</Paragraph>
+    return <Paragraph>{t("Loading split preview…")}</Paragraph>
   }
   if (previewQuery.isError) {
     return (
       <Card asChild>
         <article>
           <Card.Block data-size="sm">
-            <Heading level={3} data-size="xs">Review split policy</Heading>
+            <Heading level={3} data-size="xs">{t("Review split policy")}</Heading>
           </Card.Block>
           <Card.Block data-size="sm">
             <Paragraph role="alert">
-              Couldn&apos;t build a split preview: {previewQuery.error.message}
+              {t("Couldn't build a split preview: {{message}}", { message: previewQuery.error.message })}
             </Paragraph>
             <Paragraph data-size="sm">
-              Update this settlement&apos;s split policy from the Settlement
-              Test Form (only <strong>occupancy_days</strong> is implemented).
+              <Trans
+                ns="settlement"
+                i18nKey="Update this settlement's split policy from the Settlement Test Form (only <strong>occupancy_days</strong> is implemented)."
+                components={{ strong: <strong /> }}
+              />
             </Paragraph>
           </Card.Block>
         </article>
@@ -78,37 +83,37 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
     <Card asChild>
       <article>
         <Card.Block data-size="sm">
-          <Heading level={3} data-size="xs">Review split policy</Heading>
+          <Heading level={3} data-size="xs">{t("Review split policy")}</Heading>
           <Paragraph data-size="sm">
-            Policy: <strong>{policy}</strong>
-            {closed ? " (closed)" : ""}
+            {t("Policy:")} <strong>{policy}</strong>
+            {closed ? t(" (closed)") : ""}
           </Paragraph>
         </Card.Block>
 
         <Card.Block data-size="sm">
           <Paragraph data-size="sm">
-            Total reimbursed:{" "}
+            {t("Total reimbursed:")}{" "}
             <strong>{String(inputs.total_reimbursed)},-</strong>
           </Paragraph>
           <Paragraph data-size="sm">
-            Total booking days:{" "}
+            {t("Total booking days:")}{" "}
             <strong>{String(inputs.total_booking_days)}</strong>
           </Paragraph>
         </Card.Block>
 
         <Card.Block data-size="sm">
-          <Heading level={4} data-size="2xs">Per group</Heading>
+          <Heading level={4} data-size="2xs">{t("Per group")}</Heading>
           {groups.length === 0 ? (
-            <Paragraph data-size="sm">No groups.</Paragraph>
+            <Paragraph data-size="sm">{t("No groups.")}</Paragraph>
           ) : (
             <table>
               <thead>
                 <tr>
-                  <th align="left">Group</th>
-                  <th align="right">Days</th>
-                  <th align="right">Paid</th>
-                  <th align="right">Share</th>
-                  <th align="right">Net</th>
+                  <th align="left">{t("Group")}</th>
+                  <th align="right">{t("Days")}</th>
+                  <th align="right">{t("Paid")}</th>
+                  <th align="right">{t("Share")}</th>
+                  <th align="right">{t("Net")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -129,15 +134,15 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
         </Card.Block>
 
         <Card.Block data-size="sm">
-          <Heading level={4} data-size="2xs">Transfers</Heading>
+          <Heading level={4} data-size="2xs">{t("Transfers")}</Heading>
           {transfers.length === 0 ? (
-            <Paragraph data-size="sm">No transfers needed.</Paragraph>
+            <Paragraph data-size="sm">{t("No transfers needed.")}</Paragraph>
           ) : (
             <ul>
-              {transfers.map((t, i) => (
-                <li key={`${String(t.from_group_id)}-${String(t.to_group_id)}-${String(i)}`}>
-                  {t.from_group_name} → {t.to_group_name}:{" "}
-                  <strong>{String(t.amount)},-</strong>
+              {transfers.map((tr, i) => (
+                <li key={`${String(tr.from_group_id)}-${String(tr.to_group_id)}-${String(i)}`}>
+                  {tr.from_group_name} → {tr.to_group_name}:{" "}
+                  <strong>{String(tr.amount)},-</strong>
                 </li>
               ))}
             </ul>
@@ -146,19 +151,19 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
 
         <Card.Block data-size="sm">
           <Heading level={4} data-size="2xs">
-            Acceptance ({String(acceptedCount)}/{String(heads.length)})
+            {t("Acceptance ({{accepted}}/{{total}})", { accepted: String(acceptedCount), total: String(heads.length) })}
           </Heading>
           {heads.length === 0 ? (
-            <Paragraph data-size="sm">No heads found.</Paragraph>
+            <Paragraph data-size="sm">{t("No heads found.")}</Paragraph>
           ) : (
             <ul>
               {heads.map(h => (
                 <li key={h.user_id}>
                   {h.user_name} —{" "}
                   {h.accepted ? (
-                    <strong>accepted</strong>
+                    <strong>{t("accepted")}</strong>
                   ) : (
-                    <em>pending</em>
+                    <em>{t("pending")}</em>
                   )}
                 </li>
               ))}
@@ -169,7 +174,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
         <Card.Block data-size="sm">
           {closed ? (
             <Paragraph data-size="sm">
-              <strong>Settlement closed.</strong>
+              <strong>{t("Settlement closed.")}</strong>
             </Paragraph>
           ) : (
             <>
@@ -188,7 +193,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
                   })
                 }}
               >
-                Back
+                {t("Back")}
               </Button>
               <Button
                 type="button"
@@ -202,20 +207,20 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
                   acceptSplit.mutate({ id: settlementId })
                 }}
               >
-                {myHead?.accepted ? "Accepted" : "Accept and close"}
+                {myHead?.accepted ? t("Accepted") : t("Accept and close")}
               </Button>
             </>
           )}
           {myHead == null && !closed && (
             <Paragraph data-size="sm">
-              Only heads of this property can accept.
+              {t("Only heads of this property can accept.")}
             </Paragraph>
           )}
           {acceptSplit.error && (
-            <p role="alert">Error: {acceptSplit.error.message}</p>
+            <p role="alert">{t("Error: {{message}}", { message: acceptSplit.error.message })}</p>
           )}
           {regressPhase.error && (
-            <p role="alert">Error: {regressPhase.error.message}</p>
+            <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
           )}
         </Card.Block>
       </article>

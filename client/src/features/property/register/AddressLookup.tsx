@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./AddressLookup.module.css"
 
 export type GeonorgeAddress = {
@@ -29,7 +30,9 @@ type Props = {
   onSelect: (address: GeonorgeAddress) => void
 }
 
-export function AddressLookup({ label = "Address lookup", placeholder, onSelect }: Props) {
+export function AddressLookup({ label, placeholder, onSelect }: Props) {
+  const { t } = useTranslation("property")
+  const resolvedLabel = label ?? t("Address lookup")
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
 
@@ -63,15 +66,15 @@ export function AddressLookup({ label = "Address lookup", placeholder, onSelect 
   return (
     <div className={styles.root}>
       <Textfield
-        label={label}
+        label={resolvedLabel}
         value={query}
         onChange={e => { setQuery(e.target.value) }}
-        placeholder={placeholder ?? "e.g. Karl Johans gate 1"}
+        placeholder={placeholder ?? t("e.g. Karl Johans gate 1")}
       />
 
-      {isFetching && <Paragraph data-size="sm">Searching…</Paragraph>}
-      {error && <Paragraph data-size="sm" role="alert">Error: {error.message}</Paragraph>}
-      {noMatches && <Paragraph data-size="sm">No matches.</Paragraph>}
+      {isFetching && <Paragraph data-size="sm">{t("Searching…")}</Paragraph>}
+      {error && <Paragraph data-size="sm" role="alert">{t("Error: {{message}}", { message: error.message })}</Paragraph>}
+      {noMatches && <Paragraph data-size="sm">{t("No matches.")}</Paragraph>}
 
       {results.length > 0 && (
         <div className={styles.results}>

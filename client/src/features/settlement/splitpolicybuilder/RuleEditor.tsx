@@ -6,6 +6,7 @@ import {
   Select,
   Switch,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { ExceptPicker } from "./ExceptPicker"
 import { WhoPicker } from "./WhoPicker"
 import {
@@ -62,6 +63,7 @@ export function RuleEditor({
   onAddExcept,
   onRemoveExcept,
 }: Props) {
+  const { t } = useTranslation("settlement")
   const selectedExceptEncoded = new Set(rule.except.map(encodeExcept))
   const selectedWhoEncoded = new Set(rule.who.map(encodeWho))
   return (
@@ -69,10 +71,10 @@ export function RuleEditor({
       <article>
         <Card.Block data-size="sm">
           <Heading level={5} data-size="2xs">
-            Rule #{idx + 1}
+            {t("Rule #{{num}}", { num: idx + 1 })}
           </Heading>
           <Paragraph data-size="sm">
-            Split{" "}
+            {t("Split")}{" "}
             <Select
               data-size="sm"
               value={encodeWhat(rule.what)}
@@ -80,13 +82,13 @@ export function RuleEditor({
                 onPatch(idx, { what: decodeWhat(e.target.value) })
               }}
             >
-              <Select.Option value="total">total</Select.Option>
+              <Select.Option value="total">{t("total")}</Select.Option>
               {activeCategories.map(c => (
                 <Select.Option
                   key={c.id}
                   value={`category:${String(c.id)}`}
                 >
-                  category: {c.name}
+                  {t("category: {{name}}", { name: c.name })}
                 </Select.Option>
               ))}
             </Select>{" "}
@@ -101,13 +103,13 @@ export function RuleEditor({
             >
               {Object.entries(HOW_LABEL).map(([value, label]) => (
                 <Select.Option key={value} value={value}>
-                  {label}
+                  {(t as (k: string) => string)(label)}
                 </Select.Option>
               ))}
             </Select>{" "}
-            between{" "}
+            {t("between")}{" "}
             {rule.who.length === 0 ? (
-              <em>nobody selected</em>
+              <em>{t("nobody selected")}</em>
             ) : (
               rule.who.map(w => {
                 const enc = encodeWho(w)
@@ -124,7 +126,7 @@ export function RuleEditor({
                 )
               })
             )}{" "}
-            who were{" "}
+            {t("who were")}{" "}
             <Select
               data-size="sm"
               value={encodeWhen(rule.when)}
@@ -134,16 +136,16 @@ export function RuleEditor({
             >
               {Object.entries(WHEN_LABEL).map(([value, label]) => (
                 <Select.Option key={value} value={value}>
-                  {label}
+                  {(t as (k: string) => string)(label)}
                 </Select.Option>
               ))}
               {eligibleOwners.length > 0 && (
-                <Select.Optgroup label="Specific priority week">
+                <Select.Optgroup label={t("Specific priority week")}>
                   {eligibleOwners.map(o => {
                     const enc = `during_priority_week:${String(o.property_owner_id)}`
                     return (
                       <Select.Option key={enc} value={enc}>
-                        {o.user_name}&apos;s priority week
+                        {t("{{name}}'s priority week", { name: o.user_name })}
                       </Select.Option>
                     )
                   })}
@@ -152,7 +154,7 @@ export function RuleEditor({
             </Select>
           </Paragraph>
           <Switch
-            label="Include extra guest names (attributed to booker's group)"
+            label={t("Include extra guest names (attributed to booker's group)")}
             data-size="sm"
             checked={rule.include_extra_guests}
             onChange={e => {
@@ -169,9 +171,9 @@ export function RuleEditor({
 
         <Card.Block data-size="sm">
           <Paragraph data-size="sm">
-            <strong>except:</strong>{" "}
+            <strong>{t("except:")}</strong>{" "}
             {rule.except.length === 0 ? (
-              <em>nobody</em>
+              <em>{t("nobody")}</em>
             ) : (
               rule.except.map(e => {
                 const enc = encodeExcept(e)
@@ -205,7 +207,7 @@ export function RuleEditor({
             disabled={idx === 0 || pending}
             onClick={() => { onMove(idx, -1) }}
           >
-            ↑ Up
+            {t("↑ Up")}
           </Button>
           <Button
             type="button"
@@ -214,7 +216,7 @@ export function RuleEditor({
             disabled={isLast || pending}
             onClick={() => { onMove(idx, 1) }}
           >
-            ↓ Down
+            {t("↓ Down")}
           </Button>
           <Button
             type="button"
@@ -223,7 +225,7 @@ export function RuleEditor({
             disabled={pending}
             onClick={() => { onRemove(idx) }}
           >
-            Remove rule
+            {t("Remove rule")}
           </Button>
         </Card.Block>
       </article>

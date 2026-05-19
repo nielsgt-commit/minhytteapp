@@ -7,6 +7,7 @@ import {
   Radio,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 
 export type ItemStatus = "ok" | "followup"
@@ -28,14 +29,14 @@ export function ProcedureSection(props: {
   moveProcedureItem: (id: number, direction: -1 | 1) => void
   reorderPending: boolean
 }) {
+  const { t } = useTranslation("maintenance")
   const { items, getProc, setProc, moveProcedureItem, reorderPending } = props
   return (
     <div className={styles.section}>
-      <Heading level={5} data-size="2xs">Procedure</Heading>
+      <Heading level={5} data-size="2xs">{t("Procedure")}</Heading>
       {items.length === 0 ? (
         <Paragraph data-size="sm">
-          No pinned items yet. Add ad-hoc findings below and pin any that
-          should recur next time.
+          {t("No pinned items yet. Add ad-hoc findings below and pin any that should recur next time.")}
         </Paragraph>
       ) : (
         items.map((item, idx) => {
@@ -57,7 +58,7 @@ export function ProcedureSection(props: {
                     <Button
                       variant="tertiary"
                       data-size="sm"
-                      aria-label="Move up"
+                      aria-label={t("Move up")}
                       disabled={isFirst || reorderPending}
                       onClick={() => { moveProcedureItem(item.id, -1) }}
                     >
@@ -66,7 +67,7 @@ export function ProcedureSection(props: {
                     <Button
                       variant="tertiary"
                       data-size="sm"
-                      aria-label="Move down"
+                      aria-label={t("Move down")}
                       disabled={isLast || reorderPending}
                       onClick={() => { moveProcedureItem(item.id, 1) }}
                     >
@@ -74,10 +75,10 @@ export function ProcedureSection(props: {
                     </Button>
                   </div>
                   <Fieldset>
-                    <Fieldset.Legend>Status</Fieldset.Legend>
+                    <Fieldset.Legend>{t("Status")}</Fieldset.Legend>
                     <div className={styles.procActions}>
                       <Radio
-                        label="OK"
+                        label={t("OK")}
                         name={`procedure-${String(item.id)}`}
                         value="ok"
                         checked={state.status === "ok"}
@@ -86,7 +87,7 @@ export function ProcedureSection(props: {
                         }}
                       />
                       <Radio
-                        label="Needs followup"
+                        label={t("Needs followup")}
                         name={`procedure-${String(item.id)}`}
                         value="followup"
                         checked={state.status === "followup"}
@@ -100,7 +101,7 @@ export function ProcedureSection(props: {
                 {state.status === "followup" && (
                   <Card.Block>
                     <Textfield
-                      label="Followup description"
+                      label={t("Followup description")}
                       value={state.description}
                       onChange={e => {
                         setProc(item.id, { description: e.target.value })

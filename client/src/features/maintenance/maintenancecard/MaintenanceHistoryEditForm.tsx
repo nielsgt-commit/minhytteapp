@@ -5,6 +5,7 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 
 export type MaintenanceHistoryItem = {
   id: number
@@ -18,6 +19,7 @@ export function MaintenanceHistoryEditForm(props: {
   onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
   onCancel: () => void
 }) {
+  const { t } = useTranslation("maintenance")
   const { item, pending, onSubmit, onCancel } = props
   return (
     <Card key={item.id} asChild>
@@ -25,25 +27,25 @@ export function MaintenanceHistoryEditForm(props: {
         <Card.Block>
           <form onSubmit={onSubmit}>
             <Fieldset>
-              <Fieldset.Legend>Edit completed task</Fieldset.Legend>
+              <Fieldset.Legend>{t("Edit completed task")}</Fieldset.Legend>
               <Textfield
-                label="Task"
+                label={t("Task")}
                 name="description"
                 defaultValue={item.description}
                 required
               />
               <Textfield
-                label="Instructions"
+                label={t("Instructions")}
                 name="instructions"
                 defaultValue={item.instructions ?? ""}
               />
-              <Button type="submit" disabled={pending}>Save</Button>
+              <Button type="submit" disabled={pending}>{t("Save")}</Button>
               <Button
                 variant="secondary"
                 disabled={pending}
                 onClick={onCancel}
               >
-                Cancel
+                {t("Cancel")}
               </Button>
             </Fieldset>
           </form>

@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Checkbox, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { AddMemberForm } from "../AddMemberForm.tsx"
 import { CreateUserForm } from "../users/CreateUserForm.tsx"
@@ -62,6 +63,7 @@ export function GroupCard({
   onCancelAddMember,
   onRemoveMember,
 }: GroupCardProps) {
+  const { t } = useTranslation("usergroups")
   const handleRename = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
@@ -74,11 +76,10 @@ export function GroupCard({
     <li>
       <h3>
         {group.name}
-        {group.is_main && <small> (main)</small>}
+        {group.is_main && <small> {t("(main)")}</small>}
       </h3>
       <p>
-        {group.members.length} member
-        {group.members.length === 1 ? "" : "s"}
+        {t("{{count}} member", { count: group.members.length })}
       </p>
 
       {editMode && (
@@ -89,7 +90,7 @@ export function GroupCard({
             disabled={pending}
             onClick={onToggleRename}
           >
-            {isRenaming ? "Cancel" : "Rename"}
+            {isRenaming ? t("Cancel") : t("Rename")}
           </Button>
           <Button
             type="button"
@@ -97,7 +98,7 @@ export function GroupCard({
             disabled={pending}
             onClick={onToggleAddMember}
           >
-            {isAddingMember ? "Cancel" : "Add member"}
+            {isAddingMember ? t("Cancel") : t("Add member")}
           </Button>
           <Button
             type="button"
@@ -105,7 +106,7 @@ export function GroupCard({
             disabled={pending}
             onClick={onDelete}
           >
-            Delete
+            {t("Delete")}
           </Button>
         </div>
       )}
@@ -113,10 +114,10 @@ export function GroupCard({
       {isRenaming && (
         <form onSubmit={handleRename} key={`rename-${String(group.id)}`}>
           <fieldset>
-            <legend>Edit group</legend>
+            <legend>{t("Edit group")}</legend>
             <div>
               <Textfield
-                label="Name"
+                label={t("Name")}
                 type="text"
                 name="name"
                 defaultValue={group.name}
@@ -125,14 +126,14 @@ export function GroupCard({
             </div>
             <div>
               <Checkbox
-                label="Main"
+                label={t("Main")}
                 name="is_main"
                 defaultChecked={group.is_main}
               />
             </div>
             <div>
               <Button type="submit" disabled={renamePending}>
-                Save
+                {t("Save")}
               </Button>
               <Button
                 type="button"
@@ -140,7 +141,7 @@ export function GroupCard({
                 onClick={onCancelRename}
                 disabled={renamePending}
               >
-                Cancel
+                {t("Cancel")}
               </Button>
             </div>
           </fieldset>
@@ -170,7 +171,7 @@ export function GroupCard({
       )}
 
       {group.members.length === 0 ? (
-        <p>No members yet.</p>
+        <p>{t("No members yet.")}</p>
       ) : (
         <ul>
           {group.members.map(m => (
@@ -183,7 +184,7 @@ export function GroupCard({
                   disabled={pending}
                   onClick={() => { onRemoveMember(m.user_id, m.user_name) }}
                 >
-                  Remove
+                  {t("Remove")}
                 </Button>
               )}
             </li>

@@ -1,5 +1,6 @@
 import { Chip, Tabs } from "@digdir/designsystemet-react"
 import { useLocation, useNavigate, useRouter } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import type { SideNavGroup } from "./SideNav"
 import styles from "./GroupTabs.module.css"
 
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export function GroupTabs({ groups }: Props) {
+  const { t } = useTranslation("shared")
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const router = useRouter()
@@ -45,7 +47,7 @@ export function GroupTabs({ groups }: Props) {
               <div
                 className={styles.filter}
                 role="group"
-                aria-label={`${g.label} sections`}
+                aria-label={t("{{label}} sections", { label: g.label })}
               >
                 {g.items.map(i => {
                   const active =

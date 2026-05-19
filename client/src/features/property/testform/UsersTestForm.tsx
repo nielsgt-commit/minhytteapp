@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type UserRecord = {
@@ -61,6 +62,7 @@ function buildPayload(state: FormState) {
 }
 
 export function UsersTestForm() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
@@ -116,15 +118,15 @@ export function UsersTestForm() {
 
   return (
     <section>
-      <h3>Users Test Form</h3>
+      <h3>{t("Users Test Form")}</h3>
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
+          <legend>{isEditing ? t("Editing #{{id}}", { id: state.id ?? 0 }) : t("New record")}</legend>
 
           <div>
             <label>
-              Name
+              {t("Name")}
               <input
                 type="text"
                 value={state.name}
@@ -138,7 +140,7 @@ export function UsersTestForm() {
 
           <div>
             <label>
-              Email
+              {t("Email")}
               <input
                 type="email"
                 value={state.email}
@@ -159,36 +161,36 @@ export function UsersTestForm() {
                   dispatch({ type: "setField", field: "is_child", value: e.target.checked })
                 }}
               />
-              Is child
+              {t("Is child")}
             </label>
           </div>
 
           <div>
             <button type="submit" disabled={pending}>
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? t("Update") : t("Create")}
             </button>
             <button
               type="button"
               onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
-              Reset
+              {t("Reset")}
             </button>
           </div>
         </fieldset>
       </form>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      <h4>Records</h4>
+      <h4>{t("Records")}</h4>
       <table>
         <thead>
           <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>email</th>
-            <th>is_child</th>
-            <th>actions</th>
+            <th>{t("id")}</th>
+            <th>{t("name")}</th>
+            <th>{t("email")}</th>
+            <th>{t("is_child")}</th>
+            <th>{t("actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -197,7 +199,7 @@ export function UsersTestForm() {
               <td>{u.id}</td>
               <td>{u.name}</td>
               <td>{u.email}</td>
-              <td>{u.is_child ? "yes" : "no"}</td>
+              <td>{u.is_child ? t("yes") : t("no")}</td>
               <td>
                 <button
                   type="button"
@@ -209,14 +211,14 @@ export function UsersTestForm() {
                   }}
                   disabled={pending}
                 >
-                  Edit
+                  {t("Edit")}
                 </button>
                 <button
                   type="button"
                   onClick={() => { deleteMutation.mutate({ id: u.id }); }}
                   disabled={pending}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
               </td>
             </tr>

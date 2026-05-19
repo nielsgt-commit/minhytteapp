@@ -7,6 +7,7 @@ import {
 } from "react"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import styles from "./SideNav.module.css"
 
 export type SideNavGroup = {
@@ -20,6 +21,7 @@ type Props = {
 }
 
 export function SideNav({ groups, ariaLabel }: Props) {
+  const { t } = useTranslation("shared")
   const { pathname } = useLocation()
   const router = useRouter()
 
@@ -68,7 +70,7 @@ export function SideNav({ groups, ariaLabel }: Props) {
 
   return (
     <Card asChild>
-      <nav aria-label={ariaLabel ?? "Sections"} onKeyDown={handleKeyDown}>
+      <nav aria-label={ariaLabel ?? t("Sections")} onKeyDown={handleKeyDown}>
         {groups.map(group => (
           <Card.Block key={group.label}>
             <Heading level={2} data-size="xs">{group.label}</Heading>

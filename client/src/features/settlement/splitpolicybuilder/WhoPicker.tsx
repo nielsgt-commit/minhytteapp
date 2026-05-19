@@ -1,4 +1,5 @@
 import { Field, Label, Select } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import type { GroupWithMembers, PropertyUser } from "./types"
 
 type Props = {
@@ -14,9 +15,10 @@ export function WhoPicker({
   selectedEncoded,
   onAdd,
 }: Props) {
+  const { t } = useTranslation("settlement")
   return (
     <Field>
-      <Label data-size="sm">Add participant</Label>
+      <Label data-size="sm">{t("Add participant")}</Label>
       <Select
         value=""
         onChange={e => {
@@ -24,17 +26,17 @@ export function WhoPicker({
           e.target.value = ""
         }}
       >
-        <Select.Option value="">— pick a participant —</Select.Option>
+        <Select.Option value="">{t("— pick a participant —")}</Select.Option>
         <Select.Option value="all_users" disabled={selectedEncoded.has("all_users")}>
-          all users
+          {t("all users")}
         </Select.Option>
         <Select.Option value="main_groups" disabled={selectedEncoded.has("main_groups")}>
-          main owner groups
+          {t("main owner groups")}
         </Select.Option>
         <Select.Option value="heads_only" disabled={selectedEncoded.has("heads_only")}>
-          heads of this property
+          {t("heads of this property")}
         </Select.Option>
-        <Select.Optgroup label="Groups">
+        <Select.Optgroup label={t("Groups")}>
           {groups.map(g => {
             const enc = `user_group:${String(g.id)}`
             return (
@@ -44,7 +46,7 @@ export function WhoPicker({
             )
           })}
         </Select.Optgroup>
-        <Select.Optgroup label="Users">
+        <Select.Optgroup label={t("Users")}>
           {propertyUsers.map(u => {
             const enc = `user:${String(u.user_id)}`
             return (

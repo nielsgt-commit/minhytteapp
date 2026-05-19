@@ -11,6 +11,7 @@ import {
   Heading,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { ReviewBookingDays } from "./ReviewBookingDays"
 import {
   NEXT_PHASE,
@@ -32,6 +33,7 @@ type Props = {
 }
 
 export function BookingDaySummary({ settlementId, phase }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -99,11 +101,11 @@ export function BookingDaySummary({ settlementId, phase }: Props) {
     <Card asChild className={styles.card}>
       <article>
         <Card.Block>
-          <Heading level={3} data-size="xs">Booking days</Heading>
+          <Heading level={3} data-size="xs">{t("Booking days")}</Heading>
         </Card.Block>
         <Card.Block>
           <Paragraph>
-            <strong>Total booking days: {String(total)}</strong>
+            <strong>{t("Total booking days: {{count}}", { count: total })}</strong>
           </Paragraph>
           <Button
             type="button"
@@ -111,7 +113,7 @@ export function BookingDaySummary({ settlementId, phase }: Props) {
             data-size="sm"
             onClick={() => { setShowDetails(s => !s) }}
           >
-            Details
+            {t("Details")}
           </Button>
           {phase === "collecting_bookings" && (
             <>
@@ -130,7 +132,7 @@ export function BookingDaySummary({ settlementId, phase }: Props) {
                   })
                 }}
               >
-                Back
+                {t("Back")}
               </Button>
               <Button
                 type="button"
@@ -146,15 +148,15 @@ export function BookingDaySummary({ settlementId, phase }: Props) {
                   })
                 }}
               >
-                Close and progress to settlement
+                {t("Close and progress to settlement")}
               </Button>
             </>
           )}
           {advancePhase.error && (
-            <p role="alert">Error: {advancePhase.error.message}</p>
+            <p role="alert">{t("Error: {{message}}", { message: advancePhase.error.message })}</p>
           )}
           {regressPhase.error && (
-            <p role="alert">Error: {regressPhase.error.message}</p>
+            <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
           )}
         </Card.Block>
         {showDetails && (

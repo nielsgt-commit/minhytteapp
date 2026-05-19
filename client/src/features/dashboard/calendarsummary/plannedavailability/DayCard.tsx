@@ -1,4 +1,5 @@
 import { Badge, Card } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { pad2 } from "@/utils/dateUtils"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import GuestListView from "./GuestListView"
@@ -10,9 +11,11 @@ type Forecast = {
   symbol_code: string | null
 }
 
+type WeekdayLabel = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT"
+
 type Props = {
   date: Date
-  weekdayLabel: string
+  weekdayLabel: WeekdayLabel
   iso: string
   isSelected: boolean
   isToday: boolean
@@ -34,6 +37,7 @@ export default function DayCard({
   forecast,
   onToggle,
 }: Props) {
+  const { t } = useTranslation("dashboard")
   const isClickable = count > 0
   return (
     <Card asChild>
@@ -58,26 +62,26 @@ export default function DayCard({
                 <Badge.Position placement="top-right">
                   <Badge data-color="warning" />
                   <span>
-                    <strong>{weekdayLabel}</strong>{" "}
+                    <strong>{t(weekdayLabel)}</strong>{" "}
                     {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
-                    {isToday && " · Today"}
+                    {isToday && ` · ${t("Today")}`}
                   </span>
                 </Badge.Position>
               ) : (
                 <span>
-                  <strong>{weekdayLabel}</strong>{" "}
+                  <strong>{t(weekdayLabel)}</strong>{" "}
                   {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
-                  {isToday && " · Today"}
+                  {isToday && ` · ${t("Today")}`}
                 </span>
               )}
             </div>
             <div className={styles.dayCount}>
               {count > 0 ? (
                 <strong>
-                  {count} guest{count === 1 ? "" : "s"}
+                  {t("{{count}} guest", { count })}
                 </strong>
               ) : (
-                <span>No guests</span>
+                <span>{t("No guests")}</span>
               )}
             </div>
           </div>

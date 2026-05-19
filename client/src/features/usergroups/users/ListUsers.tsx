@@ -12,11 +12,13 @@ import {
   Heading,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 
 export function ListUsers() {
+  const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -64,21 +66,20 @@ export function ListUsers() {
     }
 
   const handleDelete = (userId: number, userName: string) => {
-    if (!window.confirm(`Delete user "${userName}"?`)) return
+    if (!window.confirm(t("Delete user \"{{userName}}\"?", { userName }))) return
     deleteUser.mutate({ id: userId })
   }
 
   return (
     <Card asChild>
       <section>
-      <Heading level={2}>Users</Heading>
+      <Heading level={2}>{t("Users")}</Heading>
       <p>
-        Edit user details or remove a user. Deletion is blocked while the user
-        is referenced by any group, ownership, booking, or expense.
+        {t("Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.")}
       </p>
 
       <Checkbox
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.currentTarget.checked
@@ -87,27 +88,27 @@ export function ListUsers() {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {users.length === 0 ? (
-        <p>No users yet.</p>
+        <p>{t("No users yet.")}</p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              {editMode && <th>Actions</th>}
+              <th>{t("Name")}</th>
+              <th>{t("Email")}</th>
+              <th>{t("Role")}</th>
+              {editMode && <th>{t("Actions")}</th>}
             </tr>
           </thead>
           <tbody>
             {users.map(u => {
               const editing = editingId === u.id
               const roles = [
-                u.is_admin ? "admin" : null,
-                u.is_child ? "child" : null,
-              ].filter(Boolean).join(", ") || "user"
+                u.is_admin ? t("admin") : null,
+                u.is_child ? t("child") : null,
+              ].filter(Boolean).join(", ") || t("user")
               return (
                 <Fragment key={u.id}>
                   <tr>
@@ -124,7 +125,7 @@ export function ListUsers() {
                             setEditingId(v => (v === u.id ? null : u.id))
                           }}
                         >
-                          {editing ? "Cancel" : "Edit"}
+                          {editing ? t("Cancel") : t("Edit")}
                         </Button>
                         <Button
                           type="button"
@@ -132,7 +133,7 @@ export function ListUsers() {
                           disabled={pending}
                           onClick={() => { handleDelete(u.id, u.name) }}
                         >
-                          Delete
+                          {t("Delete")}
                         </Button>
                       </td>
                     )}
@@ -142,10 +143,10 @@ export function ListUsers() {
                       <td colSpan={4}>
                         <form onSubmit={handleSubmit(u.id)}>
                           <fieldset>
-                            <legend>Edit user</legend>
+                            <legend>{t("Edit user")}</legend>
                             <div>
                               <Textfield
-                                label="Name"
+                                label={t("Name")}
                                 type="text"
                                 name="name"
                                 defaultValue={u.name}
@@ -154,7 +155,7 @@ export function ListUsers() {
                             </div>
                             <div>
                               <Textfield
-                                label="Email"
+                                label={t("Email")}
                                 type="email"
                                 name="email"
                                 defaultValue={u.email}
@@ -163,14 +164,14 @@ export function ListUsers() {
                             </div>
                             <div>
                               <Checkbox
-                                label="Admin"
+                                label={t("Admin")}
                                 name="is_admin"
                                 defaultChecked={u.is_admin}
                               />
                             </div>
                             <div>
                               <Checkbox
-                                label="Child"
+                                label={t("Child")}
                                 name="is_child"
                                 defaultChecked={u.is_child ?? false}
                               />
@@ -180,7 +181,7 @@ export function ListUsers() {
                                 type="submit"
                                 disabled={updateUser.isPending}
                               >
-                                Save
+                                {t("Save")}
                               </Button>
                               <Button
                                 type="button"
@@ -188,7 +189,7 @@ export function ListUsers() {
                                 onClick={() => { setEditingId(null) }}
                                 disabled={updateUser.isPending}
                               >
-                                Cancel
+                                {t("Cancel")}
                               </Button>
                             </div>
                           </fieldset>

@@ -5,6 +5,7 @@ import {
   Avatar,
   EXPERIMENTAL_AvatarStack as AvatarStack,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./AtPropertyNow.module.css"
 
@@ -20,6 +21,7 @@ function initials(name: string) {
 }
 
 export default function AtPropertyNow() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
   const { data, isLoading } = useQuery(
@@ -31,10 +33,10 @@ export default function AtPropertyNow() {
   const [expanded, setExpanded] = useState(false)
 
   if (propertyId == null) return null
-  if (isLoading) return <p>Loading…</p>
+  if (isLoading) return <p>{t("Loading…")}</p>
 
   const guests = data ?? []
-  if (guests.length === 0) return <p>No one at the property right now.</p>
+  if (guests.length === 0) return <p>{t("No one at the property right now.")}</p>
 
   const canTruncate = guests.length > VISIBLE_LIMIT
   const collapsed = canTruncate && !expanded
@@ -44,7 +46,7 @@ export default function AtPropertyNow() {
   if (collapsed) {
     return (
       <AvatarStack
-        aria-label="At property now"
+        aria-label={t("At property now")}
         overlap={8}
         suffix={`+${String(hiddenCount)}`}
         onClick={toggle}
@@ -73,7 +75,7 @@ export default function AtPropertyNow() {
   if (canTruncate) {
     return (
       <div
-        aria-label="At property now"
+        aria-label={t("At property now")}
         role="button"
         tabIndex={0}
         aria-expanded
@@ -98,7 +100,7 @@ export default function AtPropertyNow() {
   }
 
   return (
-    <AvatarStack aria-label="At property now" overlap={8}>
+    <AvatarStack aria-label={t("At property now")} overlap={8}>
       {guests.map(g => (
         <Avatar
           key={g.user_id}

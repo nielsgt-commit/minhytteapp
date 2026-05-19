@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Checkbox, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData"
 
 type UserCreationFormProps = {
@@ -8,6 +9,7 @@ type UserCreationFormProps = {
 }
 
 export function UserCreationForm({ pending, onSubmit }: UserCreationFormProps) {
+  const { t } = useTranslation("onboarding")
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
@@ -21,19 +23,19 @@ export function UserCreationForm({ pending, onSubmit }: UserCreationFormProps) {
   return (
     <form onSubmit={handleSubmit}>
       <Fieldset>
-        <Fieldset.Legend>Step 1 – Create your admin account</Fieldset.Legend>
+        <Fieldset.Legend>{t("Step 1 – Create your admin account")}</Fieldset.Legend>
         <div>
-          <Textfield label="Name" type="text" name="name" required />
+          <Textfield label={t("Name")} type="text" name="name" required />
         </div>
         <div>
-          <Textfield label="Email" type="email" name="email" required />
+          <Textfield label={t("Email")} type="email" name="email" required />
         </div>
         <div>
-          <Checkbox label="Is child" name="is_child" />
+          <Checkbox label={t("Is child")} name="is_child" />
         </div>
         <div>
           <Button type="submit" disabled={pending}>
-            Create admin
+            {t("Create admin")}
           </Button>
         </div>
       </Fieldset>

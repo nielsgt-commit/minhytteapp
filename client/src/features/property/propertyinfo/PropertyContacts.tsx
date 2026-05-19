@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Switch } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -24,6 +25,7 @@ function nullable(value: string) {
 }
 
 export default function PropertyContacts() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const property_id = useSelectedPropertyId()
@@ -115,7 +117,7 @@ export default function PropertyContacts() {
     }
 
   const handleDelete = (c: Contact) => {
-    if (!window.confirm(`Remove contact "${c.name}"?`)) return
+    if (!window.confirm(t("Remove contact \"{{name}}\"?", { name: c.name }))) return
     deleteMutation.mutate(
       { id: c.id, property_id },
       { onSuccess: () => { setEditingId(null) } },
@@ -124,10 +126,10 @@ export default function PropertyContacts() {
 
   return (
     <section>
-      <h3>Property contacts</h3>
+      <h3>{t("Property contacts")}</h3>
 
       <Switch
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.target.checked
@@ -139,7 +141,7 @@ export default function PropertyContacts() {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {editingContact ? (
         <ContactEditForm

@@ -1,4 +1,5 @@
 import { Link, linkOptions } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import styles from "./Navigation.module.css"
 
 const navLinks = linkOptions([
@@ -13,6 +14,7 @@ const navLinks = linkOptions([
 ])
 
 export default function Navigation() {
+  const { t } = useTranslation("shared")
   return (
     <nav className={styles.nav}>
       {navLinks.map((link) => (
@@ -21,7 +23,7 @@ export default function Navigation() {
           {...link}
           activeProps={{ className: styles.active }}
         >
-          {link.label}
+          {t(link.label)}
         </Link>
       ))}
     </nav>

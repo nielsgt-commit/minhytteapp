@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Card, Checkbox, Heading } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { CreateGroupForm } from "./CreateGroupForm.tsx"
@@ -19,6 +20,7 @@ type OpenForm =
   | null
 
 export function UserGroupsFlow() {
+  const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -95,7 +97,7 @@ export function UserGroupsFlow() {
     }
 
   const handleDelete = (groupId: number, groupName: string) => {
-    if (!window.confirm(`Delete group "${groupName}"?`)) return
+    if (!window.confirm(t("Delete group \"{{groupName}}\"?", { groupName }))) return
     deleteGroup.mutate(
       { id: groupId },
       { onSuccess: () => { setOpenForm(null) } },
@@ -144,21 +146,20 @@ export function UserGroupsFlow() {
     userId: number,
     userName: string,
   ) => {
-    if (!window.confirm(`Remove ${userName} from this group?`)) return
+    if (!window.confirm(t("Remove {{userName}} from this group?", { userName }))) return
     removeMember.mutate({ user_group_id: groupId, user_id: userId })
   }
 
   return (
     <Card asChild>
       <section>
-      <Heading level={2}>User groups</Heading>
+      <Heading level={2}>{t("User groups")}</Heading>
       <p>
-        Groups bundle users so you can assign group ownership on a property and
-        roll up settlements. Deleting a group is blocked while it is in use.
+        {t("Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.")}
       </p>
 
       <Checkbox
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.currentTarget.checked
@@ -170,7 +171,7 @@ export function UserGroupsFlow() {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {editMode && (
         <div>
@@ -183,7 +184,7 @@ export function UserGroupsFlow() {
               )
             }}
           >
-            {openForm?.kind === "create" ? "Cancel" : "New group"}
+            {openForm?.kind === "create" ? t("Cancel") : t("New group")}
           </Button>
         </div>
       )}
@@ -197,7 +198,7 @@ export function UserGroupsFlow() {
       )}
 
       {groups.length === 0 ? (
-        <p>No groups yet.</p>
+        <p>{t("No groups yet.")}</p>
       ) : (
         <ul className={styles.groupList}>
           {groups.map(g => {

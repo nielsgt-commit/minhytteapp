@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
 import { ReviewExpenseCard } from "./ReviewExpenseCard.tsx"
 import { ReviewHeader } from "./ReviewHeader.tsx"
@@ -24,6 +25,7 @@ type Props = {
 }
 
 export function ReviewExpenses({ settlementId, phase }: Props) {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -57,7 +59,7 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
       ? selectExpensesToReview(expenses as ExpenseRow[], memberIds, me.id)
       : []
 
-  const { stillAccepting, switchWarning, onSwitchChange } =
+  const { stillAccepting, warningCount, onSwitchChange } =
     useAcceptingToggle(toReview.length)
 
   const { reimburse, reject, pending, error } = useReviewMutations({
@@ -69,7 +71,7 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
   if (me == null || selectedPropertyId == null) return null
 
   if (!me.is_head) {
-    return <p>Only the group head can review submitted expenses.</p>
+    return <p>{t("Only the group head can review submitted expenses.")}</p>
   }
 
   const next = NEXT_PHASE.collecting_expenses
@@ -78,7 +80,7 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
     <ReviewHeader
       stillAccepting={stillAccepting}
       disabled={advancePhase.isPending || next == null}
-      switchWarning={switchWarning}
+      warningCount={warningCount}
       onSwitchChange={onSwitchChange}
     />
   )
@@ -111,7 +113,7 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
       {header}
       <div className={styles.list}>
         {error && (
-          <p role="alert">Error: {error.message}</p>
+          <p role="alert">{t("Error: {{message}}", { message: error.message })}</p>
         )}
         {toReview.map(e => (
           <ReviewExpenseCard

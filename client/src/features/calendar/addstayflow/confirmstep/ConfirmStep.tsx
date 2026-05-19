@@ -1,4 +1,5 @@
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { groupConsecutive } from "@/features/calendar/booking-logic"
 import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
 import styles from "./ConfirmStep.module.css"
@@ -24,6 +25,7 @@ export function ConfirmStep({
   isMutating: boolean
   roomOverCapacityDays: Map<number, string[]>
 }) {
+  const { t } = useTranslation("calendar")
   const overflowIds = new Set<number>()
   for (const r of conflicts.perRoom) {
     for (const uid of r.adultInKidOnlyUserIds) overflowIds.add(uid)
@@ -39,11 +41,11 @@ export function ConfirmStep({
 
   return (
     <div className={styles.warningBox}>
-      <Heading level={4}>Warnings — confirm to proceed</Heading>
+      <Heading level={4}>{t("Warnings — confirm to proceed")}</Heading>
 
       {conflicts.property.overCapacityBy > 0 && (
         <Paragraph>
-          Property over capacity by {conflicts.property.overCapacityBy} person(s).
+          {t("Property over capacity by {{count}} person", { count: conflicts.property.overCapacityBy })}
         </Paragraph>
       )}
 
@@ -53,12 +55,12 @@ export function ConfirmStep({
           <div key={r.room_id}>
             {r.overCapacityBy > 0 && days.length > 0 && (
               <Paragraph>
-                Room &quot;{r.room_name}&quot; over capacity by {r.overCapacityBy} on {formatDateRanges(days)}.
+                {t("Room \"{{room}}\" over capacity by {{count}} on {{days}}.", { room: r.room_name, count: r.overCapacityBy, days: formatDateRanges(days) })}
               </Paragraph>
             )}
             {r.adultInKidOnlyUserIds.length > 0 && (
               <Paragraph data-color="danger">
-                Adult assigned to &quot;{r.room_name}&quot; where only kid-only beds remain.
+                {t("Adult assigned to \"{{room}}\" where only kid-only beds remain.", { room: r.room_name })}
               </Paragraph>
             )}
           </div>
@@ -67,7 +69,7 @@ export function ConfirmStep({
 
       {overflowIds.size > 0 && (
         <Paragraph className={styles.queueNote}>
-          {overflowIds.size} occupant(s) will be marked queued on submit.
+          {t("{{count}} occupant will be marked queued on submit.", { count: overflowIds.size })}
         </Paragraph>
       )}
 
@@ -85,10 +87,10 @@ export function ConfirmStep({
           }}
           disabled={isMutating}
         >
-          Request anyway
+          {t("Request anyway")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isMutating}>
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
     </div>

@@ -6,12 +6,14 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { Button, Fieldset, Switch, Textfield } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type EditingState = { id: number } | null
 type DeletingState = { id: number; typed: string } | null
 
 export function UnassignedTasks() {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -37,7 +39,7 @@ export function UnassignedTasks() {
   const [deleting, setDeleting] = useState<DeletingState>(null)
   const [editMode, setEditMode] = useState(false)
 
-  if (!items) return <p>Loading…</p>
+  if (!items) return <p>{t("Loading…")}</p>
 
   const unassigned = items.filter(
     i => i.assigned_to_id == null && i.status === "todo",
@@ -77,9 +79,9 @@ export function UnassignedTasks() {
 
   return (
     <section>
-      <h2>Unassigned tasks</h2>
+      <h2>{t("Unassigned tasks")}</h2>
       <Switch
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.target.checked
@@ -90,39 +92,39 @@ export function UnassignedTasks() {
           }
         }}
       />
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
       {unassigned.length === 0 ? (
-        <p>No unassigned tasks.</p>
+        <p>{t("No unassigned tasks.")}</p>
       ) : (
         <ul>
-          {unassigned.map(t => {
-            const isEditing = editMode && editing?.id === t.id
-            const isDeleting = editMode && deleting?.id === t.id
+          {unassigned.map(task => {
+            const isEditing = editMode && editing?.id === task.id
+            const isDeleting = editMode && deleting?.id === task.id
 
             if (isEditing) {
               return (
-                <li key={t.id}>
-                  <form onSubmit={handleEditSubmit(t)}>
+                <li key={task.id}>
+                  <form onSubmit={handleEditSubmit(task)}>
                     <Fieldset>
-                      <Fieldset.Legend>Edit task</Fieldset.Legend>
+                      <Fieldset.Legend>{t("Edit task")}</Fieldset.Legend>
                       <Textfield
-                        label="Task"
+                        label={t("Task")}
                         name="description"
-                        defaultValue={t.description}
+                        defaultValue={task.description}
                         required
                       />
                       <Textfield
-                        label="Instructions"
+                        label={t("Instructions")}
                         name="instructions"
-                        defaultValue={t.instructions ?? ""}
+                        defaultValue={task.instructions ?? ""}
                       />
-                      <Button type="submit" disabled={pending}>Save</Button>
+                      <Button type="submit" disabled={pending}>{t("Save")}</Button>
                       <Button
                         variant="secondary"
                         disabled={pending}
                         onClick={() => { setEditing(null) }}
                       >
-                        Cancel
+                        {t("Cancel")}
                       </Button>
                     </Fieldset>
                   </form>
@@ -131,54 +133,59 @@ export function UnassignedTasks() {
             }
 
             return (
-              <li key={t.id}>
-                {t.description} ({t.severity}){" "}
+              <li key={task.id}>
+                {task.description} ({task.severity}){" "}
                 {editMode && (
                   <Button
                     variant="tertiary"
                     disabled={pending}
-                    onClick={() => { setEditing({ id: t.id }) }}
+                    onClick={() => { setEditing({ id: task.id }) }}
                   >
-                    Edit
+                    {t("Edit")}
                   </Button>
                 )}
                 {editMode && !isDeleting && (
                   <Button
                     variant="tertiary"
                     disabled={pending}
-                    onClick={() => { setDeleting({ id: t.id, typed: "" }) }}
+                    onClick={() => { setDeleting({ id: task.id, typed: "" }) }}
                   >
-                    Delete
+                    {t("Delete")}
                   </Button>
                 )}
                 {isDeleting && (
                   <span>
-                    {" "}Type <code>{t.description}</code> to confirm:{" "}
+                    {" "}<Trans
+                      ns="maintenance"
+                      i18nKey="Type <0>{{description}}</0> to confirm:"
+                      values={{ description: task.description }}
+                      components={[<code key="0" />]}
+                    />{" "}
                     <Textfield
-                      aria-label="Type description to confirm deletion"
+                      aria-label={t("Type description to confirm deletion")}
                       value={deleting.typed}
                       onChange={e => {
-                        setDeleting({ id: t.id, typed: e.target.value })
+                        setDeleting({ id: task.id, typed: e.target.value })
                       }}
                     />
                     <Button
                       data-color="danger"
-                      disabled={pending || deleting.typed !== t.description}
+                      disabled={pending || deleting.typed !== task.description}
                       onClick={() => {
                         deleteMutation.mutate(
-                          { id: t.id },
+                          { id: task.id },
                           { onSuccess: () => { setDeleting(null) } },
                         )
                       }}
                     >
-                      Confirm delete
+                      {t("Confirm delete")}
                     </Button>
                     <Button
                       variant="secondary"
                       disabled={pending}
                       onClick={() => { setDeleting(null) }}
                     >
-                      Cancel
+                      {t("Cancel")}
                     </Button>
                   </span>
                 )}

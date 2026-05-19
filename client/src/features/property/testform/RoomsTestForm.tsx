@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type RoomRecord = {
@@ -87,6 +88,7 @@ function buildPayload(state: FormState) {
 }
 
 export function RoomsTestForm() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
@@ -148,15 +150,15 @@ export function RoomsTestForm() {
 
   return (
     <section>
-      <h3>Rooms Test Form</h3>
+      <h3>{t("Rooms Test Form")}</h3>
 
       <form onSubmit={handleSubmit}>
         <fieldset>
-          <legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</legend>
+          <legend>{isEditing ? t("Editing #{{id}}", { id: state.id ?? 0 }) : t("New record")}</legend>
 
           <div>
             <label>
-              Name
+              {t("Name")}
               <input
                 type="text"
                 value={state.name}
@@ -168,13 +170,13 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Structure
+              {t("Structure")}
               <select
                 value={state.structure_id}
                 onChange={e => { set("structure_id")(e.target.value); }}
                 required
               >
-                <option value="">(select structure)</option>
+                <option value="">{t("(select structure)")}</option>
                 {structures.map(b => (
                   <option key={b.id} value={b.id}>
                     #{b.id} {b.name}
@@ -186,7 +188,7 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Beds (single)
+              {t("Beds (single)")}
               <input
                 type="number"
                 min={0}
@@ -199,7 +201,7 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Beds (large)
+              {t("Beds (large)")}
               <input
                 type="number"
                 min={0}
@@ -212,7 +214,7 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Beds (double)
+              {t("Beds (double)")}
               <input
                 type="number"
                 min={0}
@@ -225,7 +227,7 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Beds (kid)
+              {t("Beds (kid)")}
               <input
                 type="number"
                 min={0}
@@ -238,7 +240,7 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Mattresses
+              {t("Mattresses")}
               <input
                 type="number"
                 min={0}
@@ -251,7 +253,7 @@ export function RoomsTestForm() {
 
           <div>
             <label>
-              Travel cot
+              {t("Travel cot")}
               <input
                 type="number"
                 min={0}
@@ -264,35 +266,35 @@ export function RoomsTestForm() {
 
           <div>
             <button type="submit" disabled={pending}>
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? t("Update") : t("Create")}
             </button>
             <button
               type="button"
               onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
-              Reset
+              {t("Reset")}
             </button>
           </div>
         </fieldset>
       </form>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      <h4>Records</h4>
+      <h4>{t("Records")}</h4>
       <table>
         <thead>
           <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>structure</th>
-            <th>beds_sm</th>
-            <th>beds_lg</th>
-            <th>beds_double</th>
-            <th>beds_kid</th>
-            <th>mattresses</th>
-            <th>travel_cot</th>
-            <th>actions</th>
+            <th>{t("id")}</th>
+            <th>{t("name")}</th>
+            <th>{t("structure")}</th>
+            <th>{t("beds_sm")}</th>
+            <th>{t("beds_lg")}</th>
+            <th>{t("beds_double")}</th>
+            <th>{t("beds_kid")}</th>
+            <th>{t("mattresses")}</th>
+            <th>{t("travel_cot")}</th>
+            <th>{t("actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -320,14 +322,14 @@ export function RoomsTestForm() {
                   }
                   disabled={pending}
                 >
-                  Edit
+                  {t("Edit")}
                 </button>
                 <button
                   type="button"
                   onClick={() => { deleteMutation.mutate({ id: r.id }); }}
                   disabled={pending}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
               </td>
             </tr>

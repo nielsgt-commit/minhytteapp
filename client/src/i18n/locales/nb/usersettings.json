@@ -1,0 +1,19 @@
+{
+  "Add": "Legg til",
+  "Add child": "Legg til barn",
+  "Birthday": "Fødselsdag",
+  "Cancel": "Avbryt",
+  "Display name": "Visningsnavn",
+  "Edit": "Rediger",
+  "Error: {{message}}": "Feil: {{message}}",
+  "Household role": "Husholdningsrolle",
+  "I am a household head (can be assigned a priority week and settlement)": "Jeg er husstandsoverhode (kan tildeles prioritetsuke og oppgjør)",
+  "Loading…": "Laster…",
+  "My children": "Mine barn",
+  "Name": "Navn",
+  "No children yet.": "Ingen barn ennå.",
+  "Remove": "Fjern",
+  "Remove {{name}}?": "Fjerne {{name}}?",
+  "Save": "Lagre",
+  "User settings": "Brukerinnstillinger"
+}

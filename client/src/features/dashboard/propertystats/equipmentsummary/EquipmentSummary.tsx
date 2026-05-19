@@ -6,6 +6,7 @@ import {
   List,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
 import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
@@ -13,6 +14,7 @@ import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 const CATEGORIES = ["Boat", "Appliance", "Tool"] as const
 
 export default function EquipmentSummary() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: equipment } = useSuspenseQuery(
@@ -32,17 +34,21 @@ export default function EquipmentSummary() {
 
   return (
     <StatCard
-      title="Equipment"
+      title={t("Equipment")}
       count={CATEGORIES.length}
       content={equipment.length === 0 ? (
-        <Paragraph>No equipment yet.</Paragraph>
+        <Paragraph>{t("No equipment yet.")}</Paragraph>
       ) : (
         <List.Unordered className={styles.list}>
           {CATEGORIES.map(cat => {
             const count = countByCategory.get(cat) ?? 0
+            const label =
+              cat === "Boat" ? t("Boat")
+                : cat === "Appliance" ? t("Appliance")
+                  : t("Tool")
             return (
               <List.Item key={cat} className={styles.row}>
-                <span>{cat}</span>
+                <span>{label}</span>
                 <span>{count}</span>
               </List.Item>
             )
@@ -51,7 +57,7 @@ export default function EquipmentSummary() {
       )}
       footer={(
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty">Manage equipment</Link>
+          <Link to="/manageproperty">{t("Manage equipment")}</Link>
         </Button>
       )}
     />

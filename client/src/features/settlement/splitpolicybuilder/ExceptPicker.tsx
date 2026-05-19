@@ -1,4 +1,5 @@
 import { Field, Label, Select } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import type { GroupWithMembers, PropertyUser } from "./types"
 
 type Props = {
@@ -14,9 +15,10 @@ export function ExceptPicker({
   selectedEncoded,
   onAdd,
 }: Props) {
+  const { t } = useTranslation("settlement")
   return (
     <Field>
-      <Label data-size="sm">Add exclude</Label>
+      <Label data-size="sm">{t("Add exclude")}</Label>
       <Select
         value=""
         onChange={e => {
@@ -24,11 +26,11 @@ export function ExceptPicker({
           e.target.value = ""
         }}
       >
-        <Select.Option value="">— pick someone to exclude —</Select.Option>
+        <Select.Option value="">{t("— pick someone to exclude —")}</Select.Option>
         <Select.Option value="kids" disabled={selectedEncoded.has("kids")}>
-          Kids (all child users)
+          {t("Kids (all child users)")}
         </Select.Option>
-        <Select.Optgroup label="Users">
+        <Select.Optgroup label={t("Users")}>
           {propertyUsers.map(u => {
             const enc = `user:${String(u.user_id)}`
             return (
@@ -42,7 +44,7 @@ export function ExceptPicker({
             )
           })}
         </Select.Optgroup>
-        <Select.Optgroup label="Groups">
+        <Select.Optgroup label={t("Groups")}>
           {groups.map(g => {
             const enc = `group:${String(g.id)}`
             return (

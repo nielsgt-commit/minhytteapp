@@ -1,0 +1,23 @@
+{
+  "+ Add property": "+ Legg til eiendom",
+  "Cancel": "Avbryt",
+  "Dark mode": "Mørk modus",
+  "Error: {{message}}": "Feil: {{message}}",
+  "Footer": "Bunntekst",
+  "Language": "Språk",
+  "Loading…": "Laster…",
+  "Log out": "Logg ut",
+  "Logged in as": "Logget inn som",
+  "Manage Property": "Administrer eiendom",
+  "New property name": "Nytt eiendomsnavn",
+  "No properties": "Ingen eiendommer",
+  "No property": "Ingen eiendom",
+  "No user": "Ingen bruker",
+  "Property": "Eiendom",
+  "Save": "Lagre",
+  "Select property": "Velg eiendom",
+  "Select user": "Velg bruker",
+  "Settings": "Innstillinger",
+  "User group": "Brukergruppe",
+  "User menu": "Brukermeny"
+}

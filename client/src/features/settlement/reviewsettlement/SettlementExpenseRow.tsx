@@ -11,6 +11,7 @@ import {
   Tag,
 } from "@digdir/designsystemet-react"
 import { ReceiptIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import styles from "./SettlementExpenseRow.module.css"
 import { EditExpenseDialog } from "./EditExpenseDialog"
 import type { ExpenseRow } from "./useReviewSettlementData"
@@ -43,6 +44,7 @@ export function SettlementExpenseRow({
   openSettlementId,
   onSaved,
 }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const [editOpen, setEditOpen] = useState(false)
   const [category, setCategory] = useState<string>(
@@ -89,7 +91,7 @@ export function SettlementExpenseRow({
         <Card.Block className={styles.row} data-size="sm">
           <Paragraph asChild data-size="sm">
             <span className={styles.category}>
-              {expense.expense_types[0] ?? "(no category)"}
+              {expense.expense_types[0] ?? t("(no category)")}
             </span>
           </Paragraph>
           <span className={styles.receipt}>
@@ -99,13 +101,13 @@ export function SettlementExpenseRow({
                   variant="tertiary"
                   data-size="sm"
                   icon
-                  aria-label="View receipt"
+                  aria-label={t("View receipt")}
                 >
                   <ReceiptIcon aria-hidden fontSize="1.25rem" />
                 </Dialog.Trigger>
                 <Dialog>
                   <Dialog.Block>
-                    <Heading level={3} data-size="xs">Receipt</Heading>
+                    <Heading level={3} data-size="xs">{t("Receipt")}</Heading>
                   </Dialog.Block>
                   <Dialog.Block>
                     <Skeleton
@@ -118,7 +120,7 @@ export function SettlementExpenseRow({
             )}
           </span>
           <Paragraph className={styles.sumLabel} data-size="sm">
-            Sum
+            {t("Sum")}
           </Paragraph>
           <div className={styles.amountGroup}>
             <Paragraph asChild data-size="sm">
@@ -129,7 +131,7 @@ export function SettlementExpenseRow({
             </Paragraph>
           </div>
           <Paragraph className={styles.submittedByLabel} data-size="sm">
-            Paid by
+            {t("Paid by")}
           </Paragraph>
           <Tag className={styles.name} data-color="info" data-size="sm">
             {expense.payer_name ?? `#${String(expense.payer_id)}`}
@@ -139,20 +141,20 @@ export function SettlementExpenseRow({
             <span
               title={
                 !editable
-                  ? "Only the head can change this"
+                  ? t("Only the head can change this")
                   : linkedToClosed
-                    ? "Linked to a closed settlement — locked"
+                    ? t("Linked to a closed settlement — locked")
                     : openSettlementId == null
-                      ? "No open settlement — open one first"
+                      ? t("No open settlement — open one first")
                       : updateExpense.isPending
-                        ? "Saving…"
+                        ? t("Saving…")
                         : included
-                          ? "Click to exclude"
-                          : "Click to include"
+                          ? t("Click to exclude")
+                          : t("Click to include")
               }
             >
               <Switch
-                label="Include"
+                label={t("Include")}
                 position="end"
                 data-size="sm"
                 checked={included}

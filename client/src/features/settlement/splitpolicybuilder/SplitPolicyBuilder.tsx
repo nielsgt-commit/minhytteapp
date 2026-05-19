@@ -15,6 +15,7 @@ import {
   Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import { ExceptPicker } from "./ExceptPicker"
 import { RuleEditor } from "./RuleEditor"
 import { SavedPolicies, type SavedPolicy } from "./SavedPolicies"
@@ -48,6 +49,7 @@ type SplitPolicyBuilderProps = {
 }
 
 export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -101,8 +103,8 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
     return (
       <Card asChild>
         <section>
-          <Heading level={3} data-size="xs">Split policy builder</Heading>
-          <Paragraph>Select a property to design custom split policies.</Paragraph>
+          <Heading level={3} data-size="xs">{t("Split policy builder")}</Heading>
+          <Paragraph>{t("Select a property to design custom split policies.")}</Paragraph>
         </section>
       </Card>
     )
@@ -292,30 +294,32 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
   return (
     <Card asChild>
       <section>
-      <Heading level={3} data-size="xs">Split policy builder</Heading>
+      <Heading level={3} data-size="xs">{t("Split policy builder")}</Heading>
       <Paragraph data-size="sm">
-        Build a policy as an ordered list of rules. Each expense is matched
-        by the first rule whose <em>what</em> filter accepts it; anything
-        unmatched falls through to the default rule at the bottom.
+        <Trans
+          ns="settlement"
+          i18nKey="Build a policy as an ordered list of rules. Each expense is matched by the first rule whose <em>what</em> filter accepts it; anything unmatched falls through to the default rule at the bottom."
+          components={{ em: <em /> }}
+        />
       </Paragraph>
 
       <form onSubmit={handleSubmit}>
         <Fieldset>
           <Fieldset.Legend>
-            {isEditing ? `Editing policy #${String(form.id)}` : "New policy"}
+            {isEditing ? t("Editing policy #{{id}}", { id: String(form.id) }) : t("New policy")}
           </Fieldset.Legend>
 
           <Textfield
-            label="Name"
+            label={t("Name")}
             value={form.name}
             onChange={e => { setName(e.target.value) }}
             required
           />
 
-          <Heading level={4} data-size="2xs">Rules</Heading>
+          <Heading level={4} data-size="2xs">{t("Rules")}</Heading>
           {form.rules.length === 0 ? (
             <Paragraph data-size="sm">
-              No specific rules — the default rule below applies to everything.
+              {t("No specific rules — the default rule below applies to everything.")}
             </Paragraph>
           ) : (
             form.rules.map((rule, idx) => (
@@ -347,15 +351,15 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
             onClick={() => { addRule() }}
             disabled={pending}
           >
-            + Add rule
+            {t("+ Add rule")}
           </Button>
 
           <Card asChild>
             <article>
               <Card.Block data-size="sm">
-                <Heading level={5} data-size="2xs">Default (applies to the rest)</Heading>
+                <Heading level={5} data-size="2xs">{t("Default (applies to the rest)")}</Heading>
                 <Paragraph data-size="sm">
-                  Split the rest{" "}
+                  {t("Split the rest")}{" "}
                   <Select
                     data-size="sm"
                     value={form.fallback.how.kind}
@@ -367,13 +371,13 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                   >
                     {Object.entries(HOW_LABEL).map(([value, label]) => (
                       <Select.Option key={value} value={value}>
-                        {label}
+                        {(t as (k: string) => string)(label)}
                       </Select.Option>
                     ))}
                   </Select>{" "}
-                  between{" "}
+                  {t("between")}{" "}
                   {form.fallback.who.length === 0 ? (
-                    <em>nobody selected</em>
+                    <em>{t("nobody selected")}</em>
                   ) : (
                     form.fallback.who.map(w => {
                       const enc = encodeWho(w)
@@ -390,7 +394,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                       )
                     })
                   )}{" "}
-                  who were{" "}
+                  {t("who were")}{" "}
                   <Select
                     data-size="sm"
                     value={encodeWhen(form.fallback.when)}
@@ -400,16 +404,16 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                   >
                     {Object.entries(WHEN_LABEL).map(([value, label]) => (
                       <Select.Option key={value} value={value}>
-                        {label}
+                        {(t as (k: string) => string)(label)}
                       </Select.Option>
                     ))}
                     {eligibleOwners.length > 0 && (
-                      <Select.Optgroup label="Specific priority week">
+                      <Select.Optgroup label={t("Specific priority week")}>
                         {eligibleOwners.map(o => {
                           const enc = `during_priority_week:${String(o.property_owner_id)}`
                           return (
                             <Select.Option key={enc} value={enc}>
-                              {o.user_name}&apos;s priority week
+                              {t("{{name}}'s priority week", { name: o.user_name })}
                             </Select.Option>
                           )
                         })}
@@ -418,7 +422,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                   </Select>
                 </Paragraph>
                 <Switch
-                  label="Include extra guest names (attributed to booker's group)"
+                  label={t("Include extra guest names (attributed to booker's group)")}
                   data-size="sm"
                   checked={form.fallback.include_extra_guests}
                   onChange={e => {
@@ -434,9 +438,9 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
               </Card.Block>
               <Card.Block data-size="sm">
                 <Paragraph data-size="sm">
-                  <strong>except:</strong>{" "}
+                  <strong>{t("except:")}</strong>{" "}
                   {form.fallback.except.length === 0 ? (
-                    <em>nobody</em>
+                    <em>{t("nobody")}</em>
                   ) : (
                     form.fallback.except.map(e => {
                       const enc = encodeExcept(e)
@@ -466,7 +470,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
 
           <div>
             <Button type="submit" disabled={pending}>
-              {isEditing ? "Update policy" : "Save policy"}
+              {isEditing ? t("Update policy") : t("Save policy")}
             </Button>
             <Button
               type="button"
@@ -474,7 +478,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
               onClick={() => { reset() }}
               disabled={pending}
             >
-              Reset
+              {t("Reset")}
             </Button>
             {!isEditing && (
               <Button
@@ -484,7 +488,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                 onClick={() => { loadPreset() }}
                 disabled={pending}
               >
-                Load occupancy_days preset
+                {t("Load occupancy_days preset")}
               </Button>
             )}
           </div>
@@ -492,10 +496,10 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
       </form>
 
       {saveMutation.error && (
-        <p role="alert">Error: {saveMutation.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: saveMutation.error.message })}</p>
       )}
       {deleteMutation.error && (
-        <p role="alert">Error: {deleteMutation.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: deleteMutation.error.message })}</p>
       )}
 
       <SavedPolicies

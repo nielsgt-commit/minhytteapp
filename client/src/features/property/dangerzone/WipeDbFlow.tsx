@@ -6,11 +6,13 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 const CONFIRM_PHRASE = "wipe"
 
 export function WipeDbFlow() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -47,13 +49,12 @@ export function WipeDbFlow() {
   if (!isArmed) {
     return (
       <div>
-        <h4>Wipe database</h4>
+        <h4>{t("Wipe database")}</h4>
         <p>
-          Truncate every data table and (optionally) reseed with the default
-          Owner / Member / Hytta state. For dev use only.
+          {t("Truncate every data table and (optionally) reseed with the default Owner / Member / Hytta state. For dev use only.")}
         </p>
         <Button type="button" onClick={() => { setIsArmed(true) }}>
-          Wipe database…
+          {t("Wipe database…")}
         </Button>
       </div>
     )
@@ -61,24 +62,29 @@ export function WipeDbFlow() {
 
   return (
     <div>
-      <h4>Wipe database</h4>
+      <h4>{t("Wipe database")}</h4>
 
       <p role="alert">
-        <strong>Warning:</strong> This deletes every row in every table —
-        properties, structures, bookings, expenses, invites, users, the lot.
-        After the wipe the page will reload.
+        <Trans
+          t={t}
+          i18nKey="<1>Warning:</1> This deletes every row in every table — properties, structures, bookings, expenses, invites, users, the lot. After the wipe the page will reload."
+          components={{ 1: <strong /> }}
+        />
       </p>
 
       <form onSubmit={handleSubmit}>
         <Fieldset>
-          <Fieldset.Legend>Confirm wipe</Fieldset.Legend>
+          <Fieldset.Legend>{t("Confirm wipe")}</Fieldset.Legend>
 
           <div>
             <Textfield
               label={
-                <>
-                  Type <strong>{CONFIRM_PHRASE}</strong> to confirm
-                </>
+                <Trans
+                  t={t}
+                  i18nKey="Type <1>{{phrase}}</1> to confirm"
+                  values={{ phrase: CONFIRM_PHRASE }}
+                  components={{ 1: <strong /> }}
+                />
               }
               type="text"
               value={typed}
@@ -91,7 +97,7 @@ export function WipeDbFlow() {
 
           <div>
             <Checkbox
-              label="Reseed with Owner / Member / Hytta after wipe"
+              label={t("Reseed with Owner / Member / Hytta after wipe")}
               checked={reseed}
               onChange={e => { setReseed(e.target.checked) }}
             />
@@ -99,7 +105,7 @@ export function WipeDbFlow() {
 
           <div>
             <Checkbox
-              label="I understand all data will be permanently destroyed."
+              label={t("I understand all data will be permanently destroyed.")}
               checked={acknowledged}
               onChange={e => { setAcknowledged(e.target.checked) }}
             />
@@ -107,18 +113,18 @@ export function WipeDbFlow() {
 
           <div>
             <Button type="submit" disabled={!canWipe}>
-              {wipe.isPending ? "Wiping…" : "Wipe everything"}
+              {wipe.isPending ? t("Wiping…") : t("Wipe everything")}
             </Button>
             <Button
               type="button"
               onClick={reset}
               disabled={wipe.isPending}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
 
-          {wipe.error && <p role="alert">Error: {wipe.error.message}</p>}
+          {wipe.error && <p role="alert">{t("Error: {{message}}", { message: wipe.error.message })}</p>}
         </Fieldset>
       </form>
     </div>

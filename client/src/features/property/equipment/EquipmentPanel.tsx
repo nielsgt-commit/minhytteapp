@@ -13,6 +13,7 @@ import {
   Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -33,6 +34,7 @@ type Equipment = {
 }
 
 export function EquipmentPanel({ propertyId, propertyName }: Props) {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -130,7 +132,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     }
 
   const handleDelete = (item: Equipment) => {
-    if (!window.confirm(`Delete equipment "${item.name}"?`)) return
+    if (!window.confirm(t("Delete equipment \"{{name}}\"?", { name: item.name }))) return
     deleteEquipment.mutate(
       { id: item.id },
       { onSuccess: () => { setEditingId(null) } },
@@ -141,10 +143,10 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
 
   return (
     <section>
-      <h3>Equipment at {propertyName}</h3>
+      <h3>{t("Equipment at {{name}}", { name: propertyName })}</h3>
 
       <Switch
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.target.checked
@@ -156,7 +158,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {editingItem ? (
         <form
@@ -165,9 +167,9 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
           className={styles.editForm}
         >
           <Fieldset>
-            <Fieldset.Legend>Edit equipment</Fieldset.Legend>
+            <Fieldset.Legend>{t("Edit equipment")}</Fieldset.Legend>
             <Textfield
-              label="Name"
+              label={t("Name")}
               name="name"
               required
               autoFocus
@@ -176,7 +178,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
             />
             <div className={styles.fieldGroup}>
               <Label htmlFor={`edit-structure-${String(editingItem.id)}`}>
-                Structure
+                {t("Structure")}
               </Label>
               <Select
                 id={`edit-structure-${String(editingItem.id)}`}
@@ -193,15 +195,15 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               </Select>
             </div>
             <Textfield
-              label="Category"
+              label={t("Category")}
               name="category"
               maxLength={32}
-              placeholder="appliance, tool, boat…"
+              placeholder={t("appliance, tool, boat…")}
               defaultValue={editingItem.category ?? ""}
               disabled={updateEquipment.isPending}
             />
             <Textfield
-              label="Notes"
+              label={t("Notes")}
               name="notes"
               maxLength={255}
               defaultValue={editingItem.notes ?? ""}
@@ -209,7 +211,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
             />
             <div className={styles.actions}>
               <Button type="submit" disabled={pending}>
-                Save
+                {t("Save")}
               </Button>
               <Button
                 type="button"
@@ -218,7 +220,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                 disabled={pending}
                 onClick={() => { handleDelete(editingItem) }}
               >
-                Delete
+                {t("Delete")}
               </Button>
               <Button
                 type="button"
@@ -226,7 +228,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                 disabled={pending}
                 onClick={() => { setEditingId(null) }}
               >
-                Cancel
+                {t("Cancel")}
               </Button>
             </div>
           </Fieldset>
@@ -246,7 +248,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                         disabled={pending}
                         onClick={() => { setEditingId(item.id) }}
                       >
-                        Edit
+                        {t("Edit")}
                       </Button>
                       <Button
                         variant="tertiary"
@@ -255,7 +257,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                         disabled={pending}
                         onClick={() => { handleDelete(item) }}
                       >
-                        Delete
+                        {t("Delete")}
                       </Button>
                     </>
                   )}
@@ -269,22 +271,22 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               <Card.Block className={styles.addBlock}>
                 {isAdding ? (
                   <>
-                    <strong>Add equipment</strong>
+                    <strong>{t("Add equipment")}</strong>
                     <form
                       onSubmit={handleAdd}
                       className={styles.addForm}
                     >
                       <Fieldset>
-                        <Fieldset.Legend>New equipment</Fieldset.Legend>
+                        <Fieldset.Legend>{t("New equipment")}</Fieldset.Legend>
                         <Textfield
-                          label="Name"
+                          label={t("Name")}
                           name="name"
                           required
                           autoFocus
                           disabled={createEquipment.isPending}
                         />
                         <div className={styles.fieldGroup}>
-                          <Label htmlFor="add-equipment-structure">Structure</Label>
+                          <Label htmlFor="add-equipment-structure">{t("Structure")}</Label>
                           <Select
                             id="add-equipment-structure"
                             name="structure_id"
@@ -293,7 +295,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                             disabled={createEquipment.isPending}
                           >
                             <Select.Option value="" disabled>
-                              (select structure)
+                              {t("(select structure)")}
                             </Select.Option>
                             {propertyStructures.map(b => (
                               <Select.Option key={b.id} value={String(b.id)}>
@@ -303,21 +305,21 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           </Select>
                         </div>
                         <Textfield
-                          label="Category"
+                          label={t("Category")}
                           name="category"
                           maxLength={32}
-                          placeholder="appliance, tool, boat…"
+                          placeholder={t("appliance, tool, boat…")}
                           disabled={createEquipment.isPending}
                         />
                         <Textfield
-                          label="Notes"
+                          label={t("Notes")}
                           name="notes"
                           maxLength={255}
                           disabled={createEquipment.isPending}
                         />
                         <div className={styles.actions}>
                           <Button type="submit" disabled={createEquipment.isPending}>
-                            Add equipment
+                            {t("Add equipment")}
                           </Button>
                           <Button
                             type="button"
@@ -325,7 +327,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                             disabled={createEquipment.isPending}
                             onClick={() => { setIsAdding(false) }}
                           >
-                            Cancel
+                            {t("Cancel")}
                           </Button>
                         </div>
                       </Fieldset>
@@ -336,10 +338,10 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                     variant="tertiary"
                     className={styles.addButton}
                     disabled={pending || !canAdd}
-                    title={canAdd ? undefined : "Add a structure first"}
+                    title={canAdd ? undefined : t("Add a structure first")}
                     onClick={() => { setIsAdding(true) }}
                   >
-                    + Add equipment
+                    {t("+ Add equipment")}
                   </Button>
                 )}
               </Card.Block>

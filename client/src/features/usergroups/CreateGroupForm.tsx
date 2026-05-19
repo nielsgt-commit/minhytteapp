@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Checkbox, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData"
 
 type CreateGroupFormProps = {
@@ -13,6 +14,7 @@ export function CreateGroupForm({
   onSubmit,
   onCancel,
 }: CreateGroupFormProps) {
+  const { t } = useTranslation("usergroups")
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -25,16 +27,16 @@ export function CreateGroupForm({
   return (
     <form onSubmit={handleSubmit}>
       <fieldset>
-        <legend>New group</legend>
+        <legend>{t("New group")}</legend>
         <div>
-          <Textfield label="Name" type="text" name="name" required autoFocus />
+          <Textfield label={t("Name")} type="text" name="name" required autoFocus />
         </div>
         <div>
-          <Checkbox label="Main" name="is_main" />
+          <Checkbox label={t("Main")} name="is_main" />
         </div>
         <div>
           <Button type="submit" disabled={pending}>
-            Save
+            {t("Save")}
           </Button>
           <Button
             type="button"
@@ -42,7 +44,7 @@ export function CreateGroupForm({
             onClick={onCancel}
             disabled={pending}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       </fieldset>

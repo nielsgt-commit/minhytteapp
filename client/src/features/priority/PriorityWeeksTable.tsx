@@ -1,4 +1,5 @@
 import { Table } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import {
   PEAK_WEEKS,
   type EligibleOwner,
@@ -31,6 +32,7 @@ export function PriorityWeeksTable({
   onAssign,
   onClear,
 }: PriorityWeeksTableProps) {
+  const { t } = useTranslation("priority")
   const { ownersByWeek, ownerNameById } = lookups
   const conflictColSpan = 2 + eligibleOwners.length + 1
 
@@ -38,12 +40,12 @@ export function PriorityWeeksTable({
     <Table>
       <Table.Head>
         <Table.Row>
-          <Table.HeaderCell>Week</Table.HeaderCell>
-          <Table.HeaderCell>Dates</Table.HeaderCell>
+          <Table.HeaderCell>{t("Week")}</Table.HeaderCell>
+          <Table.HeaderCell>{t("Dates")}</Table.HeaderCell>
           {eligibleOwners.map(o => (
             <Table.HeaderCell key={o.property_owner_id}>
               {o.user_name}
-              {o.user_id === meUserId ? " (you)" : ""}
+              {o.user_id === meUserId ? t(" (you)") : ""}
             </Table.HeaderCell>
           ))}
           <Table.HeaderCell />

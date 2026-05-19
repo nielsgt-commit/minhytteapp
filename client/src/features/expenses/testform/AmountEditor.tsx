@@ -1,5 +1,6 @@
 import { Button, Textfield } from "@digdir/designsystemet-react"
 import { FolderIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 
 type Props = {
@@ -19,10 +20,11 @@ export function AmountEditor({
   onCancel,
   pending,
 }: Props) {
+  const { t } = useTranslation("expenses")
   return (
     <div className={styles.editor}>
       <Textfield
-        label={`Amount for ${category}`}
+        label={t("Amount for {{category}}", { category })}
         type="number"
         min={1}
         step={1}
@@ -44,14 +46,14 @@ export function AmountEditor({
           data-color="danger"
           disabled={pending}
         >
-          Remove
+          {t("Remove")}
         </Button>
         <Button
           type="button"
           variant="tertiary"
           disabled={pending}
         >
-          Upload receipt
+          {t("Upload receipt")}
         </Button>
       </div>
       <div className={styles.editorButtons}>
@@ -61,7 +63,7 @@ export function AmountEditor({
           disabled={pending}
           onClick={onAdd}
         >
-          Add
+          {t("Add")}
         </Button>
         <Button
           type="button"
@@ -69,7 +71,7 @@ export function AmountEditor({
           disabled={pending}
           onClick={onCancel}
         >
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
     </div>

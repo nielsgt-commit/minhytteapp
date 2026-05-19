@@ -4,6 +4,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Details } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./MyExpenses.module.css"
 import { MyExpenseCard } from "./MyExpenseCard.tsx"
 import type { ExpenseRow } from "../types.ts"
@@ -12,6 +13,7 @@ import { useInvalidateExpenses } from "../useInvalidateExpenses.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function MyExpenses() {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
@@ -35,10 +37,10 @@ export function MyExpenses() {
 
   return (
     <Details>
-      <Details.Summary>My expenses ({mine.length})</Details.Summary>
+      <Details.Summary>{t("My expenses ({{count}})", { count: mine.length })}</Details.Summary>
       <Details.Content className={styles.content}>
         {deleteExpense.error && (
-          <p role="alert">Error: {deleteExpense.error.message}</p>
+          <p role="alert">{t("Error: {{message}}", { message: deleteExpense.error.message })}</p>
         )}
         <ul className={styles.list}>
           {mine.map(e => (

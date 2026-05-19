@@ -1,20 +1,26 @@
+import { useTranslation } from "react-i18next"
 import styles from "./SettlementPhaseStepper.module.css"
 import {
   SETTLEMENT_PHASES,
   type SettlementPhase,
 } from "@/features/settlement/phase"
 
-export const PHASE_LABELS: Record<SettlementPhase, string> = {
-  collecting_expenses: "Expenses",
-  collecting_bookings: "Stays",
-  reviewing: "Reviewing",
-  split_policy: "Split policy",
-  closed: "Close",
+export function usePhaseLabels(): Record<SettlementPhase, string> {
+  const { t } = useTranslation("settlement")
+  return {
+    collecting_expenses: t("Expenses"),
+    collecting_bookings: t("Stays"),
+    reviewing: t("Reviewing"),
+    split_policy: t("Split policy"),
+    closed: t("Close"),
+  }
 }
 
 export function SettlementPhaseStepper({ phase }: { phase: SettlementPhase }) {
+  const { t } = useTranslation("settlement")
+  const PHASE_LABELS = usePhaseLabels()
   return (
-    <nav className={styles.stepper} aria-label="Settlement phases">
+    <nav className={styles.stepper} aria-label={t("Settlement phases")}>
       {SETTLEMENT_PHASES.map((p, i) => {
         const isActive = p === phase
         return (

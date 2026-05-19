@@ -2,10 +2,12 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { Details, Heading, Link, Paragraph } from "@digdir/designsystemet-react"
 import { EnvelopeClosedIcon, PhoneIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import styles from "./ContactsSummary.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export default function ContactsSummary() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
   const { data: contacts } = useQuery(
@@ -19,10 +21,10 @@ export default function ContactsSummary() {
 
   return (
     <Details>
-      <Details.Summary>Contacts</Details.Summary>
+      <Details.Summary>{t("Contacts")}</Details.Summary>
       <Details.Content>
         {contacts.length === 0 ? (
-          <Paragraph>No contacts.</Paragraph>
+          <Paragraph>{t("No contacts.")}</Paragraph>
         ) : (
           <ul className={styles.list}>
             {contacts.map(c => (

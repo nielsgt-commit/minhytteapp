@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ContactAddForm.module.css"
 
 type Props = {
@@ -9,17 +10,18 @@ type Props = {
 }
 
 export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
+  const { t } = useTranslation("property")
   return (
     <>
-      <strong>Add contact</strong>
+      <strong>{t("Add contact")}</strong>
       <form
         onSubmit={onSubmit}
         className={styles.form}
       >
         <Fieldset>
-          <Fieldset.Legend>New contact</Fieldset.Legend>
+          <Fieldset.Legend>{t("New contact")}</Fieldset.Legend>
           <Textfield
-            label="Name"
+            label={t("Name")}
             name="name"
             required
             autoFocus
@@ -27,21 +29,21 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
             disabled={createPending}
           />
           <Textfield
-            label="Phone"
+            label={t("Phone")}
             name="phone"
             type="tel"
             maxLength={64}
             disabled={createPending}
           />
           <Textfield
-            label="Email"
+            label={t("Email")}
             name="email"
             type="email"
             maxLength={255}
             disabled={createPending}
           />
           <Textfield
-            label="Info"
+            label={t("Info")}
             name="info"
             multiline
             rows={3}
@@ -50,7 +52,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
           />
           <div className={styles.actions}>
             <Button type="submit" disabled={createPending}>
-              Add contact
+              {t("Add contact")}
             </Button>
             <Button
               type="button"
@@ -58,7 +60,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
               disabled={createPending}
               onClick={onCancel}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
         </Fieldset>

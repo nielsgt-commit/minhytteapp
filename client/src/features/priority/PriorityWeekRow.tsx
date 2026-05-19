@@ -1,4 +1,5 @@
 import { Button, Radio, Table } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import {
   type EligibleOwner,
   type PeakWeek,
@@ -31,6 +32,7 @@ export function PriorityWeekRow({
   onAssign,
   onClear,
 }: PriorityWeekRowProps) {
+  const { t } = useTranslation("priority")
   const range = peakWeekRange(year, week)
   const showClear =
     ownersForWeek.length > 0 &&
@@ -38,7 +40,7 @@ export function PriorityWeekRow({
 
   return (
     <Table.Row>
-      <Table.Cell>W{week}</Table.Cell>
+      <Table.Cell>{t("W{{week}}", { week })}</Table.Cell>
       <Table.Cell>{formatRange(range)}</Table.Cell>
       {eligibleOwners.map(o => {
         const checked = ownersForWeek.includes(o.property_owner_id)
@@ -47,7 +49,7 @@ export function PriorityWeekRow({
         return (
           <Table.Cell key={o.property_owner_id}>
             <Radio
-              aria-label={`W${String(week)} – ${o.user_name}`}
+              aria-label={t("W{{week}} – {{name}}", { week, name: o.user_name })}
               name={`priority-week-owner-${String(o.property_owner_id)}`}
               value={String(week)}
               checked={checked}
@@ -70,7 +72,7 @@ export function PriorityWeekRow({
               onClear(targetOwnerId)
             }}
           >
-            Clear
+            {t("Clear")}
           </Button>
         )}
       </Table.Cell>

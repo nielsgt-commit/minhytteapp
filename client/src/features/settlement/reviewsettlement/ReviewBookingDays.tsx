@@ -11,6 +11,7 @@ import {
   Paragraph,
   Switch,
 } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import styles from "./ReviewBookingDays.module.css"
 import { ReviewBookingDaysRow } from "./ReviewBookingDaysRow"
 import {
@@ -32,6 +33,7 @@ function inclusiveDayCount(startIso: string, endIso: string) {
 }
 
 export function ReviewBookingDays({ settlementId, phase }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [stillAccepting, setStillAccepting] = useState(true)
@@ -102,9 +104,9 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">Review bookings</Heading>
+        <Heading level={4} data-size="sm">{t("Review bookings")}</Heading>
         <Switch
-          label="Accept new bookings"
+          label={t("Accept new bookings")}
           position="end"
           data-size="sm"
           checked={stillAccepting}
@@ -114,13 +116,15 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
       </div>
       {!stillAccepting && (
         <Paragraph role="alert" data-size="sm">
-          Bookings will no longer be accepted for this period. When you&apos;re
-          ready to review the settlement, click
-          {" "}<em>Continue to review</em>.
+          <Trans
+            ns="settlement"
+            i18nKey="Bookings will no longer be accepted for this period. When you're ready to review the settlement, click <em>Continue to review</em>."
+            components={{ em: <em /> }}
+          />
         </Paragraph>
       )}
       {visible.length === 0 ? (
-        <Paragraph>No bookings.</Paragraph>
+        <Paragraph>{t("No bookings.")}</Paragraph>
       ) : (
         <div className={styles.list}>
           {visible.map(b => {
@@ -140,7 +144,7 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
       )}
       <div className={styles.footer}>
         <Paragraph data-size="sm">
-          <strong>Total booking days: {String(total)}</strong>
+          <strong>{t("Total booking days: {{count}}", { count: total })}</strong>
         </Paragraph>
         {phase === "collecting_bookings" && (
           <div className={styles.footerActions}>
@@ -158,7 +162,7 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
                 })
               }}
             >
-              Back
+              {t("Back")}
             </Button>
             {!stillAccepting && next != null && (
               <Button
@@ -173,16 +177,16 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
                   })
                 }}
               >
-                Continue to review
+                {t("Continue to review")}
               </Button>
             )}
           </div>
         )}
         {advancePhase.error && (
-          <p role="alert">Error: {advancePhase.error.message}</p>
+          <p role="alert">{t("Error: {{message}}", { message: advancePhase.error.message })}</p>
         )}
         {regressPhase.error && (
-          <p role="alert">Error: {regressPhase.error.message}</p>
+          <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
         )}
       </div>
     </>

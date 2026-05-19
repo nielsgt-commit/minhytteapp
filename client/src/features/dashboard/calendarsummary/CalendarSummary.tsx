@@ -5,6 +5,7 @@ import PlannedAvailabilitySummary
 import PlannedMaintenanceSummary
   from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { startOfSunday } from "@/utils/dateUtils"
@@ -13,6 +14,7 @@ import styles from "./CalendarSummary.module.css"
 
 export default function CalendarSummary() {
 
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: properties } = useSuspenseQuery(
@@ -30,7 +32,7 @@ export default function CalendarSummary() {
       <section>
         <Card.Block>
           <Heading onClick={resetWeek} className={styles.heading}>
-            This week at {propertyName}
+            {t("This week at {{propertyName}}", { propertyName })}
           </Heading>
           <PlannedAvailabilitySummary
             weekStart={weekStart}

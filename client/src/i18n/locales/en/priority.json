@@ -1,0 +1,21 @@
+{
+  " (you)": " (you)",
+  " and ": " and ",
+  "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).": "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).",
+  "Clear": "Clear",
+  "Conflict on W{{week}}: {{names}} have both claimed this week. Resolve in person — the system will not pick a winner.": "Conflict on W{{week}}: {{names}} have both claimed this week. Resolve in person — the system will not pick a winner.",
+  "Dates": "Dates",
+  "Each household head picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.": "Each household head picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
+  "Error: {{message}}": "Error: {{message}}",
+  "Loading priority weeks…": "Loading priority weeks…",
+  "No household heads found for this property. Owners must enable the \"household head\" flag in their user settings before they can be assigned a priority week.": "No household heads found for this property. Owners must enable the \"household head\" flag in their user settings before they can be assigned a priority week.",
+  "Next": "Next",
+  "Prev": "Prev",
+  "Priority weeks (peak summer)": "Priority weeks (peak summer)",
+  "Select a property to manage priority weeks.": "Select a property to manage priority weeks.",
+  "W{{week}}": "W{{week}}",
+  "W{{week}} – {{name}}": "W{{week}} – {{name}}",
+  "Week": "Week",
+  "Year": "Year",
+  "You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings.": "You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings."
+}

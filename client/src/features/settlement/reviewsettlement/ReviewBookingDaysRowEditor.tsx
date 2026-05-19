@@ -1,4 +1,5 @@
 import { Button, Chip, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewBookingDays.module.css"
 
 export type DraftOccupant =
@@ -20,10 +21,11 @@ export function EditDates({
   onChangeStart,
   onChangeEnd,
 }: EditDatesProps) {
+  const { t } = useTranslation("settlement")
   return (
     <div className={styles.editDates}>
       <Textfield
-        label="From"
+        label={t("From")}
         data-size="sm"
         className={styles.dateField}
         type="date"
@@ -31,7 +33,7 @@ export function EditDates({
         onChange={e => { onChangeStart(e.target.value) }}
       />
       <Textfield
-        label="To"
+        label={t("To")}
         data-size="sm"
         className={styles.dateField}
         type="date"
@@ -62,6 +64,7 @@ export function OccupantChipInput({
   onRemoveAt,
   onCommit,
 }: ChipInputProps) {
+  const { t } = useTranslation("settlement")
   return (
     <div className={styles.chipInput}>
       {drafts.map((d, i) => (
@@ -71,7 +74,7 @@ export function OccupantChipInput({
           className={styles.chipWrap}
         >
           <Chip.Removable
-            aria-label={`Remove ${d.name}`}
+            aria-label={t("Remove {{name}}", { name: d.name })}
             data-size="sm"
             onClick={() => { onRemoveAt(i) }}
           >
@@ -84,7 +87,7 @@ export function OccupantChipInput({
         type="text"
         list={datalistId}
         value={inputValue}
-        placeholder="Add occupant…"
+        placeholder={t("Add occupant…")}
         onChange={e => { setInputValue(e.target.value) }}
         onKeyDown={e => {
           if (e.key === "Enter" || e.key === ",") {
@@ -123,6 +126,7 @@ export function EditActions({
   saving,
   bookerMissing,
 }: EditActionsProps) {
+  const { t } = useTranslation("settlement")
   return (
     <div className={styles.editButtons}>
       <Button
@@ -132,7 +136,7 @@ export function EditActions({
         onClick={() => { onSave() }}
         disabled={saving || bookerMissing}
       >
-        Save
+        {t("Save")}
       </Button>
       <Button
         variant="tertiary"
@@ -141,7 +145,7 @@ export function EditActions({
         onClick={() => { onCancel() }}
         disabled={saving}
       >
-        Cancel
+        {t("Cancel")}
       </Button>
     </div>
   )

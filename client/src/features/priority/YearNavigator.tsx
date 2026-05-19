@@ -1,4 +1,5 @@
 import { Button, Fieldset } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 
 type YearNavigatorProps = {
   year: number
@@ -6,16 +7,17 @@ type YearNavigatorProps = {
 }
 
 export function YearNavigator({ year, onChange }: YearNavigatorProps) {
+  const { t } = useTranslation("priority")
   return (
     <Fieldset>
-      <Fieldset.Legend>Year</Fieldset.Legend>
+      <Fieldset.Legend>{t("Year")}</Fieldset.Legend>
       <Button
         type="button"
         variant="tertiary"
         data-size="sm"
         onClick={() => { onChange(year - 1) }}
       >
-        Prev
+        {t("Prev")}
       </Button>
       <output> {year} </output>
       <Button
@@ -24,7 +26,7 @@ export function YearNavigator({ year, onChange }: YearNavigatorProps) {
         data-size="sm"
         onClick={() => { onChange(year + 1) }}
       >
-        Next
+        {t("Next")}
       </Button>
     </Fieldset>
   )

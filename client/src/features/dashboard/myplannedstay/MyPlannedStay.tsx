@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, Tag } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import styles from "./MyPlannedStay.module.css"
 
@@ -23,6 +24,7 @@ function formatDayMonth(iso: string) {
 }
 
 export function MyPlannedStay() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
@@ -35,10 +37,10 @@ export function MyPlannedStay() {
   const [openId, setOpenId] = useState<number | null>(null)
 
   if (selectedPropertyId == null) {
-    return <p>Select a property to see your stays.</p>
+    return <p>{t("Select a property to see your stays.")}</p>
   }
 
-  if (!me || !bookings) return <p>Loading…</p>
+  if (!me || !bookings) return <p>{t("Loading…")}</p>
 
   const active = bookings.filter(b => b.status !== "cancelled")
   const myBookings = active.filter(b =>
@@ -46,7 +48,7 @@ export function MyPlannedStay() {
   )
 
   if (myBookings.length === 0) {
-    return <p>No planned stays yet.</p>
+    return <p>{t("No planned stays yet.")}</p>
   }
 
   return (
@@ -86,13 +88,13 @@ export function MyPlannedStay() {
                   <div className={styles.companions}>
                     {names.length > 0 ? (
                       <>
-                        <span>Accompanied by:</span>
+                        <span>{t("Accompanied by:")}</span>
                         {names.map(n => (
                           <Tag key={n} data-color="info">{n}</Tag>
                         ))}
                       </>
                     ) : (
-                      <span>Solo stay</span>
+                      <span>{t("Solo stay")}</span>
                     )}
                   </div>
                 )}

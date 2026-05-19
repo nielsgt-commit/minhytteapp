@@ -5,6 +5,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, List, Switch, Textfield, ValidationMessage } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import type { ExpenseRow } from "./types.ts"
 import { useCategoryTotals } from "./useCategoryTotals.ts"
 import { useCategoryAdminMutations } from "./useCategoryAdminMutations.ts"
@@ -12,6 +13,7 @@ import { CategoryListItem } from "./CategoryListItem.tsx"
 import { useTRPC } from "@/trpc/trpc"
 
 export function ExpenseCategories() {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: expenses } = useSuspenseQuery(
@@ -61,10 +63,10 @@ export function ExpenseCategories() {
 
   return (
     <section>
-      <h3>Expense categories</h3>
+      <h3>{t("Expense categories")}</h3>
       {me?.is_head && (
         <Switch
-          label="Edit mode"
+          label={t("Edit mode")}
           checked={editMode}
           onChange={e => {
             const next = e.target.checked
@@ -76,7 +78,7 @@ export function ExpenseCategories() {
         />
       )}
       <List.Unordered>
-        <List.Item>(no category) - {uncategorized}</List.Item>
+        <List.Item>{t("(no category)")} - {uncategorized}</List.Item>
         {categories.map(c => (
           <CategoryListItem
             key={c.id}
@@ -98,25 +100,25 @@ export function ExpenseCategories() {
       {editMode && me?.is_head && (
         <form onSubmit={handleAdd}>
           <Textfield
-            label="New category"
+            label={t("New category")}
             value={newName}
             onChange={e => { setNewName(e.target.value) }}
             maxLength={64}
             required
           />
           <Button type="submit" disabled={create.isPending}>
-            Add
+            {t("Add")}
           </Button>
         </form>
       )}
       {create.error && (
-        <ValidationMessage>Error: {create.error.message}</ValidationMessage>
+        <ValidationMessage>{t("Error: {{message}}", { message: create.error.message })}</ValidationMessage>
       )}
       {rename.error && (
-        <ValidationMessage>Error: {rename.error.message}</ValidationMessage>
+        <ValidationMessage>{t("Error: {{message}}", { message: rename.error.message })}</ValidationMessage>
       )}
       {archive.error && (
-        <ValidationMessage>Error: {archive.error.message}</ValidationMessage>
+        <ValidationMessage>{t("Error: {{message}}", { message: archive.error.message })}</ValidationMessage>
       )}
     </section>
   )

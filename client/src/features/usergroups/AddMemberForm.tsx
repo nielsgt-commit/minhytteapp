@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Select } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdNumber } from "@/utils/formData"
 
 const ADD_USER_SENTINEL = "__add__"
@@ -23,6 +24,7 @@ export function AddMemberForm({
   onSwitchToCreateUser,
   onCancel,
 }: AddMemberFormProps) {
+  const { t } = useTranslation("usergroups")
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
@@ -35,10 +37,10 @@ export function AddMemberForm({
   return (
     <form onSubmit={handleSubmit}>
       <fieldset>
-        <legend>Add member to {groupName}</legend>
+        <legend>{t("Add member to {{groupName}}", { groupName })}</legend>
         <div>
           <label>
-            User
+            {t("User")}
             <Select
               name="user_id"
               required
@@ -50,7 +52,7 @@ export function AddMemberForm({
               }}
             >
               <Select.Option value="" disabled>
-                Select user
+                {t("Select user")}
               </Select.Option>
               {availableUsers.map(u => (
                 <Select.Option key={u.id} value={u.id}>
@@ -58,7 +60,7 @@ export function AddMemberForm({
                 </Select.Option>
               ))}
               <Select.Option value={ADD_USER_SENTINEL}>
-                + Add user
+                {t("+ Add user")}
               </Select.Option>
             </Select>
           </label>
@@ -68,7 +70,7 @@ export function AddMemberForm({
             type="submit"
             disabled={pending || availableUsers.length === 0}
           >
-            Save
+            {t("Save")}
           </Button>
           <Button
             type="button"
@@ -76,7 +78,7 @@ export function AddMemberForm({
             onClick={onCancel}
             disabled={pending}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       </fieldset>

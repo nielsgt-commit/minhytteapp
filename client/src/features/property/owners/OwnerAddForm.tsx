@@ -7,6 +7,7 @@ import {
   Select,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./OwnerAddForm.module.css"
 
 type AddKind = "user" | "group"
@@ -37,6 +38,7 @@ export function OwnerAddForm({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <form
       onSubmit={onSubmit}
@@ -44,7 +46,7 @@ export function OwnerAddForm({
       className={styles.form}
     >
       <Fieldset>
-        <Fieldset.Legend>Add owner</Fieldset.Legend>
+        <Fieldset.Legend>{t("Add owner")}</Fieldset.Legend>
         <div className={styles.chipRow}>
           <Chip.Radio
             name="kind"
@@ -52,7 +54,7 @@ export function OwnerAddForm({
             checked={addKind === "user"}
             onChange={() => { onKindChange("user") }}
           >
-            User
+            {t("User")}
           </Chip.Radio>
           <Chip.Radio
             name="kind"
@@ -60,13 +62,13 @@ export function OwnerAddForm({
             checked={addKind === "group"}
             onChange={() => { onKindChange("group") }}
           >
-            Group
+            {t("Group")}
           </Chip.Radio>
         </div>
 
         {addKind === "user" ? (
           <div className={styles.fieldGroup}>
-            <Label htmlFor="add-owner-user">User</Label>
+            <Label htmlFor="add-owner-user">{t("User")}</Label>
             <Select
               id="add-owner-user"
               name="user_id"
@@ -75,7 +77,7 @@ export function OwnerAddForm({
               disabled={pending || availableUsers.length === 0}
             >
               <Select.Option value="" disabled>
-                Select user
+                {t("Select user")}
               </Select.Option>
               {availableUsers.map(u => (
                 <Select.Option key={u.id} value={String(u.id)}>
@@ -85,13 +87,13 @@ export function OwnerAddForm({
             </Select>
             {availableUsers.length === 0 && (
               <p>
-                <em>All users are already owners.</em>
+                <em>{t("All users are already owners.")}</em>
               </p>
             )}
           </div>
         ) : (
           <div className={styles.fieldGroup}>
-            <Label htmlFor="add-owner-group">Group</Label>
+            <Label htmlFor="add-owner-group">{t("Group")}</Label>
             <Select
               id="add-owner-group"
               name="user_group_id"
@@ -100,22 +102,23 @@ export function OwnerAddForm({
               disabled={pending || availableGroups.length === 0}
             >
               <Select.Option value="" disabled>
-                Select group
+                {t("Select group")}
               </Select.Option>
               {availableGroups.map(g => (
                 <Select.Option key={g.id} value={String(g.id)}>
-                  {g.name} ({g.members.length} member
-                  {g.members.length === 1 ? "" : "s"})
+                  {g.members.length === 1
+                    ? t("{{name}} ({{count}} member)", { name: g.name, count: g.members.length })
+                    : t("{{name}} ({{count}} members)", { name: g.name, count: g.members.length })}
                 </Select.Option>
               ))}
             </Select>
             {availableGroups.length === 0 && (
               <p>
                 <em>
-                  No available groups.{" "}
+                  {t("No available groups.")}{" "}
                   {totalGroups === 0
-                    ? "Create one from Manage user groups."
-                    : "All groups are already owners."}
+                    ? t("Create one from Manage user groups.")
+                    : t("All groups are already owners.")}
                 </em>
               </p>
             )}
@@ -123,7 +126,7 @@ export function OwnerAddForm({
         )}
 
         <Textfield
-          label="Ownership %"
+          label={t("Ownership %")}
           name="ownership_pct"
           type="number"
           min={0}
@@ -136,7 +139,7 @@ export function OwnerAddForm({
 
         <div className={styles.actions}>
           <Button type="submit" disabled={addDisabled}>
-            Add owner
+            {t("Add owner")}
           </Button>
           <Button
             type="button"
@@ -144,7 +147,7 @@ export function OwnerAddForm({
             disabled={pending}
             onClick={onCancel}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       </Fieldset>

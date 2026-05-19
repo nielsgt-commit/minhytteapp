@@ -1,6 +1,7 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Heading, Tag } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./PlannedMaintenanceSummary.module.css"
 
@@ -27,6 +28,7 @@ type Props = {
 }
 
 export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: structures } = useSuspenseQuery(
@@ -65,16 +67,16 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
 
   return (
     <>
-      <Heading level={6} size="medium">Planned Maintenance</Heading>
+      <Heading level={6} size="medium">{t("Planned Maintenance")}</Heading>
       {structuresWithItems.length === 0 ? (
-        <p>No planned maintenance.</p>
+        <p>{t("No planned maintenance.")}</p>
       ) : (
         <ul className={styles.tagList}>
           {structuresWithItems.map(b => {
             const bucket = itemsByStructure.get(b.id) ?? []
             return (
               <Tag key={b.id} data-color={severityColor(bucket)}>
-                {b.name} ({bucket.length} open)
+                {t("{{name}} ({{count}} open)", { name: b.name, count: bucket.length })}
               </Tag>
             )
           })}

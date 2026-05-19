@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Select } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 
 export function CategorySelect({
@@ -9,6 +10,7 @@ export function CategorySelect({
   value: string
   onChange: (next: string) => void
 }) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const { data: categories } = useSuspenseQuery(
     trpc.expenseCategory.list.queryOptions(),
@@ -19,7 +21,7 @@ export function CategorySelect({
       value={value}
       onChange={e => { onChange(e.target.value) }}
     >
-      <Select.Option value="">(none)</Select.Option>
+      <Select.Option value="">{t("(none)")}</Select.Option>
       {!known && value !== "" && <Select.Option value={value}>{value}</Select.Option>}
       {categories.map(c => (
         <Select.Option key={c.id} value={c.name}>{c.name}</Select.Option>

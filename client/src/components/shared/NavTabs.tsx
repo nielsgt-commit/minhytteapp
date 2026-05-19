@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { Link, linkOptions, useLocation } from "@tanstack/react-router"
 import { Tabs } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./NavTabs.module.css"
 
 const navLinks = linkOptions([
@@ -12,6 +13,7 @@ const navLinks = linkOptions([
 ])
 
 export default function NavTabs({ children }: { children: ReactNode }) {
+  const { t } = useTranslation("shared")
   const { pathname } = useLocation()
 
   const activeValue =
@@ -23,10 +25,10 @@ export default function NavTabs({ children }: { children: ReactNode }) {
         <Tabs.List className={`${styles.list}${activeValue ? "" : ` ${styles.noActive}`}`}>
           {navLinks.map(link => (
             <Tabs.Tab key={link.to} value={link.to} style={{ position: "relative" }}>
-              {link.label}
+              {t(link.label)}
               <Link
                 {...link}
-                aria-label={link.label}
+                aria-label={t(link.label)}
                 style={{ position: "absolute", inset: 0 }}
               />
             </Tabs.Tab>

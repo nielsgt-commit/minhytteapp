@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { PropertyFormSection } from "./PropertyFormSection.tsx"
@@ -40,6 +41,7 @@ type StructureFormSlot = { propertyId: number; id: number | null } | null
 type RoomFormSlot = { structureId: number; id: number | null } | null
 
 export function PropertyFlow() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -203,15 +205,15 @@ export function PropertyFlow() {
   }
 
   const handleDeleteProperty = (id: number) => {
-    if (!window.confirm("Delete this property?")) return
+    if (!window.confirm(t("Delete this property?"))) return
     deleteProperty.mutate({ id })
   }
   const handleDeleteBuilding = (id: number) => {
-    if (!window.confirm("Delete this structure?")) return
+    if (!window.confirm(t("Delete this structure?"))) return
     deleteBuilding.mutate({ id })
   }
   const handleDeleteRoom = (id: number) => {
-    if (!window.confirm("Delete this room?")) return
+    if (!window.confirm(t("Delete this room?"))) return
     deleteRoom.mutate({ id })
   }
 
@@ -228,7 +230,7 @@ export function PropertyFlow() {
 
   return (
     <section>
-      <h3>Property Flow</h3>
+      <h3>{t("Property Flow")}</h3>
 
       <div>
         <button
@@ -237,24 +239,24 @@ export function PropertyFlow() {
             setPropertyForm(v => (v?.id === null ? null : { id: null }))
           }}
         >
-          {isCreatePropertyOpen ? "Cancel" : "Add new property"}
+          {isCreatePropertyOpen ? t("Cancel") : t("Add new property")}
         </button>
       </div>
 
       {isCreatePropertyOpen && (
         <PropertyFormSection
           key="property-create"
-          legend="New property"
-          submitLabel="Create property"
+          legend={t("New property")}
+          submitLabel={t("Create property")}
           pending={propertyPending}
           onSubmit={handlePropertySubmit}
           onCancel={closePropertyForm}
         />
       )}
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {properties.length === 0 && <p>No properties yet.</p>}
+      {properties.length === 0 && <p>{t("No properties yet.")}</p>}
 
       <ul>
         {properties.map(p => {
@@ -270,8 +272,11 @@ export function PropertyFlow() {
                 {p.name} <small>({p.address})</small>
               </h4>
               <p>
-                {propStructures.length} structure(s), {propRooms.length} room(s),{" "}
-                {totalBeds} bed(s) total
+                {t("{{structures}} structure(s), {{rooms}} room(s), {{beds}} bed(s) total", {
+                  structures: propStructures.length,
+                  rooms: propRooms.length,
+                  beds: totalBeds,
+                })}
               </p>
 
               <div>
@@ -284,7 +289,7 @@ export function PropertyFlow() {
                   }}
                   disabled={propertyPending}
                 >
-                  {propertyIsEditing ? "Cancel edit" : "Edit"}
+                  {propertyIsEditing ? t("Cancel edit") : t("Edit")}
                 </button>
                 <button
                   type="button"
@@ -293,7 +298,7 @@ export function PropertyFlow() {
                   }}
                   disabled={propertyPending}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
                 <button
                   type="button"
@@ -306,16 +311,16 @@ export function PropertyFlow() {
                   }}
                 >
                   {isCreateBuildingOpenFor(p.id)
-                    ? "Cancel"
-                    : "Add structure to property"}
+                    ? t("Cancel")
+                    : t("Add structure to property")}
                 </button>
               </div>
 
               {propertyIsEditing && (
                 <PropertyFormSection
                   key={`property-edit-${String(p.id)}`}
-                  legend={`Edit property #${String(p.id)}`}
-                  submitLabel="Update property"
+                  legend={t("Edit property #{{id}}", { id: p.id })}
+                  submitLabel={t("Update property")}
                   pending={propertyPending}
                   defaults={{ name: p.name, address: p.address }}
                   onSubmit={handlePropertySubmit}
@@ -326,8 +331,8 @@ export function PropertyFlow() {
               {isCreateBuildingOpenFor(p.id) && (
                 <StructureFormSection
                   key={`structure-create-${String(p.id)}`}
-                  legend={`New structure in ${p.name}`}
-                  submitLabel="Create structure"
+                  legend={t("New structure in {{name}}", { name: p.name })}
+                  submitLabel={t("Create structure")}
                   pending={structurePending}
                   onSubmit={handleBuildingSubmit}
                   onCancel={closeBuildingForm}
@@ -335,7 +340,7 @@ export function PropertyFlow() {
               )}
 
               {propStructures.length === 0 ? (
-                <p>No structures yet.</p>
+                <p>{t("No structures yet.")}</p>
               ) : (
                 <ul>
                   {propStructures.map(b => {
@@ -349,7 +354,10 @@ export function PropertyFlow() {
                       <li key={b.id}>
                         <h5>{b.name}</h5>
                         <p>
-                          {buildingRooms.length} room(s), {buildingBeds} bed(s)
+                          {t("{{rooms}} room(s), {{beds}} bed(s)", {
+                            rooms: buildingRooms.length,
+                            beds: buildingBeds,
+                          })}
                         </p>
 
                         <div>
@@ -364,7 +372,7 @@ export function PropertyFlow() {
                             }}
                             disabled={structurePending}
                           >
-                            {buildingIsEditing ? "Cancel edit" : "Edit"}
+                            {buildingIsEditing ? t("Cancel edit") : t("Edit")}
                           </button>
                           <button
                             type="button"
@@ -373,7 +381,7 @@ export function PropertyFlow() {
                             }}
                             disabled={structurePending}
                           >
-                            Delete
+                            {t("Delete")}
                           </button>
                           <button
                             type="button"
@@ -385,15 +393,15 @@ export function PropertyFlow() {
                               )
                             }}
                           >
-                            {isCreateRoomOpenFor(b.id) ? "Cancel" : "Add room"}
+                            {isCreateRoomOpenFor(b.id) ? t("Cancel") : t("Add room")}
                           </button>
                         </div>
 
                         {buildingIsEditing && (
                           <StructureFormSection
                             key={`structure-edit-${String(b.id)}`}
-                            legend={`Edit structure #${String(b.id)}`}
-                            submitLabel="Update structure"
+                            legend={t("Edit structure #{{id}}", { id: b.id })}
+                            submitLabel={t("Update structure")}
                             pending={structurePending}
                             defaults={{ name: b.name }}
                             onSubmit={handleBuildingSubmit}
@@ -404,8 +412,8 @@ export function PropertyFlow() {
                         {isCreateRoomOpenFor(b.id) && (
                           <RoomFormSection
                             key={`room-create-${String(b.id)}`}
-                            legend={`New room in ${b.name}`}
-                            submitLabel="Create room"
+                            legend={t("New room in {{name}}", { name: b.name })}
+                            submitLabel={t("Create room")}
                             pending={roomPending}
                             onSubmit={handleRoomSubmit}
                             onCancel={closeRoomForm}
@@ -418,8 +426,7 @@ export function PropertyFlow() {
                               const roomIsEditing = editingRoomId === r.id
                               return (
                                 <li key={r.id}>
-                                  {r.name} – {roomBeds(r)}{" "}
-                                  bed(s)
+                                  {t("{{name}} – {{beds}} bed(s)", { name: r.name, beds: roomBeds(r) })}
                                   <div>
                                     <button
                                       type="button"
@@ -435,7 +442,7 @@ export function PropertyFlow() {
                                       }}
                                       disabled={roomPending}
                                     >
-                                      {roomIsEditing ? "Cancel edit" : "Edit"}
+                                      {roomIsEditing ? t("Cancel edit") : t("Edit")}
                                     </button>
                                     <button
                                       type="button"
@@ -444,14 +451,14 @@ export function PropertyFlow() {
                                       }}
                                       disabled={roomPending}
                                     >
-                                      Delete
+                                      {t("Delete")}
                                     </button>
                                   </div>
                                   {roomIsEditing && (
                                     <RoomFormSection
                                       key={`room-edit-${String(r.id)}`}
-                                      legend={`Edit room #${String(r.id)}`}
-                                      submitLabel="Update room"
+                                      legend={t("Edit room #{{id}}", { id: r.id })}
+                                      submitLabel={t("Update room")}
                                       pending={roomPending}
                                       defaults={{
                                         name: r.name,

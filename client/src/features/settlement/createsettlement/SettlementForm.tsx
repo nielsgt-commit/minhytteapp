@@ -7,6 +7,7 @@ import {
   Select,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./CreateSettlementFlow.module.css"
 import { SplitPolicyBuilder } from "@/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx"
 import { useTRPC } from "@/trpc/trpc"
@@ -49,6 +50,7 @@ export function SettlementForm({
   onToggleBuilder,
   onBuilderSaved,
 }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const { data: customPolicies } = useSuspenseQuery(
     trpc.propertySplitPolicy.listForProperty.queryOptions({
@@ -60,19 +62,19 @@ export function SettlementForm({
     <form onSubmit={onSubmit}>
       <div className={styles.formRow}>
         <Textfield
-          label="Year"
+          label={t("Year")}
           type="number"
           value={year}
           onChange={e => { setYear(e.target.value) }}
           required
         />
         <Field>
-          <Label>Split policy</Label>
+          <Label>{t("Split policy")}</Label>
           <Select
             value={splitPolicyId}
             onChange={e => { setSplitPolicyId(e.target.value) }}
           >
-            <Select.Option value="">Occupancy days (built-in)</Select.Option>
+            <Select.Option value="">{t("Occupancy days (built-in)")}</Select.Option>
             {customPolicies.map(p => (
               <Select.Option key={p.id} value={String(p.id)}>
                 {p.name} (by {p.created_by_name ?? `#${String(p.created_by_id)}`})
@@ -86,12 +88,12 @@ export function SettlementForm({
           data-size="sm"
           onClick={onToggleBuilder}
         >
-          {builderOpen ? "Close split policy builder" : "Add split policy"}
+          {builderOpen ? t("Close split policy builder") : t("Add split policy")}
         </Button>
         <Button type="submit" disabled={pending}>
           {editing == null
-            ? "Create and start settlement"
-            : `Update settlement #${String(editing.id)}`}
+            ? t("Create and start settlement")
+            : t("Update settlement #{{id}}", { id: String(editing.id) })}
         </Button>
         <Button
           type="button"
@@ -100,11 +102,11 @@ export function SettlementForm({
           onClick={onCancel}
           disabled={pending}
         >
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
       {builderOpen && (
-        <Suspense fallback={<p>Loading split policy builder…</p>}>
+        <Suspense fallback={<p>{t("Loading split policy builder…")}</p>}>
           <SplitPolicyBuilder onSaved={onBuilderSaved} />
         </Suspense>
       )}

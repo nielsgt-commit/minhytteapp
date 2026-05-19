@@ -11,12 +11,14 @@ import {
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceTodos.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -68,7 +70,7 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     )
   }
 
-  if (!items) return <p>Loading…</p>
+  if (!items) return <p>{t("Loading…")}</p>
 
   const todos = items
     .filter(i => {
@@ -111,9 +113,9 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     <div className={styles.wrap}>
       <form onSubmit={handleAdd} className={styles.add}>
         <Textfield
-          aria-label="New task"
+          aria-label={t("New task")}
           name="description"
-          placeholder="Add task..."
+          placeholder={t("Add task...")}
           disabled={createMutation.isPending || selectedUserId == null}
         />
         <Button
@@ -121,29 +123,29 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
           data-size="sm"
           disabled={createMutation.isPending || selectedUserId == null}
         >
-          Add
+          {t("Add")}
         </Button>
       </form>
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
       {todos.length === 0 ? (
-        <p>No active tasks.</p>
+        <p>{t("No active tasks.")}</p>
       ) : (
         <ul className={styles.list}>
-          {todos.map(t => (
-            <Card asChild key={t.id}>
+          {todos.map(todo => (
+            <Card asChild key={todo.id}>
               <li>
                 <Card.Block className={styles.row} data-size="sm">
                   <Paragraph className={styles.description} data-size="sm">
-                    {t.description}
+                    {todo.description}
                   </Paragraph>
                   <div className={styles.actions}>
                     <Button
                       variant="tertiary"
                       data-size="sm"
                       disabled={pending}
-                      onClick={() => { markDone(t) }}
+                      onClick={() => { markDone(todo) }}
                     >
-                      Done
+                      {t("Done")}
                     </Button>
                     <Button
                       variant="tertiary"
@@ -151,10 +153,10 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                       data-size="sm"
                       disabled={pending}
                       onClick={() => {
-                        deleteMutation.mutate({ id: t.id })
+                        deleteMutation.mutate({ id: todo.id })
                       }}
                     >
-                      Delete
+                      {t("Delete")}
                     </Button>
                   </div>
                 </Card.Block>

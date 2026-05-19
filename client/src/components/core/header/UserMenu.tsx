@@ -2,6 +2,7 @@ import { useSelectedUserId } from "@/app/useSelectedIds"
 import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch } from "@/app/hooks"
 import { setSelectedUserId } from "@/features/user/userSlice"
@@ -10,6 +11,7 @@ import UserSwitcher from "./UserSwitcher"
 import styles from "./Header.module.css"
 
 export default function UserMenu() {
+  const { t } = useTranslation("core")
   const trpc = useTRPC()
 
   const auth = loadAuth()
@@ -41,11 +43,11 @@ export default function UserMenu() {
 
   let label: string
   if (isLoading) {
-    label = "Loading…"
+    label = t("Loading…")
   } else if (current) {
     label = ""
   } else {
-    label = "No user"
+    label = t("No user")
   }
 
   return (

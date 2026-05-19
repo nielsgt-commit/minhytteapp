@@ -8,6 +8,7 @@ import {
   Tag,
 } from "@digdir/designsystemet-react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import DayCard from "./DayCard"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -19,7 +20,7 @@ import {
   toIso,
 } from "@/utils/dateUtils"
 
-const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
+const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
 
 type Props = {
   weekStart: Date
@@ -30,6 +31,7 @@ export default function PlannedAvailabilitySummary({
   weekStart,
   onWeekStartChange,
 }: Props) {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const isMobile = useIsMobile()
@@ -164,16 +166,16 @@ export default function PlannedAvailabilitySummary({
           <Button
             variant="tertiary"
             icon
-            aria-label="Previous week"
+            aria-label={t("Previous week")}
             onClick={() => { onWeekStartChange(addDays(weekStart, -7)) }}
           >
             <ChevronLeftIcon aria-hidden />
           </Button>
-          <Paragraph>Week {weekNumber}</Paragraph>
+          <Paragraph>{t("Week {{weekNumber}}", { weekNumber })}</Paragraph>
           <Button
             variant="tertiary"
             icon
-            aria-label="Next week"
+            aria-label={t("Next week")}
             onClick={() => { onWeekStartChange(addDays(weekStart, 7)) }}
           >
             <ChevronRightIcon aria-hidden />
@@ -181,7 +183,7 @@ export default function PlannedAvailabilitySummary({
         </div>
         <div className={styles.weekNavRight}>
           {weekBirthdayGuests.map(g => (
-            <Tag key={g.id} data-color="warning">{g.name} birthday</Tag>
+            <Tag key={g.id} data-color="warning">{t("{{name}} birthday", { name: g.name })}</Tag>
           ))}
           {priorityHolderName && <Tag>{priorityHolderName}</Tag>}
         </div>
@@ -195,7 +197,7 @@ export default function PlannedAvailabilitySummary({
               <Card.Block className={`${styles.dayCardBlock} ${styles.dayCardBlockEmpty}`}>
                 <div className={styles.dayRow}>
                   <div className={styles.dayCount}>
-                    <span>No guests</span>
+                    <span>{t("No guests")}</span>
                   </div>
                 </div>
               </Card.Block>

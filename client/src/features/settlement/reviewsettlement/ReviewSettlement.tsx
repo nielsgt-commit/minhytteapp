@@ -9,6 +9,7 @@ import {
   Paragraph,
   Switch,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewSettlement.module.css"
 import expenseRowStyles from "./SettlementExpenseRow.module.css"
 import { SettlementExpenseRow } from "./SettlementExpenseRow"
@@ -40,6 +41,7 @@ type Props = {
 }
 
 export function ReviewSettlement({ settlementId, phase }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [showWaiting, setShowWaiting] = useState(false)
@@ -74,7 +76,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
   )
 
   if (heads.length === 0) {
-    return <p>No heads found.</p>
+    return <p>{t("No heads found.")}</p>
   }
 
   const myHead = heads.find(h => h.id === editableHeadId)
@@ -131,9 +133,9 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">Review settlement</Heading>
+        <Heading level={4} data-size="sm">{t("Review settlement")}</Heading>
         <Switch
-          label="Still reviewing"
+          label={t("Still reviewing")}
           position="end"
           data-size="sm"
           checked={stillReviewing}
@@ -143,7 +145,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
       </div>
 
       {expensesToShow.length === 0 ? (
-        <Paragraph>No reimbursed expenses.</Paragraph>
+        <Paragraph>{t("No reimbursed expenses.")}</Paragraph>
       ) : (
         <ul className={expenseRowStyles.list}>
           {expensesToShow.map(e => (
@@ -174,7 +176,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
               })
             }}
           >
-            Back
+            {t("Back")}
           </Button>
           {!stillReviewing && next != null && (
             <Button
@@ -183,25 +185,24 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
               disabled={advancePhase.isPending}
               onClick={onContinueClick}
             >
-              Progress to split policy
+              {t("Progress to split policy")}
             </Button>
           )}
         </div>
       )}
       {showWaiting && pendingOthers.length > 0 && (
         <Paragraph role="alert" data-size="sm">
-          Waiting for {pendingOthers.map(h => h.name).join(", ")} to complete
-          the settlement.
+          {t("Waiting for {{names}} to complete the settlement.", { names: pendingOthers.map(h => h.name).join(", ") })}
         </Paragraph>
       )}
       {advancePhase.error && (
-        <p role="alert">Error: {advancePhase.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: advancePhase.error.message })}</p>
       )}
       {regressPhase.error && (
-        <p role="alert">Error: {regressPhase.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
       )}
       {updateProgress.error && (
-        <p role="alert">Error: {updateProgress.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: updateProgress.error.message })}</p>
       )}
     </>
   )

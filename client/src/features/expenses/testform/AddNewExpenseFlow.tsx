@@ -7,6 +7,7 @@ import {
   Textfield,
   ValidationMessage,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 import { useExpenseEditor } from "./useExpenseEditor"
 import { useExpenseDrafts, type ExpenseDraft } from "./useExpenseDrafts.ts"
@@ -32,6 +33,7 @@ export function AddNewExpenseFlow({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
@@ -74,7 +76,7 @@ export function AddNewExpenseFlow({
       <form onSubmit={handleSubmit}>
         <Card.Block>
           <div className={styles.container}>
-            <Heading level={2} data-size="sm">Add expense</Heading>
+            <Heading level={2} data-size="sm">{t("Add expense")}</Heading>
 
             <DraftList
               drafts={drafts.drafts}
@@ -85,7 +87,7 @@ export function AddNewExpenseFlow({
 
             {me?.is_head && (
               <Switch
-                label="Edit mode"
+                label={t("Edit mode")}
                 checked={editMode}
                 onChange={e => {
                   const next = e.target.checked
@@ -110,12 +112,12 @@ export function AddNewExpenseFlow({
 
             {createError && (
               <ValidationMessage>
-                Error: {createError.message}
+                {t("Error: {{message}}", { message: createError.message })}
               </ValidationMessage>
             )}
             {archiveError && (
               <ValidationMessage>
-                Error: {archiveError.message}
+                {t("Error: {{message}}", { message: archiveError.message })}
               </ValidationMessage>
             )}
 
@@ -132,8 +134,8 @@ export function AddNewExpenseFlow({
 
             {drafts.drafts.length > 0 && (
               <Textfield
-                label="Description"
-                description="Optional"
+                label={t("Description")}
+                description={t("Optional")}
                 value={description}
                 onChange={e => { setDescription(e.target.value) }}
               />

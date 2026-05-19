@@ -7,6 +7,7 @@ import {
   EXPERIMENTAL_Suggestion as Suggestion,
 } from "@digdir/designsystemet-react"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { addOccupant, removeOccupant } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction } from "@/features/calendar/booking-logic"
 import styles from "./StepGuests.module.css"
@@ -34,16 +35,17 @@ export function StepGuests({
   stepClass: string
   stepActiveClass: string
 }) {
+  const { t } = useTranslation("calendar")
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div className={styles.card}>
-        <Heading level={4}>Guests</Heading>
+        <Heading level={4}>{t("Guests")}</Heading>
 
         <Paragraph data-size="sm" className={styles.bookerLabel}>
-          Booker: {users.find(u => u.id === selectedUserId)?.name ?? "(select user)"}
+          {t("Booker: {{name}}", { name: users.find(u => u.id === selectedUserId)?.name ?? t("(select user)") })}
         </Paragraph>
         <Field>
-          <Label>Add guests</Label>
+          <Label>{t("Add guests")}</Label>
           <Suggestion
             multiple
             selected={draft.occupants
@@ -52,7 +54,7 @@ export function StepGuests({
                 const u = users.find(x => x.id === o.user_id)
                 return {
                   value: String(o.user_id),
-                  label: u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`,
+                  label: u ? `${u.name}${u.is_child ? t(" (child)") : ""}` : `#${String(o.user_id)}`,
                 }
               })}
             onSelectedChange={(newItems: SuggestionItem[]) => {
@@ -74,13 +76,13 @@ export function StepGuests({
               }
             }}
           >
-            <Suggestion.Input ref={guestInputRef} placeholder="Search guests…" />
+            <Suggestion.Input ref={guestInputRef} placeholder={t("Search guests…")} />
             <Suggestion.Clear />
             <Suggestion.List>
-              <Suggestion.Empty>No guests found</Suggestion.Empty>
+              <Suggestion.Empty>{t("No guests found")}</Suggestion.Empty>
               {otherUsers.map(u => (
                 <Suggestion.Option key={u.id} value={String(u.id)}>
-                  {u.name}{u.is_child ? " (child)" : ""}
+                  {u.name}{u.is_child ? t(" (child)") : ""}
                 </Suggestion.Option>
               ))}
             </Suggestion.List>

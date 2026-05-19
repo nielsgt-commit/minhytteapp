@@ -1,4 +1,5 @@
 import { Card, Checkbox, Label, Tag } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import type { PreviewConflicts } from "@/features/calendar/booking-logic"
 import styles from "./UnassignedPanel.module.css"
 
@@ -11,6 +12,7 @@ export function UnassignedPanel({
   conflicts: PreviewConflicts | undefined
   onQueue: (userId: number, queued: boolean) => void
 }) {
+  const { t } = useTranslation("calendar")
   const isOverCap = (conflicts?.property.overCapacityBy ?? 0) > 0
   const allQueued = occupants.length > 0 && occupants.every(o => o.queued)
 
@@ -20,10 +22,10 @@ export function UnassignedPanel({
     <Card data-color={cardColor}>
       <Card.Block>
         <div className={styles.header}>
-          <Label data-size="sm">Unassigned</Label>
+          <Label data-size="sm">{t("Unassigned")}</Label>
           <div className={styles.controls}>
             <Checkbox
-              label="Queue"
+              label={t("Queue")}
               checked={allQueued}
               disabled={occupants.length === 0}
               onChange={e => {

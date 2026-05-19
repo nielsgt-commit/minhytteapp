@@ -6,11 +6,13 @@ import {
   List,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
 import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 export default function RoomsSummary() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: rooms } = useSuspenseQuery(
@@ -39,41 +41,41 @@ export default function RoomsSummary() {
 
   return (
     <StatCard
-      title="Bedrooms"
+      title={t("Bedrooms")}
       count={rooms.length}
       content={rooms.length === 0 ? (
-        <Paragraph>No rooms yet.</Paragraph>
+        <Paragraph>{t("No rooms yet.")}</Paragraph>
       ) : (
         <List.Unordered className={styles.list}>
           <List.Item className={styles.row}>
-            <span>Beds (single)</span>
+            <span>{t("Beds (single)")}</span>
             <span>{totals.beds_sm}</span>
           </List.Item>
           <List.Item className={styles.row}>
-            <span>Beds (large)</span>
+            <span>{t("Beds (large)")}</span>
             <span>{totals.beds_lg}</span>
           </List.Item>
           <List.Item className={styles.row}>
-            <span>Beds (double)</span>
+            <span>{t("Beds (double)")}</span>
             <span>{totals.beds_double}</span>
           </List.Item>
           <List.Item className={styles.row}>
-            <span>Beds (kid)</span>
+            <span>{t("Beds (kid)")}</span>
             <span>{totals.beds_kid}</span>
           </List.Item>
           <List.Item className={styles.row}>
-            <span>Mattresses</span>
+            <span>{t("Mattresses")}</span>
             <span>{totals.mattresses}</span>
           </List.Item>
           <List.Item className={styles.row}>
-            <span>Travel cots</span>
+            <span>{t("Travel cots")}</span>
             <span>{totals.travel_cot}</span>
           </List.Item>
         </List.Unordered>
       )}
       footer={(
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty">Manage rooms</Link>
+          <Link to="/manageproperty">{t("Manage rooms")}</Link>
         </Button>
       )}
     />

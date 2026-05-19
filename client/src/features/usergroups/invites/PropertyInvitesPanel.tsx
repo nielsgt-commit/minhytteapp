@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Card, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
 import { fdNumber, fdString } from "@/utils/formData.ts"
@@ -15,6 +16,7 @@ function inviteUrl(token: string): string {
 }
 
 export function PropertyInvitesPanel() {
+  const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const propertyId = useSelectedPropertyId()
@@ -50,8 +52,8 @@ export function PropertyInvitesPanel() {
       <Card asChild>
         <section>
           <Card.Block>
-            <h3>Invites</h3>
-            <p>No property selected. Pick one from the header.</p>
+            <h3>{t("Invites")}</h3>
+            <p>{t("No property selected. Pick one from the header.")}</p>
           </Card.Block>
         </section>
       </Card>
@@ -86,7 +88,7 @@ export function PropertyInvitesPanel() {
   }
 
   const handleRevoke = (id: number, email: string) => {
-    if (!window.confirm(`Revoke invite for ${email}?`)) return
+    if (!window.confirm(t("Revoke invite for {{email}}?", { email }))) return
     revoke.mutate({ id, property_id: propertyId })
   }
 
@@ -94,21 +96,23 @@ export function PropertyInvitesPanel() {
     <Card asChild>
       <section>
         <Card.Block>
-      <h3>Invites</h3>
+      <h3>{t("Invites")}</h3>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {invites.length === 0 ? (
-        <p>No invites yet.</p>
+        <p>{t("No invites yet.")}</p>
       ) : (
         <ul>
           {invites.map(inv => {
             const expired = new Date(inv.expires_at).getTime() < Date.now()
             const status = inv.used_at
-              ? `Accepted${inv.used_by_name ? ` by ${inv.used_by_name}` : ""}`
+              ? inv.used_by_name
+                ? t("Accepted by {{name}}", { name: inv.used_by_name })
+                : t("Accepted")
               : expired
-                ? "Expired"
-                : "Pending"
+                ? t("Expired")
+                : t("Pending")
             return (
               <li key={inv.id}>
                 <strong>{inv.email}</strong> – {inv.ownership_pct}% –{" "}
@@ -120,7 +124,7 @@ export function PropertyInvitesPanel() {
                       variant="secondary"
                       onClick={() => { handleCopy(inv.id, inv.token) }}
                     >
-                      {copied === inv.id ? "Copied!" : "Copy invite link"}
+                      {copied === inv.id ? t("Copied!") : t("Copy invite link")}
                     </Button>
                     <Button
                       type="button"
@@ -128,7 +132,7 @@ export function PropertyInvitesPanel() {
                       disabled={pending}
                       onClick={() => { handleRevoke(inv.id, inv.email) }}
                     >
-                      Revoke
+                      {t("Revoke")}
                     </Button>
                   </div>
                 )}
@@ -144,17 +148,17 @@ export function PropertyInvitesPanel() {
           disabled={pending}
           onClick={() => { setOpen(v => !v) }}
         >
-          {open ? "Cancel" : "Create invite"}
+          {open ? t("Cancel") : t("Create invite")}
         </Button>
       </div>
 
       {open && (
         <form onSubmit={handleCreate}>
           <fieldset>
-            <legend>New invite</legend>
+            <legend>{t("New invite")}</legend>
             <div>
               <Textfield
-                label="Email"
+                label={t("Email")}
                 type="email"
                 name="email"
                 required
@@ -163,7 +167,7 @@ export function PropertyInvitesPanel() {
             </div>
             <div>
               <Textfield
-                label="Ownership %"
+                label={t("Ownership %")}
                 type="number"
                 name="ownership_pct"
                 min={0}
@@ -175,7 +179,7 @@ export function PropertyInvitesPanel() {
             </div>
             <div>
               <Button type="submit" disabled={create.isPending}>
-                Create
+                {t("Create")}
               </Button>
               <Button
                 type="button"
@@ -183,7 +187,7 @@ export function PropertyInvitesPanel() {
                 onClick={() => { setOpen(false) }}
                 disabled={create.isPending}
               >
-                Cancel
+                {t("Cancel")}
               </Button>
             </div>
           </fieldset>

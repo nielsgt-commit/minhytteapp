@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ContactEditForm.module.css"
 
 type Contact = {
@@ -28,6 +29,7 @@ export function ContactEditForm({
   onDelete,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <form
       onSubmit={onSubmit}
@@ -35,9 +37,9 @@ export function ContactEditForm({
       className={styles.form}
     >
       <Fieldset>
-        <Fieldset.Legend>Edit contact</Fieldset.Legend>
+        <Fieldset.Legend>{t("Edit contact")}</Fieldset.Legend>
         <Textfield
-          label="Name"
+          label={t("Name")}
           name="name"
           required
           autoFocus
@@ -46,7 +48,7 @@ export function ContactEditForm({
           disabled={updatePending}
         />
         <Textfield
-          label="Phone"
+          label={t("Phone")}
           name="phone"
           type="tel"
           maxLength={64}
@@ -54,7 +56,7 @@ export function ContactEditForm({
           disabled={updatePending}
         />
         <Textfield
-          label="Email"
+          label={t("Email")}
           name="email"
           type="email"
           maxLength={255}
@@ -62,7 +64,7 @@ export function ContactEditForm({
           disabled={updatePending}
         />
         <Textfield
-          label="Info"
+          label={t("Info")}
           name="info"
           multiline
           rows={3}
@@ -72,7 +74,7 @@ export function ContactEditForm({
         />
         <div className={styles.actions}>
           <Button type="submit" disabled={pending}>
-            Save
+            {t("Save")}
           </Button>
           <Button
             type="button"
@@ -81,7 +83,7 @@ export function ContactEditForm({
             disabled={pending}
             onClick={onDelete}
           >
-            Remove
+            {t("Remove")}
           </Button>
           <Button
             type="button"
@@ -89,7 +91,7 @@ export function ContactEditForm({
             disabled={pending}
             onClick={onCancel}
           >
-            Cancel
+            {t("Cancel")}
           </Button>
         </div>
       </Fieldset>

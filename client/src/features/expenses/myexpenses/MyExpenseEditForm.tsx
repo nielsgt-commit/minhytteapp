@@ -1,6 +1,7 @@
 import { type SyntheticEvent, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { Button, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./MyExpenses.module.css"
 import type { ExpenseRow } from "../types.ts"
 import { toUpdateInput } from "../buildUpdatePayload.ts"
@@ -19,6 +20,7 @@ export function MyExpenseEditForm({
   onSaved,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const [description, setDescription] = useState(expense.description)
   const [amount, setAmount] = useState(String(expense.amount))
@@ -54,19 +56,19 @@ export function MyExpenseEditForm({
   return (
     <form onSubmit={handleSubmit} className={styles.editForm}>
       <Textfield
-        label="Date"
+        label={t("Date")}
         type="date"
         value={date}
         onChange={ev => { setDate(ev.target.value) }}
         required
       />
       <Textfield
-        label="Description"
+        label={t("Description")}
         value={description}
         onChange={ev => { setDescription(ev.target.value) }}
       />
       <Textfield
-        label="Amount"
+        label={t("Amount")}
         type="number"
         step={1}
         value={amount}
@@ -75,7 +77,7 @@ export function MyExpenseEditForm({
       />
       <div className={styles.editActions}>
         <Button type="submit" disabled={updateExpense.isPending}>
-          Submit
+          {t("Submit")}
         </Button>
         <Button
           type="button"
@@ -83,11 +85,11 @@ export function MyExpenseEditForm({
           disabled={updateExpense.isPending}
           onClick={() => { cancel() }}
         >
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
       {updateExpense.error && (
-        <span role="alert">Error: {updateExpense.error.message}</span>
+        <span role="alert">{t("Error: {{message}}", { message: updateExpense.error.message })}</span>
       )}
     </form>
   )

@@ -1,4 +1,5 @@
 import { Button, Card, Paragraph } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import type { SettlementPhase } from "@/features/settlement/phase.ts"
 
 type Props = {
@@ -18,16 +19,19 @@ export function EmptyReviewState({
   advanceError,
   onContinue,
 }: Props) {
+  const { t } = useTranslation("expenses")
   if (phase !== "collecting_expenses") {
-    return <p>(nothing to review)</p>
+    return <p>{t("(nothing to review)")}</p>
   }
   return (
     <>
-      <Card>No more items to review.</Card>
+      <Card>{t("No more items to review.")}</Card>
       <Paragraph data-size="sm">
-        When you&apos;re done collecting expenses, turn off
-        {" "}<em>Accept new expenses</em> and click
-        {" "}<em>Continue to booking days</em>.
+        <Trans
+          t={t}
+          i18nKey="When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>."
+          components={{ 1: <em />, 3: <em /> }}
+        />
       </Paragraph>
       {!stillAccepting && next != null && (
         <Button
@@ -36,11 +40,11 @@ export function EmptyReviewState({
           disabled={advancePending}
           onClick={onContinue}
         >
-          Continue to booking days
+          {t("Continue to booking days")}
         </Button>
       )}
       {advanceError && (
-        <p role="alert">Error: {advanceError.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: advanceError.message })}</p>
       )}
     </>
   )

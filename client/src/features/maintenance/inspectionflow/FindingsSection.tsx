@@ -7,6 +7,7 @@ import {
   Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 
 export type AdHoc = {
@@ -24,6 +25,7 @@ export function FindingsSection(props: {
   editAdHoc: (key: string) => void
   removeAdHoc: (key: string) => void
 }) {
+  const { t } = useTranslation("maintenance")
   const {
     adHocs,
     addAdHoc,
@@ -34,7 +36,7 @@ export function FindingsSection(props: {
   } = props
   return (
     <div className={styles.section}>
-      <Heading level={5} data-size="2xs">Findings</Heading>
+      <Heading level={5} data-size="2xs">{t("Findings")}</Heading>
       {adHocs.map(a =>
         a.committed ? (
           <Card key={a.key} asChild>
@@ -46,14 +48,14 @@ export function FindingsSection(props: {
                     data-size="sm"
                   >
                     {a.description}
-                    {a.pin ? " (pinned)" : ""}
+                    {a.pin ? t(" (pinned)") : ""}
                   </Paragraph>
                   <Button
                     variant="tertiary"
                     data-size="sm"
                     onClick={() => { editAdHoc(a.key) }}
                   >
-                    Edit
+                    {t("Edit")}
                   </Button>
                   <Button
                     variant="tertiary"
@@ -61,7 +63,7 @@ export function FindingsSection(props: {
                     data-size="sm"
                     onClick={() => { removeAdHoc(a.key) }}
                   >
-                    Remove
+                    {t("Remove")}
                   </Button>
                 </div>
               </Card.Block>
@@ -72,11 +74,11 @@ export function FindingsSection(props: {
             <article>
               <Card.Block>
                 <Fieldset>
-                  <Fieldset.Legend>New finding</Fieldset.Legend>
+                  <Fieldset.Legend>{t("New finding")}</Fieldset.Legend>
                   <div className={styles.adHocRow}>
                     <div className={styles.adHocDescription}>
                       <Textfield
-                        label="Description"
+                        label={t("Description")}
                         value={a.description}
                         onChange={e => {
                           updateAdHoc(a.key, { description: e.target.value })
@@ -88,7 +90,7 @@ export function FindingsSection(props: {
                       disabled={a.description.trim().length === 0}
                       onClick={() => { commitAdHoc(a.key) }}
                     >
-                      Add
+                      {t("Add")}
                     </Button>
                     <Button
                       variant="tertiary"
@@ -96,11 +98,11 @@ export function FindingsSection(props: {
                       data-size="sm"
                       onClick={() => { removeAdHoc(a.key) }}
                     >
-                      Remove
+                      {t("Remove")}
                     </Button>
                   </div>
                   <Switch
-                    label="Pin to procedure (recurs each inspection)"
+                    label={t("Pin to procedure (recurs each inspection)")}
                     checked={a.pin}
                     onChange={e => {
                       updateAdHoc(a.key, { pin: e.target.checked })
@@ -117,7 +119,7 @@ export function FindingsSection(props: {
         data-size="sm"
         onClick={addAdHoc}
       >
-        Add finding
+        {t("Add finding")}
       </Button>
     </div>
   )

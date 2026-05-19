@@ -5,6 +5,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Card } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { ClosedSettlementsList, type SettlementRow } from "./ClosedSettlementsList"
 import { SettlementForm } from "./SettlementForm"
 import { useTRPC } from "@/trpc/trpc"
@@ -21,6 +22,7 @@ type EditTarget = {
 type Props = { propertyId: number; isHead: boolean }
 
 export function CreateSettlementFlow({ propertyId, isHead }: Props) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -121,7 +123,7 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
           <article>
             <Card.Block data-size="sm">
               {openBlock === "form" ? (
-                <Suspense fallback={<p>Loading form…</p>}>
+                <Suspense fallback={<p>{t("Loading form…")}</p>}>
                   <SettlementForm
                     propertyId={propertyId}
                     year={year}
@@ -152,8 +154,8 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
                   onClick={() => { setOpenBlock("form") }}
                 >
                   {editing == null
-                    ? "Start the settlement…"
-                    : `Edit settlement #${String(editing.id)}`}
+                    ? t("Start the settlement…")
+                    : t("Edit settlement #{{id}}", { id: String(editing.id) })}
                 </Button>
               )}
             </Card.Block>
@@ -172,8 +174,8 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
               }}
             >
               {openBlock === "closed"
-                ? "Hide closed settlements"
-                : "Show closed settlements"}
+                ? t("Hide closed settlements")
+                : t("Show closed settlements")}
             </Button>
             {openBlock === "closed" && (
               <ClosedSettlementsList
@@ -189,7 +191,7 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
           </Card.Block>
         </article>
       </Card>
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { type SyntheticEvent } from "react"
+import { useTranslation } from "react-i18next"
 
 type NameAddressDefaults = { name: string; address: string }
 
@@ -19,13 +20,14 @@ export function PropertyFormSection({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <form onSubmit={onSubmit}>
       <fieldset>
         <legend>{legend}</legend>
         <div>
           <label>
-            Name
+            {t("Name")}
             <input
               type="text"
               name="name"
@@ -36,7 +38,7 @@ export function PropertyFormSection({
         </div>
         <div>
           <label>
-            Address
+            {t("Address")}
             <input
               type="text"
               name="address"
@@ -50,7 +52,7 @@ export function PropertyFormSection({
             {submitLabel}
           </button>
           <button type="button" onClick={onCancel} disabled={pending}>
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       </fieldset>

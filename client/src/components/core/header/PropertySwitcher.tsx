@@ -1,6 +1,7 @@
 import { type SyntheticEvent, useEffect, useState } from "react"
 import { Button, Divider, Dropdown, Label, Paragraph, Textfield } from '@digdir/designsystemet-react';
 import { ChevronDownIcon } from '@navikt/aksel-icons';
+import { useTranslation } from "react-i18next"
 import styles from "./PropertySwitcher.module.css"
 
 export type Property = {
@@ -31,8 +32,9 @@ export default function PropertySwitcher({
   isAddPending,
   addError,
 }: Props) {
+  const { t } = useTranslation("core")
   const current = properties.find(p => p.id === value)
-  const triggerLabel = current?.name ?? "Select property"
+  const triggerLabel = current?.name ?? t("Select property")
 
   const [name, setName] = useState("")
   const [isOpen, setIsOpen] = useState(false)
@@ -50,7 +52,7 @@ export default function PropertySwitcher({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-      <Label id="property-switcher-label" className={styles.label}>Property</Label>
+      <Label id="property-switcher-label" className={styles.label}>{t("Property")}</Label>
       <Dropdown.TriggerContext>
         <Dropdown.Trigger
           variant="tertiary"
@@ -78,7 +80,7 @@ export default function PropertySwitcher({
               style={{ display: "flex", flexDirection: "column", gap: "0.5rem", padding: "0.5rem" }}
             >
               <Textfield
-                label="New property name"
+                label={t("New property name")}
                 name="name"
                 value={name}
                 onChange={e => { setName(e.target.value) }}
@@ -86,25 +88,25 @@ export default function PropertySwitcher({
                 required
               />
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                <Button type="submit" loading={isAddPending}>Save</Button>
+                <Button type="submit" loading={isAddPending}>{t("Save")}</Button>
                 <Button
                   type="button"
                   variant="secondary"
                   disabled={isAddPending}
                   onClick={() => { onAddOpenChange(false) }}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
               </div>
               {addError && (
-                <Paragraph data-color="danger" role="alert">Error: {addError}</Paragraph>
+                <Paragraph data-color="danger" role="alert">{t("Error: {{message}}", { message: addError })}</Paragraph>
               )}
             </form>
           ) : (
             <Dropdown.List>
               {properties.length === 0 && (
                 <Dropdown.Item>
-                  <span>No properties</span>
+                  <span>{t("No properties")}</span>
                 </Dropdown.Item>
               )}
               {properties.map(p => (
@@ -117,13 +119,13 @@ export default function PropertySwitcher({
               <Divider />
               <Dropdown.Item>
                 <Dropdown.Button onClick={() => { onAddOpenChange(true) }}>
-                  + Add property
+                  {t("+ Add property")}
                 </Dropdown.Button>
               </Dropdown.Item>
               <Divider />
               <Dropdown.Item>
                 <Dropdown.Button onClick={onManageProperty}>
-                  Manage Property
+                  {t("Manage Property")}
                 </Dropdown.Button>
               </Dropdown.Item>
             </Dropdown.List>

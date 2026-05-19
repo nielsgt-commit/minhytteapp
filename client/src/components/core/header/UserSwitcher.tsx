@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { Divider, Dropdown, Label } from '@digdir/designsystemet-react';
 import { ChevronDownIcon } from '@navikt/aksel-icons';
+import { useTranslation } from "react-i18next"
+import ColorSchemeToggle from "./ColorSchemeToggle"
 
 
 export type User = {
@@ -23,16 +25,17 @@ export default function UserSwitcher({
   onLogout,
   onSettings,
 }: Props) {
+  const { t } = useTranslation("core")
   const [isOpen, setIsOpen] = useState(false)
 
   if (users.length === 0) return null
 
   const current = users.find(u => u.id === value)
-  const triggerLabel = current?.name ?? "Select user"
+  const triggerLabel = current?.name ?? t("Select user")
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-      <Label id="user-switcher-label">Logged in as</Label>
+      <Label id="user-switcher-label">{t("Logged in as")}</Label>
       <Dropdown.TriggerContext>
         <Dropdown.Trigger
           variant="tertiary"
@@ -62,13 +65,19 @@ export default function UserSwitcher({
                 </Dropdown.Button>
               </Dropdown.Item>
             ))}
-            <Divider />
+          </Dropdown.List>
+          <Divider />
+          <div style={{ padding: "0.5rem 0.75rem" }}>
+            <ColorSchemeToggle />
+          </div>
+          <Divider />
+          <Dropdown.List>
             <Dropdown.Item>
-              <Dropdown.Button onClick={onSettings}>Settings</Dropdown.Button>
+              <Dropdown.Button onClick={onSettings}>{t("Settings")}</Dropdown.Button>
             </Dropdown.Item>
             <Dropdown.Item>
               <Dropdown.Button data-color="danger" onClick={onLogout}>
-                Log out
+                {t("Log out")}
               </Dropdown.Button>
             </Dropdown.Item>
           </Dropdown.List>

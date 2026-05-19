@@ -1,4 +1,5 @@
 import { Checkbox, Fieldset } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 
 type Head = { id: number; name: string }
 
@@ -13,10 +14,11 @@ export function SettlementHeadVisibility({
   visibleIds,
   onToggle,
 }: Props) {
+  const { t } = useTranslation("settlement")
   if (others.length === 0) return null
   return (
     <Fieldset>
-      <Fieldset.Legend>Show other heads</Fieldset.Legend>
+      <Fieldset.Legend>{t("Show other heads")}</Fieldset.Legend>
       {others.map(h => (
         <Checkbox
           key={h.id}

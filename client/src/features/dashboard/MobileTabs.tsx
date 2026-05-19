@@ -1,6 +1,7 @@
 import { Suspense, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Heading, Paragraph, Tabs } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./Dashboard.module.css"
 import PlannedStaysSection from "./PlannedStaysSection"
 import { useTRPC } from "@/trpc/trpc"
@@ -11,34 +12,35 @@ import RoomAvailabilityIndicator from "@/features/dashboard/capacitysummary/room
 import NowWeather from "@/features/dashboard/weather/NowWeather.tsx"
 
 export default function MobileTabs({ propertyId }: { propertyId: number }) {
+  const { t } = useTranslation("dashboard")
   const [tab, setTab] = useState<"now" | "week" | "summer">("now")
 
   return (
     <Tabs className={styles.mobileTabs} value={tab} onChange={v => { setTab(v as "now" | "week" | "summer") }}>
       <Tabs.List>
-        <Tabs.Tab value="now" aria-label="Now">
-          <Paragraph>Now </Paragraph>
+        <Tabs.Tab value="now" aria-label={t("Now")}>
+          <Paragraph>{t("Now")} </Paragraph>
         </Tabs.Tab>
-        <Tabs.Tab value="week" aria-label="This week">
-          <Paragraph>This week</Paragraph>
+        <Tabs.Tab value="week" aria-label={t("This week")}>
+          <Paragraph>{t("This week")}</Paragraph>
         </Tabs.Tab>
-        <Tabs.Tab value="summer" aria-label="This year">
-          <Paragraph>This year</Paragraph>
+        <Tabs.Tab value="summer" aria-label={t("This year")}>
+          <Paragraph>{t("This year")}</Paragraph>
         </Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value={tab}>
         {tab === "now" && (
-          <Suspense fallback={<p>Loading…</p>}>
+          <Suspense fallback={<p>{t("Loading…")}</p>}>
             <MobileNowPanel propertyId={propertyId} />
           </Suspense>
         )}
         {tab === "week" && (
-          <Suspense fallback={<p>Loading…</p>}>
+          <Suspense fallback={<p>{t("Loading…")}</p>}>
             <CalendarSummary />
           </Suspense>
         )}
         {tab === "summer" && (
-          <Suspense fallback={<p>Loading…</p>}>
+          <Suspense fallback={<p>{t("Loading…")}</p>}>
             <PlannedStaysSection propertyId={propertyId} />
           </Suspense>
         )}
@@ -48,6 +50,7 @@ export default function MobileTabs({ propertyId }: { propertyId: number }) {
 }
 
 function MobileNowPanel({ propertyId }: { propertyId: number }) {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const { data: rooms } = useSuspenseQuery(
     trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
@@ -63,7 +66,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">Weather now</Heading>
+            <Heading level={2} data-size="xs">{t("Weather now")}</Heading>
             <NowWeather />
           </Card.Block>
         </section>
@@ -71,7 +74,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">At {propertyName} now</Heading>
+            <Heading level={2} data-size="xs">{t("At {{propertyName}} now", { propertyName })}</Heading>
             <AtPropertyNow />
           </Card.Block>
         </section>
@@ -79,7 +82,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">Available parking</Heading>
+            <Heading level={2} data-size="xs">{t("Available parking")}</Heading>
             <AvailableParking />
           </Card.Block>
         </section>
@@ -87,7 +90,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">Available beds</Heading>
+            <Heading level={2} data-size="xs">{t("Available beds")}</Heading>
             <RoomAvailabilityIndicator rooms={rooms} />
           </Card.Block>
         </section>

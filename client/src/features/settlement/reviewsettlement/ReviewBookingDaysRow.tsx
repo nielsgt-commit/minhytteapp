@@ -8,6 +8,7 @@ import {
   Switch,
   Tag,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewBookingDays.module.css"
 import {
   type DraftOccupant,
@@ -102,6 +103,7 @@ export function ReviewBookingDaysRow({
   excluded: boolean
   extras: string[]
 }) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -235,7 +237,7 @@ export function ReviewBookingDaysRow({
         <Card.Block data-size="sm">
           <div className={styles.body}>
             <Paragraph data-size="sm">
-              Booked by{" "}
+              {t("Booked by")}{" "}
               <Tag data-color="info" data-size="sm">
                 {booking.booker_name ?? `#${String(booking.booker_id)}`}
               </Tag>
@@ -252,7 +254,7 @@ export function ReviewBookingDaysRow({
               />
             ) : (
               <div className={styles.occupants}>
-                <Paragraph data-size="sm">Occupants:</Paragraph>
+                <Paragraph data-size="sm">{t("Occupants:")}</Paragraph>
                 {booking.occupants.map(o => (
                   <Tag
                     key={`u-${String(booking.id)}-${String(o.user_id)}`}
@@ -274,19 +276,21 @@ export function ReviewBookingDaysRow({
               </div>
             )}
             <Paragraph data-size="sm">
-              {String(days)} days × {String(occupantsCount)}{" "}
-              {occupantsCount === 1 ? "occupant" : "occupants"}
-              {" = "}
-              <strong>{String(days * occupantsCount)} booking days</strong>
+              {t("{{days}} days × {{occupantsCount}} {{occupantLabel}} = ", {
+                days: String(days),
+                occupantsCount: String(occupantsCount),
+                occupantLabel: occupantsCount === 1 ? t("occupant") : t("occupants"),
+              })}
+              <strong>{t("{{count}} booking days", { count: days * occupantsCount })}</strong>
             </Paragraph>
             {bookerMissing && (
               <Paragraph role="alert" data-size="sm">
-                Booker must remain among the occupants.
+                {t("Booker must remain among the occupants.")}
               </Paragraph>
             )}
             {updateBooking.error && (
               <Paragraph role="alert" data-size="sm">
-                Error: {updateBooking.error.message}
+                {t("Error: {{message}}", { message: updateBooking.error.message })}
               </Paragraph>
             )}
           </div>
@@ -294,7 +298,7 @@ export function ReviewBookingDaysRow({
         <Card.Block data-size="sm">
           <div className={styles.actions}>
             <Switch
-              label={included ? "Included" : "Excluded"}
+              label={included ? t("Included") : t("Excluded")}
               position="end"
               data-size="sm"
               checked={included}
@@ -321,7 +325,7 @@ export function ReviewBookingDaysRow({
                 type="button"
                 onClick={() => { enterEdit() }}
               >
-                Edit
+                {t("Edit")}
               </Button>
             )}
           </div>

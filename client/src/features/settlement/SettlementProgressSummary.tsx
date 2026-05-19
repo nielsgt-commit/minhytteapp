@@ -1,8 +1,9 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Paragraph } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { type SettlementPhase } from "@/features/settlement/phase"
-import { PHASE_LABELS } from "@/features/settlement/SettlementPhaseStepper.tsx"
+import { usePhaseLabels } from "@/features/settlement/SettlementPhaseStepper.tsx"
 import { useTRPC } from "@/trpc/trpc"
 
 export function SettlementProgressSummary({
@@ -12,7 +13,9 @@ export function SettlementProgressSummary({
   settlementId: number
   phase: SettlementPhase
 }) {
+  const { t } = useTranslation("settlement")
   const trpc = useTRPC()
+  const PHASE_LABELS = usePhaseLabels()
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
@@ -39,11 +42,11 @@ export function SettlementProgressSummary({
         <Card.Block data-size="sm">
           <Paragraph data-size="sm">
             <strong>{openYear ?? "—"}</strong>
-            {" · Created by "}
+            {t(" · Created by ")}
             <strong>{createdByName ?? "—"}</strong>
-            {" · Split policy: "}
+            {t(" · Split policy: ")}
             <strong>{splitPolicyName ?? "—"}</strong>
-            {" · Status: "}
+            {t(" · Status: ")}
             <strong>{PHASE_LABELS[phase]}</strong>
           </Paragraph>
         </Card.Block>

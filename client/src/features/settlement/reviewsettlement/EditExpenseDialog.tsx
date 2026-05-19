@@ -5,6 +5,7 @@ import {
   Heading,
   Paragraph,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./SettlementExpenseRow.module.css"
 import { CategorySelect } from "./CategorySelect"
 
@@ -33,6 +34,7 @@ export function EditExpenseDialog({
   errorMessage,
   editable,
 }: Props) {
+  const { t } = useTranslation("settlement")
   const formId = `edit-expense-${String(expenseId)}`
   return (
     <Dialog.TriggerContext>
@@ -42,14 +44,14 @@ export function EditExpenseDialog({
         disabled={!editable || saving}
         onClick={() => { onOpen() }}
       >
-        Edit
+        {t("Edit")}
       </Dialog.Trigger>
       <Dialog
         open={open}
         onClose={onClose}
       >
         <Dialog.Block>
-          <Heading level={3} data-size="xs">Edit category</Heading>
+          <Heading level={3} data-size="xs">{t("Edit category")}</Heading>
         </Dialog.Block>
         <Dialog.Block>
           <form
@@ -58,7 +60,7 @@ export function EditExpenseDialog({
             onSubmit={onSubmit}
           >
             <label>
-              Category
+              {t("Category")}
               <CategorySelect
                 value={category}
                 onChange={setCategory}
@@ -74,7 +76,7 @@ export function EditExpenseDialog({
               type="button"
               onClick={() => { onClose() }}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               variant="primary"
@@ -83,12 +85,12 @@ export function EditExpenseDialog({
               form={formId}
               disabled={saving}
             >
-              Save
+              {t("Save")}
             </Button>
           </div>
           {errorMessage != null && (
             <Paragraph role="alert">
-              Error: {errorMessage}
+              {t("Error: {{message}}", { message: errorMessage })}
             </Paragraph>
           )}
         </Dialog.Block>

@@ -1,4 +1,5 @@
 import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
 
 export type MaintenanceHistoryItemViewData = {
@@ -19,6 +20,7 @@ export function MaintenanceHistoryItemView(props: {
   onConfirmDelete: () => void
   onCancelDelete: () => void
 }) {
+  const { t } = useTranslation("maintenance")
   const {
     item,
     pending,
@@ -54,7 +56,7 @@ export function MaintenanceHistoryItemView(props: {
               disabled={pending}
               onClick={onStartEdit}
             >
-              Edit
+              {t("Edit")}
             </Button>
             {!isDeleting && (
               <Button
@@ -64,7 +66,7 @@ export function MaintenanceHistoryItemView(props: {
                 disabled={pending}
                 onClick={onStartDelete}
               >
-                Delete
+                {t("Delete")}
               </Button>
             )}
           </div>
@@ -73,10 +75,15 @@ export function MaintenanceHistoryItemView(props: {
           <Card.Block>
             <div className={styles.confirm}>
               <Paragraph data-size="sm">
-                Type <code>{item.description}</code> to confirm:
+                <Trans
+                  ns="maintenance"
+                  i18nKey="Type <0>{{description}}</0> to confirm:"
+                  values={{ description: item.description }}
+                  components={[<code key="0" />]}
+                />
               </Paragraph>
               <Textfield
-                aria-label="Type description to confirm deletion"
+                aria-label={t("Type description to confirm deletion")}
                 data-size="sm"
                 value={deletingTyped}
                 onChange={e => { onChangeTyped(e.target.value) }}
@@ -87,7 +94,7 @@ export function MaintenanceHistoryItemView(props: {
                 disabled={pending || deletingTyped !== item.description}
                 onClick={onConfirmDelete}
               >
-                Confirm delete
+                {t("Confirm delete")}
               </Button>
               <Button
                 variant="secondary"
@@ -95,7 +102,7 @@ export function MaintenanceHistoryItemView(props: {
                 disabled={pending}
                 onClick={onCancelDelete}
               >
-                Cancel
+                {t("Cancel")}
               </Button>
             </div>
           </Card.Block>

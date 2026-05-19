@@ -6,6 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
@@ -17,6 +18,7 @@ type EditingState = { id: number } | null
 type DeletingState = { id: number; typed: string } | null
 
 export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -118,11 +120,11 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     }
 
   if (lastError) {
-    return <p role="alert">Error: {lastError.message}</p>
+    return <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>
   }
 
   if (entries.length === 0) {
-    return <p>No completed maintenance yet.</p>
+    return <p>{t("No completed maintenance yet.")}</p>
   }
 
   return (

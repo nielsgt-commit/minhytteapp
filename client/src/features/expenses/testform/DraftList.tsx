@@ -1,4 +1,5 @@
 import { Button } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 import type { ExpenseDraft } from "./useExpenseDrafts.ts"
 
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export function DraftList({ drafts, total, pending, onRemove }: Props) {
+  const { t } = useTranslation("expenses")
   if (drafts.length === 0) return null
   return (
     <ul className={styles.draftList}>
@@ -26,12 +28,12 @@ export function DraftList({ drafts, total, pending, onRemove }: Props) {
             disabled={pending}
             onClick={() => { onRemove(d.id) }}
           >
-            Remove
+            {t("Remove")}
           </Button>
         </li>
       ))}
       <li className={styles.totalRow}>
-        <strong>Total</strong>
+        <strong>{t("Total")}</strong>
         <strong>{total}</strong>
       </li>
     </ul>

@@ -1,4 +1,5 @@
 import { Button, Card } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ContactListView.module.css"
 
 type Contact = {
@@ -31,6 +32,7 @@ export function ContactListView({
   onStartAdd,
   addSlot,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <ul className={styles.list}>
       {contacts?.map(c => (
@@ -46,7 +48,7 @@ export function ContactListView({
                     disabled={pending}
                     onClick={() => { onEdit(c.id) }}
                   >
-                    Edit
+                    {t("Edit")}
                   </Button>
                   <Button
                     variant="tertiary"
@@ -55,7 +57,7 @@ export function ContactListView({
                     disabled={pending}
                     onClick={() => { onDelete(c) }}
                   >
-                    Delete
+                    {t("Delete")}
                   </Button>
                 </>
               )}
@@ -76,7 +78,7 @@ export function ContactListView({
                 disabled={pending}
                 onClick={onStartAdd}
               >
-                + Add contact
+                {t("+ Add contact")}
               </Button>
             )}
           </Card.Block>

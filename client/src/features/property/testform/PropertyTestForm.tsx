@@ -9,6 +9,7 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type PropertyRecord = {
@@ -61,6 +62,7 @@ function buildPayload(state: FormState) {
 }
 
 export function PropertyTestForm() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
@@ -121,15 +123,15 @@ export function PropertyTestForm() {
 
   return (
     <section>
-      <h3>Property Test Form</h3>
+      <h3>{t("Property Test Form")}</h3>
 
       <form onSubmit={handleSubmit}>
         <Fieldset>
-          <Fieldset.Legend>{isEditing ? `Editing #${String(state.id)}` : "New record"}</Fieldset.Legend>
+          <Fieldset.Legend>{isEditing ? t("Editing #{{id}}", { id: state.id ?? 0 }) : t("New record")}</Fieldset.Legend>
 
           <div>
             <Textfield
-              label="Name"
+              label={t("Name")}
               type="text"
               value={state.name}
               onChange={e => { set("name")(e.target.value); }}
@@ -139,7 +141,7 @@ export function PropertyTestForm() {
 
           <div>
             <Textfield
-              label="Address"
+              label={t("Address")}
               type="text"
               value={state.address}
               onChange={e => { set("address")(e.target.value); }}
@@ -149,29 +151,29 @@ export function PropertyTestForm() {
 
           <div>
             <Button type="submit" disabled={pending}>
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? t("Update") : t("Create")}
             </Button>
             <Button
               type="button"
               onClick={() => { dispatch({ type: "reset" }); }}
               disabled={pending}
             >
-              Reset
+              {t("Reset")}
             </Button>
           </div>
         </Fieldset>
       </form>
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      <h4>Records</h4>
+      <h4>{t("Records")}</h4>
       <table>
         <thead>
           <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>address</th>
-            <th>actions</th>
+            <th>{t("id")}</th>
+            <th>{t("name")}</th>
+            <th>{t("address")}</th>
+            <th>{t("actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -191,14 +193,14 @@ export function PropertyTestForm() {
                   }
                   disabled={pending}
                 >
-                  Edit
+                  {t("Edit")}
                 </button>
                 <button
                   type="button"
                   onClick={() => { deleteMutation.mutate({ id: p.id }); }}
                   disabled={pending}
                 >
-                  Delete
+                  {t("Delete")}
                 </button>
               </td>
             </tr>

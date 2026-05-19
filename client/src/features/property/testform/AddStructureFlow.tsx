@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import styles from "./AddStructureFlow.module.css"
@@ -16,6 +17,7 @@ type Props = {
 }
 
 export function AddStructureFlow({ onAdded, onCancel }: Props) {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -54,13 +56,13 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
   }
 
   if (!selectedProperty) {
-    return <p>No property selected. Pick one from the header.</p>
+    return <p>{t("No property selected. Pick one from the header.")}</p>
   }
 
   return (
     <>
       {createStructure.error && (
-        <p role="alert">Error: {createStructure.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: createStructure.error.message })}</p>
       )}
 
       <form
@@ -68,7 +70,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
         className={styles.form}
       >
         <Textfield
-          label="Name"
+          label={t("Name")}
           name="name"
           required
           autoFocus
@@ -76,7 +78,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
         />
         <div className={styles.actions}>
           <Button type="submit" disabled={createStructure.isPending}>
-            Add structure
+            {t("Add structure")}
           </Button>
           {onCancel && (
             <Button
@@ -85,7 +87,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
               disabled={createStructure.isPending}
               onClick={onCancel}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
           )}
         </div>

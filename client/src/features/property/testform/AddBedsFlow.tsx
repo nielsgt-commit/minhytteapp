@@ -6,6 +6,7 @@ import {
   Label,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./AddBedsFlow.module.css"
 
 type BedKey =
@@ -61,6 +62,7 @@ export function AddBedsFlow({
   onSubmit,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("property")
   const [name, setName] = useState(defaults?.name ?? "")
   const [beds, setBeds] = useState<Partial<Record<BedKey, number | "">>>(() => {
     if (!defaults) return {}
@@ -119,7 +121,7 @@ export function AddBedsFlow({
         <Fieldset.Legend>{legend}</Fieldset.Legend>
         <div className={styles.body}>
           <Textfield
-            label="Room name"
+            label={t("Room name")}
             value={name}
             onChange={e => { setName(e.target.value) }}
             required
@@ -134,7 +136,7 @@ export function AddBedsFlow({
                   className={styles.bedRow}
                 >
                   <Textfield
-                    label={BED_LABELS[key]}
+                    label={(t as (k: string) => string)(BED_LABELS[key])}
                     type="number"
                     min={1}
                     value={beds[key] ?? ""}
@@ -156,7 +158,7 @@ export function AddBedsFlow({
                     onClick={() => { removeBedType(key) }}
                     disabled={pending}
                   >
-                    Remove
+                    {t("Remove")}
                   </Button>
                 </div>
               ))}
@@ -165,7 +167,7 @@ export function AddBedsFlow({
 
           {availableKeys.length > 0 && (
             <div className={styles.addGroup}>
-              <Label>Add bed type</Label>
+              <Label>{t("Add bed type")}</Label>
               <div className={styles.chipRow}>
                 {availableKeys.map(key => (
                   <Chip.Button
@@ -173,7 +175,7 @@ export function AddBedsFlow({
                     type="button"
                     onClick={() => { addBedType(key) }}
                   >
-                    + {BED_LABELS[key]}
+                    + {(t as (k: string) => string)(BED_LABELS[key])}
                   </Chip.Button>
                 ))}
               </div>
@@ -190,7 +192,7 @@ export function AddBedsFlow({
               onClick={onCancel}
               disabled={pending}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
         </div>

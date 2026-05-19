@@ -1,8 +1,10 @@
 import { useEffect, useRef, useSyncExternalStore } from "react"
 import type React from "react"
 import flatpickr from "flatpickr"
+import { Norwegian } from "flatpickr/dist/l10n/no.js"
 import "flatpickr/dist/flatpickr.min.css"
 import "../flatpickr-digdir.css"
+import { useTranslation } from "react-i18next"
 import { SEASON_MIN, SEASON_MAX } from "../constants"
 import { setDates, toIso } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction } from "@/features/calendar/booking-logic"
@@ -31,6 +33,8 @@ export function useFlatpickr(
   draftRef.current = draft
 
   const showMonths = useSyncExternalStore(subscribeWide, getShowMonthsSnapshot)
+  const { i18n } = useTranslation()
+  const language = i18n.resolvedLanguage
 
   useEffect(() => {
     if (!inputRef.current) return
@@ -39,6 +43,7 @@ export function useFlatpickr(
       mode: "range",
       inline: true,
       showMonths,
+      locale: language === "nb" ? Norwegian : "default",
       minDate: SEASON_MIN,
       maxDate: SEASON_MAX,
       defaultDate: [draftRef.current.start_date, draftRef.current.end_date].filter(
@@ -66,7 +71,7 @@ export function useFlatpickr(
       ro?.disconnect()
       fpRef.current?.destroy()
     }
-  }, [showMonths, dispatch])
+  }, [showMonths, dispatch, language])
 
   useEffect(() => {
     if (draft.start_date == null && draft.end_date == null) {

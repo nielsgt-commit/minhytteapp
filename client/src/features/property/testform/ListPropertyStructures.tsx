@@ -13,6 +13,7 @@ import {
   Tag,
 } from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { AddStructureFlow } from "@/features/property/testform/AddStructureFlow.tsx"
 import {
@@ -35,6 +36,7 @@ type OpenForm =
 
 
 export function ListPropertyStructures() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -140,7 +142,7 @@ export function ListPropertyStructures() {
   }
 
   const handleDeleteStructure = (structureId: number, structureName: string) => {
-    if (!window.confirm(`Delete structure "${structureName}"?`)) return
+    if (!window.confirm(t("Delete structure \"{{name}}\"?", { name: structureName }))) return
     deleteStructure.mutate(
       { id: structureId },
       {
@@ -186,7 +188,7 @@ export function ListPropertyStructures() {
     structure: { id: number; property_id: number; name: string; category: StructureCategory },
     isLastRoom: boolean,
   ) => {
-    if (!window.confirm(`Delete room "${room.name}"?`)) return
+    if (!window.confirm(t("Delete room \"{{name}}\"?", { name: room.name }))) return
     deleteRoom.mutate(
       { id: room.id },
       {
@@ -208,18 +210,18 @@ export function ListPropertyStructures() {
   if (!selectedProperty) {
     return (
       <section>
-        <h3>Structures</h3>
-        <p>No property selected. Pick one from the header.</p>
+        <h3>{t("Structures")}</h3>
+        <p>{t("No property selected. Pick one from the header.")}</p>
       </section>
     )
   }
 
   return (
     <section>
-      <h3>Structures for {selectedProperty.name}</h3>
+      <h3>{t("Structures for {{name}}", { name: selectedProperty.name })}</h3>
 
       <Switch
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.target.checked
@@ -232,7 +234,7 @@ export function ListPropertyStructures() {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       <ul className={styles.list}>
           {propertyStructures.map(b => {
@@ -256,7 +258,7 @@ export function ListPropertyStructures() {
                           type="text"
                           defaultValue={b.name}
                           autoFocus
-                          aria-label="structure name"
+                          aria-label={t("structure name")}
                           disabled={updateStructure.isPending}
                           onBlur={e => { handleNameSave(b, e.currentTarget.value) }}
                           onKeyDown={e => {
@@ -275,7 +277,7 @@ export function ListPropertyStructures() {
                             if (editMode) setEditingNameId(b.id)
                           }}
                           title={
-                            editMode ? "Double-click to rename" : undefined
+                            editMode ? t("Double-click to rename") : undefined
                           }
                           className={editMode ? styles.nameStatic : undefined}
                         >
@@ -286,8 +288,8 @@ export function ListPropertyStructures() {
                         data-color={
                           b.category === "habitable" ? "success" : "neutral"
                         }
-                        aria-label={CATEGORY_LABEL[b.category]}
-                        title={CATEGORY_LABEL[b.category]}
+                        aria-label={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
+                        title={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
                       >
                         {b.category === "habitable" ? (
                           <BedIcon aria-hidden fontSize="1.25rem" />
@@ -304,8 +306,8 @@ export function ListPropertyStructures() {
                         {editingRoom ? (
                           <AddBedsFlow
                             key={`edit-room-${String(editingRoom.id)}`}
-                            legend={`Edit room ${editingRoom.name}`}
-                            submitLabel="Save room"
+                            legend={t("Edit room {{name}}", { name: editingRoom.name })}
+                            submitLabel={t("Save room")}
                             pending={updateRoom.isPending}
                             defaults={{
                               name: editingRoom.name,
@@ -323,7 +325,7 @@ export function ListPropertyStructures() {
                             onCancel={() => { setOpenForm(null) }}
                           />
                         ) : structureRooms.length === 0 ? (
-                          <p>No rooms yet.</p>
+                          <p>{t("No rooms yet.")}</p>
                         ) : (
                           <ul className={styles.roomList}>
                             {structureRooms.map(r => (
@@ -340,7 +342,7 @@ export function ListPropertyStructures() {
                                   disabled={pending}
                                   onClick={() => { toggleRoomEdit(r.id) }}
                                 >
-                                  Edit
+                                  {t("Edit")}
                                 </Button>
                                 <Button
                                   variant="tertiary"
@@ -355,7 +357,7 @@ export function ListPropertyStructures() {
                                     )
                                   }}
                                 >
-                                  Delete
+                                  {t("Delete")}
                                 </Button>
                               </li>
                             ))}
@@ -367,14 +369,14 @@ export function ListPropertyStructures() {
                           disabled={pending}
                           onClick={() => { toggleAddRoom(b.id) }}
                         >
-                          {addRoomOpen ? "Cancel" : "Add room"}
+                          {addRoomOpen ? t("Cancel") : t("Add room")}
                         </Button>
 
                         {addRoomOpen && (
                           <AddBedsFlow
                             key={`add-room-${String(b.id)}`}
-                            legend={`Add room to ${b.name}`}
-                            submitLabel="Save room"
+                            legend={t("Add room to {{name}}", { name: b.name })}
+                            submitLabel={t("Save room")}
                             pending={createRoom.isPending}
                             onSubmit={handleAddRoom(b)}
                             onCancel={() => { setOpenForm(null) }}
@@ -387,7 +389,7 @@ export function ListPropertyStructures() {
                           disabled={pending}
                           onClick={() => { handleDeleteStructure(b.id, b.name) }}
                         >
-                          Delete structure
+                          {t("Delete structure")}
                         </Button>
 
                         <Button
@@ -398,7 +400,7 @@ export function ListPropertyStructures() {
                             setOpenForm(null)
                           }}
                         >
-                          Close
+                          {t("Close")}
                         </Button>
                       </>
                     )}
@@ -410,7 +412,7 @@ export function ListPropertyStructures() {
                         disabled={pending}
                         onClick={() => { setExpandedId(b.id) }}
                       >
-                        Edit structure
+                        {t("Edit structure")}
                       </Button>
                     )}
                   </Card.Block>
@@ -424,7 +426,7 @@ export function ListPropertyStructures() {
               <Card.Block className={styles.cardBlock}>
                 {isAdding ? (
                   <>
-                    <strong>Add structure</strong>
+                    <strong>{t("Add structure")}</strong>
                     <AddStructureFlow
                       onAdded={() => { setIsAdding(false) }}
                       onCancel={() => { setIsAdding(false) }}
@@ -436,7 +438,7 @@ export function ListPropertyStructures() {
                     className={styles.addButton}
                     onClick={() => { setIsAdding(true) }}
                   >
-                    + Add structure
+                    {t("+ Add structure")}
                   </Button>
                 )}
               </Card.Block>

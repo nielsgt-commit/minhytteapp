@@ -1,5 +1,6 @@
 import type { Dispatch } from "react"
 import { Button, Field, Heading, Label, Paragraph, Select, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { setNotes, setStatus } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
 import { ConfirmStep } from "../confirmstep/ConfirmStep.tsx"
@@ -48,6 +49,7 @@ export function StepConfirm({
   stepClass: string
   stepActiveClass: string
 }) {
+  const { t } = useTranslation("calendar")
   const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
   const nights = draft.start_date && draft.end_date
     ? Math.round((new Date(draft.end_date).getTime() - new Date(draft.start_date).getTime()) / 86400000)
@@ -57,7 +59,7 @@ export function StepConfirm({
     .map(o => {
       const u = users.find(x => x.id === o.user_id)
       if (!u) return `#${String(o.user_id)}`
-      return `${u.name}${u.is_child ? " (child)" : ""}${o.queued ? " (queued)" : ""}`
+      return `${u.name}${u.is_child ? t(" (child)") : ""}${o.queued ? t(" (queued)") : ""}`
     })
   const roomEntries = propertyStructures.flatMap(b =>
     propertyRooms
@@ -65,7 +67,7 @@ export function StepConfirm({
       .map(r => {
         const occs = (occupantsByRoom.get(r.id) ?? []).map(o => {
           const u = users.find(x => x.id === o.user_id)
-          return u ? `${u.name}${u.is_child ? " (child)" : ""}` : `#${String(o.user_id)}`
+          return u ? `${u.name}${u.is_child ? t(" (child)") : ""}` : `#${String(o.user_id)}`
         })
         return { structureName: b.name, roomName: r.name, occupants: occs }
       })
@@ -74,39 +76,39 @@ export function StepConfirm({
   const unassignedNames = unassigned.map(o => {
     const u = users.find(x => x.id === o.user_id)
     return u
-      ? `${u.name}${u.is_child ? " (child)" : ""}`
+      ? `${u.name}${u.is_child ? t(" (child)") : ""}`
       : `#${String(o.user_id)}`
   })
 
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div className={styles.card}>
-        <Heading level={4}>Review request</Heading>
+        <Heading level={4}>{t("Review request")}</Heading>
         <dl className={styles.list}>
           <dt>
-            <strong>When</strong>
+            <strong>{t("When")}</strong>
           </dt>
           <dd className={styles.item}>
-            {draft.start_date && draft.end_date
-              ? `${draft.start_date} → ${draft.end_date} (${String(nights)} night${nights === 1 ? "" : "s"})`
-              : "Dates not selected"}
+            {draft.start_date && draft.end_date && nights != null
+              ? `${draft.start_date} → ${draft.end_date} (${t("{{count}} night", { count: nights })})`
+              : t("Dates not selected")}
           </dd>
 
           <dt>
-            <strong>Who</strong>
+            <strong>{t("Who")}</strong>
           </dt>
           <dd className={styles.item}>
-            {bookerName} (booker)
+            {bookerName} {t("(booker)")}
             {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
           </dd>
 
           <dt>
-            <strong>Where</strong>
+            <strong>{t("Where")}</strong>
           </dt>
           <dd className={styles.item}>
             {roomEntries.length === 0 &&
               unassignedNames.length === 0 &&
-              "No occupants yet"}
+              t("No occupants yet")}
             {roomEntries.length > 0 && (
               <ul className={styles.subList}>
                 {roomEntries.map(e => (
@@ -117,12 +119,12 @@ export function StepConfirm({
               </ul>
             )}
             {unassignedNames.length > 0 && (
-              <div>Unassigned: {unassignedNames.join(", ")}</div>
+              <div>{t("Unassigned: {{names}}", { names: unassignedNames.join(", ") })}</div>
             )}
           </dd>
 
           <dt>
-            <strong>Status</strong>
+            <strong>{t("Status")}</strong>
           </dt>
           <dd className={styles.itemLast}>
             {draft.status}
@@ -131,10 +133,10 @@ export function StepConfirm({
       </div>
 
       <div className={styles.card}>
-        <Heading level={4}>Details</Heading>
+        <Heading level={4}>{t("Details")}</Heading>
         <div className={styles.fields}>
           <Field>
-            <Label>Status</Label>
+            <Label>{t("Status")}</Label>
             <Select
               value={draft.status}
               onChange={e => {
@@ -145,13 +147,13 @@ export function StepConfirm({
                 )
               }}
             >
-              <Select.Option value="pending">Pending</Select.Option>
-              <Select.Option value="confirmed">Confirmed</Select.Option>
-              <Select.Option value="cancelled">Cancelled</Select.Option>
+              <Select.Option value="pending">{t("Pending")}</Select.Option>
+              <Select.Option value="confirmed">{t("Confirmed")}</Select.Option>
+              <Select.Option value="cancelled">{t("Cancelled")}</Select.Option>
             </Select>
           </Field>
           <Textfield
-            label="Notes"
+            label={t("Notes")}
             value={draft.notes}
             onChange={e => {
               dispatch(setNotes(e.target.value))
@@ -164,10 +166,10 @@ export function StepConfirm({
       {!submitState.confirming && (
         <Button type="submit" disabled={!canSubmit}>
           {isPending
-            ? "Saving…"
+            ? t("Saving…")
             : hasWarnings
-              ? "Request stay (warnings present)"
-              : "Request stay"}
+              ? t("Request stay (warnings present)")
+              : t("Request stay")}
         </Button>
       )}
 
@@ -192,7 +194,7 @@ export function StepConfirm({
           role="alert"
           className={styles.errorMessage}
         >
-          Error: {submitState.error}
+          {t("Error: {{message}}", { message: submitState.error })}
         </Paragraph>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { Button, Card, Tag } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { ownerLabel } from "./ownershipCalculations.ts"
 import styles from "./OwnerListView.module.css"
 
@@ -28,10 +29,11 @@ export function OwnerListView({
   onRemove,
   onStartAdd,
 }: Props) {
+  const { t } = useTranslation("property")
   return (
     <>
       {owners.length === 0 ? (
-        <p>No owners yet.</p>
+        <p>{t("No owners yet.")}</p>
       ) : (
         <ul className={styles.list}>
           {owners.map(o => {
@@ -44,7 +46,7 @@ export function OwnerListView({
                       {ownerLabel(o)}
                     </span>
                     <Tag data-color={isUser ? "info" : "neutral"}>
-                      {isUser ? "User" : "Group"}
+                      {isUser ? t("User") : t("Group")}
                     </Tag>
                     <span>{o.ownership_pct}%</span>
                     {editMode && (
@@ -55,7 +57,7 @@ export function OwnerListView({
                           disabled={pending}
                           onClick={() => { onEdit(o.id) }}
                         >
-                          Edit
+                          {t("Edit")}
                         </Button>
                         <Button
                           variant="tertiary"
@@ -64,7 +66,7 @@ export function OwnerListView({
                           disabled={pending}
                           onClick={() => { onRemove(o) }}
                         >
-                          Delete
+                          {t("Delete")}
                         </Button>
                       </>
                     )}
@@ -82,7 +84,7 @@ export function OwnerListView({
           disabled={pending}
           onClick={onStartAdd}
         >
-          + Add owner
+          {t("+ Add owner")}
         </Button>
       )}
     </>

@@ -4,6 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import {
   AddNewExpenseFlow,
@@ -13,6 +14,7 @@ import {
 const todayIso = () => new Date().toISOString().slice(0, 10)
 
 export function ExpensesTestForm() {
+  const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -46,7 +48,7 @@ export function ExpensesTestForm() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <p>Select a property to record expenses.</p>
+        <p>{t("Select a property to record expenses.")}</p>
       </section>
     )
   }
@@ -60,7 +62,7 @@ export function ExpensesTestForm() {
         onCancel={() => { createMutation.reset() }}
       />
       {createMutation.error && (
-        <p role="alert">Error: {createMutation.error.message}</p>
+        <p role="alert">{t("Error: {{message}}", { message: createMutation.error.message })}</p>
       )}
     </section>
   )

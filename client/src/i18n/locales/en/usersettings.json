@@ -1,0 +1,19 @@
+{
+  "Add": "Add",
+  "Add child": "Add child",
+  "Birthday": "Birthday",
+  "Cancel": "Cancel",
+  "Display name": "Display name",
+  "Edit": "Edit",
+  "Error: {{message}}": "Error: {{message}}",
+  "Household role": "Household role",
+  "I am a household head (can be assigned a priority week and settlement)": "I am a household head (can be assigned a priority week and settlement)",
+  "Loading…": "Loading…",
+  "My children": "My children",
+  "Name": "Name",
+  "No children yet.": "No children yet.",
+  "Remove": "Remove",
+  "Remove {{name}}?": "Remove {{name}}?",
+  "Save": "Save",
+  "User settings": "User settings"
+}

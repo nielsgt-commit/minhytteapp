@@ -1,8 +1,10 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function AssignedTasks() {
+  const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
@@ -13,7 +15,7 @@ export function AssignedTasks() {
     ),
   )
 
-  if (!me || !items) return <p>Loading…</p>
+  if (!me || !items) return <p>{t("Loading…")}</p>
 
   const assigned = items.filter(
     i => i.assigned_to_id === me.id && i.status !== "done",
@@ -21,14 +23,14 @@ export function AssignedTasks() {
 
   return (
     <section>
-      <h2>Assigned tasks</h2>
+      <h2>{t("Assigned tasks")}</h2>
       {assigned.length === 0 ? (
-        <p>You&apos;re all caught up — no tasks assigned to you. Enjoy the day!</p>
+        <p>{t("You're all caught up — no tasks assigned to you. Enjoy the day!")}</p>
       ) : (
         <ul>
-          {assigned.map(t => (
-            <li key={t.id}>
-              {t.description} ({t.status})
+          {assigned.map(task => (
+            <li key={task.id}>
+              {task.description} ({task.status})
             </li>
           ))}
         </ul>

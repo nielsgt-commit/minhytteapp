@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Outlet, useLocation } from "@tanstack/react-router"
 import { Card } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./ManageProperty.module.css"
 import { SideNav } from "@/components/shared/SideNav"
 import { GroupTabs } from "@/components/shared/GroupTabs"
@@ -48,13 +49,15 @@ const BANNERS = new Map<string, { title: string; description: string }>([
 ])
 
 function RouteBanner({ pathname }: { pathname: string }) {
+  const { t } = useTranslation("property")
+  const td = t as (key: string) => string
   const banner = BANNERS.get(pathname)
   if (!banner) return null
   return (
     <Card asChild>
       <header>
-        <h2>{banner.title}</h2>
-        <p>{banner.description}</p>
+        <h2>{td(banner.title)}</h2>
+        <p>{td(banner.description)}</p>
       </header>
     </Card>
   )
@@ -99,34 +102,43 @@ const MOBILE_GROUPS = [
 ] as const
 
 export function ManageProperty() {
+  const { t } = useTranslation("property")
+  const td = t as (key: string) => string
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { pathname } = useLocation()
   useSuspenseQuery(trpc.property.list.queryOptions())
 
+  const translateGroups = <G extends { label: string; items: readonly { to: string; label: string }[] }>(
+    groups: readonly G[],
+  ) => groups.map(g => ({
+    label: td(g.label),
+    items: g.items.map(i => ({ to: i.to, label: td(i.label) })),
+  }))
+
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <h1 className={styles.title}>Manage Property</h1>
-        <p>Add or select a property to edit its details, structures, owners, and invites.</p>
+        <h1 className={styles.title}>{t("Manage Property")}</h1>
+        <p>{t("Add or select a property to edit its details, structures, owners, and invites.")}</p>
       </section>
     )
   }
 
   return (
     <section className={styles.page}>
-      <h1 className={styles.title}>Manage Property</h1>
+      <h1 className={styles.title}>{t("Manage Property")}</h1>
 
       <div className={styles.layout}>
         <div className={styles.desktopNav}>
-          <SideNav ariaLabel="Property sections" groups={DESKTOP_GROUPS} />
+          <SideNav ariaLabel={t("Property sections")} groups={translateGroups(DESKTOP_GROUPS)} />
         </div>
         <div className={styles.mobileNav}>
-          <GroupTabs groups={MOBILE_GROUPS} />
+          <GroupTabs groups={translateGroups(MOBILE_GROUPS)} />
         </div>
         <div className={styles.content}>
           <RouteBanner pathname={pathname} />
-          <Suspense fallback={<p>Loading…</p>}>
+          <Suspense fallback={<p>{t("Loading…")}</p>}>
             <Outlet />
           </Suspense>
         </div>

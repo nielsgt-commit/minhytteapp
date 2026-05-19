@@ -1,4 +1,5 @@
 import { Button } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 
 type Props = {
@@ -7,10 +8,11 @@ type Props = {
 }
 
 export function SubmitRow({ pending, onCancel }: Props) {
+  const { t } = useTranslation("expenses")
   return (
     <div className={styles.submitRow}>
       <Button type="submit" disabled={pending}>
-        Submit
+        {t("Submit")}
       </Button>
       <Button
         type="button"
@@ -18,7 +20,7 @@ export function SubmitRow({ pending, onCancel }: Props) {
         onClick={onCancel}
         disabled={pending}
       >
-        Cancel
+        {t("Cancel")}
       </Button>
     </div>
   )

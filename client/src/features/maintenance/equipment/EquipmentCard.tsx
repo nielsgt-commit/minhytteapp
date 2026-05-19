@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
 import type {
   EquipmentHistoryEntryData} from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx";
@@ -33,6 +34,7 @@ export function EquipmentCard(props: {
   schedulePending: boolean
   canSubmitSchedule: boolean
 }) {
+  const { t } = useTranslation("maintenance")
   const {
     item,
     structureName,
@@ -73,7 +75,7 @@ export function EquipmentCard(props: {
                 setModalState({ kind: "inspecting", id: item.id })
               }}
             >
-              Start inspection
+              {t("Start inspection")}
             </Button>
           )}
           <div className={styles.actions}>
@@ -85,7 +87,7 @@ export function EquipmentCard(props: {
                   setModalState({ kind: "scheduling", id: item.id })
                 }}
               >
-                Schedule maintenance
+                {t("Schedule maintenance")}
               </Button>
             )}
             {!isInspecting && (
@@ -100,7 +102,7 @@ export function EquipmentCard(props: {
                   )
                 }}
               >
-                {isHistoryOpen ? "Hide history" : "Show history"}
+                {isHistoryOpen ? t("Hide history") : t("Show history")}
               </Button>
             )}
           </div>
@@ -112,13 +114,13 @@ export function EquipmentCard(props: {
               className={styles.schedule}
             >
               <Textfield
-                label="Task"
+                label={t("Task")}
                 name="description"
-                defaultValue={`Service ${item.name}`}
+                defaultValue={t("Service {{name}}", { name: item.name })}
                 required
               />
               <Textfield
-                label="Due"
+                label={t("Due")}
                 type="date"
                 name="due_at"
               />
@@ -128,7 +130,7 @@ export function EquipmentCard(props: {
                   data-size="sm"
                   disabled={schedulePending || !canSubmitSchedule}
                 >
-                  Schedule
+                  {t("Schedule")}
                 </Button>
                 <Button
                   variant="secondary"
@@ -136,7 +138,7 @@ export function EquipmentCard(props: {
                   disabled={schedulePending}
                   onClick={() => { setModalState({ kind: "none" }) }}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
               </div>
             </form>
@@ -146,7 +148,7 @@ export function EquipmentCard(props: {
           <Card.Block>
             {historyEntries.length === 0 ? (
               <Paragraph data-size="sm">
-                No history yet.
+                {t("No history yet.")}
               </Paragraph>
             ) : (
               <div className={styles.list}>

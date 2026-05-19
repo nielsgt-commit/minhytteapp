@@ -2,11 +2,13 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@digdir/designsystemet-react"
 import { CarFillIcon, CarIcon } from "@navikt/aksel-icons"
+import { useTranslation } from "react-i18next"
 import styles from "./AvailableParking.module.css"
 import { useParking } from "./useParking"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export default function AvailableParking() {
+  const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
 
@@ -27,7 +29,7 @@ export default function AvailableParking() {
 
   const property = properties?.find(p => p.id === propertyId)
   const total = property?.parking_spots ?? 0
-  if (total === 0) return <p>No parking spots configured.</p>
+  if (total === 0) return <p>{t("No parking spots configured.")}</p>
 
   const claimedBySlot = new Map((claims ?? []).map(c => [c.slot_index, c]))
 
@@ -38,8 +40,8 @@ export default function AvailableParking() {
           const occupant = claimedBySlot.get(slot)
           const occupied = occupant != null
           const title = occupied
-            ? `Spot ${String(slot + 1)} — taken by ${occupant.user_name}`
-            : `Spot ${String(slot + 1)} — free`
+            ? t("Spot {{slot}} — taken by {{userName}}", { slot: slot + 1, userName: occupant.user_name })
+            : t("Spot {{slot}} — free", { slot: slot + 1 })
           return (
             <Button
               key={slot}

@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Switch } from "@digdir/designsystemet-react"
+import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -30,6 +31,7 @@ type Owner = {
 }
 
 export function PropertyOwnersPanel() {
+  const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -88,8 +90,8 @@ export function PropertyOwnersPanel() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <h3>Property Owners</h3>
-        <p>No property selected. Pick one from the header.</p>
+        <h3>{t("Property Owners")}</h3>
+        <p>{t("No property selected. Pick one from the header.")}</p>
       </section>
     )
   }
@@ -165,7 +167,7 @@ export function PropertyOwnersPanel() {
 
   const handleRemove = (o: Owner) => {
     const label = ownerLabel(o)
-    if (!window.confirm(`Remove ${label} as owner?`)) return
+    if (!window.confirm(t("Remove {{label}} as owner?", { label }))) return
     removeOwner.mutate(
       { id: o.id, property_id: selectedPropertyId },
       { onSuccess: () => { setEditingId(null) } },
@@ -179,17 +181,22 @@ export function PropertyOwnersPanel() {
 
   return (
     <section>
-      <h3>Property Owners</h3>
+      <h3>{t("Property Owners")}</h3>
 
       <p>
-        Total: <strong>{totalPct.toFixed(2)}%</strong>{" "}
+        <Trans
+          t={t}
+          i18nKey="Total: <1>{{total}}%</1> "
+          values={{ total: totalPct.toFixed(2) }}
+          components={{ 1: <strong /> }}
+        />
         {offBy > 0.001 && (
-          <strong role="alert">(does not sum to 100%)</strong>
+          <strong role="alert">{t("(does not sum to 100%)")}</strong>
         )}
       </p>
 
       <Switch
-        label="Edit mode"
+        label={t("Edit mode")}
         checked={editMode}
         onChange={e => {
           const next = e.target.checked
@@ -201,7 +208,7 @@ export function PropertyOwnersPanel() {
         }}
       />
 
-      {lastError && <p role="alert">Error: {lastError.message}</p>}
+      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       {editingOwner ? (
         <OwnerEditForm
