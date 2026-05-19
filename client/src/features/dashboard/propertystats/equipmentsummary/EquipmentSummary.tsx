@@ -8,6 +8,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
+import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 const CATEGORIES = ["Boat", "Appliance", "Tool"] as const
 
@@ -36,11 +37,11 @@ export default function EquipmentSummary() {
       content={equipment.length === 0 ? (
         <Paragraph>No equipment yet.</Paragraph>
       ) : (
-        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
+        <List.Unordered className={styles.list}>
           {CATEGORIES.map(cat => {
             const count = countByCategory.get(cat) ?? 0
             return (
-              <List.Item key={cat} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+              <List.Item key={cat} className={styles.row}>
                 <span>{cat}</span>
                 <span>{count}</span>
               </List.Item>
@@ -49,7 +50,7 @@ export default function EquipmentSummary() {
         </List.Unordered>
       )}
       footer={(
-        <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
+        <Button asChild variant="secondary" className={styles.footerButton}>
           <Link to="/manageproperty">Manage equipment</Link>
         </Button>
       )}

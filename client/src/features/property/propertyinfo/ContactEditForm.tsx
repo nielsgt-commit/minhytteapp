@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import styles from "./ContactEditForm.module.css"
 
 type Contact = {
   id: number
@@ -31,11 +32,7 @@ export function ContactEditForm({
     <form
       onSubmit={onSubmit}
       key={`edit-${String(contact.id)}`}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-      }}
+      className={styles.form}
     >
       <Fieldset>
         <Fieldset.Legend>Edit contact</Fieldset.Legend>
@@ -73,7 +70,7 @@ export function ContactEditForm({
           defaultValue={contact.info ?? ""}
           disabled={updatePending}
         />
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div className={styles.actions}>
           <Button type="submit" disabled={pending}>
             Save
           </Button>

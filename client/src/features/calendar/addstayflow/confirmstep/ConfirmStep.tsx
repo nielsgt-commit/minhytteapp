@@ -1,6 +1,7 @@
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { groupConsecutive } from "@/features/calendar/booking-logic"
 import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
+import styles from "./ConfirmStep.module.css"
 
 function formatDateRanges(isos: string[]): string {
   return groupConsecutive(isos)
@@ -37,15 +38,7 @@ export function ConfirmStep({
   }
 
   return (
-    <div
-      style={{
-        border: "2px solid #dc3545",
-        borderRadius: "8px",
-        padding: "1rem",
-        background: "#fff5f5",
-        marginTop: "1rem",
-      }}
-    >
+    <div className={styles.warningBox}>
       <Heading level={4}>Warnings — confirm to proceed</Heading>
 
       {conflicts.property.overCapacityBy > 0 && (
@@ -73,12 +66,12 @@ export function ConfirmStep({
       })}
 
       {overflowIds.size > 0 && (
-        <Paragraph style={{ marginTop: "0.5rem" }}>
+        <Paragraph className={styles.queueNote}>
           {overflowIds.size} occupant(s) will be marked queued on submit.
         </Paragraph>
       )}
 
-      <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+      <div className={styles.actions}>
         <Button
           type="button"
           onClick={() => {

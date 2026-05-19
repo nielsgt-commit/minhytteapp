@@ -1,4 +1,5 @@
 import { Button, Card } from "@digdir/designsystemet-react"
+import styles from "./ContactListView.module.css"
 
 type Contact = {
   id: number
@@ -31,26 +32,12 @@ export function ContactListView({
   addSlot,
 }: Props) {
   return (
-    <ul
-      style={{
-        listStyle: "none",
-        padding: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-      }}
-    >
+    <ul className={styles.list}>
       {contacts?.map(c => (
         <Card asChild key={c.id}>
           <li>
-            <Card.Block
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <span style={{ flex: 1, minWidth: 0 }}>{c.name}</span>
+            <Card.Block className={styles.row}>
+              <span className={styles.rowName}>{c.name}</span>
               {editMode && (
                 <>
                   <Button
@@ -79,23 +66,13 @@ export function ContactListView({
 
       <Card asChild key="__add">
         <li>
-          <Card.Block
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-            }}
-          >
+          <Card.Block className={styles.addBlock}>
             {isAdding ? (
               addSlot
             ) : (
               <Button
                 variant="tertiary"
-                style={{
-                  flex: 1,
-                  minHeight: "4rem",
-                  alignSelf: "stretch",
-                }}
+                className={styles.addButton}
                 disabled={pending}
                 onClick={onStartAdd}
               >

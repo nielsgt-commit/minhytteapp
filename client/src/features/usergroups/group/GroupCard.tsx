@@ -1,8 +1,8 @@
 import { type SyntheticEvent } from "react"
 import { Button, Checkbox, Textfield } from "@digdir/designsystemet-react"
-import { fdBoolean, fdString } from "@/utils/formData"
-import { AddMemberForm } from "./AddMemberForm.tsx"
-import { CreateUserForm } from "./CreateUserForm.tsx"
+import { fdBoolean, fdString } from "@/utils/formData.ts"
+import { AddMemberForm } from "../AddMemberForm.tsx"
+import { CreateUserForm } from "../users/CreateUserForm.tsx"
 
 type Member = { user_id: number; user_name: string }
 

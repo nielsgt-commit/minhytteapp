@@ -5,6 +5,7 @@ import {
   Divider,
   Heading,
 } from "@digdir/designsystemet-react"
+import styles from "./PropertyStats.module.css"
 
 type Props = {
   title: string
@@ -16,9 +17,9 @@ type Props = {
 export default function StatCard({ title, count, content, footer }: Props) {
   return (
     <Card asChild>
-      <section style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <Card.Block style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <Heading level={4} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+      <section className={styles.card}>
+        <Card.Block className={styles.cardBlock}>
+          <Heading level={4} className={styles.cardHeading}>
             <span>{title}</span>
             <Badge count={count} />
           </Heading>

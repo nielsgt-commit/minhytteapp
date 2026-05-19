@@ -16,6 +16,7 @@ import {
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import styles from "./EquipmentPanel.module.css"
 
 type Props = {
   propertyId: number
@@ -161,11 +162,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
         <form
           onSubmit={handleSave(editingItem)}
           key={`edit-${String(editingItem.id)}`}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
+          className={styles.editForm}
         >
           <Fieldset>
             <Fieldset.Legend>Edit equipment</Fieldset.Legend>
@@ -177,13 +174,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               defaultValue={editingItem.name}
               disabled={updateEquipment.isPending}
             />
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
-              }}
-            >
+            <div className={styles.fieldGroup}>
               <Label htmlFor={`edit-structure-${String(editingItem.id)}`}>
                 Structure
               </Label>
@@ -216,7 +207,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               defaultValue={editingItem.notes ?? ""}
               disabled={updateEquipment.isPending}
             />
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <div className={styles.actions}>
               <Button type="submit" disabled={pending}>
                 Save
               </Button>
@@ -241,26 +232,12 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
           </Fieldset>
         </form>
       ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
-        >
+        <ul className={styles.list}>
           {equipment.map(item => (
             <Card asChild key={item.id}>
               <li>
-                <Card.Block
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <span style={{ flex: 1, minWidth: 0 }}>{item.name}</span>
+                <Card.Block className={styles.row}>
+                  <span className={styles.rowName}>{item.name}</span>
                   {editMode && (
                     <>
                       <Button
@@ -289,23 +266,13 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
 
           <Card asChild key="__add">
             <li>
-              <Card.Block
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                }}
-              >
+              <Card.Block className={styles.addBlock}>
                 {isAdding ? (
                   <>
                     <strong>Add equipment</strong>
                     <form
                       onSubmit={handleAdd}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.5rem",
-                      }}
+                      className={styles.addForm}
                     >
                       <Fieldset>
                         <Fieldset.Legend>New equipment</Fieldset.Legend>
@@ -316,13 +283,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           autoFocus
                           disabled={createEquipment.isPending}
                         />
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "0.25rem",
-                          }}
-                        >
+                        <div className={styles.fieldGroup}>
                           <Label htmlFor="add-equipment-structure">Structure</Label>
                           <Select
                             id="add-equipment-structure"
@@ -354,13 +315,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           maxLength={255}
                           disabled={createEquipment.isPending}
                         />
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "0.5rem",
-                            flexWrap: "wrap",
-                          }}
-                        >
+                        <div className={styles.actions}>
                           <Button type="submit" disabled={createEquipment.isPending}>
                             Add equipment
                           </Button>
@@ -379,11 +334,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                 ) : (
                   <Button
                     variant="tertiary"
-                    style={{
-                      flex: 1,
-                      minHeight: "4rem",
-                      alignSelf: "stretch",
-                    }}
+                    className={styles.addButton}
                     disabled={pending || !canAdd}
                     title={canAdd ? undefined : "Add a structure first"}
                     onClick={() => { setIsAdding(true) }}

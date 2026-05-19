@@ -9,6 +9,7 @@ import {
 import type { SuggestionItem } from "@digdir/designsystemet-react"
 import { addOccupant, removeOccupant } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction } from "@/features/calendar/booking-logic"
+import styles from "./StepGuests.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
 
@@ -35,10 +36,10 @@ export function StepGuests({
 }) {
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
-      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
+      <div className={styles.card}>
         <Heading level={4}>Guests</Heading>
 
-        <Paragraph data-size="sm" style={{ marginBottom: "0.5rem" }}>
+        <Paragraph data-size="sm" className={styles.bookerLabel}>
           Booker: {users.find(u => u.id === selectedUserId)?.name ?? "(select user)"}
         </Paragraph>
         <Field>

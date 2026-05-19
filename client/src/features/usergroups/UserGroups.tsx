@@ -1,7 +1,7 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
-import { ListUsers } from "./ListUsers.tsx"
+import { ListUsers } from "./users/ListUsers.tsx"
 import { UserGroupsFlow } from "./UserGroupsFlow.tsx"
-import { PropertyInvitesPanel } from "./PropertyInvitesPanel.tsx"
+import { PropertyInvitesPanel } from "./invites/PropertyInvitesPanel.tsx"
 import styles from "./UserGroups.module.css"
 
 export function UserGroups() {

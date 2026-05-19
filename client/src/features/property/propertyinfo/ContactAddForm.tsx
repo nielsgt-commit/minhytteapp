@@ -1,5 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import styles from "./ContactAddForm.module.css"
 
 type Props = {
   createPending: boolean
@@ -13,11 +14,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
       <strong>Add contact</strong>
       <form
         onSubmit={onSubmit}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-        }}
+        className={styles.form}
       >
         <Fieldset>
           <Fieldset.Legend>New contact</Fieldset.Legend>
@@ -51,13 +48,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
             maxLength={1024}
             disabled={createPending}
           />
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className={styles.actions}>
             <Button type="submit" disabled={createPending}>
               Add contact
             </Button>

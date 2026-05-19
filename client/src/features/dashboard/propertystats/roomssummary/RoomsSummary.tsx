@@ -8,6 +8,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
+import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 export default function RoomsSummary() {
   const trpc = useTRPC()
@@ -43,35 +44,35 @@ export default function RoomsSummary() {
       content={rooms.length === 0 ? (
         <Paragraph>No rooms yet.</Paragraph>
       ) : (
-        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
-          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+        <List.Unordered className={styles.list}>
+          <List.Item className={styles.row}>
             <span>Beds (single)</span>
             <span>{totals.beds_sm}</span>
           </List.Item>
-          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+          <List.Item className={styles.row}>
             <span>Beds (large)</span>
             <span>{totals.beds_lg}</span>
           </List.Item>
-          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+          <List.Item className={styles.row}>
             <span>Beds (double)</span>
             <span>{totals.beds_double}</span>
           </List.Item>
-          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+          <List.Item className={styles.row}>
             <span>Beds (kid)</span>
             <span>{totals.beds_kid}</span>
           </List.Item>
-          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+          <List.Item className={styles.row}>
             <span>Mattresses</span>
             <span>{totals.mattresses}</span>
           </List.Item>
-          <List.Item style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+          <List.Item className={styles.row}>
             <span>Travel cots</span>
             <span>{totals.travel_cot}</span>
           </List.Item>
         </List.Unordered>
       )}
       footer={(
-        <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
+        <Button asChild variant="secondary" className={styles.footerButton}>
           <Link to="/manageproperty">Manage rooms</Link>
         </Button>
       )}

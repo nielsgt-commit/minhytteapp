@@ -192,7 +192,7 @@ export default function PlannedAvailabilitySummary({
         {isMobile && days.every(d => guestsOnDay(toIso(d)) === 0) ? (
           <Card asChild>
             <li>
-              <Card.Block className={styles.dayCardBlock} style={{ cursor: "default" }}>
+              <Card.Block className={`${styles.dayCardBlock} ${styles.dayCardBlockEmpty}`}>
                 <div className={styles.dayRow}>
                   <div className={styles.dayCount}>
                     <span>No guests</span>

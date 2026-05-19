@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, Tag } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
+import styles from "./MyPlannedStay.module.css"
 
 function rangesOverlap(
   aStart: string,
@@ -49,15 +50,7 @@ export function MyPlannedStay() {
   }
 
   return (
-    <ul
-      style={{
-        listStyle: "none",
-        padding: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-      }}
-    >
+    <ul className={styles.list}>
       {myBookings.map(b => {
         const otherNames = new Set<string>()
         for (const other of active) {
@@ -84,25 +77,13 @@ export function MyPlannedStay() {
                     toggle()
                   }
                 }}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                  cursor: "pointer",
-                }}
+                className={styles.cardBlock}
               >
                 <div>
                   {formatDayMonth(b.start_date)} – {formatDayMonth(b.end_date)}
                 </div>
                 {isOpen && (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
+                  <div className={styles.companions}>
                     {names.length > 0 ? (
                       <>
                         <span>Accompanied by:</span>

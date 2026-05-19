@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 import { ProfileSection } from "./ProfileSection"
 import { ChildrenSection } from "./ChildrenSection"
+import { Heading } from "@digdir/designsystemet-react"
 
 export function UserSettings() {
   const trpc = useTRPC()
@@ -12,7 +13,7 @@ export function UserSettings() {
 
   return (
     <section>
-      <h1>User settings</h1>
+      <Heading level={2}>User settings</Heading>
       <ProfileSection me={me} />
       <ChildrenSection />
     </section>

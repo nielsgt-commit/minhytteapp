@@ -36,7 +36,7 @@ export function MyExpenses() {
   return (
     <Details>
       <Details.Summary>My expenses ({mine.length})</Details.Summary>
-      <Details.Content style={{ padding: 0 }}>
+      <Details.Content className={styles.content}>
         {deleteExpense.error && (
           <p role="alert">Error: {deleteExpense.error.message}</p>
         )}

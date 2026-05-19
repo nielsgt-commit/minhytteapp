@@ -9,7 +9,7 @@ import { Button, Card, Checkbox, Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { CreateGroupForm } from "./CreateGroupForm.tsx"
-import { GroupCard } from "./GroupCard.tsx"
+import { GroupCard } from "./group/GroupCard.tsx"
 import styles from "./UserGroupsFlow.module.css"
 
 type OpenForm =

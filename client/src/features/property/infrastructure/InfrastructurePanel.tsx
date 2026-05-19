@@ -11,6 +11,7 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
+import styles from "./InfrastructurePanel.module.css"
 
 type Props = {
   propertyId: number
@@ -130,11 +131,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
         <form
           onSubmit={handleSave(editingInfrastructure)}
           key={`edit-${String(editingInfrastructure.id)}`}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
+          className={styles.editForm}
         >
           <Textfield
             label="Name"
@@ -151,7 +148,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
             defaultValue={editingInfrastructure.description}
             disabled={updateInfrastructure.isPending}
           />
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div className={styles.actions}>
             <Button type="submit" disabled={pending}>
               Save
             </Button>
@@ -175,26 +172,12 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
           </div>
         </form>
       ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
-        >
+        <ul className={styles.list}>
           {infrastructure.map(p => (
             <Card asChild key={p.id}>
               <li>
-                <Card.Block
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <span style={{ flex: 1, minWidth: 0 }}>{p.name}</span>
+                <Card.Block className={styles.row}>
+                  <span className={styles.rowName}>{p.name}</span>
                   {editMode && (
                     <>
                       <Button
@@ -223,23 +206,13 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
 
           <Card asChild key="__add">
             <li>
-              <Card.Block
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                }}
-              >
+              <Card.Block className={styles.addBlock}>
                 {isAdding ? (
                   <>
                     <strong>Add infrastructure</strong>
                     <form
                       onSubmit={handleAdd}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.5rem",
-                      }}
+                      className={styles.addForm}
                     >
                       <Textfield
                         label="Name"
@@ -254,13 +227,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                         required
                         disabled={createInfrastructure.isPending}
                       />
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.5rem",
-                          flexWrap: "wrap",
-                        }}
-                      >
+                      <div className={styles.actions}>
                         <Button type="submit" disabled={createInfrastructure.isPending}>
                           Add infrastructure
                         </Button>
@@ -278,11 +245,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                 ) : (
                   <Button
                     variant="tertiary"
-                    style={{
-                      flex: 1,
-                      minHeight: "4rem",
-                      alignSelf: "stretch",
-                    }}
+                    className={styles.addButton}
                     disabled={pending}
                     onClick={() => { setIsAdding(true) }}
                   >
