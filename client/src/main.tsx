@@ -15,6 +15,7 @@ import { trpcClient } from "./trpc/client"
 import { loadAuth } from "./auth/oauth"
 import "@digdir/designsystemet-css/theme"
 import "@digdir/designsystemet-css"
+import "./i18n"
 import "./index.css"
 
 
