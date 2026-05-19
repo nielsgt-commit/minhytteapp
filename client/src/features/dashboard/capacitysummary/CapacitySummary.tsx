@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Card, Divider, Heading } from "@digdir/designsystemet-react"
+import { Card, Heading } from "@digdir/designsystemet-react"
 import styles from "./CapacitySummary.module.css"
 import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "./availableparking/AvailableParking.tsx"
@@ -15,32 +15,48 @@ export function CapacitySummary() {
     trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
-  )
-
-  const propertyName =
-    properties.find(p => p.id === propertyId)?.name ?? "property"
-
   return (
-    <Card asChild>
-      <section>
-        <Card.Block>
-          <div className={styles.stack}>
-            <div className={styles.header}>
-              <div className={styles.headerLeft}>
-                <Heading level={6} size="medium">
-                  {propertyName} now <NowWeather />
-                </Heading>
-                <AtPropertyNow />
-              </div>
+    <div className={styles.row}>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <div className={styles.cardStack}>
+              <Heading level={6} size="medium">Weather now</Heading>
+              <NowWeather />
+            </div>
+          </Card.Block>
+        </section>
+      </Card>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <div className={styles.cardStack}>
+              <Heading level={6} size="medium">At property now</Heading>
+              <AtPropertyNow />
+            </div>
+          </Card.Block>
+        </section>
+      </Card>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <div className={styles.cardStack}>
+              <Heading level={6} size="medium">Available parking</Heading>
               <AvailableParking />
             </div>
-            <Divider className={styles.divider} />
-            <RoomAvailabilityIndicator rooms={rooms} />
-          </div>
-        </Card.Block>
-      </section>
-    </Card>
+          </Card.Block>
+        </section>
+      </Card>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <div className={styles.cardStack}>
+              <Heading level={6} size="medium">Available beds</Heading>
+              <RoomAvailabilityIndicator rooms={rooms} />
+            </div>
+          </Card.Block>
+        </section>
+      </Card>
+    </div>
   )
 }

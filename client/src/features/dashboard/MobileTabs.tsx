@@ -8,6 +8,7 @@ import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummar
 import AtPropertyNow from "@/features/dashboard/capacitysummary/userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
 import RoomAvailabilityIndicator from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
+import NowWeather from "@/features/dashboard/weather/NowWeather.tsx"
 
 export default function MobileTabs({ propertyId }: { propertyId: number }) {
   const [tab, setTab] = useState<"now" | "week" | "summer">("now")
@@ -62,6 +63,14 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
+            <Heading level={2} data-size="xs">Weather now</Heading>
+            <NowWeather />
+          </Card.Block>
+        </section>
+      </Card>
+      <Card asChild>
+        <section>
+          <Card.Block>
             <Heading level={2} data-size="xs">At {propertyName} now</Heading>
             <AtPropertyNow />
           </Card.Block>
@@ -70,6 +79,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
+            <Heading level={2} data-size="xs">Available parking</Heading>
             <AvailableParking />
           </Card.Block>
         </section>
@@ -77,6 +87,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
+            <Heading level={2} data-size="xs">Available beds</Heading>
             <RoomAvailabilityIndicator rooms={rooms} />
           </Card.Block>
         </section>

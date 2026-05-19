@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
-import { Button, Heading } from "@digdir/designsystemet-react"
+import { Button } from "@digdir/designsystemet-react"
 import { CarFillIcon, CarIcon } from "@navikt/aksel-icons"
 import styles from "./AvailableParking.module.css"
 import { useParking } from "./useParking"
@@ -33,7 +33,6 @@ export default function AvailableParking() {
 
   return (
     <div className={styles.wrap}>
-      <Heading level={6} size="medium">Available parking</Heading>
       <div className={styles.slots}>
         {Array.from({ length: total }, (_, slot) => {
           const occupant = claimedBySlot.get(slot)

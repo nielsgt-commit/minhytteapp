@@ -6,9 +6,8 @@ import {
   EXPERIMENTAL_AvatarStack as AvatarStack,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
-const MOBILE_LIMIT = 4
+const VISIBLE_LIMIT = 4
 
 function initials(name: string) {
   return name
@@ -28,7 +27,6 @@ export default function AtPropertyNow() {
       { enabled: propertyId != null },
     ),
   )
-  const isMobile = useIsMobile()
   const [expanded, setExpanded] = useState(false)
 
   if (propertyId == null) return null
@@ -37,9 +35,9 @@ export default function AtPropertyNow() {
   const guests = data ?? []
   if (guests.length === 0) return <p>No one at the property right now.</p>
 
-  const canTruncate = isMobile && guests.length > MOBILE_LIMIT
+  const canTruncate = guests.length > VISIBLE_LIMIT
   const collapsed = canTruncate && !expanded
-  const hiddenCount = collapsed ? guests.length - MOBILE_LIMIT : 0
+  const hiddenCount = collapsed ? guests.length - VISIBLE_LIMIT : 0
   const toggle = () => { setExpanded(e => !e) }
 
   if (collapsed) {
@@ -60,7 +58,7 @@ export default function AtPropertyNow() {
         aria-expanded={false}
         style={{ cursor: "pointer" }}
       >
-        {guests.slice(0, MOBILE_LIMIT).map(g => (
+        {guests.slice(0, VISIBLE_LIMIT).map(g => (
           <Avatar
             key={g.user_id}
             aria-label={g.name}
