@@ -1,8 +1,7 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, Tag } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 function rangesOverlap(
@@ -24,7 +23,7 @@ function formatDayMonth(iso: string) {
 
 export function MyPlannedStay() {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
   const { data: bookings } = useQuery(
     trpc.booking.listForProperty.queryOptions(

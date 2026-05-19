@@ -1,22 +1,20 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { EquipmentPanel } from "@/features/property/equipment/EquipmentPanel"
 import { trpc } from "@/trpc/client"
-import { store } from "@/app/store"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 export const Route = createFileRoute("/_authed/manageproperty/equipment")({
   loader: ({ context }) => {
-    const propertyId = selectSelectedPropertyId(store.getState())
+    const { selectedPropertyId } = context
     return Promise.all([
       context.queryClient.ensureQueryData(trpc.structure.list.queryOptions()),
-      propertyId == null
+      selectedPropertyId == null
         ? undefined
         : context.queryClient.ensureQueryData(
             trpc.equipment.listForProperty.queryOptions({
-              property_id: propertyId,
+              property_id: selectedPropertyId,
             }),
           ),
     ])
@@ -26,7 +24,7 @@ export const Route = createFileRoute("/_authed/manageproperty/equipment")({
 
 function EquipmentRoute() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = useSelectedPropertyId()
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )

@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import PlannedAvailabilitySummary
   from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
@@ -5,8 +6,6 @@ import PlannedMaintenanceSummary
   from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { startOfSunday } from "@/utils/dateUtils"
 
@@ -14,7 +13,7 @@ import { startOfSunday } from "@/utils/dateUtils"
 export default function CalendarSummary() {
 
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
+  const propertyId = useSelectedPropertyId() ?? 0
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )

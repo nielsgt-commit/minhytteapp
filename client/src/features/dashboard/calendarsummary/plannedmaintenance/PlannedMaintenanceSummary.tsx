@@ -1,8 +1,7 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Heading, Tag } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 type Severity = "major" | "minor" | "patch"
 
@@ -28,7 +27,7 @@ type Props = {
 
 export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
+  const propertyId = useSelectedPropertyId() ?? 0
   const { data: structures } = useSuspenseQuery(
     trpc.structure.listForProperty.queryOptions({ property_id: propertyId }),
   )

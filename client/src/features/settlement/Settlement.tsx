@@ -1,11 +1,10 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { Suspense } from "react"
 import styles from "./Settlement.module.css"
 import { SettlementFlow } from "@/features/settlement/SettlementFlow.tsx"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export function Settlement() {
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   if (selectedPropertyId == null) {
     return (

@@ -1,16 +1,15 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type ReactNode, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Chip, Heading, Tabs } from "@digdir/designsystemet-react"
 import styles from "./StructureStats.module.css"
-import { Equipment } from "@/features/maintenance/Equipment.tsx"
-import {
-  MaintenanceCard,
-  type MaintenanceScope,
-} from "@/features/maintenance/MaintenanceCard.tsx"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import {
+  MaintenanceCard,
+  MaintenanceScope,
+} from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import { Equipment } from "@/features/maintenance/equipment/Equipment.tsx"
 
 type TabValue = "structures" | "infrastructure" | "equipment"
 
@@ -38,7 +37,7 @@ function CategoryFrame({
 
 export function StructureStats() {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const isMobile = useIsMobile()
 
   const { data: structures } = useSuspenseQuery(

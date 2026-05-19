@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import {
   useMutation,
   useQueryClient,
@@ -11,8 +12,6 @@ import { useReviewMutations } from "./useReviewMutations.ts"
 import { useAcceptingToggle } from "./useAcceptingToggle.ts"
 import type { ExpenseRow } from "../types.ts"
 import { selectExpensesToReview } from "../selectors.ts"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import {
   NEXT_PHASE,
   type SettlementPhase,
@@ -27,7 +26,7 @@ type Props = {
 export function ReviewExpenses({ settlementId, phase }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
   const { data: expenses } = useSuspenseQuery(
     trpc.expense.listForProperty.queryOptions({

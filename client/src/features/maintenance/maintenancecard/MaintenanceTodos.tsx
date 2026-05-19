@@ -1,3 +1,4 @@
+import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent } from "react"
 import {
   useMutation,
@@ -11,17 +12,15 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import styles from "./MaintenanceTodos.module.css"
-import type { MaintenanceScope } from "@/features/maintenance/MaintenanceCard.tsx"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
-import { selectSelectedUserId } from "@/features/user/userSlice.ts"
+import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
-  const selectedUserId = useAppSelector(selectSelectedUserId)
+  const selectedPropertyId = useSelectedPropertyId()
+  const selectedUserId = useSelectedUserId()
 
   const { data: items } = useQuery(
     trpc.maintenance.listForProperty.queryOptions(

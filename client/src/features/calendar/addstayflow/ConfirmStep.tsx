@@ -80,6 +80,7 @@ export function ConfirmStep({
 
       <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
         <Button
+          type="button"
           onClick={() => {
             onConfirm({
               ...draft,
@@ -93,7 +94,7 @@ export function ConfirmStep({
         >
           Request anyway
         </Button>
-        <Button variant="secondary" onClick={onCancel} disabled={isMutating}>
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={isMutating}>
           Cancel
         </Button>
       </div>

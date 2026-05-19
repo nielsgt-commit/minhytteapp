@@ -1,11 +1,10 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc"
 
 export function PreliminarySettlement() {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: users } = useSuspenseQuery(
     trpc.user.listForProperty.queryOptions({
       property_id: selectedPropertyId ?? 0,

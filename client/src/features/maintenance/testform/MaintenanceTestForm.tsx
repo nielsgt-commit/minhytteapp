@@ -1,3 +1,4 @@
+import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useReducer, useState } from "react"
 import {
   useMutation,
@@ -12,9 +13,6 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedUserId } from "@/features/user/userSlice"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 type Category = "maintenance" | "repair"
 type Severity = "major" | "minor" | "patch"
@@ -109,8 +107,8 @@ function buildPayload(state: FormState, addedBy: number) {
 export function MaintenanceTestForm() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedUserId = useAppSelector(selectSelectedUserId)
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedUserId = useSelectedUserId()
+  const selectedPropertyId = useSelectedPropertyId()
   const [state, dispatch] = useReducer(formReducer, initialFormState)
   const [showMore, setShowMore] = useState(false)
 

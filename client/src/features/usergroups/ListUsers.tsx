@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { Fragment, type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -11,8 +12,6 @@ import {
   Heading,
   Textfield,
 } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { fdBoolean, fdString } from "@/utils/formData"
@@ -20,7 +19,7 @@ import { fdBoolean, fdString } from "@/utils/formData"
 export function ListUsers() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
   const { data: users } = useSuspenseQuery(

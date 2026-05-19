@@ -1,4 +1,4 @@
-import type { RefObject } from "react"
+import { useMemo, type RefObject } from "react"
 import { Card, Label, Paragraph, Tag } from "@digdir/designsystemet-react"
 
 type OverlappingBooking = {
@@ -6,6 +6,11 @@ type OverlappingBooking = {
 }
 
 type PriorityWeek = { iso_week: number; owner_name: string }
+
+type Availability = {
+  color: "danger" | "warning" | "neutral" | "success"
+  label: string
+}
 
 export function StepDates({
   isActive,
@@ -30,6 +35,29 @@ export function StepDates({
   stepClass: string
   stepActiveClass: string
 }) {
+  const availability = useMemo<Availability | null>(() => {
+    if (occupiedBeds === null) return null
+    const ratio = totalBeds > 0 ? (totalBeds - occupiedBeds) / totalBeds : 1
+    if (ratio <= 0) return { color: "danger", label: "At capacity" }
+    if (ratio <= 0.3) return { color: "warning", label: "Almost at capacity" }
+    if (ratio <= 0.6) return { color: "neutral", label: "Limited availability" }
+    return { color: "success", label: "High availability" }
+  }, [totalBeds, occupiedBeds])
+
+  const overlappingOccupantsText = useMemo(() => {
+    const seen = new Map<number, { name: string; queued: boolean }>()
+    for (const o of overlappingBookings.flatMap(b => b.occupants)) {
+      if (!seen.has(o.user_id) || (!o.queued && seen.get(o.user_id)!.queued)) {
+        seen.set(o.user_id, { name: o.user_name ?? `#${String(o.user_id)}`, queued: o.queued })
+      }
+    }
+    const confirmed = Array.from(seen.values()).filter(o => !o.queued).map(o => o.name)
+    const queued = Array.from(seen.values()).filter(o => o.queued).map(o => `${o.name}?`)
+    return queued.length > 0
+      ? `${confirmed.join(", ")} (+ ${queued.join(", ")})`
+      : confirmed.join(", ")
+  }, [overlappingBookings])
+
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div
@@ -45,16 +73,8 @@ export function StepDates({
           <Card>
             <Card.Block>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                {occupiedBeds !== null ? (
-                  (() => {
-                    const ratio = totalBeds > 0 ? (totalBeds - occupiedBeds) / totalBeds : 1
-                    const [color, label]: ["danger" | "warning" | "neutral" | "success", string] =
-                      ratio <= 0 ? ["danger", "At capacity"] :
-                      ratio <= 0.3 ? ["warning", "Almost at capacity"] :
-                      ratio <= 0.6 ? ["neutral", "Limited availability"] :
-                      ["success", "High availability"]
-                    return <Tag data-color={color}>{label}</Tag>
-                  })()
+                {availability !== null ? (
+                  <Tag data-color={availability.color}>{availability.label}</Tag>
                 ) : (
                   <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
                     Pick dates to see availability.
@@ -78,19 +98,7 @@ export function StepDates({
                     During this period:
                   </Label>
                   <Paragraph data-size="sm" style={{ margin: 0 }}>
-                    {(() => {
-                      const seen = new Map<number, { name: string; queued: boolean }>()
-                      for (const o of overlappingBookings.flatMap(b => b.occupants)) {
-                        if (!seen.has(o.user_id) || (!o.queued && seen.get(o.user_id)!.queued)) {
-                          seen.set(o.user_id, { name: o.user_name ?? `#${String(o.user_id)}`, queued: o.queued })
-                        }
-                      }
-                      const confirmed = Array.from(seen.values()).filter(o => !o.queued).map(o => o.name)
-                      const queued = Array.from(seen.values()).filter(o => o.queued).map(o => `${o.name}?`)
-                      return queued.length > 0
-                        ? `${confirmed.join(", ")} (+ ${queued.join(", ")})`
-                        : confirmed.join(", ")
-                    })()}
+                    {overlappingOccupantsText}
                   </Paragraph>
                 </div>
               )}

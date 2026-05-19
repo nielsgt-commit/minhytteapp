@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -5,8 +6,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Card, Textfield } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { fdNumber, fdString } from "@/utils/formData"
@@ -18,7 +17,7 @@ function inviteUrl(token: string): string {
 export function PropertyInvitesPanel() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = useSelectedPropertyId()
 
   const invitesQuery = useSuspenseQuery(
     trpc.invite.list.queryOptions(

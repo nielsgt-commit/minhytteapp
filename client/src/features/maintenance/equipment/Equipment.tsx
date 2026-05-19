@@ -1,3 +1,4 @@
+import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -7,22 +8,21 @@ import {
 } from "@tanstack/react-query"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import styles from "./Equipment.module.css"
-import {
-  EquipmentCard,
-  type ModalState,
-} from "@/features/maintenance/EquipmentCard.tsx"
-import { type EquipmentHistoryEntryData } from "@/features/maintenance/EquipmentHistoryEntry.tsx"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
-import { selectSelectedUserId } from "@/features/user/userSlice.ts"
+import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
+import type {
+  ModalState} from "@/features/maintenance/equipment/EquipmentCard.tsx";
+import {
+  EquipmentCard
+} from "@/features/maintenance/equipment/EquipmentCard.tsx"
 
 export function Equipment() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
-  const selectedUserId = useAppSelector(selectSelectedUserId)
+  const selectedPropertyId = useSelectedPropertyId()
+  const selectedUserId = useSelectedUserId()
   const isMobile = useIsMobile()
 
   const { data: equipment = [] } = useQuery(

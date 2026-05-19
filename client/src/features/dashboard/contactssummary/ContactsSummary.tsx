@@ -1,14 +1,13 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { Details, Heading, Link, Paragraph } from "@digdir/designsystemet-react"
 import { EnvelopeClosedIcon, PhoneIcon } from "@navikt/aksel-icons"
 import styles from "./ContactsSummary.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export default function ContactsSummary() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = useSelectedPropertyId()
   const { data: contacts } = useQuery(
     trpc.propertyContact.listForProperty.queryOptions(
       { property_id: propertyId ?? 0 },

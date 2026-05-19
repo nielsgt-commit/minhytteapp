@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { Button, Card, Divider, Paragraph } from "@digdir/designsystemet-react"
 import styles from "./MaintenanceCard.module.css"
-import { InspectionFlow } from "@/features/maintenance/InspectionFlow.tsx"
-import { MaintenanceHistory } from "@/features/maintenance/MaintenanceHistory.tsx"
-import { MaintenanceTodos } from "@/features/maintenance/MaintenanceTodos.tsx"
+import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
+import { MaintenanceHistory } from "@/features/maintenance/maintenancecard/MaintenanceHistory.tsx"
+import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/MaintenanceTodos.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export type MaintenanceScope =

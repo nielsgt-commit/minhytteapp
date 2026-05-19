@@ -1,12 +1,10 @@
+import { useSelectedUserId } from "@/app/useSelectedIds"
 import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import {
-  selectSelectedUserId,
-  setSelectedUserId,
-} from "@/features/user/userSlice"
+import { useAppDispatch } from "@/app/hooks"
+import { setSelectedUserId } from "@/features/user/userSlice"
 import { loadAuth, logout } from "@/auth/oauth"
 import UserSwitcher from "./UserSwitcher"
 import styles from "./Header.module.css"
@@ -18,7 +16,7 @@ export default function UserMenu() {
   const { data: me, isLoading } = useQuery(
     trpc.user.me.queryOptions(undefined, { enabled: auth.isAuthenticated }),
   )
-  const selectedId = useAppSelector(selectSelectedUserId)
+  const selectedId = useSelectedUserId()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 

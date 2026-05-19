@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import {
   useMutation,
@@ -6,8 +7,6 @@ import {
 } from "@tanstack/react-query"
 import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import {
   PEAK_WEEKS,
@@ -22,7 +21,7 @@ import { usePrioritySliceSync } from "@/features/priority/usePrioritySliceSync"
 export function PriorityWeeks() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const [year, setYear] = useState<number>(defaultYear())
 
   const { data: me } = useQuery(trpc.user.me.queryOptions())

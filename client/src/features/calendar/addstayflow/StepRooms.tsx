@@ -6,9 +6,9 @@ import {
   removeOccupant,
 } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
-import { RoomCapacityMeter } from "./components/RoomCapacityMeter"
-import { UnassignedPanel } from "./components/UnassignedPanel"
-import type { ExistingOccupant, RoomShape } from "./types"
+import { RoomCapacityMeter } from "./RoomCapacityMeter"
+import { UnassignedPanel } from "./UnassignedPanel"
+import type { ExistingOccupant, RoomShape } from "@/features/calendar/types.ts"
 
 type User = { id: number; name: string; is_child: boolean | null }
 type Structure = { id: number; name: string }
@@ -65,25 +65,54 @@ export function StepRooms({
             if (buildingRooms.length === 0) return null
             return (
               <li key={building.id}>
-                <Label data-size="sm" style={{ textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ds-color-neutral-text-subtle)", display: "block", marginBottom: "0.25rem" }}>
+                <Label
+                  data-size="sm"
+                  style={{
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "var(--ds-color-neutral-text-subtle)",
+                    display: "block",
+                    marginBottom: "0.25rem",
+                  }}
+                >
                   {building.name}
                 </Label>
-                <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <ul
+                  style={{
+                    listStyle: "none",
+                    padding: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                  }}
+                >
                   {buildingRooms.map(r => (
                     <li key={r.id}>
                       <RoomCapacityMeter
                         room={r}
                         structureName={building.name}
                         occupantsInRoom={occupantsByRoom.get(r.id) ?? []}
-                        existingOccupantsInRoom={existingOccupantsByRoom.get(r.id) ?? []}
+                        existingOccupantsInRoom={
+                          existingOccupantsByRoom.get(r.id) ?? []
+                        }
                         users={users}
-                        adultInKidOnlyUserIds={adultInKidOnlyByRoom.get(r.id) ?? []}
+                        adultInKidOnlyUserIds={
+                          adultInKidOnlyByRoom.get(r.id) ?? []
+                        }
                         unassignedOccupants={unassigned}
-                        onAssign={(uid, roomId) => { dispatch(assignOccupantToRoom(uid, roomId)) }}
-                        onRemove={uid => { dispatch(removeOccupant(uid)) }}
+                        onAssign={(uid, roomId) => {
+                          dispatch(assignOccupantToRoom(uid, roomId))
+                        }}
+                        onRemove={uid => {
+                          dispatch(removeOccupant(uid))
+                        }}
                         isBooker={uid => uid === selectedUserId}
                         isExpanded={expandedRoomId === r.id}
-                        onToggle={() => { setExpandedRoomId(prev => prev === r.id ? null : r.id) }}
+                        onToggle={() => {
+                          setExpandedRoomId(prev =>
+                            prev === r.id ? null : r.id,
+                          )
+                        }}
                       />
                     </li>
                   ))}

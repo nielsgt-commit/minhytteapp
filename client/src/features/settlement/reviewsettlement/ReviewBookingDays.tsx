@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import {
   useMutation,
@@ -12,8 +13,6 @@ import {
 } from "@digdir/designsystemet-react"
 import styles from "./ReviewBookingDays.module.css"
 import { ReviewBookingDaysRow } from "./ReviewBookingDaysRow"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import {
   NEXT_PHASE,
   PREV_PHASE,
@@ -36,7 +35,7 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [stillAccepting, setStillAccepting] = useState(true)
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),

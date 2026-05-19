@@ -1,15 +1,14 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { Button, Heading } from "@digdir/designsystemet-react"
 import { CarFillIcon, CarIcon } from "@navikt/aksel-icons"
 import styles from "./AvailableParking.module.css"
 import { useParking } from "./useParking"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export default function AvailableParking() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = useSelectedPropertyId()
 
   const { data: me } = useQuery(trpc.user.me.queryOptions())
   const { data: properties } = useQuery(

@@ -1,11 +1,12 @@
 import { type SyntheticEvent } from "react"
 import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
 import styles from "./Equipment.module.css"
+import type {
+  EquipmentHistoryEntryData} from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx";
 import {
-  EquipmentHistoryEntry,
-  type EquipmentHistoryEntryData,
-} from "@/features/maintenance/EquipmentHistoryEntry.tsx"
-import { InspectionFlow } from "@/features/maintenance/InspectionFlow.tsx"
+  EquipmentHistoryEntry
+} from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
+import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 
 export type ModalState =
   | { kind: "none" }

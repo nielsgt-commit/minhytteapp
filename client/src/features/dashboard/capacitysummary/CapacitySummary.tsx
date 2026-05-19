@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Divider, Heading } from "@digdir/designsystemet-react"
 import styles from "./CapacitySummary.module.css"
@@ -5,12 +6,10 @@ import AtPropertyNow from "./userscheckedin/AtPropertyNow.tsx"
 import AvailableParking from "./availableparking/AvailableParking.tsx"
 import RoomAvailabilityIndicator from "./roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 
 export function CapacitySummary() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
+  const propertyId = useSelectedPropertyId() ?? 0
   const { data: rooms } = useSuspenseQuery(
     trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
   )

@@ -1,15 +1,14 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { Suspense } from "react"
 import styles from "./Dashboard.module.css"
 import MobileTabs from "./MobileTabs"
 import PlannedStaysSection from "./PlannedStaysSection"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export function Dashboard() {
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const isMobile = useIsMobile()
 
   if (selectedPropertyId == null) {

@@ -1,5 +1,5 @@
 import { Card, Paragraph } from "@digdir/designsystemet-react"
-import { InspectionCard } from "@/features/maintenance/InspectionCard.tsx"
+import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 
 type MaintenanceEntry = {
   kind: "maintenance"

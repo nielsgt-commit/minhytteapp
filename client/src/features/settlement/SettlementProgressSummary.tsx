@@ -1,7 +1,6 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Paragraph } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SettlementPhase } from "@/features/settlement/phase"
 import { PHASE_LABELS } from "@/features/settlement/SettlementPhaseStepper.tsx"
 import { useTRPC } from "@/trpc/trpc"
@@ -14,7 +13,7 @@ export function SettlementProgressSummary({
   phase: SettlementPhase
 }) {
   const trpc = useTRPC()
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
   const { data: settlements } = useSuspenseQuery(

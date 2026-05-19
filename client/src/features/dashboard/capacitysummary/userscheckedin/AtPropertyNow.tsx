@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -5,8 +6,6 @@ import {
   EXPERIMENTAL_AvatarStack as AvatarStack,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 const MOBILE_LIMIT = 4
@@ -22,7 +21,7 @@ function initials(name: string) {
 
 export default function AtPropertyNow() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId)
+  const propertyId = useSelectedPropertyId()
   const { data, isLoading } = useQuery(
     trpc.stay.atProperty.queryOptions(
       { property_id: propertyId ?? 0 },

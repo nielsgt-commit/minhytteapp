@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -10,11 +11,8 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
-import { useAppDispatch, useAppSelector } from "@/app/hooks.ts"
-import {
-  selectSelectedPropertyId,
-  setSelectedPropertyId,
-} from "@/features/property/propertySlice.ts"
+import { useAppDispatch } from "@/app/hooks.ts"
+import { setSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function DeletePropertyFlow() {
@@ -22,7 +20,7 @@ export function DeletePropertyFlow() {
   const qc = useQueryClient()
   const dispatch = useAppDispatch()
 
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),

@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import {
@@ -6,13 +7,11 @@ import {
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
 
 export default function UserSummary() {
   const trpc = useTRPC()
-  const propertyId = useAppSelector(selectSelectedPropertyId) ?? 0
+  const propertyId = useSelectedPropertyId() ?? 0
   const { data: userGroups } = useSuspenseQuery(
     trpc.userGroup.listWithMembersForProperty.queryOptions({
       property_id: propertyId,

@@ -1,3 +1,4 @@
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent } from "react"
 import {
   useMutation,
@@ -5,8 +6,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Button, Textfield } from "@digdir/designsystemet-react"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 
@@ -19,7 +18,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
 
-  const selectedPropertyId = useAppSelector(selectSelectedPropertyId)
+  const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
