@@ -1,0 +1,48 @@
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+}
+
+.addBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.addButton {
+  flex: 1;
+  min-height: 4rem;
+  align-self: stretch;
+}

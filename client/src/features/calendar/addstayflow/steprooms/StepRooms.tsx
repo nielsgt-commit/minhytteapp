@@ -6,9 +6,10 @@ import {
   removeOccupant,
 } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
-import { RoomCapacityMeter } from "./RoomCapacityMeter"
-import { UnassignedPanel } from "./UnassignedPanel"
+import { RoomCapacityMeter } from "../roomcapacitymeter/RoomCapacityMeter.tsx"
+import { UnassignedPanel } from "../unassignedpanel/UnassignedPanel.tsx"
 import type { ExistingOccupant, RoomShape } from "@/features/calendar/types.ts"
+import styles from "./StepRooms.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
 type Structure = { id: number; name: string }
@@ -53,13 +54,13 @@ export function StepRooms({
 }) {
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
-      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginBottom: "1rem" }}>
+      <div className={styles.card}>
         <Heading level={4}>Rooms</Heading>
         {isFetching && (
-          <Paragraph style={{ color: "#666", fontSize: "0.85rem" }}>Checking conflicts…</Paragraph>
+          <Paragraph className={styles.loading}>Checking conflicts…</Paragraph>
         )}
 
-        <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <ul className={styles.buildingList}>
           {propertyStructures.map(building => {
             const buildingRooms = propertyRooms.filter(r => r.structure_id === building.id)
             if (buildingRooms.length === 0) return null
@@ -67,25 +68,11 @@ export function StepRooms({
               <li key={building.id}>
                 <Label
                   data-size="sm"
-                  style={{
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: "var(--ds-color-neutral-text-subtle)",
-                    display: "block",
-                    marginBottom: "0.25rem",
-                  }}
+                  className={styles.buildingLabel}
                 >
                   {building.name}
                 </Label>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.5rem",
-                  }}
-                >
+                <ul className={styles.roomList}>
                   {buildingRooms.map(r => (
                     <li key={r.id}>
                       <RoomCapacityMeter

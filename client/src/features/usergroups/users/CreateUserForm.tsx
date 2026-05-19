@@ -1,6 +1,6 @@
 import { type SyntheticEvent } from "react"
 import { Button, Textfield } from "@digdir/designsystemet-react"
-import { fdString } from "@/utils/formData"
+import { fdString } from "@/utils/formData.ts"
 
 type CreateUserFormProps = {
   groupName: string

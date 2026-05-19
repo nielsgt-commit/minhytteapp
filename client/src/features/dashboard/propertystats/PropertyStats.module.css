@@ -1,9 +1,44 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-  gap: 1rem;
+  gap: var(--ds-size-4);
 }
 
 .grid > * {
   min-width: 0;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ds-size-2);
+}
+
+.footerButton {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cardBlock {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cardHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ds-size-2);
 }

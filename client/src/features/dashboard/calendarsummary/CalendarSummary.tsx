@@ -8,6 +8,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { startOfSunday } from "@/utils/dateUtils"
+import styles from "./CalendarSummary.module.css"
 
 
 export default function CalendarSummary() {
@@ -28,7 +29,7 @@ export default function CalendarSummary() {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading onClick={resetWeek} style={{ cursor: "pointer" }}>
+          <Heading onClick={resetWeek} className={styles.heading}>
             This week at {propertyName}
           </Heading>
           <PlannedAvailabilitySummary

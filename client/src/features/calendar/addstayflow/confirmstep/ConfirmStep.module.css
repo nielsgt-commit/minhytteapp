@@ -1,0 +1,17 @@
+.warningBox {
+  border: 2px solid var(--ds-color-danger-border-default);
+  border-radius: var(--ds-border-radius-md, 8px);
+  padding: 1rem;
+  background: var(--ds-color-danger-surface-default);
+  margin-top: 1rem;
+}
+
+.queueNote {
+  margin-top: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

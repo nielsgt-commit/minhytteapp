@@ -7,6 +7,7 @@ import {
   Select,
   Textfield,
 } from "@digdir/designsystemet-react"
+import styles from "./OwnerAddForm.module.css"
 
 type AddKind = "user" | "group"
 
@@ -40,15 +41,11 @@ export function OwnerAddForm({
     <form
       onSubmit={onSubmit}
       key={`add-${addKind}`}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-      }}
+      className={styles.form}
     >
       <Fieldset>
         <Fieldset.Legend>Add owner</Fieldset.Legend>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div className={styles.chipRow}>
           <Chip.Radio
             name="kind"
             value="user"
@@ -68,13 +65,7 @@ export function OwnerAddForm({
         </div>
 
         {addKind === "user" ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
-          >
+          <div className={styles.fieldGroup}>
             <Label htmlFor="add-owner-user">User</Label>
             <Select
               id="add-owner-user"
@@ -99,13 +90,7 @@ export function OwnerAddForm({
             )}
           </div>
         ) : (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
-          >
+          <div className={styles.fieldGroup}>
             <Label htmlFor="add-owner-group">Group</Label>
             <Select
               id="add-owner-group"
@@ -149,7 +134,7 @@ export function OwnerAddForm({
           disabled={pending}
         />
 
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div className={styles.actions}>
           <Button type="submit" disabled={addDisabled}>
             Add owner
           </Button>

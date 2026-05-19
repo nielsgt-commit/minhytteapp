@@ -2,9 +2,10 @@ import type { Dispatch } from "react"
 import { Button, Field, Heading, Label, Paragraph, Select, Textfield } from "@digdir/designsystemet-react"
 import { setNotes, setStatus } from "@/features/calendar/booking-logic"
 import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
-import { ConfirmStep } from "./ConfirmStep"
-import type { SubmitAction, SubmitState } from "../hooks/useBookingForm"
+import { ConfirmStep } from "../confirmstep/ConfirmStep.tsx"
+import type { SubmitAction, SubmitState } from "../../hooks/useBookingForm.ts"
 import { RoomShape } from "@/features/calendar/types.ts"
+import styles from "./StepConfirm.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
 type Structure = { id: number; name: string }
@@ -79,20 +80,13 @@ export function StepConfirm({
 
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
-      <div
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "1rem",
-          marginBottom: "1rem",
-        }}
-      >
+      <div className={styles.card}>
         <Heading level={4}>Review request</Heading>
-        <dl style={{ margin: 0 }}>
+        <dl className={styles.list}>
           <dt>
             <strong>When</strong>
           </dt>
-          <dd style={{ margin: "0 0 0.5rem 0" }}>
+          <dd className={styles.item}>
             {draft.start_date && draft.end_date
               ? `${draft.start_date} → ${draft.end_date} (${String(nights)} night${nights === 1 ? "" : "s"})`
               : "Dates not selected"}
@@ -101,7 +95,7 @@ export function StepConfirm({
           <dt>
             <strong>Who</strong>
           </dt>
-          <dd style={{ margin: "0 0 0.5rem 0" }}>
+          <dd className={styles.item}>
             {bookerName} (booker)
             {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
           </dd>
@@ -109,12 +103,12 @@ export function StepConfirm({
           <dt>
             <strong>Where</strong>
           </dt>
-          <dd style={{ margin: "0 0 0.5rem 0" }}>
+          <dd className={styles.item}>
             {roomEntries.length === 0 &&
               unassignedNames.length === 0 &&
               "No occupants yet"}
             {roomEntries.length > 0 && (
-              <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
+              <ul className={styles.subList}>
                 {roomEntries.map(e => (
                   <li key={`${e.structureName}-${e.roomName}`}>
                     {e.structureName} · {e.roomName}: {e.occupants.join(", ")}
@@ -130,22 +124,15 @@ export function StepConfirm({
           <dt>
             <strong>Status</strong>
           </dt>
-          <dd style={{ margin: 0, textTransform: "capitalize" }}>
+          <dd className={styles.itemLast}>
             {draft.status}
           </dd>
         </dl>
       </div>
 
-      <div
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "1rem",
-          marginBottom: "1rem",
-        }}
-      >
+      <div className={styles.card}>
         <Heading level={4}>Details</Heading>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className={styles.fields}>
           <Field>
             <Label>Status</Label>
             <Select
@@ -169,7 +156,7 @@ export function StepConfirm({
             onChange={e => {
               dispatch(setNotes(e.target.value))
             }}
-            style={{ width: "100%" }}
+            className={styles.fullWidth}
           />
         </div>
       </div>
@@ -203,7 +190,7 @@ export function StepConfirm({
         <Paragraph
           data-color="danger"
           role="alert"
-          style={{ marginTop: "0.5rem" }}
+          className={styles.errorMessage}
         >
           Error: {submitState.error}
         </Paragraph>

@@ -8,6 +8,7 @@ import {
 import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
+import styles from "./AddStructureFlow.module.css"
 
 type Props = {
   onAdded?: () => void
@@ -64,7 +65,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
 
       <form
         onSubmit={handleAddStructure}
-        style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+        className={styles.form}
       >
         <Textfield
           label="Name"
@@ -73,7 +74,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
           autoFocus
           disabled={createStructure.isPending}
         />
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div className={styles.actions}>
           <Button type="submit" disabled={createStructure.isPending}>
             Add structure
           </Button>

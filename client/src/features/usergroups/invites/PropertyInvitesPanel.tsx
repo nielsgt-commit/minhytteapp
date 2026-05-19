@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/app/useSelectedIds.ts"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -7,8 +7,8 @@ import {
 } from "@tanstack/react-query"
 import { Button, Card, Textfield } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useMutationsStatus } from "@/hooks/useMutationsStatus"
-import { fdNumber, fdString } from "@/utils/formData"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
+import { fdNumber, fdString } from "@/utils/formData.ts"
 
 function inviteUrl(token: string): string {
   return `${window.location.origin}/invite/${token}`

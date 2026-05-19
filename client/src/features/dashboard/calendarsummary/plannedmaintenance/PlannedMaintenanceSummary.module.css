@@ -1,0 +1,7 @@
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-4);
+  list-style: none;
+  padding: 0;
+}

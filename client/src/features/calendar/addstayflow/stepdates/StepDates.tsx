@@ -1,5 +1,6 @@
 import { useMemo, type RefObject } from "react"
 import { Card, Label, Paragraph, Tag } from "@digdir/designsystemet-react"
+import styles from "./StepDates.module.css"
 
 type OverlappingBooking = {
   occupants: { user_id: number; queued: boolean; user_name: string | null }[]
@@ -61,28 +62,27 @@ export function StepDates({
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div
-        className="fp-row"
+        className={`fp-row ${styles.row}`}
         ref={rowRef}
-        style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "1rem" }}
       >
-        <div className="fp-container" style={{ maxWidth: "100%" }}>
-          <input ref={inputRef} type="text" style={{ display: "none" }} readOnly />
+        <div className={`fp-container ${styles.container}`}>
+          <input ref={inputRef} type="text" className={styles.hiddenInput} readOnly />
         </div>
 
-        <div className="fp-right-panel" style={{ flex: 1, minWidth: "15rem" }}>
+        <div className={`fp-right-panel ${styles.rightPanel}`}>
           <Card>
             <Card.Block>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+              <div className={styles.cardHeader}>
                 {availability !== null ? (
                   <Tag data-color={availability.color}>{availability.label}</Tag>
                 ) : (
-                  <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
+                  <Paragraph data-size="sm" className={styles.subtleText}>
                     Pick dates to see availability.
                   </Paragraph>
                 )}
 
                 {overlappingPriorityWeeks.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", justifyContent: "flex-end" }}>
+                  <div className={styles.priorityTags}>
                     {overlappingPriorityWeeks.map(pw => (
                       <Tag key={pw.iso_week} data-color="neutral">
                         W{pw.iso_week} priority: {pw.owner_name}
@@ -94,17 +94,17 @@ export function StepDates({
 
               {overlappingBookings.length > 0 && (
                 <div>
-                  <Label data-size="sm" style={{ display: "block", marginBottom: "0.25rem" }}>
+                  <Label data-size="sm" className={styles.duringLabel}>
                     During this period:
                   </Label>
-                  <Paragraph data-size="sm" style={{ margin: 0 }}>
+                  <Paragraph data-size="sm" className={styles.duringText}>
                     {overlappingOccupantsText}
                   </Paragraph>
                 </div>
               )}
 
               {hasStartDate && overlappingBookings.length === 0 && occupiedBeds !== null && (
-                <Paragraph data-size="sm" style={{ color: "var(--ds-color-neutral-text-subtle)", margin: 0 }}>
+                <Paragraph data-size="sm" className={styles.subtleText}>
                   No other bookings in this period.
                 </Paragraph>
               )}

@@ -6,6 +6,7 @@ import {
   EXPERIMENTAL_AvatarStack as AvatarStack,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
+import styles from "./AtPropertyNow.module.css"
 
 const VISIBLE_LIMIT = 4
 
@@ -56,7 +57,7 @@ export default function AtPropertyNow() {
         role="button"
         tabIndex={0}
         aria-expanded={false}
-        style={{ cursor: "pointer" }}
+        className={styles.stack}
       >
         {guests.slice(0, VISIBLE_LIMIT).map(g => (
           <Avatar
@@ -83,12 +84,7 @@ export default function AtPropertyNow() {
             toggle()
           }
         }}
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "0.5rem",
-          cursor: "pointer",
-        }}
+        className={styles.expandedList}
       >
         {guests.map(g => (
           <Avatar

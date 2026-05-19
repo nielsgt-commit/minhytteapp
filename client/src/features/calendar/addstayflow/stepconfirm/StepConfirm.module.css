@@ -1,0 +1,38 @@
+.card {
+  border: 1px solid var(--ds-color-neutral-border-default);
+  border-radius: var(--ds-border-radius-md, 8px);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.list {
+  margin: 0;
+}
+
+.item {
+  margin: 0 0 0.5rem 0;
+}
+
+.itemLast {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.subList {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.errorMessage {
+  margin-top: 0.5rem;
+}

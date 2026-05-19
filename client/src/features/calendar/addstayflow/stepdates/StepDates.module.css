@@ -1,0 +1,48 @@
+.row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.container {
+  max-width: 100%;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.rightPanel {
+  flex: 1;
+  min-width: 15rem;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.subtleText {
+  color: var(--ds-color-neutral-text-subtle);
+  margin: 0;
+}
+
+.priorityTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.duringLabel {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.duringText {
+  margin: 0;
+}

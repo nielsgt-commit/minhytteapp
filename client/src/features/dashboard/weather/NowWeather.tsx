@@ -3,6 +3,7 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { startOfSunday, toIso } from "@/utils/dateUtils"
 import WeatherSymbol from "./WeatherSymbol"
+import styles from "./NowWeather.module.css"
 
 export default function NowWeather() {
   const trpc = useTRPC()
@@ -25,7 +26,7 @@ export default function NowWeather() {
   return (
     <span
       aria-label="Current weather"
-      style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+      className={styles.now}
     >
       <WeatherSymbol code={data.now.symbol_code} />
       <strong>{Math.round(data.now.temperature_c)}°</strong>

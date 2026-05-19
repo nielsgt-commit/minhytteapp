@@ -1,6 +1,7 @@
 import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { ownerLabel } from "./ownershipCalculations.ts"
+import styles from "./OwnerEditForm.module.css"
 
 type Owner = {
   id: number
@@ -32,11 +33,7 @@ export function OwnerEditForm({
     <form
       onSubmit={onSubmit}
       key={`edit-${String(owner.id)}`}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-      }}
+      className={styles.form}
     >
       <Fieldset>
         <Fieldset.Legend>Edit owner</Fieldset.Legend>
@@ -55,7 +52,7 @@ export function OwnerEditForm({
           autoFocus
           disabled={updatePending}
         />
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div className={styles.actions}>
           <Button type="submit" disabled={pending}>
             Save
           </Button>

@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/app/useSelectedIds.ts"
 import { Fragment, type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -13,8 +13,8 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useMutationsStatus } from "@/hooks/useMutationsStatus"
-import { fdBoolean, fdString } from "@/utils/formData"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
+import { fdBoolean, fdString } from "@/utils/formData.ts"
 
 export function ListUsers() {
   const trpc = useTRPC()

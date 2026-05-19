@@ -1,10 +1,11 @@
 import { BedFillIcon, BedIcon } from "@navikt/aksel-icons"
-import { BED_ICON_COLOR, MAX_BED_ICONS } from "../constants.ts"
+import { BED_ICON_COLOR, MAX_BED_ICONS } from "../../constants.ts"
+import styles from "./BedIcons.module.css"
 
 function BedSvg({ variant }: { variant: "empty" | "existing" | "draft" | "over" }) {
   const color = BED_ICON_COLOR[variant]
   const Icon = variant === "empty" ? BedIcon : BedFillIcon
-  return <Icon fontSize="1.4rem" style={{ color }} aria-hidden />
+  return <Icon fontSize="1.4rem" className={styles.bedIcon} style={{ "--bed-icon-color": color } as React.CSSProperties} aria-hidden />
 }
 
 export function BedIconRow({
@@ -34,7 +35,7 @@ export function BedIconRow({
           <BedSvg key={`over-${i}`} variant="over" />
         ))}
       {overflow > 0 && (
-        <span style={{ fontSize: "0.75rem", color: "var(--ds-color-neutral-text-subtle)" }}>
+        <span className={styles.overflow}>
           +{overflow}
         </span>
       )}

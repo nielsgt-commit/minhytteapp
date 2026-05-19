@@ -1,0 +1,39 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bedList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bedRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.bedField {
+  flex: 1;
+}
+
+.addGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

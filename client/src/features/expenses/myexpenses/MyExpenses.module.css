@@ -7,6 +7,10 @@
   margin: 0;
 }
 
+.content {
+  padding: 0;
+}
+
 .row {
   display: grid;
   grid-template-columns: auto auto auto 1fr auto auto auto;

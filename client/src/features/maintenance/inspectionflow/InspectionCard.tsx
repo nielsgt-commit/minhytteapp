@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Tag, Button, Card, Paragraph } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
+import styles from "./InspectionCard.module.css"
 
 type Inspection = {
   id: number
@@ -42,17 +43,10 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
   return (
     <Card asChild>
       <article>
-        <Card.Block
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            flexWrap: "wrap",
-          }}
-        >
+        <Card.Block className={styles.header}>
           <Tag data-color="info">Inspection</Tag>
           <Paragraph data-size="sm">{completedLabel}</Paragraph>
-          <Paragraph data-size="sm" style={{ marginLeft: "auto" }}>
+          <Paragraph data-size="sm" className={styles.inspector}>
             {inspection.inspected_by}
           </Paragraph>
           <Paragraph data-size="sm">{cadenceLabel[inspection.recurrence]}</Paragraph>

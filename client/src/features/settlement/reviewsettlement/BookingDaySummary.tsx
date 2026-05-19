@@ -18,6 +18,7 @@ import {
   type SettlementPhase,
 } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
+import styles from "./BookingDaySummary.module.css"
 
 function inclusiveDayCount(startIso: string, endIso: string) {
   const s = Date.parse(`${startIso}T00:00:00Z`)
@@ -95,7 +96,7 @@ export function BookingDaySummary({ settlementId, phase }: Props) {
     }, 0)
 
   return (
-    <Card asChild style={{ border: "none" }}>
+    <Card asChild className={styles.card}>
       <article>
         <Card.Block>
           <Heading level={3} data-size="xs">Booking days</Heading>

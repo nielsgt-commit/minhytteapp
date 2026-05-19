@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import styles from "./AddressLookup.module.css"
 
 export type GeonorgeAddress = {
   adressetekst: string
@@ -60,7 +61,7 @@ export function AddressLookup({ label = "Address lookup", placeholder, onSelect 
     data?.metadata.totaltAntallTreff === 0
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    <div className={styles.root}>
       <Textfield
         label={label}
         value={query}
@@ -73,7 +74,7 @@ export function AddressLookup({ label = "Address lookup", placeholder, onSelect 
       {noMatches && <Paragraph data-size="sm">No matches.</Paragraph>}
 
       {results.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+        <div className={styles.results}>
           {results.map(a => (
             <Button
               key={`${String(a.adressekode)}-${a.adressetekst}-${a.postnummer}`}

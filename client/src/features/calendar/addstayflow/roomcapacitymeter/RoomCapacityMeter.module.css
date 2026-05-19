@@ -1,0 +1,75 @@
+.toggleButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  display: block;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.structureName {
+  font-size: 0.75rem;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.headerRight {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.chevron {
+  font-size: 0.75rem;
+  color: var(--ds-color-neutral-text-subtle);
+  line-height: 1;
+}
+
+.bedSummary {
+  font-size: 0.8rem;
+  color: var(--ds-color-neutral-text-subtle);
+  margin-top: 0.5rem;
+}
+
+.section {
+  margin-top: 0.75rem;
+}
+
+.tagRow {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.tagRowLg {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.occupantItem {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.15rem;
+  line-height: 1;
+  color: var(--ds-color-neutral-text-subtle);
+}

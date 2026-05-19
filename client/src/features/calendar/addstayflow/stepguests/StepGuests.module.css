@@ -1,0 +1,10 @@
+.card {
+  border: 1px solid var(--ds-color-neutral-border-default);
+  border-radius: var(--ds-border-radius-md, 8px);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bookerLabel {
+  margin-bottom: 0.5rem;
+}

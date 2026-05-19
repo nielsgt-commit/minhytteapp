@@ -8,6 +8,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
+import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 export default function StructureSummary() {
   const trpc = useTRPC()
@@ -34,11 +35,11 @@ export default function StructureSummary() {
       content={structures.length === 0 ? (
         <Paragraph>No Structures yet.</Paragraph>
       ) : (
-        <List.Unordered style={{ listStyle: "none", padding: 0 }}>
+        <List.Unordered className={styles.list}>
           {structures.map(b => {
             const count = roomCountByStructure.get(b.id) ?? 0
             return (
-              <List.Item key={b.id} style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+              <List.Item key={b.id} className={styles.row}>
                 <span>{b.name}</span>
                 <span>{count} room{count === 1 ? "" : "s"}</span>
               </List.Item>
@@ -47,7 +48,7 @@ export default function StructureSummary() {
         </List.Unordered>
       )}
       footer={(
-        <Button asChild variant="secondary" style={{ marginTop: "auto", alignSelf: "flex-start" }}>
+        <Button asChild variant="secondary" className={styles.footerButton}>
           <Link to="/manageproperty">Manage Structures</Link>
         </Button>
       )}

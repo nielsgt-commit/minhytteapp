@@ -1,7 +1,7 @@
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--ds-size-4);
   align-items: stretch;
 }
 
@@ -13,6 +13,6 @@
 .cardStack {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--ds-size-3);
   align-items: flex-start;
 }

@@ -1,22 +1,9 @@
 import { Button, Card, Label, Paragraph, Select, Tag } from "@digdir/designsystemet-react"
 import { bedCapacity } from "@/features/calendar/booking-logic"
-import { BED_LABELS } from "../constants.ts"
-import { BedIconRow } from "./BedIcons.tsx"
-import type { RoomShape, ExistingOccupant } from "../types.ts"
-
-const toggleButtonStyle: React.CSSProperties = {
-  background: "none",
-  border: "none",
-  padding: 0,
-  margin: 0,
-  width: "100%",
-  cursor: "pointer",
-  textAlign: "left",
-  display: "block",
-  fontFamily: "inherit",
-  fontSize: "inherit",
-  color: "inherit",
-}
+import { BED_LABELS } from "../../constants.ts"
+import { BedIconRow } from "../bedicons/BedIcons.tsx"
+import type { RoomShape, ExistingOccupant } from "../../types.ts"
+import styles from "./RoomCapacityMeter.module.css"
 
 const BED_KEYS = ["beds_sm", "beds_lg", "beds_double", "beds_kid", "travel_cot", "mattresses"] as const
 
@@ -64,17 +51,17 @@ export function RoomCapacityMeter({
       <Card.Block>
 
         {/* Always visible: toggle header */}
-        <Button type="button" variant="tertiary" onClick={onToggle} style={toggleButtonStyle} aria-expanded={isExpanded}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Button type="button" variant="tertiary" onClick={onToggle} className={styles.toggleButton} aria-expanded={isExpanded}>
+          <div className={styles.header}>
             <div>
               <span>{room.name}</span>
               {structureName && (
-                <div style={{ fontSize: "0.75rem", color: "var(--ds-color-neutral-text-subtle)" }}>
+                <div className={styles.structureName}>
                   {structureName}
                 </div>
               )}
             </div>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <div className={styles.headerRight}>
               <BedIconRow
                 total={total}
                 existingCount={existingOccupantsInRoom.length}
@@ -83,7 +70,7 @@ export function RoomCapacityMeter({
               <Tag data-color={over ? "danger" : placed === total ? "warning" : "success"}>
                 {placed}/{total} beds
               </Tag>
-              <span style={{ fontSize: "0.75rem", color: "var(--ds-color-neutral-text-subtle)", lineHeight: 1 }}>
+              <span className={styles.chevron}>
                 {isExpanded ? "▴" : "▾"}
               </span>
             </div>
@@ -95,15 +82,15 @@ export function RoomCapacityMeter({
         {isExpanded && (
           <>
             {bedSummary && (
-              <div style={{ fontSize: "0.8rem", color: "var(--ds-color-neutral-text-subtle)", marginTop: "0.5rem" }}>
+              <div className={styles.bedSummary}>
                 {bedSummary}
               </div>
             )}
 
             {existingOccupantsInRoom.length > 0 && (
-              <div style={{ marginTop: "0.75rem" }}>
+              <div className={styles.section}>
                 <Label data-size="sm">Already booked</Label>
-                <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+                <div className={styles.tagRow}>
                   {existingOccupantsInRoom.map(o => (
                     <Tag key={`existing-${o.user_id}`} data-color="neutral">
                       {o.user_name ?? `#${String(o.user_id)}`}{o.queued ? " [Q]" : ""}
@@ -114,15 +101,15 @@ export function RoomCapacityMeter({
             )}
 
             {occupantsInRoom.length > 0 && (
-              <div style={{ marginTop: "0.75rem" }}>
+              <div className={styles.section}>
                 {existingOccupantsInRoom.length > 0 && <Label data-size="sm">Adding</Label>}
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+                <div className={styles.tagRowLg}>
                   {occupantsInRoom.map(o => {
                     const u = users.find(x => x.id === o.user_id)
                     const isAdultKidOnly = adultInKidOnlyUserIds.includes(o.user_id)
                     const color = isAdultKidOnly ? "danger" : o.queued ? "warning" : "accent"
                     return (
-                      <div key={o.user_id} style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
+                      <div key={o.user_id} className={styles.occupantItem}>
                         <Tag data-color={color}>
                           {u?.name ?? `#${String(o.user_id)}`}
                           {u?.is_child ? " (kid)" : ""}
@@ -135,14 +122,7 @@ export function RoomCapacityMeter({
                             variant="tertiary"
                             onClick={() => { onRemove(o.user_id) }}
                             aria-label={`Remove ${u?.name ?? String(o.user_id)}`}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              padding: "0 0.15rem",
-                              lineHeight: 1,
-                              color: "var(--ds-color-neutral-text-subtle)",
-                            }}
+                            className={styles.removeButton}
                           >
                             ×
                           </Button>
@@ -166,7 +146,7 @@ export function RoomCapacityMeter({
             )}
 
             {unassignedOccupants.length > 0 && (
-              <div style={{ marginTop: "0.75rem" }}>
+              <div className={styles.section}>
                 <Select
                   value=""
                   onChange={e => {

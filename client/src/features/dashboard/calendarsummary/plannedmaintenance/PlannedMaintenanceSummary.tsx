@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Heading, Tag } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc.ts"
+import styles from "./PlannedMaintenanceSummary.module.css"
 
 type Severity = "major" | "minor" | "patch"
 
@@ -68,7 +69,7 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
       {structuresWithItems.length === 0 ? (
         <p>No planned maintenance.</p>
       ) : (
-        <ul style={{ display: "flex", flexWrap: "wrap", gap: "1rem", listStyle: "none", padding: 0 }}>
+        <ul className={styles.tagList}>
           {structuresWithItems.map(b => {
             const bucket = itemsByStructure.get(b.id) ?? []
             return (

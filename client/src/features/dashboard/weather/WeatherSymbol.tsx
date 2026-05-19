@@ -1,3 +1,5 @@
+import styles from "./WeatherSymbol.module.css"
+
 type Props = {
   code: string | null
   size?: number
@@ -46,7 +48,8 @@ export default function WeatherSymbol({ code, size = 20 }: Props) {
     <span
       role="img"
       aria-label={code.replace(/_/g, " ")}
-      style={{ fontSize: size, lineHeight: 1 }}
+      className={styles.symbol}
+      style={{ ["--symbol-size" as string]: `${String(size)}px` }}
     >
       {symbolToEmoji(code)}
     </span>

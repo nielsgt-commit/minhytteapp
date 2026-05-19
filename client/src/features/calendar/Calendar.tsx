@@ -14,7 +14,7 @@ export function Calendar() {
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <Heading level={2} style={{ margin: 0 }}>Calendar</Heading>
+        <Heading level={2} className={styles.heading}>Calendar</Heading>
         <Paragraph>Add or select a property to plan stays, block dates, and see who&apos;s booked in.</Paragraph>
       </section>
     )
@@ -22,7 +22,7 @@ export function Calendar() {
 
   return (
     <section className={styles.page}>
-      <Heading level={2} style={{ margin: 0 }}>
+      <Heading level={2} className={styles.heading}>
         Calendar
       </Heading>
       <div className={styles.main}>

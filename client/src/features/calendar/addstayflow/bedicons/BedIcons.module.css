@@ -1,0 +1,8 @@
+.bedIcon {
+  color: var(--bed-icon-color);
+}
+
+.overflow {
+  font-size: 0.75rem;
+  color: var(--ds-color-neutral-text-subtle);
+}

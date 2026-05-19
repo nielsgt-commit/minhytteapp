@@ -1,5 +1,6 @@
 import { Button, Card, Tag } from "@digdir/designsystemet-react"
 import { ownerLabel } from "./ownershipCalculations.ts"
+import styles from "./OwnerListView.module.css"
 
 type Owner = {
   id: number
@@ -32,28 +33,14 @@ export function OwnerListView({
       {owners.length === 0 ? (
         <p>No owners yet.</p>
       ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
-        >
+        <ul className={styles.list}>
           {owners.map(o => {
             const isUser = o.user_id != null
             return (
               <Card asChild key={o.id}>
                 <li>
-                  <Card.Block
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <span style={{ flex: 1, minWidth: 0 }}>
+                  <Card.Block className={styles.row}>
+                    <span className={styles.rowName}>
                       {ownerLabel(o)}
                     </span>
                     <Tag data-color={isUser ? "info" : "neutral"}>

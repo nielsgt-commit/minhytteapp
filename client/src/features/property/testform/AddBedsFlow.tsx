@@ -6,6 +6,7 @@ import {
   Label,
   Textfield,
 } from "@digdir/designsystemet-react"
+import styles from "./AddBedsFlow.module.css"
 
 type BedKey =
   | "beds_sm"
@@ -116,9 +117,7 @@ export function AddBedsFlow({
     <form onSubmit={handleSubmit}>
       <Fieldset>
         <Fieldset.Legend>{legend}</Fieldset.Legend>
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-        >
+        <div className={styles.body}>
           <Textfield
             label="Room name"
             value={name}
@@ -128,21 +127,11 @@ export function AddBedsFlow({
           />
 
           {addedKeys.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-              }}
-            >
+            <div className={styles.bedList}>
               {addedKeys.map(key => (
                 <div
                   key={key}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-end",
-                    gap: "0.5rem",
-                  }}
+                  className={styles.bedRow}
                 >
                   <Textfield
                     label={BED_LABELS[key]}
@@ -159,7 +148,7 @@ export function AddBedsFlow({
                       if (Number.isFinite(n)) setBedCount(key, Math.max(1, Math.floor(n)))
                     }}
                     autoFocus={key === lastAddedKey}
-                    style={{ flex: 1 }}
+                    className={styles.bedField}
                   />
                   <Button
                     type="button"
@@ -175,21 +164,9 @@ export function AddBedsFlow({
           )}
 
           {availableKeys.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
-              }}
-            >
+            <div className={styles.addGroup}>
               <Label>Add bed type</Label>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "0.5rem",
-                }}
-              >
+              <div className={styles.chipRow}>
                 {availableKeys.map(key => (
                   <Chip.Button
                     key={key}
@@ -203,7 +180,7 @@ export function AddBedsFlow({
             </div>
           )}
 
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div className={styles.actions}>
             <Button type="submit" disabled={pending}>
               {submitLabel}
             </Button>

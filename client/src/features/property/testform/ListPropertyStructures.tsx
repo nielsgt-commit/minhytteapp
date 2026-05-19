@@ -19,6 +19,7 @@ import {
   AddBedsFlow,
   type RoomData,
 } from "@/features/property/testform/AddBedsFlow.tsx"
+import styles from "./ListPropertyStructures.module.css"
 
 type StructureCategory = "habitable" | "non_habitable"
 
@@ -233,16 +234,7 @@ export function ListPropertyStructures() {
 
       {lastError && <p role="alert">Error: {lastError.message}</p>}
 
-      <ul
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: "1rem",
-          listStyle: "none",
-          padding: 0,
-        }}
-      >
+      <ul className={styles.list}>
           {propertyStructures.map(b => {
             const structureRooms = roomsByStructure.get(b.id) ?? []
             const isExpanded = expandedId === b.id
@@ -256,30 +248,9 @@ export function ListPropertyStructures() {
 
             return (
               <Card asChild key={b.id}>
-                <li
-                  style={{
-                    flex: "1 1 240px",
-                    minWidth: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <Card.Block
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      flex: 1,
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                      }}
-                    >
+                <li className={styles.cardItem}>
+                  <Card.Block className={styles.cardBlock}>
+                    <div className={styles.header}>
                       {isEditingName ? (
                         <input
                           type="text"
@@ -296,7 +267,7 @@ export function ListPropertyStructures() {
                               setEditingNameId(null)
                             }
                           }}
-                          style={{ flex: 1, minWidth: 0 }}
+                          className={styles.nameInput}
                         />
                       ) : (
                         <strong
@@ -306,10 +277,7 @@ export function ListPropertyStructures() {
                           title={
                             editMode ? "Double-click to rename" : undefined
                           }
-                          style={{
-                            cursor: editMode ? "text" : undefined,
-                            userSelect: editMode ? "none" : undefined,
-                          }}
+                          className={editMode ? styles.nameStatic : undefined}
                         >
                           {b.name}
                         </strong>
@@ -357,25 +325,13 @@ export function ListPropertyStructures() {
                         ) : structureRooms.length === 0 ? (
                           <p>No rooms yet.</p>
                         ) : (
-                          <ul
-                            style={{
-                              listStyle: "none",
-                              padding: 0,
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "0.5rem",
-                            }}
-                          >
+                          <ul className={styles.roomList}>
                             {structureRooms.map(r => (
                               <li
                                 key={r.id}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "0.5rem",
-                                }}
+                                className={styles.roomRow}
                               >
-                                <span style={{ flex: 1, minWidth: 0 }}>
+                                <span className={styles.roomName}>
                                   {r.name}
                                 </span>
                                 <Button
@@ -436,10 +392,7 @@ export function ListPropertyStructures() {
 
                         <Button
                           variant="tertiary"
-                          style={{
-                            marginTop: "auto",
-                            alignSelf: "stretch",
-                          }}
+                          className={styles.closeButton}
                           onClick={() => {
                             setExpandedId(null)
                             setOpenForm(null)
@@ -453,10 +406,7 @@ export function ListPropertyStructures() {
                     {editMode && !isExpanded && (
                       <Button
                         variant="secondary"
-                        style={{
-                          marginTop: "auto",
-                          alignSelf: "stretch",
-                        }}
+                        className={styles.closeButton}
                         disabled={pending}
                         onClick={() => { setExpandedId(b.id) }}
                       >
@@ -470,22 +420,8 @@ export function ListPropertyStructures() {
           })}
 
           <Card asChild key="__add">
-            <li
-              style={{
-                flex: "1 1 240px",
-                minWidth: 0,
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <Card.Block
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  flex: 1,
-                  gap: "0.5rem",
-                }}
-              >
+            <li className={styles.cardItem}>
+              <Card.Block className={styles.cardBlock}>
                 {isAdding ? (
                   <>
                     <strong>Add structure</strong>
@@ -497,11 +433,7 @@ export function ListPropertyStructures() {
                 ) : (
                   <Button
                     variant="tertiary"
-                    style={{
-                      flex: 1,
-                      minHeight: "4rem",
-                      alignSelf: "stretch",
-                    }}
+                    className={styles.addButton}
                     onClick={() => { setIsAdding(true) }}
                   >
                     + Add structure

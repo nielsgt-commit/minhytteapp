@@ -1,5 +1,6 @@
 import { Card, Checkbox, Label, Tag } from "@digdir/designsystemet-react"
 import type { PreviewConflicts } from "@/features/calendar/booking-logic"
+import styles from "./UnassignedPanel.module.css"
 
 export function UnassignedPanel({
   occupants,
@@ -18,9 +19,9 @@ export function UnassignedPanel({
   return (
     <Card data-color={cardColor}>
       <Card.Block>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className={styles.header}>
           <Label data-size="sm">Unassigned</Label>
-          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <div className={styles.controls}>
             <Checkbox
               label="Queue"
               checked={allQueued}
