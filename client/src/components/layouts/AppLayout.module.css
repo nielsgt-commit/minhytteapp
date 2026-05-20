@@ -31,6 +31,10 @@
   .main {
     padding-bottom: calc(56px + env(safe-area-inset-bottom));
   }
+
+  .shell > footer {
+    display: none;
+  }
 }
 
 .shell > footer {
