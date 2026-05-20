@@ -11,6 +11,17 @@
       crossorigin="anonymous"
     />
     <title>React Redux App</title>
+    <script>
+      (function () {
+        try {
+          var s = localStorage.getItem("color-scheme");
+          if (s !== "light" && s !== "dark") s = "light";
+          document.documentElement.dataset.colorScheme = s;
+        } catch (_) {
+          document.documentElement.dataset.colorScheme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
