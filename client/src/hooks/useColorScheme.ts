@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type SyntheticEvent } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 export type ColorScheme = "light" | "dark"
 
@@ -37,7 +37,7 @@ export function useColorScheme() {
     return () => { window.removeEventListener("storage", onStorage) }
   }, [])
 
-  const toggle = useCallback((_: SyntheticEvent<HTMLInputElement>) => {
+  const toggle = useCallback(() => {
     setScheme(prev => (prev === "dark" ? "light" : "dark"))
   }, [])
 

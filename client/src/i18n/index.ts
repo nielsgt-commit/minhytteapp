@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 
 import enCalendar from "./locales/en/calendar.json"
+import enCheckin from "./locales/en/checkin.json"
 import enCommon from "./locales/en/common.json"
 import enCore from "./locales/en/core.json"
 import enDashboard from "./locales/en/dashboard.json"
@@ -20,6 +21,7 @@ import enUsergroups from "./locales/en/usergroups.json"
 import enUsersettings from "./locales/en/usersettings.json"
 
 import nbCalendar from "./locales/nb/calendar.json"
+import nbCheckin from "./locales/nb/checkin.json"
 import nbCommon from "./locales/nb/common.json"
 import nbCore from "./locales/nb/core.json"
 import nbDashboard from "./locales/nb/dashboard.json"
@@ -41,6 +43,7 @@ export const defaultNS = "common"
 export const resources = {
   en: {
     calendar: enCalendar,
+    checkin: enCheckin,
     common: enCommon,
     core: enCore,
     dashboard: enDashboard,
@@ -59,6 +62,7 @@ export const resources = {
   },
   nb: {
     calendar: nbCalendar,
+    checkin: nbCheckin,
     common: nbCommon,
     core: nbCore,
     dashboard: nbDashboard,
@@ -87,6 +91,7 @@ void i18n
     defaultNS,
     ns: [
       "calendar",
+      "checkin",
       "common",
       "core",
       "dashboard",

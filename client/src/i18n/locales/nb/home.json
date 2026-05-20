@@ -2,7 +2,6 @@
   "Home": "Hjem",
   "Log in": "Logg inn",
   "Log in or create account": "Logg inn eller opprett konto",
-  "Log out": "Logg ut",
   "Signed in as <0>{{userName}}</0>": "Logget inn som <0>{{userName}}</0>",
   "Visible when user is not logged in": "Synlig når du ikke er logget inn"
 }

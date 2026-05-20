@@ -24,7 +24,7 @@ export function Calendar() {
 
   return (
     <section className={styles.page}>
-      <Heading level={2} className={styles.heading}>
+      <Heading level={2} className={styles.title}>
         {t("Calendar")}
       </Heading>
       <div className={styles.main}>

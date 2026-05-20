@@ -1,19 +1,21 @@
 import { useTranslation } from "react-i18next"
+import { Button } from "@digdir/designsystemet-react"
+import { GlobeIcon } from "@navikt/aksel-icons"
 
 export default function LanguageSwitcher() {
   const { t, i18n } = useTranslation("core")
+  const current = i18n.resolvedLanguage === "nb" ? "nb" : "en"
+  const next = current === "nb" ? "en" : "nb"
+  const nextLabel = next === "nb" ? "Norsk" : "English"
+
   return (
-    <label>
-      {t("Language")}{" "}
-      <select
-        value={i18n.resolvedLanguage}
-        onChange={(e) => {
-          void i18n.changeLanguage(e.target.value)
-        }}
-      >
-        <option value="en">English</option>
-        <option value="nb">Norsk</option>
-      </select>
-    </label>
+    <Button
+      variant="tertiary"
+      aria-label={t("Switch language to {{label}}", { label: nextLabel })}
+      onClick={() => { void i18n.changeLanguage(next) }}
+    >
+      <GlobeIcon aria-hidden />
+      {current.toUpperCase()}
+    </Button>
   )
 }

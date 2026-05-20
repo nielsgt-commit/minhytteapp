@@ -1,3 +1,7 @@
 .heading {
   cursor: pointer;
 }
+
+.summaryCard {
+  height: 100%;
+}

@@ -3,7 +3,7 @@
   border-radius: var(--ds-border-radius-md, 8px);
   padding: 1rem;
   margin-bottom: 1rem;
-  background: var(--ds-color-accent-surface-default);
+  background-color: var(--ds-color-accent-surface-default);
 }
 
 .headingRow {
@@ -32,6 +32,8 @@
   color: var(--ds-color-neutral-text-subtle);
   display: block;
   margin-bottom: 0.25rem;
+
+
 }
 
 .roomList {
@@ -40,4 +42,5 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
 }

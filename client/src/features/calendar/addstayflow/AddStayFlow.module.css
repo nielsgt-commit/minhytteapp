@@ -41,7 +41,7 @@
 }
 
 .stepperItemActive .stepperBadge {
-  background: var(--ds-color-accent-surface-default);
+  background: var(--ds-color-accent-surface-active);
   border-color: var(--ds-color-accent-border-default);
   color: var(--ds-color-accent-text-default);
 }

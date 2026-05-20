@@ -52,7 +52,7 @@ export default function PropertySwitcher({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-      <Label id="property-switcher-label" className={styles.label}>{t("Property")}</Label>
+      <Label id="property-switcher-label" className={styles.label}></Label>
       <Dropdown.TriggerContext>
         <Dropdown.Trigger
           variant="tertiary"

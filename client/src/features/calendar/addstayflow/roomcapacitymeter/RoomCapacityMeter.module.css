@@ -23,6 +23,11 @@
   color: var(--ds-color-neutral-text-subtle);
 }
 
+.roomCard{
+
+  background-color: var(--ds-color-accent-surface-tinted);
+}
+
 .headerRight {
   display: flex;
   gap: 0.5rem;
