@@ -5,14 +5,14 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { loadAuth } from "@/auth/oauth"
+import { useAuthSession } from "@/auth/auth-client"
 
 import { Switch } from '@digdir/designsystemet-react';
 
 export default function CheckIn() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const auth = loadAuth()
+  const auth = useAuthSession()
   const propertyId = useSelectedPropertyId()
 
   const enabled = auth.isAuthenticated && propertyId != null

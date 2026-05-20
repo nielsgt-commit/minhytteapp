@@ -4,6 +4,7 @@ import {
   Heading,
   Label,
   Paragraph,
+  Tag,
   EXPERIMENTAL_Suggestion as Suggestion,
 } from "@digdir/designsystemet-react"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
@@ -39,7 +40,12 @@ export function StepGuests({
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div className={styles.card}>
-        <Heading level={4}>{t("Guests")}</Heading>
+        <div className={styles.headingRow}>
+          <Heading level={4}>{t("Guests")}</Heading>
+          {draft.start_date && draft.end_date && (
+            <Tag data-color="info">{draft.start_date} → {draft.end_date}</Tag>
+          )}
+        </div>
 
         <Paragraph data-size="sm" className={styles.bookerLabel}>
           {t("Booker: {{name}}", { name: users.find(u => u.id === selectedUserId)?.name ?? t("(select user)") })}

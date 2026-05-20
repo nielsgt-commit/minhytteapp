@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Heading, Tag } from "@digdir/designsystemet-react"
+import { Divider, Heading, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./PlannedMaintenanceSummary.module.css"
@@ -67,6 +67,7 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
 
   return (
     <>
+      <Divider className={styles.divider} />
       <Heading level={6} size="medium">{t("Planned Maintenance")}</Heading>
       {structuresWithItems.length === 0 ? (
         <p>{t("No planned maintenance.")}</p>

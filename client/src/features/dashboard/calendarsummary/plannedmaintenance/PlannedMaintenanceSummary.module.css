@@ -5,3 +5,8 @@
   list-style: none;
   padding: 0;
 }
+
+.divider {
+  margin-top: var(--ds-size-4);
+  margin-bottom: var(--ds-size-4);
+}

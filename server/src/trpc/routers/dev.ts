@@ -33,6 +33,7 @@ export const devRouter = router({
           "property_invitations", "property_owners",
           "rooms", "structures", "infrastructure",
           "user_group_members", "user_groups",
+          "sessions", "accounts", "verifications",
           "users",
           "properties"
         RESTART IDENTITY CASCADE
@@ -45,14 +46,14 @@ export const devRouter = router({
         .values({
           name: "Owner",
           email: "owner@example.com",
-          oauth_sub: "Owner",
+          email_verified: true,
           is_admin: true,
         })
         .returning()
       await ctx.db.insert(usersTable).values({
         name: "Member",
         email: "member@example.com",
-        oauth_sub: "Member",
+        email_verified: true,
         is_admin: false,
       })
       const address = "Neholmveien 99"

@@ -7,11 +7,12 @@ import {
   usersTable,
 } from "../../db/schema/users.schema.ts"
 import {
-  authenticatedProcedure,
+  adminProcedure,
+  propertyAdminProcedure,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
+import { relevantGroupIdsForProperty } from "./userGroup.ts"
 
 const birthdayString = z
   .string()
@@ -34,97 +35,52 @@ const updateInput = z.object({
 })
 
 export const userRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select()
       .from(usersTable)
       .orderBy(asc(usersTable.id))
   }),
 
-  listForProperty: protectedProcedure
-    .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      const directOwnerIds = await ctx.db
-        .selectDistinct({ user_id: propertyOwnersTable.user_id })
-        .from(propertyOwnersTable)
-        .where(eq(propertyOwnersTable.property_id, input.property_id))
+  listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
+    const { relevantGroupIds, peopleSet } = await relevantGroupIdsForProperty(
+      ctx,
+      input.property_id,
+      ctx.user.id,
+    )
 
-      const groupMemberIds = await ctx.db
+    const ids = new Set<number>(peopleSet)
+    ids.delete(ctx.user.id)
+    const directOwnerRows = await ctx.db
+      .select({ user_id: propertyOwnersTable.user_id })
+      .from(propertyOwnersTable)
+      .where(eq(propertyOwnersTable.property_id, input.property_id))
+    for (const row of directOwnerRows) {
+      if (row.user_id != null) ids.add(row.user_id)
+    }
+    if (relevantGroupIds.size > 0) {
+      const memberRows = await ctx.db
         .selectDistinct({ user_id: userGroupMembersTable.user_id })
         .from(userGroupMembersTable)
-        .innerJoin(
-          propertyOwnersTable,
-          eq(
-            propertyOwnersTable.user_group_id,
+        .where(
+          inArray(
             userGroupMembersTable.user_group_id,
+            Array.from(relevantGroupIds),
           ),
         )
-        .where(eq(propertyOwnersTable.property_id, input.property_id))
-
-      const ids = new Set<number>()
-      for (const row of directOwnerIds) {
-        if (row.user_id != null) ids.add(row.user_id)
-      }
-      for (const row of groupMemberIds) {
-        ids.add(row.user_id)
-      }
-      if (ids.size === 0) return []
-
-      return ctx.db
-        .select()
-        .from(usersTable)
-        .where(inArray(usersTable.id, Array.from(ids)))
-        .orderBy(asc(usersTable.id))
-    }),
-
-  me: authenticatedProcedure.query(({ ctx }) => ctx.user),
-
-  bootstrap: authenticatedProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user) return ctx.user
-
-    const { sub, name, email } = ctx.claims
-    const isDev = process.env.NODE_ENV !== "production"
-    await ctx.db.transaction(async tx => {
-      const existing = await tx
-        .select({ id: usersTable.id })
-        .from(usersTable)
-        .limit(1)
-      const isFirst = isDev && existing.length === 0
-      await tx
-        .insert(usersTable)
-        .values({
-          name: name ?? sub,
-          email: email ?? `${sub}@oauth.local`,
-          oauth_sub: sub,
-          is_admin: isFirst,
-        })
-        .onConflictDoNothing({ target: usersTable.oauth_sub })
-    })
-
-    const created = (
-      await ctx.db
-        .select({
-          id: usersTable.id,
-          name: usersTable.name,
-          email: usersTable.email,
-          is_admin: usersTable.is_admin,
-          is_head: usersTable.is_head,
-          settlement_progress: usersTable.settlement_progress,
-          birthday: usersTable.birthday,
-        })
-        .from(usersTable)
-        .where(eq(usersTable.oauth_sub, sub))
-        .limit(1)
-    ).at(0)
-
-    if (!created) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "failed to provision user",
-      })
+      for (const row of memberRows) ids.add(row.user_id)
     }
-    return created
+    ids.add(ctx.user.id)
+
+    if (ids.size === 0) return []
+    return ctx.db
+      .select()
+      .from(usersTable)
+      .where(inArray(usersTable.id, Array.from(ids)))
+      .orderBy(asc(usersTable.id))
   }),
+
+  me: protectedProcedure.query(({ ctx }) => ctx.user),
 
   create: protectedProcedure
     .input(createInput)
@@ -257,7 +213,7 @@ export const userRouter = router({
       return deleted
     }),
 
-  update: protectedProcedure
+  update: adminProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
@@ -269,7 +225,7 @@ export const userRouter = router({
       return updated
     }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db

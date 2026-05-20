@@ -1,11 +1,11 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { loadAuth } from "@/auth/oauth"
+import { useAuthSession } from "@/auth/auth-client"
 
 export default function EventBanner() {
   const trpc = useTRPC()
-  const auth = loadAuth()
+  const auth = useAuthSession()
   const propertyId = useSelectedPropertyId()
 
   const enabled = auth.isAuthenticated && propertyId != null

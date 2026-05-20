@@ -1,8 +1,8 @@
-import { logout } from "@/auth/oauth"
+import { signOut } from "@/auth/auth-client"
 
 export function useLogoutAction() {
-  return () => {
-    logout()
+  return async () => {
+    await signOut()
     window.location.replace("/")
   }
 }

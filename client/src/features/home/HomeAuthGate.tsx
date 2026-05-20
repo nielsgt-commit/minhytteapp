@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { loadAuth } from "@/auth/oauth"
+import { useAuthSession } from "@/auth/auth-client"
 
 export function HomeAuthGate({
   authenticated,
@@ -8,6 +8,7 @@ export function HomeAuthGate({
   authenticated: ReactNode
   unauthenticated: ReactNode
 }) {
-  const auth = loadAuth()
-  return auth.isAuthenticated && auth.user ? authenticated : unauthenticated
+  const auth = useAuthSession()
+  if (auth.isPending) return null
+  return auth.isAuthenticated ? authenticated : unauthenticated
 }

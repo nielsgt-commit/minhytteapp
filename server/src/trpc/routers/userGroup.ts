@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm"
+import { and, asc, eq, inArray, isNotNull } from "drizzle-orm"
 import { z } from "zod"
 import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
 import {
@@ -6,74 +6,125 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
+import type { Context } from "../context.ts"
 import {
-  adminProcedure,
+  propertyAdminProcedure,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
+
+export async function relevantGroupIdsForProperty(
+  ctx: Context,
+  property_id: number,
+  calling_user_id: number,
+) {
+  const owningGroupRows = await ctx.db
+    .select({ id: propertyOwnersTable.user_group_id })
+    .from(propertyOwnersTable)
+    .where(
+      and(
+        eq(propertyOwnersTable.property_id, property_id),
+        isNotNull(propertyOwnersTable.user_group_id),
+      ),
+    )
+  const owningGroupIds = owningGroupRows
+    .map(r => r.id)
+    .filter((id): id is number => id != null)
+
+  const directOwnerRows = await ctx.db
+    .select({ user_id: propertyOwnersTable.user_id })
+    .from(propertyOwnersTable)
+    .where(
+      and(
+        eq(propertyOwnersTable.property_id, property_id),
+        isNotNull(propertyOwnersTable.user_id),
+      ),
+    )
+
+  const peopleSet = new Set<number>([calling_user_id])
+  for (const r of directOwnerRows) {
+    if (r.user_id != null) peopleSet.add(r.user_id)
+  }
+  if (owningGroupIds.length > 0) {
+    const owningMembers = await ctx.db
+      .select({ user_id: userGroupMembersTable.user_id })
+      .from(userGroupMembersTable)
+      .where(inArray(userGroupMembersTable.user_group_id, owningGroupIds))
+    for (const r of owningMembers) peopleSet.add(r.user_id)
+  }
+
+  const relevantIds = new Set<number>(owningGroupIds)
+  if (peopleSet.size > 0) {
+    const groupsByMember = await ctx.db
+      .selectDistinct({ id: userGroupMembersTable.user_group_id })
+      .from(userGroupMembersTable)
+      .where(inArray(userGroupMembersTable.user_id, Array.from(peopleSet)))
+    for (const r of groupsByMember) relevantIds.add(r.id)
+  }
+
+  return { relevantGroupIds: relevantIds, peopleSet }
+}
 
 const userGroupFields = {
   name: z.string().min(1, { error: "name is required" }),
   is_main: z.boolean().optional(),
 }
 
+async function fetchGroupsWithMembers(
+  ctx: Context,
+  groupIds: number[],
+) {
+  if (groupIds.length === 0) return []
+  const groups = await ctx.db
+    .select({
+      id: userGroupsTable.id,
+      name: userGroupsTable.name,
+      is_main: userGroupsTable.is_main,
+    })
+    .from(userGroupsTable)
+    .where(inArray(userGroupsTable.id, groupIds))
+    .orderBy(asc(userGroupsTable.id))
+
+  const members = await ctx.db
+    .select({
+      user_group_id: userGroupMembersTable.user_group_id,
+      user_id: userGroupMembersTable.user_id,
+      user_name: usersTable.name,
+    })
+    .from(userGroupMembersTable)
+    .innerJoin(usersTable, eq(usersTable.id, userGroupMembersTable.user_id))
+    .where(inArray(userGroupMembersTable.user_group_id, groupIds))
+    .orderBy(asc(usersTable.id))
+
+  const byGroup = new Map<
+    number,
+    { user_id: number; user_name: string }[]
+  >()
+  for (const m of members) {
+    const list = byGroup.get(m.user_group_id) ?? []
+    list.push({ user_id: m.user_id, user_name: m.user_name })
+    byGroup.set(m.user_group_id, list)
+  }
+
+  return groups.map(g => ({
+    ...g,
+    members: byGroup.get(g.id) ?? [],
+  }))
+}
+
 export const userGroupRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(userGroupsTable)
-      .orderBy(asc(userGroupsTable.id))
-  }),
+  listWithMembersForProperty: propertyAdminProcedure.query(
+    async ({ ctx, input }) => {
+      const { relevantGroupIds } = await relevantGroupIdsForProperty(
+        ctx,
+        input.property_id,
+        ctx.user.id,
+      )
+      return fetchGroupsWithMembers(ctx, Array.from(relevantGroupIds))
+    },
+  ),
 
-  listWithMembersForProperty: protectedProcedure
-    .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      const groups = await ctx.db
-        .selectDistinct({
-          id: userGroupsTable.id,
-          name: userGroupsTable.name,
-          is_main: userGroupsTable.is_main,
-        })
-        .from(userGroupsTable)
-        .innerJoin(
-          propertyOwnersTable,
-          eq(propertyOwnersTable.user_group_id, userGroupsTable.id),
-        )
-        .where(eq(propertyOwnersTable.property_id, input.property_id))
-        .orderBy(asc(userGroupsTable.id))
-
-      if (groups.length === 0) return []
-
-      const groupIds = groups.map(g => g.id)
-      const members = await ctx.db
-        .select({
-          user_group_id: userGroupMembersTable.user_group_id,
-          user_id: userGroupMembersTable.user_id,
-          user_name: usersTable.name,
-        })
-        .from(userGroupMembersTable)
-        .innerJoin(usersTable, eq(usersTable.id, userGroupMembersTable.user_id))
-        .where(inArray(userGroupMembersTable.user_group_id, groupIds))
-        .orderBy(asc(usersTable.id))
-
-      const byGroup = new Map<
-        number,
-        { user_id: number; user_name: string }[]
-      >()
-      for (const m of members) {
-        const list = byGroup.get(m.user_group_id) ?? []
-        list.push({ user_id: m.user_id, user_name: m.user_name })
-        byGroup.set(m.user_group_id, list)
-      }
-
-      return groups.map(g => ({
-        ...g,
-        members: byGroup.get(g.id) ?? [],
-      }))
-    }),
-
-  listWithMembers: publicProcedure.query(async ({ ctx }) => {
+  listWithMembers: protectedProcedure.query(async ({ ctx }) => {
     const groups = await ctx.db
       .select()
       .from(userGroupsTable)
@@ -105,20 +156,24 @@ export const userGroupRouter = router({
     }))
   }),
 
-  create: protectedProcedure
+  create: propertyAdminProcedure
     .input(z.object(userGroupFields))
     .mutation(async ({ ctx, input }) => {
+      const { property_id: _propId, ...rest } = input
       const [created] = await ctx.db
         .insert(userGroupsTable)
-        .values(input)
+        .values(rest)
         .returning()
+      await ctx.db
+        .insert(userGroupMembersTable)
+        .values({ user_group_id: created.id, user_id: ctx.user.id })
       return created
     }),
 
-  update: protectedProcedure
+  update: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive(), ...userGroupFields }))
     .mutation(async ({ ctx, input }) => {
-      const { id, ...rest } = input
+      const { id, property_id: _propId, ...rest } = input
       const [updated] = await ctx.db
         .update(userGroupsTable)
         .set(rest)
@@ -127,7 +182,7 @@ export const userGroupRouter = router({
       return updated
     }),
 
-  delete: adminProcedure
+  delete: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const [deleted] = await ctx.db
@@ -137,7 +192,7 @@ export const userGroupRouter = router({
       return deleted
     }),
 
-  addMember: protectedProcedure
+  addMember: propertyAdminProcedure
     .input(
       z.object({
         user_group_id: z.number().int().positive(),
@@ -147,12 +202,15 @@ export const userGroupRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
         .insert(userGroupMembersTable)
-        .values(input)
+        .values({
+          user_group_id: input.user_group_id,
+          user_id: input.user_id,
+        })
         .returning()
       return created
     }),
 
-  removeMember: protectedProcedure
+  removeMember: propertyAdminProcedure
     .input(
       z.object({
         user_group_id: z.number().int().positive(),

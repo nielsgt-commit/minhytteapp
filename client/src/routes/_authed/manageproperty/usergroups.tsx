@@ -5,8 +5,12 @@ import { trpc } from "@/trpc/client"
 export const Route = createFileRoute("/_authed/manageproperty/usergroups")({
   loader: ({ context }) => {
     const { selectedPropertyId } = context
-    if (selectedPropertyId == null) return
+    const meQuery = context.queryClient.ensureQueryData(
+      trpc.user.me.queryOptions(),
+    )
+    if (selectedPropertyId == null) return meQuery
     return Promise.all([
+      meQuery,
       context.queryClient.ensureQueryData(
         trpc.userGroup.listWithMembersForProperty.queryOptions({
           property_id: selectedPropertyId,

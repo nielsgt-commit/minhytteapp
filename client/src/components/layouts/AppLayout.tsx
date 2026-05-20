@@ -1,19 +1,23 @@
 import type { ReactNode } from "react"
+import { useLocation } from "@tanstack/react-router"
 import Header from "@/components/core/header/Header"
-import Footer from "@/components/core/footer/Footer"
 import NavTabs from "@/components/shared/NavTabs"
 import BottomNavBar from "@/components/shared/BottomNavBar"
+import { useAuthSession } from "@/auth/auth-client"
 import styles from "./AppLayout.module.css"
 
 export function AppLayout({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation()
+  const { isAuthenticated } = useAuthSession()
+  const isUnauthenticatedHome = pathname === "/" && !isAuthenticated
+
   return (
     <div className={styles.shell}>
-      <Header />
+      {isUnauthenticatedHome ? null : <Header />}
       <main className={styles.main}>
-        <NavTabs>{children}</NavTabs>
+        {isUnauthenticatedHome ? children : <NavTabs>{children}</NavTabs>}
       </main>
-      <Footer />
-      <BottomNavBar />
+      {isUnauthenticatedHome ? null : <BottomNavBar />}
     </div>
   )
 }

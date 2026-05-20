@@ -1,11 +1,11 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Checkbox, Heading } from "@digdir/designsystemet-react"
+import { Button, Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -19,7 +19,11 @@ type OpenForm =
   | { kind: "addMember"; groupId: number }
   | null
 
-export function UserGroupsFlow() {
+type UserGroupsFlowProps = {
+  editMode: boolean
+}
+
+export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -65,7 +69,13 @@ export function UserGroupsFlow() {
   const [addingUserForGroup, setAddingUserForGroup] = useState<number | null>(
     null,
   )
-  const [editMode, setEditMode] = useState(false)
+
+  useEffect(() => {
+    if (!editMode) {
+      setOpenForm(null)
+      setAddingUserForGroup(null)
+    }
+  }, [editMode])
 
   const { pending, error: lastError } = useMutationsStatus(
     createGroup,
@@ -80,18 +90,21 @@ export function UserGroupsFlow() {
     input: { name: string; is_main: boolean },
     reset: () => void,
   ) => {
-    createGroup.mutate(input, {
-      onSuccess: () => {
-        reset()
-        setOpenForm(null)
+    createGroup.mutate(
+      { ...input, property_id: propertyId },
+      {
+        onSuccess: () => {
+          reset()
+          setOpenForm(null)
+        },
       },
-    })
+    )
   }
 
   const handleRename = (groupId: number) =>
     (input: { name: string; is_main: boolean }) => {
       updateGroup.mutate(
-        { id: groupId, ...input },
+        { id: groupId, ...input, property_id: propertyId },
         { onSuccess: () => { setOpenForm(null) } },
       )
     }
@@ -99,7 +112,7 @@ export function UserGroupsFlow() {
   const handleDelete = (groupId: number, groupName: string) => {
     if (!window.confirm(t("Delete group \"{{groupName}}\"?", { groupName }))) return
     deleteGroup.mutate(
-      { id: groupId },
+      { id: groupId, property_id: propertyId },
       { onSuccess: () => { setOpenForm(null) } },
     )
   }
@@ -107,7 +120,7 @@ export function UserGroupsFlow() {
   const handleAddMember = (groupId: number) =>
     (user_id: number, reset: () => void) => {
       addMember.mutate(
-        { user_group_id: groupId, user_id },
+        { user_group_id: groupId, user_id, property_id: propertyId },
         {
           onSuccess: () => {
             reset()
@@ -125,9 +138,12 @@ export function UserGroupsFlow() {
         {
           onSuccess: created => {
             invalidateUsers()
-            if (!created) return
             addMember.mutate(
-              { user_group_id: groupId, user_id: created.id },
+              {
+                user_group_id: groupId,
+                user_id: created.id,
+                property_id: propertyId,
+              },
               {
                 onSuccess: () => {
                   reset()
@@ -147,7 +163,11 @@ export function UserGroupsFlow() {
     userName: string,
   ) => {
     if (!window.confirm(t("Remove {{userName}} from this group?", { userName }))) return
-    removeMember.mutate({ user_group_id: groupId, user_id: userId })
+    removeMember.mutate({
+      user_group_id: groupId,
+      user_id: userId,
+      property_id: propertyId,
+    })
   }
 
   return (
@@ -157,19 +177,6 @@ export function UserGroupsFlow() {
       <p>
         {t("Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.")}
       </p>
-
-      <Checkbox
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.currentTarget.checked
-          setEditMode(next)
-          if (!next) {
-            setOpenForm(null)
-            setAddingUserForGroup(null)
-          }
-        }}
-      />
 
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 

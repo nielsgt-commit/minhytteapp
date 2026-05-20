@@ -1,5 +1,5 @@
 .header {
-  background: var(--ds-color-accent-surface-default);
+  background: var(--ds-color-background-default);
   border-block: solid 1px var(--ds-color-border-subtle);
 }
 
@@ -26,6 +26,9 @@
 
 .end {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .menu {

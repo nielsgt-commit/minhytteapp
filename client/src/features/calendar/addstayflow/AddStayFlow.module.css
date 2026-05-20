@@ -1,5 +1,12 @@
 .stepper {
-  display: none;
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  position: sticky;
+  top: 0;
+  background: var(--ds-color-neutral-background-default);
+  z-index: 1;
+  padding: 0.25rem 0;
 }
 
 .stepperItem {
@@ -25,7 +32,7 @@
   height: 1.75rem;
   border-radius: 50%;
   border: 1px solid var(--ds-color-neutral-border-default);
-  background: var(--ds-color-neutral-background-default);
+  background: var(--ds-color-accent-surface-default);
   font-weight: 600;
 }
 
@@ -34,35 +41,18 @@
 }
 
 .stepperItemActive .stepperBadge {
-  background: var(--ds-color-accent-background-default);
+  background: var(--ds-color-accent-surface-default);
   border-color: var(--ds-color-accent-border-default);
   color: var(--ds-color-accent-text-default);
 }
 
-.navButtons {
+.step:not(.stepActive) {
   display: none;
 }
 
-@media (max-width: 640px) {
-  .stepper {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-    position: sticky;
-    top: 0;
-    background: var(--ds-color-neutral-background-default);
-    z-index: 1;
-    padding: 0.25rem 0;
-  }
-
-  .step:not(.stepActive) {
-    display: none;
-  }
-
-  .navButtons {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
+.navButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }

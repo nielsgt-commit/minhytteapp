@@ -1,12 +1,12 @@
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
-import { loadAuth } from "@/auth/oauth"
 import { UserCreationForm } from "./UserCreationForm"
 import { PropertyCreationForm } from "./PropertyCreationForm"
 
@@ -21,6 +21,7 @@ export function OnboardingFlow() {
   const { data: properties } = useSuspenseQuery(
     trpc.property.list.queryOptions(),
   )
+  const { data: me } = useQuery(trpc.user.me.queryOptions())
 
   const invalidateAll = () => {
     void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
@@ -37,10 +38,7 @@ export function OnboardingFlow() {
   const lastError = createUser.error ?? createProperty.error
   const pending = createUser.isPending || createProperty.isPending
 
-  const auth = loadAuth()
-  const currentUser = auth.user
-    ? users.find(u => u.oauth_sub === auth.user?.id) ?? null
-    : null
+  const currentUser = me ?? null
   const anyUser = users[0] ?? null
   const firstProperty = properties[0] ?? null
 
