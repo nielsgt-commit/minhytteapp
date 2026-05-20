@@ -1,6 +1,8 @@
 .header {
   background: var(--ds-color-background-default);
   border-block: solid 1px var(--ds-color-border-subtle);
+  padding: var(--ds-size--sm) 0;
+  margin-block-end: var(--ds-size-8);
 }
 
 .inner {
@@ -35,6 +37,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.adress {
+  font-size: 0.85rem;
+  color: var(--ds-color-accent-text-subtle);
 }
 
 .hideOnMobile {

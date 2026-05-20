@@ -7,6 +7,7 @@ import PlannedStaysSection from "./PlannedStaysSection"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import { Heading } from "@digdir/designsystemet-react"
 
 export function Dashboard() {
   const { t } = useTranslation("dashboard")
@@ -25,7 +26,7 @@ export function Dashboard() {
   if (isMobile) {
     return (
       <section className={styles.page}>
-        <h2 className={styles.title}>{t("Dashboard")}</h2>
+        <Heading level={2} className={styles.title}>{t("Dashboard")}</Heading>
         <MobileTabs propertyId={selectedPropertyId} />
       </section>
     )

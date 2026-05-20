@@ -6,12 +6,10 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import type {
   ModalState} from "@/features/maintenance/equipment/EquipmentCard.tsx";
@@ -25,7 +23,6 @@ export function Equipment() {
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const selectedUserId = useSelectedUserId()
-  const isMobile = useIsMobile()
 
   const { data: equipment = [] } = useQuery(
     trpc.equipment.listForProperty.queryOptions(
@@ -92,22 +89,10 @@ export function Equipment() {
     }
 
   if (selectedPropertyId == null) {
-    if (isMobile) {
-      return (
-        <section>
-          <p>{t("Select a property to see its equipment.")}</p>
-        </section>
-      )
-    }
     return (
-      <Card asChild>
-        <section>
-          <Card.Block>
-            <Heading level={3} data-size="xs">{t("Equipment")}</Heading>
-            <p>{t("Select a property to see its equipment.")}</p>
-          </Card.Block>
-        </section>
-      </Card>
+      <section>
+        <p>{t("Select a property to see its equipment.")}</p>
+      </section>
     )
   }
 
@@ -176,18 +161,5 @@ export function Equipment() {
     </>
   )
 
-  if (isMobile) {
-    return <section>{body}</section>
-  }
-
-  return (
-    <Card asChild>
-      <section>
-        <Card.Block>
-          <Heading level={3} data-size="xs">{t("Equipment")}</Heading>
-        </Card.Block>
-        <Card.Block>{body}</Card.Block>
-      </section>
-    </Card>
-  )
+  return <section>{body}</section>
 }

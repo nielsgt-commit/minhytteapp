@@ -1,11 +1,10 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
-import { type ReactNode, useState } from "react"
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Card, Chip, Heading, Tabs } from "@digdir/designsystemet-react"
+import { Chip, Tabs } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./StructureStats.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import {
   MaintenanceCard,
   MaintenanceScope,
@@ -14,33 +13,10 @@ import { Equipment } from "@/features/maintenance/equipment/Equipment.tsx"
 
 type TabValue = "structures" | "infrastructure" | "equipment"
 
-function CategoryFrame({
-  isMobile,
-  title,
-  children,
-}: {
-  isMobile: boolean
-  title: string
-  children: ReactNode
-}) {
-  if (isMobile) return <>{children}</>
-  return (
-    <Card asChild>
-      <section>
-        <Card.Block>
-          <Heading level={3} data-size="xs">{title}</Heading>
-        </Card.Block>
-        <Card.Block>{children}</Card.Block>
-      </section>
-    </Card>
-  )
-}
-
 export function StructureStats() {
   const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
-  const isMobile = useIsMobile()
 
   const { data: structures } = useSuspenseQuery(
     trpc.structure.listForProperty.queryOptions({
@@ -86,7 +62,7 @@ export function StructureStats() {
 
       <Tabs.Panel value="structures" className={styles.panel}>
         {activeTab === "structures" && (
-          <CategoryFrame isMobile={isMobile} title={t("Structures")}>
+          <section className={styles.section}>
             {structures.length === 0 ? (
               <p>{t("No Structures yet.")}</p>
             ) : (
@@ -122,13 +98,13 @@ export function StructureStats() {
                 </div>
               </div>
             )}
-          </CategoryFrame>
+          </section>
         )}
       </Tabs.Panel>
 
       <Tabs.Panel value="infrastructure" className={styles.panel}>
         {activeTab === "infrastructure" && (
-          <CategoryFrame isMobile={isMobile} title={t("Infrastructure")}>
+          <section className={styles.section}>
             {infrastructure.length === 0 ? (
               <p>{t("No Infrastructure yet.")}</p>
             ) : (
@@ -164,7 +140,7 @@ export function StructureStats() {
                 </div>
               </div>
             )}
-          </CategoryFrame>
+          </section>
         )}
       </Tabs.Panel>
 

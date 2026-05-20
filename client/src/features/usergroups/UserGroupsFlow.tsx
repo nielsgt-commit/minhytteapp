@@ -171,7 +171,6 @@ export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
   }
 
   return (
-    <Card asChild>
       <section>
       <Heading level={2}>{t("User groups")}</Heading>
       <p>
@@ -261,6 +260,5 @@ export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
         </ul>
       )}
       </section>
-    </Card>
   )
 }
