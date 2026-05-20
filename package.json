@@ -39,6 +39,7 @@
     "@tursodatabase/database": "^0.5.3",
     "@tursodatabase/serverless": "^1.1.0",
     "@tursodatabase/sync": "^0.5.3",
+    "better-auth": "^1.6.11",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "flatpickr": "^4.6.13",
