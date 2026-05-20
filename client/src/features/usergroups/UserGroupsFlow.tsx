@@ -5,7 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Checkbox, Heading } from "@digdir/designsystemet-react"
+import { Button, Checkbox } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -151,9 +151,8 @@ export function UserGroupsFlow() {
   }
 
   return (
-    <Card asChild>
-      <section>
-      <Heading level={2}>{t("User groups")}</Heading>
+    <section>
+      <h3>{t("User groups")}</h3>
       <p>
         {t("Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.")}
       </p>
