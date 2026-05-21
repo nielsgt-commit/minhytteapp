@@ -2,12 +2,14 @@ import { useState } from "react"
 import { Button, Card, Chip, Paragraph, Textfield } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
+import { SeverityTag, type Severity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 export type MaintenanceHistoryItemViewData = {
   id: number
   description: string
   instructions: string | null
   completed_at: string | Date | null
+  severity: Severity
 }
 
 export function MaintenanceHistoryItemView(props: {
@@ -20,6 +22,7 @@ export function MaintenanceHistoryItemView(props: {
   onChangeTyped: (value: string) => void
   onConfirmDelete: () => void
   onCancelDelete: () => void
+  onCycleSeverity: () => void
 }) {
   const { t } = useTranslation("maintenance")
   const {
@@ -32,6 +35,7 @@ export function MaintenanceHistoryItemView(props: {
     onChangeTyped,
     onConfirmDelete,
     onCancelDelete,
+    onCycleSeverity,
   } = props
   const [expanded, setExpanded] = useState(false)
   const hasInstructions = item.instructions != null && item.instructions !== ""
@@ -46,6 +50,11 @@ export function MaintenanceHistoryItemView(props: {
           <Paragraph className={styles.date} data-size="sm">
             {completedLabel}
           </Paragraph>
+          <SeverityTag
+            severity={item.severity}
+            onCycle={onCycleSeverity}
+            disabled={pending}
+          />
           <Paragraph className={styles.description} data-size="sm">
             {item.description}
           </Paragraph>

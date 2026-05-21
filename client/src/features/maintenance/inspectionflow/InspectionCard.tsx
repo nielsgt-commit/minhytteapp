@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Tag, Button, Card, Paragraph } from "@digdir/designsystemet-react"
+import { Tag, Button, Card, Chip, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./InspectionCard.module.css"
@@ -28,6 +28,15 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [expanded, setExpanded] = useState(false)
+  const [expandedFindings, setExpandedFindings] = useState<Set<number>>(new Set())
+  const toggleFindingExpanded = (id: number) => {
+    setExpandedFindings(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const { data: findings = [] } = useQuery(
     trpc.inspection.listFindings.queryOptions(
@@ -97,16 +106,37 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                   <strong>{t("Followups raised ({{count}})", { count: followups.length })}</strong>
                 </Paragraph>
                 <ul>
-                  {followups.map(f => (
-                    <li key={f.id} className={styles.finding}>
-                      <SeverityTag
-                        severity={f.severity}
-                        onCycle={() => { cycleFindingSeverity(f) }}
-                        disabled={updateMutation.isPending}
-                      />
-                      <Paragraph data-size="sm">{f.description}</Paragraph>
-                    </li>
-                  ))}
+                  {followups.map(f => {
+                    const hasInstructions = f.instructions != null && f.instructions !== ""
+                    const isExpanded = expandedFindings.has(f.id)
+                    return (
+                      <li key={f.id} className={styles.findingItem}>
+                        <div className={styles.finding}>
+                          <SeverityTag
+                            severity={f.severity}
+                            onCycle={() => { cycleFindingSeverity(f) }}
+                            disabled={updateMutation.isPending}
+                          />
+                          <Paragraph data-size="sm">{f.description}</Paragraph>
+                          {hasInstructions && (
+                            <Chip.Button
+                              type="button"
+                              data-size="sm"
+                              aria-expanded={isExpanded}
+                              onClick={() => { toggleFindingExpanded(f.id) }}
+                            >
+                              {isExpanded ? t("Hide execution") : t("Show execution")}
+                            </Chip.Button>
+                          )}
+                        </div>
+                        {hasInstructions && isExpanded && (
+                          <Paragraph data-size="sm" className={styles.instructions}>
+                            {f.instructions}
+                          </Paragraph>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               </>
             )}
@@ -116,19 +146,40 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                   <strong>{t("Findings added ({{count}})", { count: adHocs.length })}</strong>
                 </Paragraph>
                 <ul>
-                  {adHocs.map(f => (
-                    <li key={f.id} className={styles.finding}>
-                      <SeverityTag
-                        severity={f.severity}
-                        onCycle={() => { cycleFindingSeverity(f) }}
-                        disabled={updateMutation.isPending}
-                      />
-                      <Paragraph data-size="sm">
-                        {f.description}
-                        {f.is_pinned ? t(" (pinned)") : ""}
-                      </Paragraph>
-                    </li>
-                  ))}
+                  {adHocs.map(f => {
+                    const hasInstructions = f.instructions != null && f.instructions !== ""
+                    const isExpanded = expandedFindings.has(f.id)
+                    return (
+                      <li key={f.id} className={styles.findingItem}>
+                        <div className={styles.finding}>
+                          <SeverityTag
+                            severity={f.severity}
+                            onCycle={() => { cycleFindingSeverity(f) }}
+                            disabled={updateMutation.isPending}
+                          />
+                          <Paragraph data-size="sm">
+                            {f.description}
+                            {f.is_pinned ? t(" (pinned)") : ""}
+                          </Paragraph>
+                          {hasInstructions && (
+                            <Chip.Button
+                              type="button"
+                              data-size="sm"
+                              aria-expanded={isExpanded}
+                              onClick={() => { toggleFindingExpanded(f.id) }}
+                            >
+                              {isExpanded ? t("Hide execution") : t("Show execution")}
+                            </Chip.Button>
+                          )}
+                        </div>
+                        {hasInstructions && isExpanded && (
+                          <Paragraph data-size="sm" className={styles.instructions}>
+                            {f.instructions}
+                          </Paragraph>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               </>
             )}

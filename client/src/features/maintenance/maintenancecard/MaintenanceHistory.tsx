@@ -13,6 +13,7 @@ import { InspectionCard } from "@/features/maintenance/inspectionflow/Inspection
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceHistoryEditForm } from "@/features/maintenance/maintenancecard/MaintenanceHistoryEditForm.tsx"
 import { MaintenanceHistoryItemView } from "@/features/maintenance/maintenancecard/MaintenanceHistoryItemView.tsx"
+import { cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 type EditingState = { id: number } | null
 type DeletingState = { id: number; typed: string } | null
@@ -89,6 +90,22 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
 
   const pending = updateMutation.isPending || deleteMutation.isPending
   const lastError = updateMutation.error ?? deleteMutation.error
+
+  const cycleItemSeverity = (item: (typeof doneItems)[number]) => {
+    updateMutation.mutate({
+      id: item.id,
+      description: item.description,
+      instructions: item.instructions ?? undefined,
+      added_by: item.added_by,
+      assigned_to_id: item.assigned_to_id ?? undefined,
+      structure_id: item.structure_id ?? undefined,
+      infrastructure_id: item.infrastructure_id ?? undefined,
+      category: item.category,
+      severity: cycleSeverity(item.severity),
+      status: item.status,
+      recurrence: item.recurrence,
+    })
+  }
 
   const handleEditSubmit = (item: (typeof doneItems)[number]) =>
     (e: SyntheticEvent<HTMLFormElement>) => {
@@ -174,6 +191,7 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
               )
             }}
             onCancelDelete={() => { setDeleting(null) }}
+            onCycleSeverity={() => { cycleItemSeverity(item) }}
           />
         )
       })}

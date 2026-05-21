@@ -5,25 +5,28 @@
 }
 
 .row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas: "date description actions";
-  align-items: baseline;
-  gap: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.date         { grid-area: date; margin: 0; }
-.description  { grid-area: description; margin: 0; }
+.date { margin: 0; flex: 0 0 auto; }
+.description {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .instructions {
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .actions {
-  grid-area: actions;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 0 0 auto;
 }
 
 .confirm {
@@ -34,16 +37,8 @@
 }
 
 @media (max-width: 640px) {
-  .row {
-    grid-template-columns: auto 1fr;
-    grid-template-areas:
-      "date        description"
-      "actions     actions";
-    row-gap: 0.25rem;
-    column-gap: 0.5rem;
-  }
   .actions {
-    justify-self: stretch;
+    flex: 1 1 100%;
     justify-content: flex-end;
   }
 }
