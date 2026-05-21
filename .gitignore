@@ -27,5 +27,10 @@ yarn.lock
 *.sln
 *.sw?
 
+# Env: commit .env.development / .env.staging / .env.production / .env.example.
+# Local overrides (.env.local, .env.*.local) are covered by *.local above.
+.env
+server/.env
+
 .yalc/
 yalc.lock

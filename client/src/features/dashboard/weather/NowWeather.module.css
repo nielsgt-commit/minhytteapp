@@ -3,3 +3,8 @@
   align-items: center;
   gap: 0.35rem;
 }
+
+.hint {
+  font-size: 0.85rem;
+  text-decoration: underline;
+}

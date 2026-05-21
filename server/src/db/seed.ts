@@ -1,4 +1,4 @@
-import "dotenv/config"
+import "../env.ts"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import { db, pool } from "./client.ts"
 import {
@@ -848,22 +848,21 @@ async function seedMaintenance(structureIds: number[], userIds: number[]) {
 
 type SeedEquipment = {
   name: string
-  structure_name: string
   category?: string
   notes?: string
 }
 
 const SEED_EQUIPMENT: SeedEquipment[] = [
-  { name: "Wood stove", structure_name: "Furua", category: "heating" },
-  { name: "Heat pump", structure_name: "Nybygget", category: "heating" },
-  { name: "Refrigerator", structure_name: "Furua", category: "appliance" },
-  { name: "Dishwasher", structure_name: "Furua", category: "appliance" },
-  { name: "Washing machine", structure_name: "Nybygget", category: "appliance" },
-  { name: "Outboard motor", structure_name: "Naustet", category: "boat" },
-  { name: "Rowing boat", structure_name: "Naustet", category: "boat" },
-  { name: "Lawn mower", structure_name: "Kabelpalasset", category: "tool" },
-  { name: "Chainsaw", structure_name: "Kabelpalasset", category: "tool" },
-  { name: "Smoke detector", structure_name: "Slabeslottet", category: "safety" },
+  { name: "Wood stove", category: "heating" },
+  { name: "Heat pump", category: "heating" },
+  { name: "Refrigerator", category: "appliance" },
+  { name: "Dishwasher", category: "appliance" },
+  { name: "Washing machine", category: "appliance" },
+  { name: "Outboard motor", category: "boat" },
+  { name: "Rowing boat", category: "boat" },
+  { name: "Lawn mower", category: "tool" },
+  { name: "Chainsaw", category: "tool" },
+  { name: "Smoke detector", category: "safety" },
 ]
 
 type SeedContact = {
@@ -924,10 +923,7 @@ async function seedContacts(property_id: number) {
   console.log(`inserted ${String(inserted.length)} property contacts`)
 }
 
-async function seedEquipment(
-  property_id: number,
-  structuresByName: Map<string, number>,
-) {
+async function seedEquipment(property_id: number) {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(equipmentTable)
@@ -935,22 +931,14 @@ async function seedEquipment(
     console.log(`found ${String(count)} equipment items, skipping seed`)
     return
   }
-  const rows: (typeof equipmentTable.$inferInsert)[] = []
-  for (const seed of SEED_EQUIPMENT) {
-    const structure_id = structuresByName.get(seed.structure_name)
-    if (structure_id === undefined) {
-      throw new Error(
-        `seed equipment "${seed.name}" references unknown structure "${seed.structure_name}"`,
-      )
-    }
-    rows.push({
+  const rows: (typeof equipmentTable.$inferInsert)[] = SEED_EQUIPMENT.map(
+    seed => ({
       name: seed.name,
       property_id,
-      structure_id,
       category: seed.category ?? null,
       notes: seed.notes ?? null,
-    })
-  }
+    }),
+  )
   const inserted = await db
     .insert(equipmentTable)
     .values(rows)
@@ -964,11 +952,9 @@ async function main() {
   const property = await upsertProperty()
 
   const structureIds: number[] = []
-  const structuresByName = new Map<string, number>()
   for (const seedStructure of SEED_STRUCTURES) {
     const structure = await upsertStructure(property.id, seedStructure.name)
     structureIds.push(structure.id)
-    structuresByName.set(structure.name, structure.id)
     for (const seedRoom of seedStructure.rooms) {
       await upsertRoom(structure.id, seedRoom)
     }
@@ -1016,7 +1002,7 @@ async function main() {
   await seedBookings(property.id, groupMemberIds)
   const nonAdminIds = users.filter(u => !u.is_admin).map(u => u.id)
   await seedMaintenance(structureIds, nonAdminIds)
-  await seedEquipment(property.id, structuresByName)
+  await seedEquipment(property.id)
   await seedContacts(property.id)
 
   console.log("\nseed complete.")
