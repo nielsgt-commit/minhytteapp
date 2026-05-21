@@ -184,7 +184,6 @@ export const structuresRelations = relations(structuresTable, ({ one, many }) =>
     relationName: "structure_adjacency_b",
   }),
   maintenance: many(maintenanceTable),
-  equipment: many(equipmentTable),
   inspections: many(inspectionsTable),
 }))
 
@@ -365,10 +364,6 @@ export const equipmentRelations = relations(equipmentTable, ({ one, many }) => (
   property: one(propertyTable, {
     fields: [equipmentTable.property_id],
     references: [propertyTable.id],
-  }),
-  structure: one(structuresTable, {
-    fields: [equipmentTable.structure_id],
-    references: [structuresTable.id],
   }),
   maintenance: many(maintenanceTable),
   inspections: many(inspectionsTable),

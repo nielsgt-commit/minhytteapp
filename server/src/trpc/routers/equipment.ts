@@ -5,13 +5,13 @@ import {
   equipmentTable,
   maintenanceTable,
 } from "../../db/schema/maintenance.schema.ts"
-import { structuresTable } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const equipmentFields = {
   name: z.string().min(1, { error: "name is required" }).max(255),
   property_id: z.number().int().positive(),
-  structure_id: z.number().int().positive(),
+  brand: z.string().max(64).optional(),
+  model: z.string().max(64).optional(),
   category: z.string().max(32).optional(),
   notes: z.string().max(255).optional(),
 }
@@ -48,22 +48,6 @@ export const equipmentRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
-      const structure = (
-        await ctx.db
-          .select({
-            id: structuresTable.id,
-            property_id: structuresTable.property_id,
-          })
-          .from(structuresTable)
-          .where(eq(structuresTable.id, input.structure_id))
-          .limit(1)
-      ).at(0)
-      if (!structure || structure.property_id !== input.property_id) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "structure must belong to the given property",
-        })
-      }
       const [created] = await ctx.db
         .insert(equipmentTable)
         .values(input)
@@ -116,7 +100,6 @@ export const equipmentRouter = router({
           instructions: input.instructions,
           added_by: input.added_by,
           assigned_to_id: input.assigned_to_id,
-          structure_id: equipment.structure_id,
           equipment_id: equipment.id,
           category: input.category,
           severity: input.severity,

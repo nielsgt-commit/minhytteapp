@@ -144,34 +144,14 @@ export const inspectionRouter = router({
           })
         }
 
-        let equipmentStructureId: number | null = null
-        if (existing.equipment_id != null) {
-          const found = (
-            await tx
-              .select({ structure_id: equipmentTable.structure_id })
-              .from(equipmentTable)
-              .where(eq(equipmentTable.id, existing.equipment_id))
-              .limit(1)
-          ).at(0)
-          if (!found) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "equipment for inspection not found",
-            })
-          }
-          equipmentStructureId = found.structure_id
-        }
-
         const findingLocation = () => {
           if (existing.infrastructure_id != null) {
             return { infrastructure_id: existing.infrastructure_id }
           }
-          // structure or equipment target — maintenance row needs structure_id set
-          // (the XOR check requires exactly one of structure_id / infrastructure_id)
-          return {
-            structure_id: existing.structure_id ?? equipmentStructureId!,
-            equipment_id: existing.equipment_id ?? undefined,
+          if (existing.equipment_id != null) {
+            return { equipment_id: existing.equipment_id }
           }
+          return { structure_id: existing.structure_id! }
         }
 
         const toInsert = input.findings.filter(
@@ -235,11 +215,10 @@ export const inspectionRouter = router({
     .input(recordInput)
     .mutation(async ({ ctx, input }) => {
       return ctx.db.transaction(async tx => {
-        let equipmentStructureId: number | null = null
         if (input.equipment_id != null) {
           const found = (
             await tx
-              .select({ structure_id: equipmentTable.structure_id })
+              .select({ id: equipmentTable.id })
               .from(equipmentTable)
               .where(eq(equipmentTable.id, input.equipment_id))
               .limit(1)
@@ -250,7 +229,6 @@ export const inspectionRouter = router({
               message: "equipment not found",
             })
           }
-          equipmentStructureId = found.structure_id
         }
 
         const now = new Date()
@@ -271,10 +249,8 @@ export const inspectionRouter = router({
 
         const findingLocation = () => {
           if (input.infrastructure_id != null) return { infrastructure_id: input.infrastructure_id }
-          return {
-            structure_id: input.structure_id ?? equipmentStructureId!,
-            equipment_id: input.equipment_id ?? undefined,
-          }
+          if (input.equipment_id != null) return { equipment_id: input.equipment_id }
+          return { structure_id: input.structure_id! }
         }
 
         const toInsert = input.findings.filter(

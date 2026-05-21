@@ -4,7 +4,6 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-  useSuspenseQuery,
 } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
@@ -30,9 +29,6 @@ export function Equipment() {
       { enabled: selectedPropertyId != null },
     ),
   )
-  const { data: structures } = useSuspenseQuery(
-    trpc.structure.list.queryOptions(),
-  )
   const { data: maintenanceItems = [] } = useQuery(
     trpc.maintenance.listForProperty.queryOptions(
       { property_id: selectedPropertyId ?? 0 },
@@ -45,8 +41,6 @@ export function Equipment() {
       { enabled: selectedPropertyId != null },
     ),
   )
-
-  const structureNameById = new Map(structures.map(b => [b.id, b.name]))
 
   const invalidate = () => {
     void qc.invalidateQueries({
@@ -112,9 +106,6 @@ export function Equipment() {
       ) : (
         <div className={styles.list}>
           {sortedEquipment.map(item => {
-            const structureName =
-              structureNameById.get(item.structure_id)
-              ?? `#${String(item.structure_id)}`
             const itemMaintenance = maintenanceItems
               .filter(m => m.equipment_id === item.id && m.status === "done")
               .slice()
@@ -146,7 +137,6 @@ export function Equipment() {
               <EquipmentCard
                 key={item.id}
                 item={item}
-                structureName={structureName}
                 historyEntries={historyEntries}
                 modalState={modalState}
                 setModalState={setModalState}

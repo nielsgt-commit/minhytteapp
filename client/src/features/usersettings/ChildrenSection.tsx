@@ -77,7 +77,7 @@ export function ChildrenSection() {
 
   return (
     <section>
-      <h2>My children</h2>
+      <h2>My children (under 13)</h2>
       {children && children.length > 0 ? (
         <ul>
           {children.map(c => (
@@ -133,7 +133,7 @@ export function ChildrenSection() {
 
       <form onSubmit={handleAddChild}>
         <Fieldset>
-          <Fieldset.Legend>Add child</Fieldset.Legend>
+          <Fieldset.Legend>Add child (under 13)</Fieldset.Legend>
           <Textfield label="Name" type="text" name="name" required />
           <Button type="submit" disabled={createChild.isPending}>
             Add

@@ -8,8 +8,6 @@ import {
   Button,
   Card,
   Fieldset,
-  Label,
-  Select,
   Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
@@ -28,7 +26,8 @@ type Equipment = {
   id: number
   name: string
   property_id: number
-  structure_id: number
+  brand: string | null
+  model: string | null
   category: string | null
   notes: string | null
 }
@@ -40,13 +39,6 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
 
   const { data: equipment } = useSuspenseQuery(
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
-  )
-  const { data: structures } = useSuspenseQuery(
-    trpc.structure.list.queryOptions(),
-  )
-
-  const propertyStructures = structures.filter(
-    b => b.property_id === propertyId,
   )
 
   const invalidate = () => {
@@ -86,16 +78,17 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     const form = e.currentTarget
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
-    const structureRaw = fdString(fd, "structure_id").trim()
+    const brand = fdString(fd, "brand").trim()
+    const model = fdString(fd, "model").trim()
     const category = fdString(fd, "category").trim()
     const notes = fdString(fd, "notes").trim()
-    const structure_id = Number(structureRaw)
-    if (!name || !structureRaw || !Number.isFinite(structure_id)) return
+    if (!name) return
     createEquipment.mutate(
       {
         name,
         property_id: propertyId,
-        structure_id,
+        brand: brand || undefined,
+        model: model || undefined,
         category: category || undefined,
         notes: notes || undefined,
       },
@@ -113,17 +106,18 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const name = fdString(fd, "name").trim()
-      const structureRaw = fdString(fd, "structure_id").trim()
+      const brand = fdString(fd, "brand").trim()
+      const model = fdString(fd, "model").trim()
       const category = fdString(fd, "category").trim()
       const notes = fdString(fd, "notes").trim()
-      const structure_id = Number(structureRaw)
-      if (!name || !structureRaw || !Number.isFinite(structure_id)) return
+      if (!name) return
       updateEquipment.mutate(
         {
           id: item.id,
           name,
           property_id: propertyId,
-          structure_id,
+          brand: brand || undefined,
+          model: model || undefined,
           category: category || undefined,
           notes: notes || undefined,
         },
@@ -138,8 +132,6 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
       { onSuccess: () => { setEditingId(null) } },
     )
   }
-
-  const canAdd = propertyStructures.length > 0
 
   return (
     <section>
@@ -176,24 +168,20 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               defaultValue={editingItem.name}
               disabled={updateEquipment.isPending}
             />
-            <div className={styles.fieldGroup}>
-              <Label htmlFor={`edit-structure-${String(editingItem.id)}`}>
-                {t("Structure")}
-              </Label>
-              <Select
-                id={`edit-structure-${String(editingItem.id)}`}
-                name="structure_id"
-                required
-                defaultValue={String(editingItem.structure_id)}
-                disabled={updateEquipment.isPending}
-              >
-                {propertyStructures.map(b => (
-                  <Select.Option key={b.id} value={String(b.id)}>
-                    {b.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </div>
+            <Textfield
+              label={t("Brand")}
+              name="brand"
+              maxLength={64}
+              defaultValue={editingItem.brand ?? ""}
+              disabled={updateEquipment.isPending}
+            />
+            <Textfield
+              label={t("Model")}
+              name="model"
+              maxLength={64}
+              defaultValue={editingItem.model ?? ""}
+              disabled={updateEquipment.isPending}
+            />
             <Textfield
               label={t("Category")}
               name="category"
@@ -285,25 +273,18 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           autoFocus
                           disabled={createEquipment.isPending}
                         />
-                        <div className={styles.fieldGroup}>
-                          <Label htmlFor="add-equipment-structure">{t("Structure")}</Label>
-                          <Select
-                            id="add-equipment-structure"
-                            name="structure_id"
-                            required
-                            defaultValue=""
-                            disabled={createEquipment.isPending}
-                          >
-                            <Select.Option value="" disabled>
-                              {t("(select structure)")}
-                            </Select.Option>
-                            {propertyStructures.map(b => (
-                              <Select.Option key={b.id} value={String(b.id)}>
-                                {b.name}
-                              </Select.Option>
-                            ))}
-                          </Select>
-                        </div>
+                        <Textfield
+                          label={t("Brand")}
+                          name="brand"
+                          maxLength={64}
+                          disabled={createEquipment.isPending}
+                        />
+                        <Textfield
+                          label={t("Model")}
+                          name="model"
+                          maxLength={64}
+                          disabled={createEquipment.isPending}
+                        />
                         <Textfield
                           label={t("Category")}
                           name="category"
@@ -337,8 +318,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                   <Button
                     variant="tertiary"
                     className={styles.addButton}
-                    disabled={pending || !canAdd}
-                    title={canAdd ? undefined : t("Add a structure first")}
+                    disabled={pending}
                     onClick={() => { setIsAdding(true) }}
                   >
                     {t("+ Add equipment")}

@@ -18,13 +18,13 @@ export type ModalState =
 type EquipmentItem = {
   id: number
   name: string
-  structure_id: number
+  brand: string | null
+  model: string | null
   category: string | null
 }
 
 export function EquipmentCard(props: {
   item: EquipmentItem
-  structureName: string
   historyEntries: readonly EquipmentHistoryEntryData[]
   modalState: ModalState
   setModalState: (next: ModalState) => void
@@ -37,7 +37,6 @@ export function EquipmentCard(props: {
   const { t } = useTranslation("maintenance")
   const {
     item,
-    structureName,
     historyEntries,
     modalState,
     setModalState,
@@ -57,12 +56,16 @@ export function EquipmentCard(props: {
     <Card asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
-          <Paragraph className={styles.name} data-size="sm">
-            {item.name}
-          </Paragraph>
-          <Paragraph className={styles.building} data-size="sm">
-            {structureName}
-          </Paragraph>
+          <div className={styles.nameGroup}>
+            <Paragraph className={styles.name} data-size="sm">
+              {item.name}
+            </Paragraph>
+            {(item.brand ?? item.model) && (
+              <Paragraph className={styles.brandModel} data-size="xs">
+                {[item.brand, item.model].filter(Boolean).join(" · ")}
+              </Paragraph>
+            )}
+          </div>
           <Paragraph className={styles.category} data-size="sm">
             {item.category ?? ""}
           </Paragraph>

@@ -25,9 +25,8 @@ export const equipmentTable = pgTable("equipment", {
   property_id: integer("property_id")
     .notNull()
     .references(() => propertyTable.id),
-  structure_id: integer("structure_id")
-    .notNull()
-    .references(() => structuresTable.id),
+  brand: varchar("brand", { length: 64 }),
+  model: varchar("model", { length: 64 }),
   category: varchar("category", { length: 32 }),
   notes: varchar("notes", { length: 255 }),
   created_at: timestamp("created_at").notNull().defaultNow(),
@@ -79,7 +78,11 @@ export const maintenanceTable = pgTable(
   (t) => [
     check(
       "maintenance_location_xor",
-      sql`(${t.structure_id} IS NOT NULL) <> (${t.infrastructure_id} IS NOT NULL)`,
+      sql`(
+        (CASE WHEN ${t.structure_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.infrastructure_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.equipment_id} IS NOT NULL THEN 1 ELSE 0 END)
+      ) = 1`,
     ),
     check(
       "maintenance_done_has_timestamp",

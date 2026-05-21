@@ -6,14 +6,15 @@
 
 .row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto auto auto;
-  grid-template-areas: "name structure category actions inspect";
+  grid-template-columns: 1fr auto auto auto;
+  grid-template-areas: "name category actions inspect";
   align-items: baseline;
   gap: 1rem;
 }
 
-.name     { grid-area: name; margin: 0; }
-.structure { grid-area: structure; margin: 0; }
+.nameGroup { grid-area: name; display: flex; flex-direction: column; gap: 0.1rem; }
+.name     { margin: 0; }
+.brandModel { margin: 0; opacity: 0.75; }
 .category { grid-area: category; margin: 0; }
 .inspect  { grid-area: inspect; }
 .actions {
@@ -38,9 +39,9 @@
   .row {
     grid-template-columns: 1fr auto;
     grid-template-areas:
-      "name       inspect"
-      "structure   category"
-      "actions    actions";
+      "name     inspect"
+      "category category"
+      "actions  actions";
     row-gap: 0.25rem;
     column-gap: 0.5rem;
   }

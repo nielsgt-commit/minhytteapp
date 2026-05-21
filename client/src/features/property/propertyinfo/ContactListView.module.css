@@ -17,6 +17,42 @@
   min-width: 0;
 }
 
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.toggle:disabled {
+  cursor: default;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .addBlock {
   display: flex;
   flex-direction: column;
