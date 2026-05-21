@@ -12,10 +12,13 @@ import { store } from "./app/store"
 import { queryClient } from "./app/queryClient"
 import { TRPCProvider } from "./trpc/trpc"
 import { trpcClient } from "./trpc/client"
+import { registerSW } from "virtual:pwa-register"
 import "@digdir/designsystemet-css/theme"
 import "@digdir/designsystemet-css"
 import "./i18n"
 import "./index.css"
+
+registerSW({ immediate: true })
 
 
 const router = createRouter({
