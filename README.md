@@ -1,4 +1,4 @@
-# hytta-start
+# minhytteapp
 
 Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via Drizzle ORM.
 
