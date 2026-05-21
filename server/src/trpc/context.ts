@@ -1,72 +1,33 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch"
-import { eq } from "drizzle-orm"
 import { db } from "../db/client.ts"
-import { usersTable } from "../db/schema/users.schema.ts"
+import { auth } from "../auth/auth.ts"
 
 export type AuthUser = {
   id: number
   name: string
   email: string
+  emailVerified: boolean
+  image: string | null
   is_admin: boolean
   is_head: boolean
+  is_child: boolean | null
+  parent_user_id: number | null
   settlement_progress: "in_progress" | "all_done"
   birthday: string | null
-}
-
-export type AuthClaims = {
-  sub: string
-  name?: string
-  email?: string
-}
-
-function extractClaims(authHeader: string | null): AuthClaims | null {
-  if (!authHeader) return null
-  const [scheme, token] = authHeader.split(" ")
-  if (scheme.toLowerCase() !== "bearer" || !token) return null
-  const [, payload] = token.split(".")
-  if (!payload) return null
-  try {
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/")
-    const json = Buffer.from(normalized, "base64").toString("utf8")
-    const raw = JSON.parse(json) as Record<string, unknown>
-    if (typeof raw.sub !== "string") return null
-    return {
-      sub: raw.sub,
-      name: typeof raw.name === "string" ? raw.name : undefined,
-      email: typeof raw.email === "string" ? raw.email : undefined,
-    }
-  } catch {
-    return null
-  }
-}
-
-async function lookupUser(sub: string | null): Promise<AuthUser | null> {
-  if (!sub) return null
-  const row = (
-    await db
-      .select({
-        id: usersTable.id,
-        name: usersTable.name,
-        email: usersTable.email,
-        is_admin: usersTable.is_admin,
-        is_head: usersTable.is_head,
-        settlement_progress: usersTable.settlement_progress,
-        birthday: usersTable.birthday,
-      })
-      .from(usersTable)
-      .where(eq(usersTable.oauth_sub, sub))
-      .limit(1)
-  ).at(0)
-  return row ?? null
+  createdAt: Date
+  updatedAt: Date
 }
 
 export const createContext = async ({ req }: FetchCreateContextFnOptions) => {
-  const claims = extractClaims(req.headers.get("authorization"))
-  return {
-    db,
-    claims,
-    user: await lookupUser(claims?.sub ?? null),
+  const result = await auth.api.getSession({ headers: req.headers })
+  if (!result) {
+    return { db, session: null, user: null as AuthUser | null }
   }
+  const raw = result.user as unknown as Omit<AuthUser, "id"> & {
+    id: number | string
+  }
+  const user: AuthUser = { ...raw, id: Number(raw.id) }
+  return { db, session: result.session, user }
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>

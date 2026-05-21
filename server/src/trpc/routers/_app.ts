@@ -1,4 +1,5 @@
 import { router } from "../init.ts"
+import { allowedEmailRouter } from "./allowedEmail.ts"
 import { bookingRouter } from "./booking.ts"
 import { dashboardRouter } from "./dashboard.ts"
 import { devRouter } from "./dev.ts"
@@ -8,7 +9,6 @@ import { expenseRouter } from "./expense.ts"
 import { expenseCategoryRouter } from "./expenseCategory.ts"
 import { infrastructureRouter } from "./infrastructure.ts"
 import { inspectionRouter } from "./inspection.ts"
-import { inviteRouter } from "./invite.ts"
 import { maintenanceRouter } from "./maintenance.ts"
 import { parkingRouter } from "./parking.ts"
 import { priorityRouter } from "./priority.ts"
@@ -25,6 +25,7 @@ import { userGroupRouter } from "./userGroup.ts"
 import { weatherRouter } from "./weather.ts"
 
 export const appRouter = router({
+  allowedEmail: allowedEmailRouter,
   booking: bookingRouter,
   dashboard: dashboardRouter,
   dev: devRouter,
@@ -34,7 +35,6 @@ export const appRouter = router({
   expenseCategory: expenseCategoryRouter,
   infrastructure: infrastructureRouter,
   inspection: inspectionRouter,
-  invite: inviteRouter,
   maintenance: maintenanceRouter,
   parking: parkingRouter,
   priority: priorityRouter,

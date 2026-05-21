@@ -50,7 +50,7 @@ export function RoomCapacityMeter({
   // Card's data-color type is narrower than Tag's; cast to allow feedback colors
   const cardColor = (over || adultInKidOnly ? "danger" : "neutral") as "neutral"
   return (
-    <Card data-color={cardColor}>
+    <Card data-color={cardColor} className={styles.roomCard}>
       <Card.Block>
 
         {/* Always visible: toggle header */}

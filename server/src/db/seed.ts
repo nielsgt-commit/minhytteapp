@@ -140,9 +140,8 @@ function mondayOfIsoWeekUTC(year: number, week: number) {
 }
 
 async function upsertUser(seed: SeedUser) {
-  const oauth_sub = seed.name
-  const email = `${seed.name}@oauth.local`
-  const legacyPendingEmail = `pending-${seed.name}@example.local`
+  const email = `${seed.name.toLowerCase()}@oauth.local`
+  const legacyPendingEmail = `pending-${seed.name.toLowerCase()}@example.local`
   const is_admin = seed.is_admin ?? false
   const is_head = seed.is_head ?? false
   const existing = (
@@ -162,18 +161,18 @@ async function upsertUser(seed: SeedUser) {
       existing.email !== email ||
       existing.is_admin !== is_admin ||
       existing.is_head !== is_head ||
-      existing.oauth_sub !== oauth_sub
+      !existing.email_verified
     if (!drift) {
       console.log(`found user #${String(existing.id)} (${existing.email})`)
       return existing
     }
     const [updated] = await db
       .update(usersTable)
-      .set({ email, is_admin, is_head, oauth_sub })
+      .set({ email, is_admin, is_head, email_verified: true })
       .where(eq(usersTable.id, existing.id))
       .returning()
     console.log(
-      `updated user #${String(updated.id)} (${updated.email}) -> admin=${String(updated.is_admin)}, head=${String(updated.is_head)}, sub=${String(updated.oauth_sub)}`,
+      `updated user #${String(updated.id)} (${updated.email}) -> admin=${String(updated.is_admin)}, head=${String(updated.is_head)}`,
     )
     return updated
   }
@@ -183,7 +182,7 @@ async function upsertUser(seed: SeedUser) {
       .values({
         name: seed.name,
         email,
-        oauth_sub,
+        email_verified: true,
         is_admin,
         is_head,
       })

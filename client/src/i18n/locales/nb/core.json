@@ -5,6 +5,7 @@
   "Error: {{message}}": "Feil: {{message}}",
   "Footer": "Bunntekst",
   "Language": "Språk",
+  "Light mode": "Lys modus",
   "Loading…": "Laster…",
   "Log out": "Logg ut",
   "Logged in as": "Logget inn som",
@@ -18,6 +19,9 @@
   "Select property": "Velg eiendom",
   "Select user": "Velg bruker",
   "Settings": "Innstillinger",
+  "Switch language to {{label}}": "Bytt språk til {{label}}",
+  "Switch to dark mode": "Bytt til mørk modus",
+  "Switch to light mode": "Bytt til lys modus",
   "User group": "Brukergruppe",
   "User menu": "Brukermeny"
 }

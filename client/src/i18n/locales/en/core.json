@@ -5,6 +5,7 @@
   "Error: {{message}}": "Error: {{message}}",
   "Footer": "Footer",
   "Language": "Language",
+  "Light mode": "Light mode",
   "Loading…": "Loading…",
   "Log out": "Log out",
   "Logged in as": "Logged in as",
@@ -18,6 +19,9 @@
   "Select property": "Select property",
   "Select user": "Select user",
   "Settings": "Settings",
+  "Switch language to {{label}}": "Switch language to {{label}}",
+  "Switch to dark mode": "Switch to dark mode",
+  "Switch to light mode": "Switch to light mode",
   "User group": "User group",
   "User menu": "User menu"
 }

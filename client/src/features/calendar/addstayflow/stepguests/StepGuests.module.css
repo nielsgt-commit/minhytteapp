@@ -1,10 +1,18 @@
 .card {
-  border: 1px solid var(--ds-color-neutral-border-default);
+  border: 1px solid var(--ds-color-accent-border-default);
   border-radius: var(--ds-border-radius-md, 8px);
   padding: 1rem;
   margin-bottom: 1rem;
+  background-color: var(--ds-color-accent-surface-default);
 }
 
 .bookerLabel {
   margin-bottom: 0.5rem;
+}
+
+.headingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }

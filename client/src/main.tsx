@@ -12,19 +12,15 @@ import { store } from "./app/store"
 import { queryClient } from "./app/queryClient"
 import { TRPCProvider } from "./trpc/trpc"
 import { trpcClient } from "./trpc/client"
-import { loadAuth } from "./auth/oauth"
 import "@digdir/designsystemet-css/theme"
 import "@digdir/designsystemet-css"
 import "./i18n"
 import "./index.css"
 
 
-const auth = loadAuth()
-
 const router = createRouter({
   routeTree,
   context: {
-    auth,
     queryClient,
   },
 })

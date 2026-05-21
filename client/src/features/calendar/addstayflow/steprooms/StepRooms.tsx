@@ -1,5 +1,5 @@
 import type { Dispatch } from "react"
-import { Heading, Label, Paragraph } from "@digdir/designsystemet-react"
+import { Heading, Label, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import {
   assignOccupantToRoom,
@@ -57,7 +57,12 @@ export function StepRooms({
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div className={styles.card}>
-        <Heading level={4}>{t("Rooms")}</Heading>
+        <div className={styles.headingRow}>
+          <Heading level={4}>{t("Rooms")}</Heading>
+          {draft.start_date && draft.end_date && (
+            <Tag data-color="info">{draft.start_date} → {draft.end_date}</Tag>
+          )}
+        </div>
         {isFetching && (
           <Paragraph className={styles.loading}>{t("Checking conflicts…")}</Paragraph>
         )}

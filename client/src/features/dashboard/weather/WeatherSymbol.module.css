@@ -1,4 +1,4 @@
 .symbol {
-  font-size: var(--symbol-size);
+  font-size: var(--ds-size--sm);
   line-height: 1;
 }

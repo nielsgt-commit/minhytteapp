@@ -28,7 +28,7 @@ export default function CalendarSummary() {
   const resetWeek = () => { setWeekStart(startOfSunday(new Date())) }
 
   return (
-    <Card asChild>
+    <Card asChild className={styles.summaryCard}>
       <section>
         <Card.Block>
           <Heading onClick={resetWeek} className={styles.heading}>

@@ -5,14 +5,15 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { loadAuth } from "@/auth/oauth"
+import { useAuthSession } from "@/auth/auth-client"
 
+import { useTranslation } from "react-i18next"
 import { Switch } from '@digdir/designsystemet-react';
 
 export default function CheckIn() {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const auth = loadAuth()
+  const auth = useAuthSession()
   const propertyId = useSelectedPropertyId()
 
   const enabled = auth.isAuthenticated && propertyId != null
@@ -22,6 +23,10 @@ export default function CheckIn() {
       { enabled },
     ),
   )
+
+
+  const { t } = useTranslation("checkin")
+
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: trpc.stay.currentForMe.queryKey() })
@@ -49,7 +54,7 @@ export default function CheckIn() {
 
   return (
     <Switch
-      label={checked ? "På hytta nå" : "På hytta?"}
+      label={checked ? t("At property now") : t("At property?")}
       checked={checked}
       disabled={pending}
       onChange={e => { handleChange(e.currentTarget.checked) }}

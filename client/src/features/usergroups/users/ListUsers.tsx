@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds.ts"
-import { Fragment, type SyntheticEvent, useState } from "react"
+import { Fragment, type SyntheticEvent, useEffect, useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -17,7 +17,11 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 
-export function ListUsers() {
+type ListUsersProps = {
+  editMode: boolean
+}
+
+export function ListUsers({ editMode }: ListUsersProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -41,7 +45,10 @@ export function ListUsers() {
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editMode, setEditMode] = useState(false)
+
+  useEffect(() => {
+    if (!editMode) setEditingId(null)
+  }, [editMode])
 
   const { pending, error: lastError } = useMutationsStatus(updateUser, deleteUser)
 
@@ -77,16 +84,6 @@ export function ListUsers() {
       <p>
         {t("Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.")}
       </p>
-
-      <Checkbox
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.currentTarget.checked
-          setEditMode(next)
-          if (!next) setEditingId(null)
-        }}
-      />
 
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 

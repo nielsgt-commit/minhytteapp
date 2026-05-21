@@ -1,28 +1,47 @@
 import { useSelectedUserId } from "@/app/useSelectedIds"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
+import { Avatar, Divider, Dropdown, Tag } from "@digdir/designsystemet-react"
+import { ChevronDownIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch } from "@/app/hooks"
 import { setSelectedUserId } from "@/features/user/userSlice"
-import { loadAuth, logout } from "@/auth/oauth"
-import UserSwitcher from "./UserSwitcher"
-import styles from "./Header.module.css"
+import { signOut, useAuthSession } from "@/auth/auth-client"
+import CheckIn from "./CheckIn"
+import ColorSchemeToggle from "./ColorSchemeToggle"
+import LanguageSwitcher from "./LanguageSwitcher"
 
-export default function UserMenu() {
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0]?.toUpperCase() ?? "")
+    .join("")
+}
+
+type Props = {
+  showCheckIn?: boolean
+}
+
+export default function UserMenu({ showCheckIn = true }: Props) {
   const { t } = useTranslation("core")
   const trpc = useTRPC()
-
-  const auth = loadAuth()
-  const { data: me, isLoading } = useQuery(
+  const auth = useAuthSession()
+  const { data: me } = useQuery(
     trpc.user.me.queryOptions(undefined, { enabled: auth.isAuthenticated }),
+  )
+  const { data: groups } = useQuery(
+    trpc.userGroup.listWithMembers.queryOptions(),
   )
   const selectedId = useSelectedUserId()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const [isOpen, setIsOpen] = useState(false)
 
-  const list = me ? [me] : []
+  const list = me ? [{ ...me, name: me.name || me.email }] : []
 
   useEffect(() => {
     if (list.length === 0) return
@@ -32,34 +51,88 @@ export default function UserMenu() {
     }
   }, [list, selectedId, dispatch])
 
-  const handleLogout = () => {
-    logout()
-    window.location.assign("/")
-  }
-
   if (!auth.user) return null
 
   const current = list.find(u => u.id === selectedId)
+  const name = current?.name ?? t("Select user")
 
-  let label: string
-  if (isLoading) {
-    label = t("Loading…")
-  } else if (current) {
-    label = ""
-  } else {
-    label = t("No user")
+  const mainGroup =
+    selectedId != null && groups
+      ? groups.find(
+          g => g.is_main && g.members.some(m => m.user_id === selectedId),
+        )
+      : undefined
+
+  const handleLogout = async () => {
+    await signOut()
+    window.location.assign("/")
   }
 
   return (
-    <div className={styles.menu} style={{ alignSelf: "flex-end" }}>
-      <span> {label}</span>
-      <UserSwitcher
-        users={list}
-        value={selectedId}
-        onChange={id => { dispatch(setSelectedUserId(id)) }}
-        onLogout={handleLogout}
-        onSettings={() => { void navigate({ to: "/usersettings" }) }}
-      />
-    </div>
+    <Dropdown.TriggerContext>
+      <Dropdown.Trigger
+        variant="tertiary"
+        data-color="neutral"
+        aria-label={t("User menu")}
+        style={isOpen ? undefined : { border: "none" }}
+      >
+        {name}
+        {isOpen && <ChevronDownIcon aria-hidden />}
+        <Avatar
+          aria-hidden
+          data-color="accent"
+          data-initials={initials(name)}
+          style={{ marginLeft: "auto" }}
+        />
+      </Dropdown.Trigger>
+      <Dropdown
+        placement="bottom-end"
+        open={isOpen}
+        onOpen={() => { setIsOpen(true) }}
+        onClose={() => { setIsOpen(false) }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.5rem 0.75rem",
+          }}
+        >
+          <span>{name}</span>
+          {mainGroup && <Tag data-color="info">{mainGroup.name}</Tag>}
+        </div>
+        <Divider />
+        {showCheckIn && (
+          <>
+            <div style={{ padding: "0.5rem 0.75rem" }}>
+              <CheckIn />
+            </div>
+            <Divider />
+          </>
+        )}
+        <div style={{ padding: "0.5rem 0.75rem" }}>
+          <ColorSchemeToggle />
+        </div>
+        <Divider />
+        <div style={{ padding: "0.5rem 0.75rem" }}>
+          <LanguageSwitcher />
+        </div>
+        <Divider />
+        <Dropdown.List>
+          <Dropdown.Item>
+            <Dropdown.Button onClick={() => { void navigate({ to: "/usersettings" }) }}>
+              {t("Settings")}
+            </Dropdown.Button>
+          </Dropdown.Item>
+          <Dropdown.Item>
+            <Dropdown.Button data-color="danger" onClick={() => { void handleLogout() }}>
+              {t("Log out")}
+            </Dropdown.Button>
+          </Dropdown.Item>
+        </Dropdown.List>
+      </Dropdown>
+    </Dropdown.TriggerContext>
   )
 }

@@ -181,21 +181,3 @@ export const propertyContactsTable = pgTable("property_contacts", {
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 })
 
-export const propertyInvitationsTable = pgTable("property_invitations", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  token: varchar("token", { length: 64 }).notNull().unique(),
-  property_id: integer("property_id")
-    .notNull()
-    .references(() => propertyTable.id),
-  email: varchar("email", { length: 255 }).notNull(),
-  ownership_pct: numeric("ownership_pct", { precision: 5, scale: 2 })
-    .notNull()
-    .default("0.00"),
-  expires_at: timestamp("expires_at").notNull(),
-  used_at: timestamp("used_at"),
-  used_by_user_id: integer("used_by_user_id").references(() => usersTable.id),
-  created_by_user_id: integer("created_by_user_id")
-    .notNull()
-    .references(() => usersTable.id),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-})

@@ -16,6 +16,10 @@ code {
   min-width: 0;
 }
 
+.ds-card {
+  background-color: var(--ds-color-background-tinted);
+}
+
 ds-tabs,
 u-tabs {
   display: block;

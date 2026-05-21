@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch } from "@/app/hooks"
 import { setSelectedPropertyId } from "@/features/property/propertySlice"
-import { loadAuth } from "@/auth/oauth"
+import { useAuthSession } from "@/auth/auth-client"
 import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
 
@@ -18,7 +18,7 @@ export default function PropertyMenu() {
   const { t } = useTranslation("core")
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const auth = loadAuth()
+  const auth = useAuthSession()
   const selectedUserId = useSelectedUserId()
   const { data: properties, isLoading } = useQuery(
     trpc.property.listForUser.queryOptions(

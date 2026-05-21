@@ -16,7 +16,6 @@ import {
   infrastructureTable,
   parkingClaimsTable,
   propertyContactsTable,
-  propertyInvitationsTable,
   propertyOwnersTable,
   propertyTable,
   roomAdjacenciesTable,
@@ -102,7 +101,6 @@ export const propertyRelations = relations(propertyTable, ({ many }) => ({
   infrastructure: many(infrastructureTable),
   bookings: many(bookingTable),
   owners: many(propertyOwnersTable),
-  invitations: many(propertyInvitationsTable),
   equipment: many(equipmentTable),
   stays: many(stayTable),
   parkingClaims: many(parkingClaimsTable),
@@ -154,26 +152,6 @@ export const parkingClaimsRelations = relations(parkingClaimsTable, ({ one }) =>
     references: [usersTable.id],
   }),
 }))
-
-export const propertyInvitationsRelations = relations(
-  propertyInvitationsTable,
-  ({ one }) => ({
-    property: one(propertyTable, {
-      fields: [propertyInvitationsTable.property_id],
-      references: [propertyTable.id],
-    }),
-    createdBy: one(usersTable, {
-      fields: [propertyInvitationsTable.created_by_user_id],
-      references: [usersTable.id],
-      relationName: "invitation_created_by",
-    }),
-    usedBy: one(usersTable, {
-      fields: [propertyInvitationsTable.used_by_user_id],
-      references: [usersTable.id],
-      relationName: "invitation_used_by",
-    }),
-  }),
-)
 
 export const propertyOwnersRelations = relations(
   propertyOwnersTable,
