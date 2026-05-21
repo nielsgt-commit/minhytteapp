@@ -1,4 +1,5 @@
-import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import { useState } from "react"
+import { Button, Card, Chip, Paragraph, Textfield } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
 
@@ -32,6 +33,8 @@ export function MaintenanceHistoryItemView(props: {
     onConfirmDelete,
     onCancelDelete,
   } = props
+  const [expanded, setExpanded] = useState(false)
+  const hasInstructions = item.instructions != null && item.instructions !== ""
   const completedLabel = item.completed_at
     ? new Date(item.completed_at).toLocaleDateString()
     : ""
@@ -46,10 +49,17 @@ export function MaintenanceHistoryItemView(props: {
           <Paragraph className={styles.description} data-size="sm">
             {item.description}
           </Paragraph>
-          <Paragraph className={styles.instructions} data-size="sm">
-            {item.instructions ?? ""}
-          </Paragraph>
           <div className={styles.actions}>
+            {hasInstructions && (
+              <Chip.Button
+                type="button"
+                data-size="sm"
+                aria-expanded={expanded}
+                onClick={() => { setExpanded(v => !v) }}
+              >
+                {expanded ? t("Hide execution") : t("Show execution")}
+              </Chip.Button>
+            )}
             <Button
               variant="tertiary"
               data-size="sm"
@@ -71,6 +81,13 @@ export function MaintenanceHistoryItemView(props: {
             )}
           </div>
         </Card.Block>
+        {hasInstructions && expanded && (
+          <Card.Block>
+            <Paragraph className={styles.instructions} data-size="sm">
+              {item.instructions}
+            </Paragraph>
+          </Card.Block>
+        )}
         {isDeleting && (
           <Card.Block>
             <div className={styles.confirm}>

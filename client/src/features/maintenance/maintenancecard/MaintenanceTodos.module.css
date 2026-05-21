@@ -40,4 +40,11 @@
   display: flex;
   gap: 0.5rem;
   flex: 0 0 auto;
+  align-items: center;
+}
+
+.instructions {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

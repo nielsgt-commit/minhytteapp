@@ -1,0 +1,1 @@
+ALTER TABLE "maintenance" ALTER COLUMN "instructions" SET DATA TYPE text;

@@ -297,6 +297,9 @@ export function ListPropertyStructures() {
                           <WrenchIcon aria-hidden fontSize="1.25rem" />
                         )}
                       </Tag>
+                      {b.built_year != null && (
+                        <small title={t("Built year")}>{t("Built {{year}}", { year: b.built_year })}</small>
+                      )}
                     </div>
 
                     {isExpanded && (

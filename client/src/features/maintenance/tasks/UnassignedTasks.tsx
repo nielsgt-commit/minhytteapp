@@ -5,7 +5,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
-import { Button, Fieldset, Switch, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Field,
+  Fieldset,
+  Label,
+  Switch,
+  Textarea,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 
@@ -113,11 +121,14 @@ export function UnassignedTasks() {
                         defaultValue={task.description}
                         required
                       />
-                      <Textfield
-                        label={t("Instructions")}
-                        name="instructions"
-                        defaultValue={task.instructions ?? ""}
-                      />
+                      <Field>
+                        <Label>{t("Instructions")}</Label>
+                        <Textarea
+                          name="instructions"
+                          defaultValue={task.instructions ?? ""}
+                          rows={4}
+                        />
+                      </Field>
                       <Button type="submit" disabled={pending}>{t("Save")}</Button>
                       <Button
                         variant="secondary"

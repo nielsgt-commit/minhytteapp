@@ -6,18 +6,23 @@
 
 .row {
   display: grid;
-  grid-template-columns: auto 1fr 1fr auto;
-  grid-template-areas: "date description instructions actions";
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "date description actions";
   align-items: baseline;
   gap: 1rem;
 }
 
 .date         { grid-area: date; margin: 0; }
 .description  { grid-area: description; margin: 0; }
-.instructions { grid-area: instructions; margin: 0; }
+.instructions {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .actions {
   grid-area: actions;
   display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -33,7 +38,6 @@
     grid-template-columns: auto 1fr;
     grid-template-areas:
       "date        description"
-      "date        instructions"
       "actions     actions";
     row-gap: 0.25rem;
     column-gap: 0.5rem;

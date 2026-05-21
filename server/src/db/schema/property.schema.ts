@@ -51,19 +51,29 @@ export const parkingClaimsTable = pgTable(
   ],
 )
 
-export const structuresTable = pgTable("structures", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar("name", { length: 255 }).notNull(),
-  property_id: integer("property_id")
-    .notNull()
-    .references(() => propertyTable.id),
-  category: varchar("category", {
-    length: 16,
-    enum: ["habitable", "non_habitable"],
-  })
-    .notNull()
-    .default("habitable"),
-})
+export const structuresTable = pgTable(
+  "structures",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    name: varchar("name", { length: 255 }).notNull(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    category: varchar("category", {
+      length: 16,
+      enum: ["habitable", "non_habitable"],
+    })
+      .notNull()
+      .default("habitable"),
+    built_year: integer("built_year"),
+  },
+  (t) => [
+    check(
+      "structures_built_year_range",
+      sql`${t.built_year} IS NULL OR (${t.built_year} BETWEEN 1500 AND 2100)`,
+    ),
+  ],
+)
 
 export const roomTable = pgTable("rooms", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

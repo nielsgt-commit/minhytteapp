@@ -1,5 +1,5 @@
 import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
-import { type SyntheticEvent } from "react"
+import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
   useQuery,
@@ -8,6 +8,7 @@ import {
 import {
   Button,
   Card,
+  Chip,
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
@@ -16,6 +17,7 @@ import styles from "./MaintenanceTodos.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   const { t } = useTranslation("maintenance")
@@ -62,7 +64,7 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
           ? { structure_id: scope.id }
           : { infrastructure_id: scope.id }),
         category: "maintenance",
-        severity: "minor",
+        severity: "patch",
         status: "todo",
         recurrence: "once",
       },
@@ -102,6 +104,32 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     })
   }
 
+  const cycleItemSeverity = (item: (typeof todos)[number]) => {
+    updateMutation.mutate({
+      id: item.id,
+      description: item.description,
+      instructions: item.instructions ?? undefined,
+      added_by: item.added_by,
+      assigned_to_id: item.assigned_to_id ?? undefined,
+      structure_id: item.structure_id ?? undefined,
+      infrastructure_id: item.infrastructure_id ?? undefined,
+      category: item.category,
+      severity: cycleSeverity(item.severity),
+      status: item.status,
+      recurrence: item.recurrence,
+    })
+  }
+
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
+  const toggleExpanded = (id: number) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const pending =
     createMutation.isPending
     || updateMutation.isPending
@@ -131,38 +159,64 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
         <p>{t("No active tasks.")}</p>
       ) : (
         <ul className={styles.list}>
-          {todos.map(todo => (
-            <Card asChild key={todo.id}>
-              <li>
-                <Card.Block className={styles.row} data-size="sm">
-                  <Paragraph className={styles.description} data-size="sm">
-                    {todo.description}
-                  </Paragraph>
-                  <div className={styles.actions}>
-                    <Button
-                      variant="tertiary"
-                      data-size="sm"
+          {todos.map(todo => {
+            const hasInstructions = todo.instructions != null && todo.instructions !== ""
+            const isExpanded = expanded.has(todo.id)
+            return (
+              <Card asChild key={todo.id}>
+                <li>
+                  <Card.Block className={styles.row} data-size="sm">
+                    <SeverityTag
+                      severity={todo.severity}
+                      onCycle={() => { cycleItemSeverity(todo) }}
                       disabled={pending}
-                      onClick={() => { markDone(todo) }}
-                    >
-                      {t("Done")}
-                    </Button>
-                    <Button
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      disabled={pending}
-                      onClick={() => {
-                        deleteMutation.mutate({ id: todo.id })
-                      }}
-                    >
-                      {t("Delete")}
-                    </Button>
-                  </div>
-                </Card.Block>
-              </li>
-            </Card>
-          ))}
+                    />
+                    <Paragraph className={styles.description} data-size="sm">
+                      {todo.description}
+                    </Paragraph>
+                    <div className={styles.actions}>
+                      {hasInstructions && (
+                        <Chip.Button
+                          type="button"
+                          data-size="sm"
+                          aria-expanded={isExpanded}
+                          onClick={() => { toggleExpanded(todo.id) }}
+                        >
+                          {isExpanded ? t("Hide execution") : t("Show execution")}
+                        </Chip.Button>
+                      )}
+                      <Button
+                        variant="tertiary"
+                        data-size="sm"
+                        disabled={pending}
+                        onClick={() => { markDone(todo) }}
+                      >
+                        {t("Done")}
+                      </Button>
+                      <Button
+                        variant="tertiary"
+                        data-color="danger"
+                        data-size="sm"
+                        disabled={pending}
+                        onClick={() => {
+                          deleteMutation.mutate({ id: todo.id })
+                        }}
+                      >
+                        {t("Delete")}
+                      </Button>
+                    </div>
+                  </Card.Block>
+                  {hasInstructions && isExpanded && (
+                    <Card.Block>
+                      <Paragraph className={styles.instructions} data-size="sm">
+                        {todo.instructions}
+                      </Paragraph>
+                    </Card.Block>
+                  )}
+                </li>
+              </Card>
+            )
+          })}
         </ul>
       )}
     </div>

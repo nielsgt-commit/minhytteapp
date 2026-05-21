@@ -8,7 +8,7 @@ import {
 import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { fdString } from "@/utils/formData"
+import { fdNumber, fdString } from "@/utils/formData"
 import styles from "./AddStructureFlow.module.css"
 
 type Props = {
@@ -44,8 +44,10 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
     if (!name) return
+    const yearRaw = fdNumber(fd, "built_year")
+    const built_year = Number.isFinite(yearRaw) ? yearRaw : undefined
     createStructure.mutate(
-      { name, property_id: selectedProperty.id },
+      { name, property_id: selectedProperty.id, built_year },
       {
         onSuccess: () => {
           form.reset()
@@ -74,6 +76,16 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
           name="name"
           required
           autoFocus
+          disabled={createStructure.isPending}
+        />
+        <Textfield
+          label={t("Built year")}
+          name="built_year"
+          type="number"
+          min={1500}
+          max={2100}
+          step={1}
+          inputMode="numeric"
           disabled={createStructure.isPending}
         />
         <div className={styles.actions}>

@@ -10,6 +10,7 @@ import {
   Field,
   Label,
   Select,
+  Textarea,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -58,7 +59,7 @@ const initialFormState: FormState = {
   structure_id: "",
   infrastructure_id: "",
   category: "maintenance",
-  severity: "minor",
+  severity: "patch",
   status: "todo",
   recurrence: "once",
   when: "",
@@ -233,13 +234,16 @@ export function MaintenanceTestForm() {
             required
           />
 
-          <Textfield
-            label={t("Instructions")}
-            value={state.instructions}
-            onChange={e => {
-              set("instructions")(e.target.value)
-            }}
-          />
+          <Field>
+            <Label>{t("Instructions")}</Label>
+            <Textarea
+              value={state.instructions}
+              onChange={e => {
+                set("instructions")(e.target.value)
+              }}
+              rows={4}
+            />
+          </Field>
 
           <Field>
             <Label>{t("Status")}</Label>

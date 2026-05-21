@@ -8,3 +8,9 @@
 .inspector {
   margin-left: auto;
 }
+
+.finding {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+}

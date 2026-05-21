@@ -1,4 +1,5 @@
 import { asc, eq, or } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
 import {
@@ -18,6 +19,7 @@ const maintenanceFields = {
   severity: z.enum(["major", "minor", "patch"]),
   status: z.enum(["todo", "doing", "done"]),
   recurrence: z.enum(["once", "yearly", "5year"]),
+  completed_at: z.coerce.date().optional(),
 }
 
 const locationXor = {
@@ -77,7 +79,10 @@ export const maintenanceRouter = router({
         .insert(maintenanceTable)
         .values({
           ...input,
-          completed_at: input.status === "done" ? new Date() : null,
+          completed_at:
+            input.status === "done"
+              ? (input.completed_at ?? new Date())
+              : null,
         })
         .returning()
       return created
@@ -87,12 +92,23 @@ export const maintenanceRouter = router({
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
+      const existing = (
+        await ctx.db
+          .select({ completed_at: maintenanceTable.completed_at })
+          .from(maintenanceTable)
+          .where(eq(maintenanceTable.id, id))
+          .limit(1)
+      ).at(0)
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "maintenance not found" })
+      }
+      const completed_at =
+        rest.status === "done"
+          ? (rest.completed_at ?? existing.completed_at ?? new Date())
+          : null
       const [updated] = await ctx.db
         .update(maintenanceTable)
-        .set({
-          ...rest,
-          completed_at: rest.status === "done" ? new Date() : null,
-        })
+        .set({ ...rest, completed_at })
         .where(eq(maintenanceTable.id, id))
         .returning()
       return updated

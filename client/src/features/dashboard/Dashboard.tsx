@@ -6,6 +6,7 @@ import MobileTabs from "./MobileTabs"
 import PlannedStaysSection from "./PlannedStaysSection"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
 import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
+import PropertyEvents from "@/features/dashboard/propertyevents/PropertyEvents.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { Heading } from "@digdir/designsystemet-react"
 
@@ -41,6 +42,9 @@ export function Dashboard() {
       </Suspense>
       <Suspense fallback={<p>{t("Loading…")}</p>}>
         <PlannedStaysSection propertyId={selectedPropertyId} />
+      </Suspense>
+      <Suspense fallback={<p>{t("Loading…")}</p>}>
+        <PropertyEvents />
       </Suspense>
     </section>
   )

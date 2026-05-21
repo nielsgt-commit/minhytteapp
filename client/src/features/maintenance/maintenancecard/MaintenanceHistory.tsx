@@ -96,11 +96,16 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
       const fd = new FormData(e.currentTarget)
       const rawDescription = fd.get("description")
       const rawInstructions = fd.get("instructions")
+      const rawCompletedAt = fd.get("completed_at")
       const description =
         typeof rawDescription === "string" ? rawDescription.trim() : ""
       const instructions =
         typeof rawInstructions === "string" ? rawInstructions.trim() : ""
+      const completedAtStr =
+        typeof rawCompletedAt === "string" ? rawCompletedAt.trim() : ""
       if (!description) return
+      const completed_at =
+        completedAtStr ? new Date(`${completedAtStr}T12:00:00`) : undefined
       updateMutation.mutate(
         {
           id: item.id,
@@ -114,6 +119,7 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
           severity: item.severity,
           status: item.status,
           recurrence: item.recurrence,
+          completed_at,
         },
         { onSuccess: () => { setEditing(null) } },
       )

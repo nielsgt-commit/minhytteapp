@@ -1,9 +1,10 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Tag, Button, Card, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./InspectionCard.module.css"
+import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 type Inspection = {
   id: number
@@ -25,6 +26,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
     "5year": t("Every 5 years"),
   }
   const trpc = useTRPC()
+  const qc = useQueryClient()
   const [expanded, setExpanded] = useState(false)
 
   const { data: findings = [] } = useQuery(
@@ -33,6 +35,31 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
       { enabled: expanded },
     ),
   )
+
+  const updateMutation = useMutation(
+    trpc.maintenance.update.mutationOptions({
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
+        void qc.invalidateQueries({ queryKey: trpc.inspection.pathKey() })
+      },
+    }),
+  )
+
+  const cycleFindingSeverity = (f: (typeof findings)[number]) => {
+    updateMutation.mutate({
+      id: f.id,
+      description: f.description,
+      instructions: f.instructions ?? undefined,
+      added_by: f.added_by,
+      assigned_to_id: f.assigned_to_id ?? undefined,
+      structure_id: f.structure_id ?? undefined,
+      infrastructure_id: f.infrastructure_id ?? undefined,
+      category: f.category,
+      severity: cycleSeverity(f.severity),
+      status: f.status,
+      recurrence: f.recurrence,
+    })
+  }
 
   const completedLabel = inspection.completed_at
     ? new Date(inspection.completed_at).toLocaleDateString()
@@ -71,7 +98,12 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                 </Paragraph>
                 <ul>
                   {followups.map(f => (
-                    <li key={f.id}>
+                    <li key={f.id} className={styles.finding}>
+                      <SeverityTag
+                        severity={f.severity}
+                        onCycle={() => { cycleFindingSeverity(f) }}
+                        disabled={updateMutation.isPending}
+                      />
                       <Paragraph data-size="sm">{f.description}</Paragraph>
                     </li>
                   ))}
@@ -85,7 +117,12 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                 </Paragraph>
                 <ul>
                   {adHocs.map(f => (
-                    <li key={f.id}>
+                    <li key={f.id} className={styles.finding}>
+                      <SeverityTag
+                        severity={f.severity}
+                        onCycle={() => { cycleFindingSeverity(f) }}
+                        disabled={updateMutation.isPending}
+                      />
                       <Paragraph data-size="sm">
                         {f.description}
                         {f.is_pinned ? t(" (pinned)") : ""}

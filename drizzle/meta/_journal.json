@@ -316,6 +316,20 @@
       "when": 1779281139909,
       "tag": "0044_luxuriant_shadowcat",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1779354549571,
+      "tag": "0045_solid_bill_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1779357235666,
+      "tag": "0046_reflective_sunset_bain",
+      "breakpoints": true
     }
   ]
 }

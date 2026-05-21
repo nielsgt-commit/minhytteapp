@@ -10,6 +10,7 @@ const structureFields = {
   name: z.string().min(1, { error: "name is required" }),
   property_id: z.number().int().positive(),
   category: z.enum(["habitable", "non_habitable"]).default("habitable"),
+  built_year: z.number().int().min(1500).max(2100).nullable().optional(),
 }
 
 const createInput = z.object(structureFields)
@@ -28,6 +29,7 @@ export const structureRouter = router({
         property_id: structuresTable.property_id,
         property_name: propertyTable.name,
         category: structuresTable.category,
+        built_year: structuresTable.built_year,
       })
       .from(structuresTable)
       .leftJoin(
@@ -48,6 +50,7 @@ export const structureRouter = router({
           property_id: structuresTable.property_id,
           property_name: propertyTable.name,
           category: structuresTable.category,
+          built_year: structuresTable.built_year,
         })
         .from(structuresTable)
         .leftJoin(

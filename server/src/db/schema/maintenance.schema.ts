@@ -38,7 +38,7 @@ export const maintenanceTable = pgTable(
   {
     id: serial("id").primaryKey(),
     description: varchar("description", { length: 255 }).notNull(),
-    instructions: varchar("instructions", { length: 255 }),
+    instructions: text("instructions"),
     added_by: integer("added_by")
       .notNull()
       .references(() => usersTable.id),

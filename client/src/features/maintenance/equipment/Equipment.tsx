@@ -82,7 +82,7 @@ export function Equipment() {
         description,
         added_by: selectedUserId,
         category: "maintenance",
-        severity: "minor",
+        severity: "patch",
         recurrence: "once",
         due_at: dueRaw ? new Date(dueRaw) : undefined,
       })

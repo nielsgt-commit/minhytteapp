@@ -38,6 +38,8 @@
   "Beds (kid)": "Senger (barn)",
   "Beds (large)": "Senger (stor)",
   "Beds (single)": "Senger (enkel)",
+  "Built {{year}}": "Bygget {{year}}",
+  "Built year": "Byggeår",
   "beds_double": "beds_double",
   "beds_kid": "beds_kid",
   "beds_lg": "beds_lg",
