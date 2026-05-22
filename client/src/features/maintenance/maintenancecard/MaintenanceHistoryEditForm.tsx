@@ -1,20 +1,28 @@
-import { type SyntheticEvent } from "react"
+import { type SyntheticEvent, useState } from "react"
 import {
   Button,
   Card,
   Field,
   Fieldset,
   Label,
-  Textarea,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import type { PortableTextBlock } from "@portabletext/types"
+import { MaintenanceInstructionsPTEditor } from "./MaintenanceInstructionsPTEditor.tsx"
+import styles from "./MaintenanceHistory.module.css"
 
 export type MaintenanceHistoryItem = {
   id: number
   description: string
-  instructions: string | null
+  instructions_pt: PortableTextBlock[] | null
   completed_at: string | Date | null
+}
+
+export type MaintenanceHistoryEditValues = {
+  description: string
+  instructions_pt: PortableTextBlock[] | null
+  completed_at?: Date
 }
 
 function toDateInputValue(value: string | Date | null): string {
@@ -30,16 +38,39 @@ function toDateInputValue(value: string | Date | null): string {
 export function MaintenanceHistoryEditForm(props: {
   item: MaintenanceHistoryItem
   pending: boolean
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onSubmit: (values: MaintenanceHistoryEditValues) => void
   onCancel: () => void
 }) {
   const { t } = useTranslation("maintenance")
   const { item, pending, onSubmit, onCancel } = props
+  const [instructionsPT, setInstructionsPT] = useState<PortableTextBlock[]>(
+    item.instructions_pt ?? [],
+  )
+
+  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    const rawDescription = fd.get("description")
+    const rawCompletedAt = fd.get("completed_at")
+    const description =
+      typeof rawDescription === "string" ? rawDescription.trim() : ""
+    const completedAtStr =
+      typeof rawCompletedAt === "string" ? rawCompletedAt.trim() : ""
+    if (!description) return
+    onSubmit({
+      description,
+      instructions_pt: instructionsPT.length > 0 ? instructionsPT : null,
+      completed_at: completedAtStr
+        ? new Date(`${completedAtStr}T12:00:00`)
+        : undefined,
+    })
+  }
+
   return (
     <Card key={item.id} asChild>
       <article>
         <Card.Block>
-          <form onSubmit={onSubmit}>
+          <form onSubmit={handleSubmit}>
             <Fieldset>
               <Fieldset.Legend>{t("Edit completed task")}</Fieldset.Legend>
               <Textfield
@@ -49,11 +80,10 @@ export function MaintenanceHistoryEditForm(props: {
                 required
               />
               <Field>
-                <Label>{t("Instructions")}</Label>
-                <Textarea
-                  name="instructions"
-                  defaultValue={item.instructions ?? ""}
-                  rows={4}
+                <Label>{t("Description")}</Label>
+                <MaintenanceInstructionsPTEditor
+                  initialValue={item.instructions_pt ?? undefined}
+                  onChange={setInstructionsPT}
                 />
               </Field>
               <Textfield
@@ -62,14 +92,16 @@ export function MaintenanceHistoryEditForm(props: {
                 type="date"
                 defaultValue={toDateInputValue(item.completed_at)}
               />
-              <Button type="submit" disabled={pending}>{t("Save")}</Button>
-              <Button
-                variant="secondary"
-                disabled={pending}
-                onClick={onCancel}
-              >
-                {t("Cancel")}
-              </Button>
+              <div className={styles.formActions}>
+                <Button
+                  variant="secondary"
+                  disabled={pending}
+                  onClick={onCancel}
+                >
+                  {t("Cancel")}
+                </Button>
+                <Button type="submit" disabled={pending}>{t("Save")}</Button>
+              </div>
             </Fieldset>
           </form>
         </Card.Block>

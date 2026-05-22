@@ -10,13 +10,16 @@ import { useIsMobile } from "@/hooks/useIsMobile.ts"
 export type MaintenanceScope =
   | { kind: "structure"; id: number; name: string }
   | { kind: "infrastructure"; id: number; name: string }
+  | { kind: "equipment"; id: number; name: string }
 
 export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   const { t } = useTranslation("maintenance")
-  const [showHistory, setShowHistory] = useState(false)
-  const [showTodos, setShowTodos] = useState(false)
+  const [view, setView] = useState<"none" | "todos" | "history">("none")
   const [inspecting, setInspecting] = useState(false)
   const isMobile = useIsMobile()
+
+  const showTodos = view === "todos"
+  const showHistory = view === "history"
 
   const todosLabel = isMobile
     ? t("Todos")
@@ -50,14 +53,14 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               <Button
                 variant="tertiary"
                 data-size="sm"
-                onClick={() => { setShowTodos(v => !v) }}
+                onClick={() => { setView(v => v === "todos" ? "none" : "todos") }}
               >
                 {todosLabel}
               </Button>
               <Button
                 variant="tertiary"
                 data-size="sm"
-                onClick={() => { setShowHistory(v => !v) }}
+                onClick={() => { setView(v => v === "history" ? "none" : "history") }}
               >
                 {historyLabel}
               </Button>

@@ -1,13 +1,8 @@
-import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
-import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
-import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import type {
@@ -19,9 +14,7 @@ import {
 export function Equipment() {
   const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
-  const selectedUserId = useSelectedUserId()
 
   const { data: equipment = [] } = useQuery(
     trpc.equipment.listForProperty.queryOptions(
@@ -42,45 +35,7 @@ export function Equipment() {
     ),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.equipment.pathKey(),
-    })
-    void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
-  }
-
   const [modalState, setModalState] = useState<ModalState>({ kind: "none" })
-
-  const scheduleMutation = useMutation(
-    trpc.equipment.scheduleMaintenance.mutationOptions({
-      onSuccess: () => {
-        setModalState({ kind: "none" })
-        invalidate()
-      },
-    }),
-  )
-
-  const handleSubmit = (equipment_id: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      if (selectedUserId == null) return
-      const fd = new FormData(e.currentTarget)
-      const rawDescription = fd.get("description")
-      const rawDue = fd.get("due_at")
-      const description =
-        typeof rawDescription === "string" ? rawDescription.trim() : ""
-      const dueRaw = typeof rawDue === "string" ? rawDue.trim() : ""
-      if (!description) return
-      scheduleMutation.mutate({
-        equipment_id,
-        description,
-        added_by: selectedUserId,
-        category: "maintenance",
-        severity: "patch",
-        recurrence: "once",
-        due_at: dueRaw ? new Date(dueRaw) : undefined,
-      })
-    }
 
   if (selectedPropertyId == null) {
     return (
@@ -96,59 +51,49 @@ export function Equipment() {
     return bT - aT
   })
 
-  const body = (
-    <>
-      {scheduleMutation.error && (
-        <p role="alert">{t("Error: {{message}}", { message: scheduleMutation.error.message })}</p>
-      )}
-      {sortedEquipment.length === 0 ? (
-        <p>{t("No equipment registered for this property yet.")}</p>
-      ) : (
-        <div className={styles.list}>
-          {sortedEquipment.map(item => {
-            const itemMaintenance = maintenanceItems
-              .filter(m => m.equipment_id === item.id && m.status === "done")
-              .slice()
-              .sort((a, b) => {
-                const aT = a.completed_at
-                  ? new Date(a.completed_at).getTime()
-                  : 0
-                const bT = b.completed_at
-                  ? new Date(b.completed_at).getTime()
-                  : 0
-                return bT - aT
-              })
-            const itemInspections = inspections.filter(
-              i => i.equipment_id === item.id && i.completed_at != null,
-            )
-            const historyEntries: EquipmentHistoryEntryData[] = [
-              ...itemMaintenance.map(m => ({
-                kind: "maintenance" as const,
-                t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
-                m,
-              })),
-              ...itemInspections.map(i => ({
-                kind: "inspection" as const,
-                t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
-                i,
-              })),
-            ].sort((a, b) => b.t - a.t)
-            return (
-              <EquipmentCard
-                key={item.id}
-                item={item}
-                historyEntries={historyEntries}
-                modalState={modalState}
-                setModalState={setModalState}
-                onScheduleSubmit={handleSubmit}
-                schedulePending={scheduleMutation.isPending}
-                canSubmitSchedule={selectedUserId != null}
-              />
-            )
-          })}
-        </div>
-      )}
-    </>
+  const body = sortedEquipment.length === 0 ? (
+    <p>{t("No equipment registered for this property yet.")}</p>
+  ) : (
+    <div className={styles.list}>
+      {sortedEquipment.map(item => {
+        const itemMaintenance = maintenanceItems
+          .filter(m => m.equipment_id === item.id && m.status === "done")
+          .slice()
+          .sort((a, b) => {
+            const aT = a.completed_at
+              ? new Date(a.completed_at).getTime()
+              : 0
+            const bT = b.completed_at
+              ? new Date(b.completed_at).getTime()
+              : 0
+            return bT - aT
+          })
+        const itemInspections = inspections.filter(
+          i => i.equipment_id === item.id && i.completed_at != null,
+        )
+        const historyEntries: EquipmentHistoryEntryData[] = [
+          ...itemMaintenance.map(m => ({
+            kind: "maintenance" as const,
+            t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
+            m,
+          })),
+          ...itemInspections.map(i => ({
+            kind: "inspection" as const,
+            t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
+            i,
+          })),
+        ].sort((a, b) => b.t - a.t)
+        return (
+          <EquipmentCard
+            key={item.id}
+            item={item}
+            historyEntries={historyEntries}
+            modalState={modalState}
+            setModalState={setModalState}
+          />
+        )
+      })}
+    </div>
   )
 
   return <section>{body}</section>

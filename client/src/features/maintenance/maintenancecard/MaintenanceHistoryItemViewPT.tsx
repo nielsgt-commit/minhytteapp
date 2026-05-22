@@ -1,19 +1,21 @@
 import { useState } from "react"
-import { Button, Card, Chip, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Chip, Paragraph, Tag, Textfield } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
+import type { PortableTextBlock } from "@portabletext/types"
 import styles from "./MaintenanceHistory.module.css"
 import { SeverityTag, type Severity } from "@/features/maintenance/severity/SeverityTag.tsx"
+import { MaintenanceInstructionsPT } from "./MaintenanceInstructionsPT.tsx"
 
-export type MaintenanceHistoryItemViewData = {
+export type MaintenanceHistoryItemViewPTData = {
   id: number
   description: string
-  instructions: string | null
+  instructions_pt: PortableTextBlock[] | null
   completed_at: string | Date | null
   severity: Severity
 }
 
-export function MaintenanceHistoryItemView(props: {
-  item: MaintenanceHistoryItemViewData
+export function MaintenanceHistoryItemViewPT(props: {
+  item: MaintenanceHistoryItemViewPTData
   pending: boolean
   isDeleting: boolean
   deletingTyped: string
@@ -38,7 +40,8 @@ export function MaintenanceHistoryItemView(props: {
     onCycleSeverity,
   } = props
   const [expanded, setExpanded] = useState(false)
-  const hasInstructions = item.instructions != null && item.instructions !== ""
+  const hasInstructions =
+    item.instructions_pt != null && item.instructions_pt.length > 0
   const completedLabel = item.completed_at
     ? new Date(item.completed_at).toLocaleDateString()
     : ""
@@ -47,14 +50,14 @@ export function MaintenanceHistoryItemView(props: {
     <Card key={item.id} asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
-          <Paragraph className={styles.date} data-size="sm">
-            {completedLabel}
-          </Paragraph>
           <SeverityTag
             severity={item.severity}
             onCycle={onCycleSeverity}
             disabled={pending}
           />
+          <Tag data-size="sm" className={styles.date}>
+            {completedLabel}
+          </Tag>
           <Paragraph className={styles.description} data-size="sm">
             {item.description}
           </Paragraph>
@@ -92,9 +95,7 @@ export function MaintenanceHistoryItemView(props: {
         </Card.Block>
         {hasInstructions && expanded && (
           <Card.Block>
-            <Paragraph className={styles.instructions} data-size="sm">
-              {item.instructions}
-            </Paragraph>
+            <MaintenanceInstructionsPT value={item.instructions_pt} />
           </Card.Block>
         )}
         {isDeleting && (

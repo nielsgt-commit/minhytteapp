@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import {
   useMutation,
   useQuery,
@@ -11,8 +11,11 @@ import styles from "./MaintenanceHistory.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
-import { MaintenanceHistoryEditForm } from "@/features/maintenance/maintenancecard/MaintenanceHistoryEditForm.tsx"
-import { MaintenanceHistoryItemView } from "@/features/maintenance/maintenancecard/MaintenanceHistoryItemView.tsx"
+import {
+  MaintenanceHistoryEditForm,
+  type MaintenanceHistoryEditValues,
+} from "@/features/maintenance/maintenancecard/MaintenanceHistoryEditForm.tsx"
+import { MaintenanceHistoryItemViewPT } from "@/features/maintenance/maintenancecard/MaintenanceHistoryItemViewPT.tsx"
 import { cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 type EditingState = { id: number } | null
@@ -61,7 +64,8 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     .sort((a, b) => {
       const aT = a.completed_at ? new Date(a.completed_at).getTime() : 0
       const bT = b.completed_at ? new Date(b.completed_at).getTime() : 0
-      return bT - aT
+      if (bT !== aT) return bT - aT
+      return b.id - a.id
     })
 
   const scopedInspections = inspections.filter(i => {
@@ -95,11 +99,12 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     updateMutation.mutate({
       id: item.id,
       description: item.description,
-      instructions: item.instructions ?? undefined,
+      instructions_pt: item.instructions_pt,
       added_by: item.added_by,
       assigned_to_id: item.assigned_to_id ?? undefined,
       structure_id: item.structure_id ?? undefined,
       infrastructure_id: item.infrastructure_id ?? undefined,
+      equipment_id: item.equipment_id ?? undefined,
       category: item.category,
       severity: cycleSeverity(item.severity),
       status: item.status,
@@ -108,35 +113,22 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   }
 
   const handleEditSubmit = (item: (typeof doneItems)[number]) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const fd = new FormData(e.currentTarget)
-      const rawDescription = fd.get("description")
-      const rawInstructions = fd.get("instructions")
-      const rawCompletedAt = fd.get("completed_at")
-      const description =
-        typeof rawDescription === "string" ? rawDescription.trim() : ""
-      const instructions =
-        typeof rawInstructions === "string" ? rawInstructions.trim() : ""
-      const completedAtStr =
-        typeof rawCompletedAt === "string" ? rawCompletedAt.trim() : ""
-      if (!description) return
-      const completed_at =
-        completedAtStr ? new Date(`${completedAtStr}T12:00:00`) : undefined
+    (values: MaintenanceHistoryEditValues) => {
       updateMutation.mutate(
         {
           id: item.id,
-          description,
-          instructions: instructions || undefined,
+          description: values.description,
+          instructions_pt: values.instructions_pt,
           added_by: item.added_by,
           assigned_to_id: item.assigned_to_id ?? undefined,
           structure_id: item.structure_id ?? undefined,
           infrastructure_id: item.infrastructure_id ?? undefined,
+          equipment_id: item.equipment_id ?? undefined,
           category: item.category,
           severity: item.severity,
           status: item.status,
           recurrence: item.recurrence,
-          completed_at,
+          completed_at: values.completed_at,
         },
         { onSuccess: () => { setEditing(null) } },
       )
@@ -173,7 +165,7 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
         }
 
         return (
-          <MaintenanceHistoryItemView
+          <MaintenanceHistoryItemViewPT
             key={item.id}
             item={item}
             pending={pending}

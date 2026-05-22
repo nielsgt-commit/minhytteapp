@@ -30,6 +30,14 @@ type Equipment = {
   model: string | null
   category: string | null
   notes: string | null
+  acquired_year: number | null
+}
+
+function fdYear(fd: FormData, key: string): number | null {
+  const raw = fdString(fd, key).trim()
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isInteger(n) && n >= 1500 && n <= 2100 ? n : null
 }
 
 export function EquipmentPanel({ propertyId, propertyName }: Props) {
@@ -82,6 +90,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     const model = fdString(fd, "model").trim()
     const category = fdString(fd, "category").trim()
     const notes = fdString(fd, "notes").trim()
+    const acquired_year = fdYear(fd, "acquired_year")
     if (!name) return
     createEquipment.mutate(
       {
@@ -91,6 +100,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
         model: model || undefined,
         category: category || undefined,
         notes: notes || undefined,
+        acquired_year,
       },
       {
         onSuccess: () => {
@@ -110,6 +120,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
       const model = fdString(fd, "model").trim()
       const category = fdString(fd, "category").trim()
       const notes = fdString(fd, "notes").trim()
+      const acquired_year = fdYear(fd, "acquired_year")
       if (!name) return
       updateEquipment.mutate(
         {
@@ -120,6 +131,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
           model: model || undefined,
           category: category || undefined,
           notes: notes || undefined,
+          acquired_year,
         },
         { onSuccess: () => { setEditingId(null) } },
       )
@@ -197,6 +209,15 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               defaultValue={editingItem.notes ?? ""}
               disabled={updateEquipment.isPending}
             />
+            <Textfield
+              label={t("Acquired")}
+              name="acquired_year"
+              type="number"
+              min={1500}
+              max={2100}
+              defaultValue={editingItem.acquired_year ?? ""}
+              disabled={updateEquipment.isPending}
+            />
             <div className={styles.actions}>
               <Button type="submit" disabled={pending}>
                 {t("Save")}
@@ -228,6 +249,11 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               <li>
                 <Card.Block className={styles.row}>
                   <span className={styles.rowName}>{item.name}</span>
+                  {item.acquired_year != null && (
+                    <small title={t("Acquired")}>
+                      {t("Acquired {{year}}", { year: item.acquired_year })}
+                    </small>
+                  )}
                   {editMode && (
                     <>
                       <Button
@@ -296,6 +322,14 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           label={t("Notes")}
                           name="notes"
                           maxLength={255}
+                          disabled={createEquipment.isPending}
+                        />
+                        <Textfield
+                          label={t("Acquired")}
+                          name="acquired_year"
+                          type="number"
+                          min={1500}
+                          max={2100}
                           disabled={createEquipment.isPending}
                         />
                         <div className={styles.actions}>

@@ -16,6 +16,7 @@
   "Available beds": "Ledige senger",
   "Available parking": "Ledig parkering",
   "Bedrooms": "Soverom",
+  "Bicycle": "Sykkel",
   "Beds (double)": "Senger (dobbel)",
   "Beds (kid)": "Senger (barn)",
   "Beds (large)": "Senger (stor)",
@@ -33,6 +34,7 @@
   "Manage rooms": "Administrer rom",
   "Manage user groups": "Administrer brukergrupper",
   "Mattresses": "Madrasser",
+  "Motorcycle": "Motorsykkel",
   "Next week": "Neste uke",
   "No Structures yet.": "Ingen bygninger ennå.",
   "No contacts.": "Ingen kontakter.",
@@ -56,6 +58,7 @@
   "Solo stay": "Alene-opphold",
   "Spot {{slot}} — free": "Plass {{slot}} — ledig",
   "Spot {{slot}} — taken by {{userName}}": "Plass {{slot}} — tatt av {{userName}}",
+  "Stroller": "Barnevogn",
   "Structures": "Bygninger",
   "THU": "Tor",
   "TUE": "Tir",
@@ -69,5 +72,8 @@
   "User groups": "Brukergrupper",
   "WED": "Ons",
   "Weather now": "Været nå",
-  "Week {{weekNumber}}": "Uke {{weekNumber}}"
+  "Week {{weekNumber}}": "Uke {{weekNumber}}",
+  "Wheelbarrow": "Trillebår",
+  "{{vehicle}} — free": "{{vehicle}} — ledig",
+  "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}"
 }

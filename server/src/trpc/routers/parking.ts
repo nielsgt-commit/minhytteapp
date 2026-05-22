@@ -12,6 +12,13 @@ const slotExtra = z.object({
   slot_index: z.number().int().min(0),
 })
 
+// Reserved slot indices for the "fun" extras (motorcycle/bike/stroller/wheelbarrow)
+// that don't take up a real parking lot.
+const EXTRA_SLOT_MIN = 1000
+const EXTRA_SLOT_MAX = 1003
+const isExtraSlot = (slot: number) =>
+  slot >= EXTRA_SLOT_MIN && slot <= EXTRA_SLOT_MAX
+
 export const parkingRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     return ctx.db
@@ -39,7 +46,10 @@ export const parkingRouter = router({
       if (!property) {
         throw new TRPCError({ code: "NOT_FOUND", message: "property not found" })
       }
-      if (input.slot_index >= property.parking_spots) {
+      if (
+        !isExtraSlot(input.slot_index) &&
+        input.slot_index >= property.parking_spots
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "slot_index out of range",

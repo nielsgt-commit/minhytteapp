@@ -7,6 +7,7 @@ const infrastructureFields = {
   name: z.string().min(1, { error: "name is required" }),
   description: z.string().min(1, { error: "description is required" }).max(255),
   property_id: z.number().int().positive(),
+  since_year: z.number().int().min(1500).max(2100).nullable().optional(),
 }
 
 const createInput = z.object(infrastructureFields)

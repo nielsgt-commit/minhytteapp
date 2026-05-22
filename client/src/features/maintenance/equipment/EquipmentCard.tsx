@@ -1,5 +1,4 @@
-import { type SyntheticEvent } from "react"
-import { Button, Card, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Divider, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
 import type {
@@ -8,12 +7,14 @@ import {
   EquipmentHistoryEntry
 } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
+import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/MaintenanceTodos.tsx"
+import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
 export type ModalState =
   | { kind: "none" }
-  | { kind: "scheduling"; id: number }
   | { kind: "inspecting"; id: number }
   | { kind: "history"; id: number }
+  | { kind: "todos"; id: number }
 
 type EquipmentItem = {
   id: number
@@ -21,6 +22,7 @@ type EquipmentItem = {
   brand: string | null
   model: string | null
   category: string | null
+  acquired_year: number | null
 }
 
 export function EquipmentCard(props: {
@@ -28,29 +30,29 @@ export function EquipmentCard(props: {
   historyEntries: readonly EquipmentHistoryEntryData[]
   modalState: ModalState
   setModalState: (next: ModalState) => void
-  onScheduleSubmit: (
-    equipmentId: number,
-  ) => (e: SyntheticEvent<HTMLFormElement>) => void
-  schedulePending: boolean
-  canSubmitSchedule: boolean
 }) {
   const { t } = useTranslation("maintenance")
+  const isMobile = useIsMobile()
   const {
     item,
     historyEntries,
     modalState,
     setModalState,
-    onScheduleSubmit,
-    schedulePending,
-    canSubmitSchedule,
   } = props
 
-  const isScheduling =
-    modalState.kind === "scheduling" && modalState.id === item.id
   const isInspecting =
     modalState.kind === "inspecting" && modalState.id === item.id
   const isHistoryOpen =
     modalState.kind === "history" && modalState.id === item.id
+  const isTodosOpen =
+    modalState.kind === "todos" && modalState.id === item.id
+
+  const todosLabel = isMobile
+    ? t("Todos")
+    : isTodosOpen ? t("Hide todos") : t("Show todos")
+  const historyLabel = isMobile
+    ? t("History")
+    : isHistoryOpen ? t("Hide history") : t("Show history")
 
   return (
     <Card asChild>
@@ -63,6 +65,11 @@ export function EquipmentCard(props: {
             {(item.brand ?? item.model) && (
               <Paragraph className={styles.brandModel} data-size="xs">
                 {[item.brand, item.model].filter(Boolean).join(" · ")}
+              </Paragraph>
+            )}
+            {item.acquired_year != null && (
+              <Paragraph className={styles.brandModel} data-size="xs">
+                {t("Acquired {{year}}", { year: item.acquired_year })}
               </Paragraph>
             )}
           </div>
@@ -81,16 +88,23 @@ export function EquipmentCard(props: {
               {t("Start inspection")}
             </Button>
           )}
+          {!isInspecting && (
+            <Divider className={styles.divider} />
+          )}
           <div className={styles.actions}>
-            {!isScheduling && !isInspecting && (
+            {!isInspecting && (
               <Button
                 variant="tertiary"
                 data-size="sm"
                 onClick={() => {
-                  setModalState({ kind: "scheduling", id: item.id })
+                  setModalState(
+                    isTodosOpen
+                      ? { kind: "none" }
+                      : { kind: "todos", id: item.id },
+                  )
                 }}
               >
-                {t("Schedule maintenance")}
+                {todosLabel}
               </Button>
             )}
             {!isInspecting && (
@@ -105,46 +119,16 @@ export function EquipmentCard(props: {
                   )
                 }}
               >
-                {isHistoryOpen ? t("Hide history") : t("Show history")}
+                {historyLabel}
               </Button>
             )}
           </div>
         </Card.Block>
-        {isScheduling && !isInspecting && (
+        {isTodosOpen && !isInspecting && (
           <Card.Block>
-            <form
-              onSubmit={onScheduleSubmit(item.id)}
-              className={styles.schedule}
-            >
-              <Textfield
-                label={t("Task")}
-                name="description"
-                defaultValue={t("Service {{name}}", { name: item.name })}
-                required
-              />
-              <Textfield
-                label={t("Due")}
-                type="date"
-                name="due_at"
-              />
-              <div className={styles.scheduleActions}>
-                <Button
-                  type="submit"
-                  data-size="sm"
-                  disabled={schedulePending || !canSubmitSchedule}
-                >
-                  {t("Schedule")}
-                </Button>
-                <Button
-                  variant="secondary"
-                  data-size="sm"
-                  disabled={schedulePending}
-                  onClick={() => { setModalState({ kind: "none" }) }}
-                >
-                  {t("Cancel")}
-                </Button>
-              </div>
-            </form>
+            <MaintenanceTodos
+              scope={{ kind: "equipment", id: item.id, name: item.name }}
+            />
           </Card.Block>
         )}
         {isHistoryOpen && !isInspecting && (

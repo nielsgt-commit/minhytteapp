@@ -7,7 +7,7 @@ import {
 import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 
-export type Recurrence = "once" | "yearly" | "5year"
+export type Recurrence = "yearly" | "5year" | "spring" | "fall"
 
 export function MetadataSection(props: {
   inspectedBy: string
@@ -32,9 +32,10 @@ export function MetadataSection(props: {
           value={recurrence}
           onChange={e => { setRecurrence(e.target.value as Recurrence) }}
         >
-          <Select.Option value="once">{t("Once")}</Select.Option>
           <Select.Option value="yearly">{t("Yearly")}</Select.Option>
           <Select.Option value="5year">{t("Every 5 years")}</Select.Option>
+          <Select.Option value="spring">{t("Every spring")}</Select.Option>
+          <Select.Option value="fall">{t("Every fall")}</Select.Option>
         </Select>
       </Field>
     </div>

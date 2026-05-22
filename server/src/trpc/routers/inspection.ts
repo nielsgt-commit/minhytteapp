@@ -1,6 +1,7 @@
 import { asc, eq, or } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
+import type { PortableTextBlock } from "@portabletext/types"
 import {
   equipmentTable,
   inspectionsTable,
@@ -23,7 +24,11 @@ const targetXor = {
   error: "exactly one of structure_id, infrastructure_id, equipment_id must be set",
 }
 
-const recurrenceEnum = z.enum(["once", "yearly", "5year"])
+const recurrenceEnum = z.enum(["yearly", "5year", "spring", "fall"])
+
+const notesPtSchema = z
+  .custom<PortableTextBlock[]>((v) => v == null || Array.isArray(v))
+  .optional()
 
 const startInput = z
   .object({
@@ -47,7 +52,7 @@ const completeInput = z.object({
   id: z.number().int().positive(),
   inspected_by: z.string().min(1).max(255),
   recurrence: recurrenceEnum,
-  notes: z.string().max(2000).optional(),
+  notes_pt: notesPtSchema,
   added_by: z.number().int().positive(),
   findings: z.array(findingSchema),
 })
@@ -60,7 +65,7 @@ const recordInput = z
     started_by_user_id: z.number().int().positive(),
     inspected_by: z.string().min(1).max(255),
     recurrence: recurrenceEnum,
-    notes: z.string().max(2000).optional(),
+    notes_pt: notesPtSchema,
     added_by: z.number().int().positive(),
     findings: z.array(findingSchema),
   })
@@ -186,7 +191,7 @@ export const inspectionRouter = router({
           .set({
             inspected_by: input.inspected_by,
             recurrence: input.recurrence,
-            notes: input.notes,
+            notes_pt: input.notes_pt,
             completed_at: new Date(),
           })
           .where(eq(inspectionsTable.id, input.id))
@@ -241,7 +246,7 @@ export const inspectionRouter = router({
             started_by_user_id: input.started_by_user_id,
             inspected_by: input.inspected_by,
             recurrence: input.recurrence,
-            notes: input.notes,
+            notes_pt: input.notes_pt,
             started_at: now,
             completed_at: now,
           })

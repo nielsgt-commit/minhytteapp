@@ -4,12 +4,14 @@ import {
   boolean,
   check,
   integer,
+  jsonb,
   pgTable,
   serial,
   text,
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core"
+import type { PortableTextBlock } from "@portabletext/types"
 import { infrastructureTable, propertyTable, structuresTable } from "./property.schema.ts"
 import { usersTable } from "./users.schema.ts"
 
@@ -19,25 +21,35 @@ export const routinesTable = pgTable("routines", {
   description: varchar("description", { length: 255 }),
 })
 
-export const equipmentTable = pgTable("equipment", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar("name", { length: 255 }).notNull(),
-  property_id: integer("property_id")
-    .notNull()
-    .references(() => propertyTable.id),
-  brand: varchar("brand", { length: 64 }),
-  model: varchar("model", { length: 64 }),
-  category: varchar("category", { length: 32 }),
-  notes: varchar("notes", { length: 255 }),
-  created_at: timestamp("created_at").notNull().defaultNow(),
-})
+export const equipmentTable = pgTable(
+  "equipment",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    name: varchar("name", { length: 255 }).notNull(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    brand: varchar("brand", { length: 64 }),
+    model: varchar("model", { length: 64 }),
+    category: varchar("category", { length: 32 }),
+    notes: varchar("notes", { length: 255 }),
+    acquired_year: integer("acquired_year"),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "equipment_acquired_year_range",
+      sql`${t.acquired_year} IS NULL OR (${t.acquired_year} BETWEEN 1500 AND 2100)`,
+    ),
+  ],
+)
 
 export const maintenanceTable = pgTable(
   "maintenance",
   {
     id: serial("id").primaryKey(),
     description: varchar("description", { length: 255 }).notNull(),
-    instructions: text("instructions"),
+    instructions_pt: jsonb("instructions_pt").$type<PortableTextBlock[]>(),
     added_by: integer("added_by")
       .notNull()
       .references(() => usersTable.id),
@@ -58,7 +70,7 @@ export const maintenanceTable = pgTable(
     }).notNull(),
     recurrence: varchar("recurrence", {
       length: 6,
-      enum: ["once", "yearly", "5year"],
+      enum: ["once", "yearly", "5year", "spring", "fall"],
     }).notNull(),
     routine_id: integer("routine_id").references(() => routinesTable.id),
     routine_position: integer("routine_position"),
@@ -108,9 +120,9 @@ export const inspectionsTable = pgTable(
     inspected_by: varchar("inspected_by", { length: 255 }).notNull(),
     recurrence: varchar("recurrence", {
       length: 6,
-      enum: ["once", "yearly", "5year"],
+      enum: ["yearly", "5year", "spring", "fall"],
     }).notNull(),
-    notes: text("notes"),
+    notes_pt: jsonb("notes_pt").$type<PortableTextBlock[]>(),
     started_at: timestamp("started_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),
   },

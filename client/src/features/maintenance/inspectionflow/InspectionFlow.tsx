@@ -11,8 +11,8 @@ import {
   Heading,
   Label,
   Paragraph,
-  Textarea,
 } from "@digdir/designsystemet-react"
+import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 import {
@@ -27,6 +27,7 @@ import {
   ProcedureSection,
   type ProcedureState,
 } from "@/features/maintenance/inspectionflow/ProcedureSection.tsx"
+import { MaintenanceInstructionsPTEditor } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPTEditor.tsx"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export type InspectionScope =
@@ -77,7 +78,7 @@ export function InspectionFlow(props: {
 
   const [inspectedBy, setInspectedBy] = useState("")
   const [recurrence, setRecurrence] = useState<Recurrence>("yearly")
-  const [notes, setNotes] = useState("")
+  const [notes, setNotes] = useState<PortableTextBlock[]>([])
   const [procState, setProcState] = useState<Record<number, ProcedureState>>({})
   const [adHocs, setAdHocs] = useState<AdHoc[]>([])
 
@@ -120,7 +121,7 @@ export function InspectionFlow(props: {
   const resetForm = () => {
     setProcState({})
     setAdHocs([])
-    setNotes("")
+    setNotes([])
   }
 
   const handleCancel = () => {
@@ -208,7 +209,7 @@ export function InspectionFlow(props: {
       added_by: selectedUserId,
       inspected_by: inspectedBy.trim(),
       recurrence,
-      notes: notes.trim() || undefined,
+      notes_pt: notes.length > 0 ? notes : undefined,
       findings: [...procFindings, ...adHocFindings],
     })
   }
@@ -247,10 +248,9 @@ export function InspectionFlow(props: {
 
       <Field>
         <Label>{t("Notes")}</Label>
-        <Textarea
-          value={notes}
-          onChange={e => { setNotes(e.target.value) }}
-          rows={3}
+        <MaintenanceInstructionsPTEditor
+          initialValue={notes}
+          onChange={setNotes}
         />
       </Field>
 

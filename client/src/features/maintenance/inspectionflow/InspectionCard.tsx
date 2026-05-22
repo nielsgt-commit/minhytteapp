@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Tag, Button, Card, Chip, Paragraph } from "@digdir/designsystemet-react"
+import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./InspectionCard.module.css"
+import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
 import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 type Inspection = {
@@ -12,8 +14,8 @@ type Inspection = {
   infrastructure_id: number | null
   equipment_id: number | null
   inspected_by: string
-  recurrence: "once" | "yearly" | "5year"
-  notes: string | null
+  recurrence: "yearly" | "5year" | "spring" | "fall"
+  notes_pt: PortableTextBlock[] | null
   started_at: string | Date
   completed_at: string | Date | null
 }
@@ -21,9 +23,10 @@ type Inspection = {
 export function InspectionCard({ inspection }: { inspection: Inspection }) {
   const { t } = useTranslation("maintenance")
   const cadenceLabel: Record<Inspection["recurrence"], string> = {
-    once: t("One-off"),
     yearly: t("Yearly"),
     "5year": t("Every 5 years"),
+    spring: t("Every spring"),
+    fall: t("Every fall"),
   }
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -58,7 +61,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
     updateMutation.mutate({
       id: f.id,
       description: f.description,
-      instructions: f.instructions ?? undefined,
+      instructions_pt: f.instructions_pt,
       added_by: f.added_by,
       assigned_to_id: f.assigned_to_id ?? undefined,
       structure_id: f.structure_id ?? undefined,
@@ -97,8 +100,8 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
         </Card.Block>
         {expanded && (
           <Card.Block>
-            {inspection.notes && (
-              <Paragraph data-size="sm">{inspection.notes}</Paragraph>
+            {inspection.notes_pt && inspection.notes_pt.length > 0 && (
+              <MaintenanceInstructionsPT value={inspection.notes_pt} />
             )}
             {followups.length > 0 && (
               <>
@@ -107,7 +110,8 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                 </Paragraph>
                 <ul>
                   {followups.map(f => {
-                    const hasInstructions = f.instructions != null && f.instructions !== ""
+                    const hasInstructions =
+                      f.instructions_pt != null && f.instructions_pt.length > 0
                     const isExpanded = expandedFindings.has(f.id)
                     return (
                       <li key={f.id} className={styles.findingItem}>
@@ -130,9 +134,9 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                           )}
                         </div>
                         {hasInstructions && isExpanded && (
-                          <Paragraph data-size="sm" className={styles.instructions}>
-                            {f.instructions}
-                          </Paragraph>
+                          <div className={styles.instructions}>
+                            <MaintenanceInstructionsPT value={f.instructions_pt} />
+                          </div>
                         )}
                       </li>
                     )
@@ -147,7 +151,8 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                 </Paragraph>
                 <ul>
                   {adHocs.map(f => {
-                    const hasInstructions = f.instructions != null && f.instructions !== ""
+                    const hasInstructions =
+                      f.instructions_pt != null && f.instructions_pt.length > 0
                     const isExpanded = expandedFindings.has(f.id)
                     return (
                       <li key={f.id} className={styles.findingItem}>
@@ -173,9 +178,9 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                           )}
                         </div>
                         {hasInstructions && isExpanded && (
-                          <Paragraph data-size="sm" className={styles.instructions}>
-                            {f.instructions}
-                          </Paragraph>
+                          <div className={styles.instructions}>
+                            <MaintenanceInstructionsPT value={f.instructions_pt} />
+                          </div>
                         )}
                       </li>
                     )

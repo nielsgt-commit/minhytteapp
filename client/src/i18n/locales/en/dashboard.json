@@ -20,6 +20,7 @@
   "Beds (large)": "Beds (large)",
   "Beds (single)": "Beds (single)",
   "Bedrooms": "Bedrooms",
+  "Bicycle": "Bicycle",
   "Boat": "Boat",
   "Contacts": "Contacts",
   "Current weather": "Current weather",
@@ -33,6 +34,7 @@
   "Manage rooms": "Manage rooms",
   "Manage user groups": "Manage user groups",
   "Mattresses": "Mattresses",
+  "Motorcycle": "Motorcycle",
   "Next week": "Next week",
   "No Structures yet.": "No Structures yet.",
   "No contacts.": "No contacts.",
@@ -56,6 +58,7 @@
   "Solo stay": "Solo stay",
   "Spot {{slot}} — free": "Spot {{slot}} — free",
   "Spot {{slot}} — taken by {{userName}}": "Spot {{slot}} — taken by {{userName}}",
+  "Stroller": "Stroller",
   "Structures": "Structures",
   "THU": "Thu",
   "TUE": "Tue",
@@ -69,5 +72,8 @@
   "User groups": "User groups",
   "WED": "Wed",
   "Weather now": "Weather now",
-  "Week {{weekNumber}}": "Week {{weekNumber}}"
+  "Week {{weekNumber}}": "Week {{weekNumber}}",
+  "Wheelbarrow": "Wheelbarrow",
+  "{{vehicle}} — free": "{{vehicle}} — free",
+  "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — taken by {{userName}}"
 }

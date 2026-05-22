@@ -1,0 +1,2 @@
+ALTER TABLE "infrastructure" ADD COLUMN "since_year" integer;--> statement-breakpoint
+ALTER TABLE "infrastructure" ADD CONSTRAINT "infrastructure_since_year_range" CHECK ("infrastructure"."since_year" IS NULL OR ("infrastructure"."since_year" BETWEEN 1500 AND 2100));

@@ -11,13 +11,14 @@ import {
   Fieldset,
   Label,
   Switch,
-  Textarea,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
+import type { PortableTextBlock } from "@portabletext/types"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { MaintenanceInstructionsPTEditor } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPTEditor.tsx"
 
-type EditingState = { id: number } | null
+type EditingState = { id: number; pt: PortableTextBlock[] } | null
 type DeletingState = { id: number; typed: string } | null
 
 export function UnassignedTasks() {
@@ -56,22 +57,22 @@ export function UnassignedTasks() {
   const pending = updateMutation.isPending || deleteMutation.isPending
   const lastError = updateMutation.error ?? deleteMutation.error
 
-  const handleEditSubmit = (item: (typeof unassigned)[number]) =>
+  const handleEditSubmit = (
+    item: (typeof unassigned)[number],
+    pt: PortableTextBlock[],
+  ) =>
     (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       const fd = new FormData(e.currentTarget)
       const rawDescription = fd.get("description")
-      const rawInstructions = fd.get("instructions")
       const description =
         typeof rawDescription === "string" ? rawDescription.trim() : ""
-      const instructions =
-        typeof rawInstructions === "string" ? rawInstructions.trim() : ""
       if (!description) return
       updateMutation.mutate(
         {
           id: item.id,
           description,
-          instructions: instructions || undefined,
+          instructions_pt: pt.length > 0 ? pt : null,
           added_by: item.added_by,
           assigned_to_id: item.assigned_to_id ?? undefined,
           structure_id: item.structure_id ?? undefined,
@@ -112,7 +113,7 @@ export function UnassignedTasks() {
             if (isEditing) {
               return (
                 <li key={task.id}>
-                  <form onSubmit={handleEditSubmit(task)}>
+                  <form onSubmit={handleEditSubmit(task, editing.pt)}>
                     <Fieldset>
                       <Fieldset.Legend>{t("Edit task")}</Fieldset.Legend>
                       <Textfield
@@ -122,11 +123,12 @@ export function UnassignedTasks() {
                         required
                       />
                       <Field>
-                        <Label>{t("Instructions")}</Label>
-                        <Textarea
-                          name="instructions"
-                          defaultValue={task.instructions ?? ""}
-                          rows={4}
+                        <Label>{t("Description")}</Label>
+                        <MaintenanceInstructionsPTEditor
+                          initialValue={task.instructions_pt ?? undefined}
+                          onChange={(pt) => {
+                            setEditing({ id: task.id, pt })
+                          }}
                         />
                       </Field>
                       <Button type="submit" disabled={pending}>{t("Save")}</Button>
@@ -150,7 +152,12 @@ export function UnassignedTasks() {
                   <Button
                     variant="tertiary"
                     disabled={pending}
-                    onClick={() => { setEditing({ id: task.id }) }}
+                    onClick={() => {
+                      setEditing({
+                        id: task.id,
+                        pt: task.instructions_pt ?? [],
+                      })
+                    }}
                   >
                     {t("Edit")}
                   </Button>

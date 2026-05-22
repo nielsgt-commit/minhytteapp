@@ -1,7 +1,11 @@
 import { asc, eq, or } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
-import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
+import type { PortableTextBlock } from "@portabletext/types"
+import {
+  equipmentTable,
+  maintenanceTable,
+} from "../../db/schema/maintenance.schema.ts"
 import {
   structuresTable,
   infrastructureTable,
@@ -10,11 +14,14 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const maintenanceFields = {
   description: z.string().min(1),
-  instructions: z.string().optional(),
+  instructions_pt: z
+    .custom<PortableTextBlock[]>((v) => v == null || Array.isArray(v))
+    .nullish(),
   added_by: z.number().int().positive(),
   assigned_to_id: z.number().int().positive().optional(),
   structure_id: z.number().int().positive().optional(),
   infrastructure_id: z.number().int().positive().optional(),
+  equipment_id: z.number().int().positive().optional(),
   category: z.enum(["maintenance", "repair"]),
   severity: z.enum(["major", "minor", "patch"]),
   status: z.enum(["todo", "doing", "done"]),
@@ -23,10 +30,17 @@ const maintenanceFields = {
 }
 
 const locationXor = {
-  check: (v: { structure_id?: number; infrastructure_id?: number }) =>
-    (v.structure_id != null) !== (v.infrastructure_id != null),
-  error: "exactly one of structure_id or infrastructure_id must be set",
-  path: ["infrastructure_id"] as const,
+  check: (v: {
+    structure_id?: number
+    infrastructure_id?: number
+    equipment_id?: number
+  }) =>
+    [v.structure_id, v.infrastructure_id, v.equipment_id].filter(
+      x => x != null,
+    ).length === 1,
+  error:
+    "exactly one of structure_id, infrastructure_id, or equipment_id must be set",
+  path: ["equipment_id"] as const,
 }
 
 const createInput = z
@@ -48,7 +62,7 @@ export const maintenanceRouter = router({
     return ctx.db
       .select()
       .from(maintenanceTable)
-      .orderBy(asc(maintenanceTable.created_at))
+      .orderBy(asc(maintenanceTable.created_at), asc(maintenanceTable.id))
   }),
 
   listForProperty: protectedProcedure
@@ -61,14 +75,22 @@ export const maintenanceRouter = router({
           structuresTable,
           eq(structuresTable.id, maintenanceTable.structure_id),
         )
-        .leftJoin(infrastructureTable, eq(infrastructureTable.id, maintenanceTable.infrastructure_id))
+        .leftJoin(
+          infrastructureTable,
+          eq(infrastructureTable.id, maintenanceTable.infrastructure_id),
+        )
+        .leftJoin(
+          equipmentTable,
+          eq(equipmentTable.id, maintenanceTable.equipment_id),
+        )
         .where(
           or(
             eq(structuresTable.property_id, input.property_id),
             eq(infrastructureTable.property_id, input.property_id),
+            eq(equipmentTable.property_id, input.property_id),
           ),
         )
-        .orderBy(asc(maintenanceTable.created_at))
+        .orderBy(asc(maintenanceTable.created_at), asc(maintenanceTable.id))
       return rows.map(r => r.m)
     }),
 

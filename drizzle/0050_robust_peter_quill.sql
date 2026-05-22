@@ -1,0 +1,1 @@
+ALTER TABLE "maintenance" DROP COLUMN "instructions";

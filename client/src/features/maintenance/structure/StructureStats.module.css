@@ -31,8 +31,9 @@
 }
 
 @media (max-width: 640px) {
-  /* Drop digdir's tabpanel padding on mobile to reclaim horizontal space. */
+  /* Drop digdir's tabpanel horizontal padding on mobile to reclaim space,
+     but keep top padding so the filter chips don't crowd the tabs. */
   :global(.ds-tabs) .panel {
-    padding: 0;
+    padding: 1rem 0 0;
   }
 }

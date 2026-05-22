@@ -10,7 +10,6 @@ import {
   Card,
   Divider,
   Switch,
-  Tag,
 } from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
@@ -284,19 +283,19 @@ export function ListPropertyStructures() {
                           {b.name}
                         </strong>
                       )}
-                      <Tag
-                        data-color={
-                          b.category === "habitable" ? "success" : "neutral"
-                        }
-                        aria-label={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
-                        title={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
-                      >
-                        {b.category === "habitable" ? (
-                          <BedIcon aria-hidden fontSize="1.25rem" />
-                        ) : (
-                          <WrenchIcon aria-hidden fontSize="1.25rem" />
-                        )}
-                      </Tag>
+                      {structureRooms.length > 0 ? (
+                        <BedIcon
+                          aria-label={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
+                          title={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
+                          fontSize="1.25rem"
+                        />
+                      ) : (
+                        <WrenchIcon
+                          aria-label={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
+                          title={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
+                          fontSize="1.25rem"
+                        />
+                      )}
                       {b.built_year != null && (
                         <small title={t("Built year")}>{t("Built {{year}}", { year: b.built_year })}</small>
                       )}

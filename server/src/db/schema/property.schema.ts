@@ -147,12 +147,22 @@ export const propertyOwnersTable = pgTable(
   ],
 )
 
-export const infrastructureTable = pgTable("infrastructure", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: varchar("description", { length: 255 }).notNull(),
-  property_id: integer("property_id").references(() => propertyTable.id),
-})
+export const infrastructureTable = pgTable(
+  "infrastructure",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: varchar("description", { length: 255 }).notNull(),
+    property_id: integer("property_id").references(() => propertyTable.id),
+    since_year: integer("since_year"),
+  },
+  (t) => [
+    check(
+      "infrastructure_since_year_range",
+      sql`${t.since_year} IS NULL OR (${t.since_year} BETWEEN 1500 AND 2100)`,
+    ),
+  ],
+)
 
 export const propertyPriorityWeeksTable = pgTable(
   "property_priority_weeks",

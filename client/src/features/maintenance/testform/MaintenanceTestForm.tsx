@@ -10,11 +10,12 @@ import {
   Field,
   Label,
   Select,
-  Textarea,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import type { PortableTextBlock } from "@portabletext/types"
 import { useTRPC } from "@/trpc/trpc"
+import { MaintenanceInstructionsPTEditor } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPTEditor.tsx"
 
 type Category = "maintenance" | "repair"
 type Severity = "major" | "minor" | "patch"
@@ -24,7 +25,7 @@ type Recurrence = "once" | "yearly" | "5year"
 type FormState = {
   id: number | null
   description: string
-  instructions: string
+  instructions_pt: PortableTextBlock[]
   assigned_to_id: string
   structure_id: string
   infrastructure_id: string
@@ -54,7 +55,7 @@ function defaultPriorityYear(): number {
 const initialFormState: FormState = {
   id: null,
   description: "",
-  instructions: "",
+  instructions_pt: [],
   assigned_to_id: "",
   structure_id: "",
   infrastructure_id: "",
@@ -65,10 +66,11 @@ const initialFormState: FormState = {
   when: "",
 }
 
-type EditableField = Exclude<keyof FormState, "id">
+type StringField = Exclude<keyof FormState, "id" | "instructions_pt">
 
 type FormAction =
-  | { type: "setField"; field: EditableField; value: string }
+  | { type: "setField"; field: StringField; value: string }
+  | { type: "setInstructionsPT"; value: PortableTextBlock[] }
   | { type: "setLocation"; kind: "structure" | "infrastructure" | "none"; id: string }
   | { type: "reset" }
 
@@ -76,6 +78,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
   switch (action.type) {
     case "setField":
       return { ...state, [action.field]: action.value }
+    case "setInstructionsPT":
+      return { ...state, instructions_pt: action.value }
     case "setLocation":
       if (action.kind === "structure") {
         return { ...state, structure_id: action.id, infrastructure_id: "" }
@@ -92,7 +96,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
 function buildPayload(state: FormState, addedBy: number) {
   return {
     description: state.description,
-    instructions: state.instructions.trim() ? state.instructions : undefined,
+    instructions_pt: state.instructions_pt.length > 0 ? state.instructions_pt : null,
     added_by: addedBy,
     assigned_to_id: state.assigned_to_id
       ? Number(state.assigned_to_id)
@@ -181,7 +185,7 @@ export function MaintenanceTestForm() {
   const pending = createMutation.isPending || updateMutation.isPending
   const lastError = createMutation.error ?? updateMutation.error
 
-  const set = (field: EditableField) => (value: string) => {
+  const set = (field: StringField) => (value: string) => {
     dispatch({ type: "setField", field, value })
   }
 
@@ -235,13 +239,12 @@ export function MaintenanceTestForm() {
           />
 
           <Field>
-            <Label>{t("Instructions")}</Label>
-            <Textarea
-              value={state.instructions}
-              onChange={e => {
-                set("instructions")(e.target.value)
+            <Label>{t("Description")}</Label>
+            <MaintenanceInstructionsPTEditor
+              initialValue={state.instructions_pt}
+              onChange={(value) => {
+                dispatch({ type: "setInstructionsPT", value })
               }}
-              rows={4}
             />
           </Field>
 

@@ -28,11 +28,13 @@ export function UserGroups() {
   return (
     <section className={styles.page}>
       {canEdit && (
-        <Checkbox
-          label={t("Edit mode")}
-          checked={editMode}
-          onChange={e => { setEditMode(e.currentTarget.checked) }}
-        />
+        <div className={styles.header}>
+          <Checkbox
+            label={t("Edit mode")}
+            checked={editMode}
+            onChange={e => { setEditMode(e.currentTarget.checked) }}
+          />
+        </div>
       )}
       <div className={styles.groups}>
         <UserGroupsFlow editMode={canEdit && editMode} />

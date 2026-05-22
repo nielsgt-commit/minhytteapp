@@ -24,11 +24,19 @@ type Infrastructure = {
   name: string
   description: string
   property_id: number | null
+  since_year: number | null
 }
 
 function fdString(fd: FormData, key: string): string {
   const v = fd.get(key)
   return typeof v === "string" ? v : ""
+}
+
+function fdYear(fd: FormData, key: string): number | null {
+  const raw = fdString(fd, key).trim()
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isInteger(n) && n >= 1500 && n <= 2100 ? n : null
 }
 
 export function InfrastructurePanel({ propertyId, propertyName }: Props) {
@@ -77,9 +85,10 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
     const description = fdString(fd, "description").trim()
+    const since_year = fdYear(fd, "since_year")
     if (!name || !description) return
     createInfrastructure.mutate(
-      { name, description, property_id: propertyId },
+      { name, description, property_id: propertyId, since_year },
       {
         onSuccess: () => {
           form.reset()
@@ -95,9 +104,10 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
       const fd = new FormData(e.currentTarget)
       const name = fdString(fd, "name").trim()
       const description = fdString(fd, "description").trim()
+      const since_year = fdYear(fd, "since_year")
       if (!name || !description) return
       updateInfrastructure.mutate(
-        { id: p.id, name, description, property_id: propertyId },
+        { id: p.id, name, description, property_id: propertyId, since_year },
         { onSuccess: () => { setEditingId(null) } },
       )
     }
@@ -150,6 +160,15 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
             defaultValue={editingInfrastructure.description}
             disabled={updateInfrastructure.isPending}
           />
+          <Textfield
+            label={t("Since")}
+            name="since_year"
+            type="number"
+            min={1500}
+            max={2100}
+            defaultValue={editingInfrastructure.since_year ?? ""}
+            disabled={updateInfrastructure.isPending}
+          />
           <div className={styles.actions}>
             <Button type="submit" disabled={pending}>
               {t("Save")}
@@ -180,6 +199,11 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
               <li>
                 <Card.Block className={styles.row}>
                   <span className={styles.rowName}>{p.name}</span>
+                  {p.since_year != null && (
+                    <small title={t("Since")}>
+                      {t("Since {{year}}", { year: p.since_year })}
+                    </small>
+                  )}
                   {editMode && (
                     <>
                       <Button
@@ -227,6 +251,14 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                         label={t("Description")}
                         name="description"
                         required
+                        disabled={createInfrastructure.isPending}
+                      />
+                      <Textfield
+                        label={t("Since")}
+                        name="since_year"
+                        type="number"
+                        min={1500}
+                        max={2100}
                         disabled={createInfrastructure.isPending}
                       />
                       <div className={styles.actions}>

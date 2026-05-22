@@ -17,6 +17,7 @@ import styles from "./MaintenanceTodos.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
 import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
@@ -62,7 +63,9 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
         added_by: selectedUserId,
         ...(scope.kind === "structure"
           ? { structure_id: scope.id }
-          : { infrastructure_id: scope.id }),
+          : scope.kind === "infrastructure"
+            ? { infrastructure_id: scope.id }
+            : { equipment_id: scope.id }),
         category: "maintenance",
         severity: "patch",
         status: "todo",
@@ -79,24 +82,28 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       if (i.status !== "todo" && i.status !== "doing") return false
       return scope.kind === "structure"
         ? i.structure_id === scope.id
-        : i.infrastructure_id === scope.id
+        : scope.kind === "infrastructure"
+          ? i.infrastructure_id === scope.id
+          : i.equipment_id === scope.id
     })
     .slice()
     .sort((a, b) => {
       const aT = new Date(a.created_at).getTime()
       const bT = new Date(b.created_at).getTime()
-      return bT - aT
+      if (bT !== aT) return bT - aT
+      return b.id - a.id
     })
 
   const markDone = (item: (typeof todos)[number]) => {
     updateMutation.mutate({
       id: item.id,
       description: item.description,
-      instructions: item.instructions ?? undefined,
+      instructions_pt: item.instructions_pt,
       added_by: item.added_by,
       assigned_to_id: item.assigned_to_id ?? undefined,
       structure_id: item.structure_id ?? undefined,
       infrastructure_id: item.infrastructure_id ?? undefined,
+      equipment_id: item.equipment_id ?? undefined,
       category: item.category,
       severity: item.severity,
       status: "done",
@@ -108,11 +115,12 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     updateMutation.mutate({
       id: item.id,
       description: item.description,
-      instructions: item.instructions ?? undefined,
+      instructions_pt: item.instructions_pt,
       added_by: item.added_by,
       assigned_to_id: item.assigned_to_id ?? undefined,
       structure_id: item.structure_id ?? undefined,
       infrastructure_id: item.infrastructure_id ?? undefined,
+      equipment_id: item.equipment_id ?? undefined,
       category: item.category,
       severity: cycleSeverity(item.severity),
       status: item.status,
@@ -160,7 +168,8 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       ) : (
         <ul className={styles.list}>
           {todos.map(todo => {
-            const hasInstructions = todo.instructions != null && todo.instructions !== ""
+            const hasInstructions =
+              todo.instructions_pt != null && todo.instructions_pt.length > 0
             const isExpanded = expanded.has(todo.id)
             return (
               <Card asChild key={todo.id}>
@@ -208,9 +217,7 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                   </Card.Block>
                   {hasInstructions && isExpanded && (
                     <Card.Block>
-                      <Paragraph className={styles.instructions} data-size="sm">
-                        {todo.instructions}
-                      </Paragraph>
+                      <MaintenanceInstructionsPT value={todo.instructions_pt} />
                     </Card.Block>
                   )}
                 </li>

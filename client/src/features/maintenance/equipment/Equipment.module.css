@@ -12,27 +12,26 @@
   gap: 1rem;
 }
 
-.nameGroup { grid-area: name; display: flex; flex-direction: column; gap: 0.1rem; }
+.nameGroup {
+  grid-area: name;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
 .name     { margin: 0; }
 .brandModel { margin: 0; opacity: 0.75; }
 .category { grid-area: category; margin: 0; }
 .inspect  { grid-area: inspect; }
+.divider {
+  grid-area: divider;
+  display: none;
+}
 .actions {
   grid-area: actions;
   display: flex;
   gap: 0.5rem;
-}
-
-.schedule {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.scheduleActions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
@@ -41,9 +40,17 @@
     grid-template-areas:
       "name     inspect"
       "category category"
+      "divider  divider"
       "actions  actions";
     row-gap: 0.25rem;
     column-gap: 0.5rem;
+  }
+  .nameGroup {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .divider {
+    display: block;
   }
   .actions {
     justify-self: stretch;
