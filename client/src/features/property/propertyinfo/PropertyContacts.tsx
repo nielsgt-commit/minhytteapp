@@ -1,11 +1,11 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Switch } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useCanEdit } from "@/hooks/useCanEdit"
 import { ContactListView } from "./ContactListView.tsx"
 import { ContactEditForm } from "./ContactEditForm.tsx"
 import { ContactAddForm } from "./ContactAddForm.tsx"
@@ -29,6 +29,7 @@ export default function PropertyContacts() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const property_id = useSelectedPropertyId()
+  const canEdit = useCanEdit()
 
   const { data: contacts } = useQuery(
     trpc.propertyContact.listForProperty.queryOptions(
@@ -58,7 +59,6 @@ export default function PropertyContacts() {
     }),
   )
 
-  const [editMode, setEditMode] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
 
@@ -69,10 +69,6 @@ export default function PropertyContacts() {
   )
 
   if (property_id == null) return null
-
-  const editingContact = editingId
-    ? contacts?.find(c => c.id === editingId) ?? null
-    : null
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -128,48 +124,35 @@ export default function PropertyContacts() {
     <section>
       <h3>{t("Property contacts")}</h3>
 
-      <Switch
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.target.checked
-          setEditMode(next)
-          if (!next) {
-            setEditingId(null)
-            setIsAdding(false)
-          }
-        }}
-      />
-
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {editingContact ? (
-        <ContactEditForm
-          contact={editingContact}
-          pending={pending}
-          updatePending={updateMutation.isPending}
-          onSubmit={handleSave(editingContact)}
-          onDelete={() => { handleDelete(editingContact) }}
-          onCancel={() => { setEditingId(null) }}
-        />
-      ) : (
-        <ContactListView
-          contacts={contacts}
-          editMode={editMode}
-          pending={pending}
-          isAdding={isAdding}
-          onEdit={id => { setEditingId(id) }}
-          onDelete={handleDelete}
-          onStartAdd={() => { setIsAdding(true) }}
-          addSlot={
-            <ContactAddForm
-              createPending={createMutation.isPending}
-              onSubmit={handleAdd}
-              onCancel={() => { setIsAdding(false) }}
-            />
-          }
-        />
-      )}
+      <ContactListView
+        contacts={contacts}
+        canEdit={canEdit}
+        pending={pending}
+        isAdding={isAdding}
+        editingId={editingId}
+        onEdit={id => { setEditingId(id) }}
+        onDelete={handleDelete}
+        onStartAdd={() => { setIsAdding(true) }}
+        renderEditForm={c => (
+          <ContactEditForm
+            contact={c}
+            pending={pending}
+            updatePending={updateMutation.isPending}
+            onSubmit={handleSave(c)}
+            onDelete={() => { handleDelete(c) }}
+            onCancel={() => { setEditingId(null) }}
+          />
+        )}
+        addSlot={
+          <ContactAddForm
+            createPending={createMutation.isPending}
+            onSubmit={handleAdd}
+            onCancel={() => { setIsAdding(false) }}
+          />
+        }
+      />
     </section>
   )
 }

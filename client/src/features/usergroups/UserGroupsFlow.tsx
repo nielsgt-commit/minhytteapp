@@ -1,11 +1,11 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Heading } from "@digdir/designsystemet-react"
+import { Button, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -20,10 +20,10 @@ type OpenForm =
   | null
 
 type UserGroupsFlowProps = {
-  editMode: boolean
+  canEdit: boolean
 }
 
-export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
+export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -69,13 +69,6 @@ export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
   const [addingUserForGroup, setAddingUserForGroup] = useState<number | null>(
     null,
   )
-
-  useEffect(() => {
-    if (!editMode) {
-      setOpenForm(null)
-      setAddingUserForGroup(null)
-    }
-  }, [editMode])
 
   const { pending, error: lastError } = useMutationsStatus(
     createGroup,
@@ -179,7 +172,7 @@ export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
 
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {editMode && (
+      {canEdit && (
         <div>
           <Button
             type="button"
@@ -219,7 +212,7 @@ export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
                 key={g.id}
                 group={g}
                 availableUsers={availableUsers}
-                editMode={editMode}
+                canEdit={canEdit}
                 isRenaming={isRenaming}
                 isAddingMember={isAddingMember}
                 isCreatingUser={addingUserForGroup === g.id}
@@ -229,12 +222,8 @@ export function UserGroupsFlow({ editMode }: UserGroupsFlowProps) {
                 createUserPending={
                   createUser.isPending || addMember.isPending
                 }
-                onToggleRename={() => {
-                  setOpenForm(v =>
-                    v?.kind === "rename" && v.groupId === g.id
-                      ? null
-                      : { kind: "rename", groupId: g.id },
-                  )
+                onStartRename={() => {
+                  setOpenForm({ kind: "rename", groupId: g.id })
                 }}
                 onToggleAddMember={() => {
                   setOpenForm(v =>

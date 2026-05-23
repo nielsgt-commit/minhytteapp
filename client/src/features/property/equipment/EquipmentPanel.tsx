@@ -8,13 +8,14 @@ import {
   Button,
   Card,
   Fieldset,
-  Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useCanEdit } from "@/hooks/useCanEdit"
+import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import styles from "./EquipmentPanel.module.css"
 
 type Props = {
@@ -44,6 +45,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const canEdit = useCanEdit()
 
   const { data: equipment } = useSuspenseQuery(
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
@@ -67,7 +69,6 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     trpc.equipment.delete.mutationOptions({ onSuccess: invalidate }),
   )
 
-  const [editMode, setEditMode] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
 
@@ -76,10 +77,6 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     updateEquipment,
     deleteEquipment,
   )
-
-  const editingItem = editingId
-    ? equipment.find(e => e.id === editingId) ?? null
-    : null
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -145,141 +142,124 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     )
   }
 
+  const renderEditForm = (item: Equipment) => (
+    <form
+      onSubmit={handleSave(item)}
+      key={`edit-${String(item.id)}`}
+      className={styles.editForm}
+    >
+      <Fieldset>
+        <Fieldset.Legend>{t("Edit equipment")}</Fieldset.Legend>
+        <Textfield
+          label={t("Name")}
+          name="name"
+          required
+          autoFocus
+          defaultValue={item.name}
+          disabled={updateEquipment.isPending}
+        />
+        <Textfield
+          label={t("Brand")}
+          name="brand"
+          maxLength={64}
+          defaultValue={item.brand ?? ""}
+          disabled={updateEquipment.isPending}
+        />
+        <Textfield
+          label={t("Model")}
+          name="model"
+          maxLength={64}
+          defaultValue={item.model ?? ""}
+          disabled={updateEquipment.isPending}
+        />
+        <Textfield
+          label={t("Category")}
+          name="category"
+          maxLength={32}
+          placeholder={t("appliance, tool, boat…")}
+          defaultValue={item.category ?? ""}
+          disabled={updateEquipment.isPending}
+        />
+        <Textfield
+          label={t("Notes")}
+          name="notes"
+          maxLength={255}
+          defaultValue={item.notes ?? ""}
+          disabled={updateEquipment.isPending}
+        />
+        <Textfield
+          label={t("Acquired")}
+          name="acquired_year"
+          type="number"
+          min={1500}
+          max={2100}
+          defaultValue={item.acquired_year ?? ""}
+          disabled={updateEquipment.isPending}
+        />
+        <div className={styles.actions}>
+          <Button type="submit" disabled={pending}>
+            {t("Save")}
+          </Button>
+          <Button
+            type="button"
+            variant="tertiary"
+            disabled={pending}
+            onClick={() => { setEditingId(null) }}
+          >
+            {t("Cancel")}
+          </Button>
+        </div>
+      </Fieldset>
+    </form>
+  )
+
   return (
     <section>
       <h3>{t("Equipment at {{name}}", { name: propertyName })}</h3>
 
-      <Switch
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.target.checked
-          setEditMode(next)
-          if (!next) {
-            setEditingId(null)
-            setIsAdding(false)
-          }
-        }}
-      />
-
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {editingItem ? (
-        <form
-          onSubmit={handleSave(editingItem)}
-          key={`edit-${String(editingItem.id)}`}
-          className={styles.editForm}
-        >
-          <Fieldset>
-            <Fieldset.Legend>{t("Edit equipment")}</Fieldset.Legend>
-            <Textfield
-              label={t("Name")}
-              name="name"
-              required
-              autoFocus
-              defaultValue={editingItem.name}
-              disabled={updateEquipment.isPending}
-            />
-            <Textfield
-              label={t("Brand")}
-              name="brand"
-              maxLength={64}
-              defaultValue={editingItem.brand ?? ""}
-              disabled={updateEquipment.isPending}
-            />
-            <Textfield
-              label={t("Model")}
-              name="model"
-              maxLength={64}
-              defaultValue={editingItem.model ?? ""}
-              disabled={updateEquipment.isPending}
-            />
-            <Textfield
-              label={t("Category")}
-              name="category"
-              maxLength={32}
-              placeholder={t("appliance, tool, boat…")}
-              defaultValue={editingItem.category ?? ""}
-              disabled={updateEquipment.isPending}
-            />
-            <Textfield
-              label={t("Notes")}
-              name="notes"
-              maxLength={255}
-              defaultValue={editingItem.notes ?? ""}
-              disabled={updateEquipment.isPending}
-            />
-            <Textfield
-              label={t("Acquired")}
-              name="acquired_year"
-              type="number"
-              min={1500}
-              max={2100}
-              defaultValue={editingItem.acquired_year ?? ""}
-              disabled={updateEquipment.isPending}
-            />
-            <div className={styles.actions}>
-              <Button type="submit" disabled={pending}>
-                {t("Save")}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                data-color="danger"
-                disabled={pending}
-                onClick={() => { handleDelete(editingItem) }}
-              >
-                {t("Delete")}
-              </Button>
-              <Button
-                type="button"
-                variant="tertiary"
-                disabled={pending}
-                onClick={() => { setEditingId(null) }}
-              >
-                {t("Cancel")}
-              </Button>
-            </div>
-          </Fieldset>
-        </form>
-      ) : (
-        <ul className={styles.list}>
-          {equipment.map(item => (
-            <Card asChild key={item.id}>
-              <li>
-                <Card.Block className={styles.row}>
-                  <span className={styles.rowName}>{item.name}</span>
-                  {item.acquired_year != null && (
-                    <small title={t("Acquired")}>
-                      {t("Acquired {{year}}", { year: item.acquired_year })}
-                    </small>
-                  )}
-                  {editMode && (
+      <ul className={styles.list}>
+        {equipment.map(item => (
+          <Card asChild key={item.id}>
+            <li>
+              <Card.Block className={styles.row}>
+                <InlineEditRow
+                  editing={editingId === item.id}
+                  canEdit={canEdit}
+                  pending={pending}
+                  editLabel={t("Edit equipment {{name}}", { name: item.name })}
+                  onStartEdit={() => { setEditingId(item.id) }}
+                  view={
                     <>
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        disabled={pending}
-                        onClick={() => { setEditingId(item.id) }}
-                      >
-                        {t("Edit")}
-                      </Button>
-                      <Button
-                        variant="tertiary"
-                        data-color="danger"
-                        data-size="sm"
-                        disabled={pending}
-                        onClick={() => { handleDelete(item) }}
-                      >
-                        {t("Delete")}
-                      </Button>
+                      <span className={styles.rowName}>{item.name}</span>
+                      {item.acquired_year != null && (
+                        <small title={t("Acquired")}>
+                          {t("Acquired {{year}}", { year: item.acquired_year })}
+                        </small>
+                      )}
                     </>
-                  )}
-                </Card.Block>
-              </li>
-            </Card>
-          ))}
+                  }
+                  form={renderEditForm(item)}
+                  actions={
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      aria-label={t("Delete equipment \"{{name}}\"?", { name: item.name })}
+                      onClick={() => { handleDelete(item) }}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  }
+                />
+              </Card.Block>
+            </li>
+          </Card>
+        ))}
 
+        {canEdit && (
           <Card asChild key="__add">
             <li>
               <Card.Block className={styles.addBlock}>
@@ -361,8 +341,8 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
               </Card.Block>
             </li>
           </Card>
-        </ul>
-      )}
+        )}
+      </ul>
     </section>
   )
 }

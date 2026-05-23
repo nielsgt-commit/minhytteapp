@@ -26,6 +26,14 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     title: "User groups",
     description: "Group users together to share access, costs, or bookings.",
   }],
+  ["/manageproperty/users", {
+    title: "Users",
+    description: "Everyone with access to this property — edit roles or remove people.",
+  }],
+  ["/manageproperty/invites", {
+    title: "Invites",
+    description: "Email addresses allowed to sign in and claim a spot on this property.",
+  }],
   ["/manageproperty/structures", {
     title: "Structures",
     description: "Buildings on the property and the rooms inside them.",
@@ -68,18 +76,20 @@ function RouteBanner({ pathname }: { pathname: string }) {
 }
 
 const DESKTOP_GROUPS = [
-  { label: "Identity", items: [
+  { label: "Property", items: [
     { to: "/manageproperty/info", label: "Info" },
     { to: "/manageproperty/contacts", label: "Contacts" },
     { to: "/manageproperty/ownership", label: "Ownership" },
-    { to: "/manageproperty/usergroups", label: "User groups" },
-  ]},
-  { label: "Property", items: [
     { to: "/manageproperty/structures", label: "Structures" },
     { to: "/manageproperty/infrastructure", label: "Infrastructure" },
     { to: "/manageproperty/equipment", label: "Equipment" },
   ]},
-  { label: "Admin", items: [
+  { label: "People", items: [
+    { to: "/manageproperty/users", label: "Users" },
+    { to: "/manageproperty/usergroups", label: "User groups" },
+    { to: "/manageproperty/invites", label: "Invites" },
+  ]},
+  { label: "Domain model", items: [
     { to: "/manageproperty/split-policy", label: "Split policy" },
     { to: "/manageproperty/priority", label: "Priority weeks" },
     { to: "/manageproperty/settings", label: "Settings" },
@@ -87,20 +97,20 @@ const DESKTOP_GROUPS = [
 ] as const
 
 const MOBILE_GROUPS = [
-  { label: "Info", items: [
-    { to: "/manageproperty/info", label: "Info" },
-  ]},
   { label: "Property", items: [
+    { to: "/manageproperty/info", label: "Info" },
+    { to: "/manageproperty/contacts", label: "Contacts" },
+    { to: "/manageproperty/ownership", label: "Ownership" },
     { to: "/manageproperty/structures", label: "Structures" },
     { to: "/manageproperty/infrastructure", label: "Infrastructure" },
     { to: "/manageproperty/equipment", label: "Equipment" },
   ]},
-  { label: "Identity", items: [
-    { to: "/manageproperty/contacts", label: "Contacts" },
-    { to: "/manageproperty/ownership", label: "Ownership" },
+  { label: "People", items: [
+    { to: "/manageproperty/users", label: "Users" },
     { to: "/manageproperty/usergroups", label: "User groups" },
+    { to: "/manageproperty/invites", label: "Invites" },
   ]},
-  { label: "Admin", items: [
+  { label: "Domain model", items: [
     { to: "/manageproperty/split-policy", label: "Split policy" },
     { to: "/manageproperty/priority", label: "Priority weeks" },
     { to: "/manageproperty/settings", label: "Settings" },

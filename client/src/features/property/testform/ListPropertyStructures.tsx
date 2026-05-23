@@ -9,11 +9,12 @@ import {
   Button,
   Card,
   Divider,
-  Switch,
 } from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useCanEdit } from "@/hooks/useCanEdit"
+import { InlineEditField } from "@/components/shared/InlineEditField"
 import { AddStructureFlow } from "@/features/property/testform/AddStructureFlow.tsx"
 import {
   AddBedsFlow,
@@ -38,6 +39,7 @@ export function ListPropertyStructures() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const canEdit = useCanEdit()
 
   const selectedPropertyId = useSelectedPropertyId()
 
@@ -73,9 +75,7 @@ export function ListPropertyStructures() {
   )
 
   const [openForm, setOpenForm] = useState<OpenForm>(null)
-  const [editMode, setEditMode] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [editingNameId, setEditingNameId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
@@ -125,19 +125,13 @@ export function ListPropertyStructures() {
     newName: string,
   ) => {
     const trimmed = newName.trim()
-    if (!trimmed || trimmed === b.name) {
-      setEditingNameId(null)
-      return
-    }
-    updateStructure.mutate(
-      {
-        id: b.id,
-        name: trimmed,
-        property_id: b.property_id,
-        category: b.category,
-      },
-      { onSuccess: () => { setEditingNameId(null) } },
-    )
+    if (!trimmed || trimmed === b.name) return
+    updateStructure.mutate({
+      id: b.id,
+      name: trimmed,
+      property_id: b.property_id,
+      category: b.category,
+    })
   }
 
   const handleDeleteStructure = (structureId: number, structureName: string) => {
@@ -219,27 +213,12 @@ export function ListPropertyStructures() {
     <section>
       <h3>{t("Structures for {{name}}", { name: selectedProperty.name })}</h3>
 
-      <Switch
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.target.checked
-          setEditMode(next)
-          if (!next) {
-            setOpenForm(null)
-            setExpandedId(null)
-            setEditingNameId(null)
-          }
-        }}
-      />
-
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
       <ul className={styles.list}>
           {propertyStructures.map(b => {
             const structureRooms = roomsByStructure.get(b.id) ?? []
             const isExpanded = expandedId === b.id
-            const isEditingName = editingNameId === b.id
             const addRoomOpen =
               openForm?.kind === "addRoom" && openForm.structureId === b.id
             const editingRoom =
@@ -252,37 +231,13 @@ export function ListPropertyStructures() {
                 <li className={styles.cardItem}>
                   <Card.Block className={styles.cardBlock}>
                     <div className={styles.header}>
-                      {isEditingName ? (
-                        <input
-                          type="text"
-                          defaultValue={b.name}
-                          autoFocus
-                          aria-label={t("structure name")}
-                          disabled={updateStructure.isPending}
-                          onBlur={e => { handleNameSave(b, e.currentTarget.value) }}
-                          onKeyDown={e => {
-                            if (e.key === "Enter") {
-                              e.preventDefault()
-                              handleNameSave(b, e.currentTarget.value)
-                            } else if (e.key === "Escape") {
-                              setEditingNameId(null)
-                            }
-                          }}
-                          className={styles.nameInput}
-                        />
-                      ) : (
-                        <strong
-                          onDoubleClick={() => {
-                            if (editMode) setEditingNameId(b.id)
-                          }}
-                          title={
-                            editMode ? t("Double-click to rename") : undefined
-                          }
-                          className={editMode ? styles.nameStatic : undefined}
-                        >
-                          {b.name}
-                        </strong>
-                      )}
+                      <InlineEditField
+                        value={b.name}
+                        canEdit={canEdit}
+                        pending={updateStructure.isPending}
+                        ariaLabel={t("Edit structure {{name}}", { name: b.name })}
+                        onSave={next => { handleNameSave(b, next) }}
+                      />
                       {structureRooms.length > 0 ? (
                         <BedIcon
                           aria-label={(t as (k: string) => string)(CATEGORY_LABEL[b.category])}
@@ -407,7 +362,7 @@ export function ListPropertyStructures() {
                       </>
                     )}
 
-                    {editMode && !isExpanded && (
+                    {canEdit && !isExpanded && (
                       <Button
                         variant="secondary"
                         className={styles.closeButton}
@@ -423,29 +378,31 @@ export function ListPropertyStructures() {
             )
           })}
 
-          <Card asChild key="__add">
-            <li className={styles.cardItem}>
-              <Card.Block className={styles.cardBlock}>
-                {isAdding ? (
-                  <>
-                    <strong>{t("Add structure")}</strong>
-                    <AddStructureFlow
-                      onAdded={() => { setIsAdding(false) }}
-                      onCancel={() => { setIsAdding(false) }}
-                    />
-                  </>
-                ) : (
-                  <Button
-                    variant="tertiary"
-                    className={styles.addButton}
-                    onClick={() => { setIsAdding(true) }}
-                  >
-                    {t("+ Add structure")}
-                  </Button>
-                )}
-              </Card.Block>
-            </li>
-          </Card>
+          {canEdit && (
+            <Card asChild key="__add">
+              <li className={styles.cardItem}>
+                <Card.Block className={styles.cardBlock}>
+                  {isAdding ? (
+                    <>
+                      <strong>{t("Add structure")}</strong>
+                      <AddStructureFlow
+                        onAdded={() => { setIsAdding(false) }}
+                        onCancel={() => { setIsAdding(false) }}
+                      />
+                    </>
+                  ) : (
+                    <Button
+                      variant="tertiary"
+                      className={styles.addButton}
+                      onClick={() => { setIsAdding(true) }}
+                    >
+                      {t("+ Add structure")}
+                    </Button>
+                  )}
+                </Card.Block>
+              </li>
+            </Card>
+          )}
         </ul>
     </section>
   )
