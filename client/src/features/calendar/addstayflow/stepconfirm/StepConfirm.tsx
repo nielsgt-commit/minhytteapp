@@ -1,4 +1,4 @@
-import type { Dispatch } from "react"
+import type { Dispatch, ReactNode } from "react"
 import { Button, Field, Heading, Label, Paragraph, Select, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { setNotes, setStatus } from "@/features/calendar/booking-logic"
@@ -30,6 +30,10 @@ export function StepConfirm({
   roomOverCapacityDays,
   stepClass,
   stepActiveClass,
+  submitLabel,
+  submitWarningsLabel,
+  submitPendingLabel,
+  extraActions,
 }: {
   isActive: boolean
   draft: BookingDraft
@@ -48,6 +52,10 @@ export function StepConfirm({
   roomOverCapacityDays: Map<number, string[]>
   stepClass: string
   stepActiveClass: string
+  submitLabel?: string
+  submitWarningsLabel?: string
+  submitPendingLabel?: string
+  extraActions?: ReactNode
 }) {
   const { t } = useTranslation("calendar")
   const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
@@ -164,13 +172,16 @@ export function StepConfirm({
       </div>
 
       {!submitState.confirming && (
-        <Button type="submit" disabled={!canSubmit}>
-          {isPending
-            ? t("Saving…")
-            : hasWarnings
-              ? t("Request stay (warnings present)")
-              : t("Request stay")}
-        </Button>
+        <div className={styles.actions}>
+          <Button type="submit" disabled={!canSubmit}>
+            {isPending
+              ? (submitPendingLabel ?? t("Saving…"))
+              : hasWarnings
+                ? (submitWarningsLabel ?? t("Request stay (warnings present)"))
+                : (submitLabel ?? t("Request stay"))}
+          </Button>
+          {extraActions}
+        </div>
       )}
 
       {submitState.confirming && conflicts && (

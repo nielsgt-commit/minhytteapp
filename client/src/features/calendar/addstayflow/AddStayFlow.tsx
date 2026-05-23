@@ -46,7 +46,12 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
   const {
     draft, dispatch, conflicts, isFetching, hasWarnings,
     submitState, submit, isPending, canSubmit,
-  } = useBookingForm(propertyId, selectedUserId, () => { setCurrentStep(1) })
+  } = useBookingForm(
+    propertyId,
+    selectedUserId,
+    { kind: "create" },
+    () => { setCurrentStep(1) },
+  )
 
   const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
 
