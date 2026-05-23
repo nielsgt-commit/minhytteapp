@@ -5,9 +5,9 @@ import {
   type EligibleOwner,
   type OwnerLookups,
   type PeakWeek,
-} from "@/features/priority/priorityUtils"
-import { PriorityWeekRow } from "@/features/priority/PriorityWeekRow"
-import { ConflictRow } from "@/features/priority/ConflictRow"
+} from "./priorityUtils"
+import { PriorityWeekRow } from "./PriorityWeekRow"
+import { ConflictRow } from "./ConflictRow"
 
 type PriorityWeeksTableProps = {
   year: number

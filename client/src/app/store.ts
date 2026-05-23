@@ -1,7 +1,7 @@
 import type { Action, ThunkAction } from "@reduxjs/toolkit"
 import { combineSlices, configureStore } from "@reduxjs/toolkit"
 import { setupListeners } from "@reduxjs/toolkit/query"
-import { prioritySlice } from "@/features/priority/prioritySlice"
+import { prioritySlice } from "@/routes/_authed/manageproperty/-priority/prioritySlice"
 import { propertySlice } from "@/features/property/propertySlice"
 import { userSlice } from "@/features/user/userSlice"
 
