@@ -53,6 +53,11 @@
 }
 
 @media (max-width: 640px) {
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
   .inner {
     justify-content: space-between;
     padding-inline: 0.5rem 0;

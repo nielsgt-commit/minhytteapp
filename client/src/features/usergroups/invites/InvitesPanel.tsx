@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/app/useSelectedIds.ts"
-import { type SyntheticEvent, useEffect, useState } from "react"
+import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -14,10 +14,10 @@ import { fdString } from "@/utils/formData.ts"
 const GROUP_NONE = ""
 
 type InvitesPanelProps = {
-  editMode: boolean
+  canEdit: boolean
 }
 
-export function InvitesPanel({ editMode }: InvitesPanelProps) {
+export function InvitesPanel({ canEdit }: InvitesPanelProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
   const qc = useQueryClient()
@@ -47,10 +47,6 @@ export function InvitesPanel({ editMode }: InvitesPanelProps) {
   )
 
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    if (!editMode) setOpen(false)
-  }, [editMode])
 
   const { pending, error: lastError } = useMutationsStatus(add, remove)
 
@@ -129,12 +125,13 @@ export function InvitesPanel({ editMode }: InvitesPanelProps) {
                     {entry.added_by_name ? (
                       <span> – {t("added by {{name}}", { name: entry.added_by_name })}</span>
                     ) : null}
-                    {!entry.used_at && editMode && (
+                    {!entry.used_at && canEdit && (
                       <div>
                         <Button
                           type="button"
                           variant="secondary"
                           disabled={pending}
+                          aria-label={t("Remove invite {{email}}", { email: entry.email })}
                           onClick={() => { handleRemove(entry.id, entry.email) }}
                         >
                           {t("Remove")}
@@ -147,7 +144,7 @@ export function InvitesPanel({ editMode }: InvitesPanelProps) {
             </ul>
           )}
 
-          {editMode && (
+          {canEdit && (
             <div>
               <Button
                 type="button"
@@ -159,7 +156,7 @@ export function InvitesPanel({ editMode }: InvitesPanelProps) {
             </div>
           )}
 
-          {editMode && open && (
+          {canEdit && open && (
             <form onSubmit={handleAdd}>
               <fieldset>
                 <legend>{t("New invite")}</legend>

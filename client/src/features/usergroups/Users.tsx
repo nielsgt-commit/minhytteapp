@@ -1,20 +1,20 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+   import { useSelectedPropertyId } from "@/app/useSelectedIds"
 import { useTranslation } from "react-i18next"
 import { useCanEdit } from "@/hooks/useCanEdit"
-import { UserGroupsFlow } from "./UserGroupsFlow.tsx"
+import { ListUsers } from "./users/ListUsers.tsx"
 
-export function UserGroups() {
+export function Users() {
   const { t } = useTranslation("usergroups")
   const selectedPropertyId = useSelectedPropertyId()
   const canEdit = useCanEdit()
 
   if (selectedPropertyId == null) {
-    return <p>{t("Select a property to manage its user groups and members.")}</p>
+    return <p>{t("Select a property to manage its users.")}</p>
   }
 
   return (
     <section>
-      <UserGroupsFlow canEdit={canEdit} />
+      <ListUsers canEdit={canEdit} />
     </section>
   )
 }

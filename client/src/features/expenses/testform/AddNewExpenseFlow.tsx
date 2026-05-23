@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query"
 import {
   Card,
   Heading,
-  Switch,
   Textfield,
   ValidationMessage,
 } from "@digdir/designsystemet-react"
@@ -36,11 +35,11 @@ export function AddNewExpenseFlow({
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
+  const canManageCategories = me?.is_head ?? false
 
   const drafts = useExpenseDrafts()
   const editor = useExpenseEditor()
   const [description, setDescription] = useState("")
-  const [editMode, setEditMode] = useState(false)
   const suggestionInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -85,23 +84,9 @@ export function AddNewExpenseFlow({
               onRemove={drafts.remove}
             />
 
-            {me?.is_head && (
-              <Switch
-                label={t("Edit mode")}
-                checked={editMode}
-                onChange={e => {
-                  const next = e.target.checked
-                  setEditMode(next)
-                  if (next) {
-                    editor.close()
-                  }
-                }}
-              />
-            )}
-
             <CategoryPicker
               categories={categories}
-              editMode={editMode}
+              canManage={canManageCategories}
               selectedCats={selectedCats}
               onCategoriesChange={handleCategoriesChange}
               suggestionInputRef={suggestionInputRef}
@@ -121,7 +106,7 @@ export function AddNewExpenseFlow({
               </ValidationMessage>
             )}
 
-            {!editMode && editor.openCategory != null && (
+            {editor.openCategory != null && (
               <AmountEditor
                 category={editor.openCategory}
                 amount={editor.amount}

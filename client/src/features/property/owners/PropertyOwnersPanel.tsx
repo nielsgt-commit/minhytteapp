@@ -5,18 +5,17 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Switch } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useCanEdit } from "@/hooks/useCanEdit"
 import {
   ownerLabel,
   ownershipOffBy,
   totalOwnershipPct,
 } from "./ownershipCalculations.ts"
 import { OwnerListView } from "./OwnerListView.tsx"
-import { OwnerEditForm } from "./OwnerEditForm.tsx"
 import { OwnerAddForm } from "./OwnerAddForm.tsx"
 
 type AddKind = "user" | "group"
@@ -34,6 +33,7 @@ export function PropertyOwnersPanel() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const canEdit = useCanEdit()
 
   const selectedPropertyId = useSelectedPropertyId()
 
@@ -75,8 +75,6 @@ export function PropertyOwnersPanel() {
     trpc.propertyOwner.remove.mutationOptions({ onSuccess: invalidateOwners }),
   )
 
-  const [editMode, setEditMode] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
   const [addKind, setAddKind] = useState<AddKind>("user")
 
@@ -112,21 +110,13 @@ export function PropertyOwnersPanel() {
   const availableUsers = users.filter(u => !takenUserIds.has(u.id))
   const availableGroups = groups.filter(g => !takenGroupIds.has(g.id))
 
-  const editingOwner = editingId
-    ? owners.find(o => o.id === editingId) ?? null
-    : null
-
-  const handleEditSubmit =
-    (o: Owner) => (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const fd = new FormData(e.currentTarget)
-      const pct = fdNumber(fd, "ownership_pct")
-      if (!Number.isFinite(pct)) return
-      updatePct.mutate(
-        { id: o.id, property_id: selectedPropertyId, ownership_pct: pct },
-        { onSuccess: () => { setEditingId(null) } },
-      )
-    }
+  const handlePctSave = (o: Owner, pct: number) => {
+    updatePct.mutate({
+      id: o.id,
+      property_id: selectedPropertyId,
+      ownership_pct: pct,
+    })
+  }
 
   const handleAddSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -168,10 +158,7 @@ export function PropertyOwnersPanel() {
   const handleRemove = (o: Owner) => {
     const label = ownerLabel(o)
     if (!window.confirm(t("Remove {{label}} as owner?", { label }))) return
-    removeOwner.mutate(
-      { id: o.id, property_id: selectedPropertyId },
-      { onSuccess: () => { setEditingId(null) } },
-    )
+    removeOwner.mutate({ id: o.id, property_id: selectedPropertyId })
   }
 
   const addDisabled =
@@ -195,31 +182,9 @@ export function PropertyOwnersPanel() {
         )}
       </p>
 
-      <Switch
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.target.checked
-          setEditMode(next)
-          if (!next) {
-            setEditingId(null)
-            setIsAdding(false)
-          }
-        }}
-      />
-
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {editingOwner ? (
-        <OwnerEditForm
-          owner={editingOwner}
-          pending={pending}
-          updatePending={updatePct.isPending}
-          onSubmit={handleEditSubmit(editingOwner)}
-          onRemove={() => { handleRemove(editingOwner) }}
-          onCancel={() => { setEditingId(null) }}
-        />
-      ) : isAdding ? (
+      {isAdding ? (
         <OwnerAddForm
           addKind={addKind}
           pending={pending}
@@ -234,9 +199,9 @@ export function PropertyOwnersPanel() {
       ) : (
         <OwnerListView
           owners={owners}
-          editMode={editMode}
+          canEdit={canEdit}
           pending={pending}
-          onEdit={id => { setEditingId(id) }}
+          onPctSave={handlePctSave}
           onRemove={handleRemove}
           onStartAdd={() => { setIsAdding(true) }}
         />

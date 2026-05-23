@@ -22,12 +22,14 @@ import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 import { Route as AuthedManagepropertyIndexRouteImport } from './routes/_authed/manageproperty/index'
+import { Route as AuthedManagepropertyUsersRouteImport } from './routes/_authed/manageproperty/users'
 import { Route as AuthedManagepropertyUsergroupsRouteImport } from './routes/_authed/manageproperty/usergroups'
 import { Route as AuthedManagepropertyStructuresRouteImport } from './routes/_authed/manageproperty/structures'
 import { Route as AuthedManagepropertySplitPolicyRouteImport } from './routes/_authed/manageproperty/split-policy'
 import { Route as AuthedManagepropertySettingsRouteImport } from './routes/_authed/manageproperty/settings'
 import { Route as AuthedManagepropertyPriorityRouteImport } from './routes/_authed/manageproperty/priority'
 import { Route as AuthedManagepropertyOwnershipRouteImport } from './routes/_authed/manageproperty/ownership'
+import { Route as AuthedManagepropertyInvitesRouteImport } from './routes/_authed/manageproperty/invites'
 import { Route as AuthedManagepropertyInfrastructureRouteImport } from './routes/_authed/manageproperty/infrastructure'
 import { Route as AuthedManagepropertyInfoRouteImport } from './routes/_authed/manageproperty/info'
 import { Route as AuthedManagepropertyEquipmentRouteImport } from './routes/_authed/manageproperty/equipment'
@@ -96,6 +98,12 @@ const AuthedManagepropertyIndexRoute =
     path: '/',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
+const AuthedManagepropertyUsersRoute =
+  AuthedManagepropertyUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => AuthedManagepropertyRoute,
+  } as any)
 const AuthedManagepropertyUsergroupsRoute =
   AuthedManagepropertyUsergroupsRouteImport.update({
     id: '/usergroups',
@@ -130,6 +138,12 @@ const AuthedManagepropertyOwnershipRoute =
   AuthedManagepropertyOwnershipRouteImport.update({
     id: '/ownership',
     path: '/ownership',
+    getParentRoute: () => AuthedManagepropertyRoute,
+  } as any)
+const AuthedManagepropertyInvitesRoute =
+  AuthedManagepropertyInvitesRouteImport.update({
+    id: '/invites',
+    path: '/invites',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
 const AuthedManagepropertyInfrastructureRoute =
@@ -171,12 +185,14 @@ export interface FileRoutesByFullPath {
   '/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/manageproperty/info': typeof AuthedManagepropertyInfoRoute
   '/manageproperty/infrastructure': typeof AuthedManagepropertyInfrastructureRoute
+  '/manageproperty/invites': typeof AuthedManagepropertyInvitesRoute
   '/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
   '/manageproperty/priority': typeof AuthedManagepropertyPriorityRoute
   '/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
   '/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
+  '/manageproperty/users': typeof AuthedManagepropertyUsersRoute
   '/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRoutesByTo {
@@ -192,12 +208,14 @@ export interface FileRoutesByTo {
   '/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/manageproperty/info': typeof AuthedManagepropertyInfoRoute
   '/manageproperty/infrastructure': typeof AuthedManagepropertyInfrastructureRoute
+  '/manageproperty/invites': typeof AuthedManagepropertyInvitesRoute
   '/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
   '/manageproperty/priority': typeof AuthedManagepropertyPriorityRoute
   '/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
   '/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
+  '/manageproperty/users': typeof AuthedManagepropertyUsersRoute
   '/manageproperty': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRoutesById {
@@ -218,12 +236,14 @@ export interface FileRoutesById {
   '/_authed/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/_authed/manageproperty/info': typeof AuthedManagepropertyInfoRoute
   '/_authed/manageproperty/infrastructure': typeof AuthedManagepropertyInfrastructureRoute
+  '/_authed/manageproperty/invites': typeof AuthedManagepropertyInvitesRoute
   '/_authed/manageproperty/ownership': typeof AuthedManagepropertyOwnershipRoute
   '/_authed/manageproperty/priority': typeof AuthedManagepropertyPriorityRoute
   '/_authed/manageproperty/settings': typeof AuthedManagepropertySettingsRoute
   '/_authed/manageproperty/split-policy': typeof AuthedManagepropertySplitPolicyRoute
   '/_authed/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/_authed/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
+  '/_authed/manageproperty/users': typeof AuthedManagepropertyUsersRoute
   '/_authed/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRouteTypes {
@@ -242,12 +262,14 @@ export interface FileRouteTypes {
     | '/manageproperty/equipment'
     | '/manageproperty/info'
     | '/manageproperty/infrastructure'
+    | '/manageproperty/invites'
     | '/manageproperty/ownership'
     | '/manageproperty/priority'
     | '/manageproperty/settings'
     | '/manageproperty/split-policy'
     | '/manageproperty/structures'
     | '/manageproperty/usergroups'
+    | '/manageproperty/users'
     | '/manageproperty/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,12 +285,14 @@ export interface FileRouteTypes {
     | '/manageproperty/equipment'
     | '/manageproperty/info'
     | '/manageproperty/infrastructure'
+    | '/manageproperty/invites'
     | '/manageproperty/ownership'
     | '/manageproperty/priority'
     | '/manageproperty/settings'
     | '/manageproperty/split-policy'
     | '/manageproperty/structures'
     | '/manageproperty/usergroups'
+    | '/manageproperty/users'
     | '/manageproperty'
   id:
     | '__root__'
@@ -288,12 +312,14 @@ export interface FileRouteTypes {
     | '/_authed/manageproperty/equipment'
     | '/_authed/manageproperty/info'
     | '/_authed/manageproperty/infrastructure'
+    | '/_authed/manageproperty/invites'
     | '/_authed/manageproperty/ownership'
     | '/_authed/manageproperty/priority'
     | '/_authed/manageproperty/settings'
     | '/_authed/manageproperty/split-policy'
     | '/_authed/manageproperty/structures'
     | '/_authed/manageproperty/usergroups'
+    | '/_authed/manageproperty/users'
     | '/_authed/manageproperty/'
   fileRoutesById: FileRoutesById
 }
@@ -396,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyIndexRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
+    '/_authed/manageproperty/users': {
+      id: '/_authed/manageproperty/users'
+      path: '/users'
+      fullPath: '/manageproperty/users'
+      preLoaderRoute: typeof AuthedManagepropertyUsersRouteImport
+      parentRoute: typeof AuthedManagepropertyRoute
+    }
     '/_authed/manageproperty/usergroups': {
       id: '/_authed/manageproperty/usergroups'
       path: '/usergroups'
@@ -438,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyOwnershipRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
+    '/_authed/manageproperty/invites': {
+      id: '/_authed/manageproperty/invites'
+      path: '/invites'
+      fullPath: '/manageproperty/invites'
+      preLoaderRoute: typeof AuthedManagepropertyInvitesRouteImport
+      parentRoute: typeof AuthedManagepropertyRoute
+    }
     '/_authed/manageproperty/infrastructure': {
       id: '/_authed/manageproperty/infrastructure'
       path: '/infrastructure'
@@ -474,12 +514,14 @@ interface AuthedManagepropertyRouteChildren {
   AuthedManagepropertyEquipmentRoute: typeof AuthedManagepropertyEquipmentRoute
   AuthedManagepropertyInfoRoute: typeof AuthedManagepropertyInfoRoute
   AuthedManagepropertyInfrastructureRoute: typeof AuthedManagepropertyInfrastructureRoute
+  AuthedManagepropertyInvitesRoute: typeof AuthedManagepropertyInvitesRoute
   AuthedManagepropertyOwnershipRoute: typeof AuthedManagepropertyOwnershipRoute
   AuthedManagepropertyPriorityRoute: typeof AuthedManagepropertyPriorityRoute
   AuthedManagepropertySettingsRoute: typeof AuthedManagepropertySettingsRoute
   AuthedManagepropertySplitPolicyRoute: typeof AuthedManagepropertySplitPolicyRoute
   AuthedManagepropertyStructuresRoute: typeof AuthedManagepropertyStructuresRoute
   AuthedManagepropertyUsergroupsRoute: typeof AuthedManagepropertyUsergroupsRoute
+  AuthedManagepropertyUsersRoute: typeof AuthedManagepropertyUsersRoute
   AuthedManagepropertyIndexRoute: typeof AuthedManagepropertyIndexRoute
 }
 
@@ -489,12 +531,14 @@ const AuthedManagepropertyRouteChildren: AuthedManagepropertyRouteChildren = {
   AuthedManagepropertyInfoRoute: AuthedManagepropertyInfoRoute,
   AuthedManagepropertyInfrastructureRoute:
     AuthedManagepropertyInfrastructureRoute,
+  AuthedManagepropertyInvitesRoute: AuthedManagepropertyInvitesRoute,
   AuthedManagepropertyOwnershipRoute: AuthedManagepropertyOwnershipRoute,
   AuthedManagepropertyPriorityRoute: AuthedManagepropertyPriorityRoute,
   AuthedManagepropertySettingsRoute: AuthedManagepropertySettingsRoute,
   AuthedManagepropertySplitPolicyRoute: AuthedManagepropertySplitPolicyRoute,
   AuthedManagepropertyStructuresRoute: AuthedManagepropertyStructuresRoute,
   AuthedManagepropertyUsergroupsRoute: AuthedManagepropertyUsergroupsRoute,
+  AuthedManagepropertyUsersRoute: AuthedManagepropertyUsersRoute,
   AuthedManagepropertyIndexRoute: AuthedManagepropertyIndexRoute,
 }
 
