@@ -7,7 +7,10 @@ import {
   setBooker,
   usePreviewConflicts,
 } from "@/features/calendar/booking-logic"
-import type { BookingDraft } from "@/features/calendar/booking-logic"
+import type {
+  BookingDraft,
+  BookingDraftRecord,
+} from "@/features/calendar/booking-logic"
 
 export type SubmitState = { error: string | null; confirming: boolean }
 
@@ -15,8 +18,13 @@ export type SubmitAction =
   | { kind: "submit" }
   | { kind: "confirm"; draft: BookingDraft }
   | { kind: "cancel" }
+  | { kind: "cancel-stay" }
 
 const INITIAL_SUBMIT_STATE: SubmitState = { error: null, confirming: false }
+
+export type BookingFormMode =
+  | { kind: "create" }
+  | { kind: "edit"; bookingId: number; initialRecord: BookingDraftRecord }
 
 function isDraftSubmittable(d: BookingDraft): boolean {
   return (
@@ -27,27 +35,58 @@ function isDraftSubmittable(d: BookingDraft): boolean {
   )
 }
 
+function recordToDraft(r: BookingDraftRecord): BookingDraft {
+  return {
+    property_id: r.property_id,
+    booker_id: r.booker_id,
+    start_date: r.start_date,
+    end_date: r.end_date,
+    status: r.status,
+    notes: r.notes ?? "",
+    occupants: r.occupants.map(o => ({
+      user_id: o.user_id,
+      room_id: o.room_id,
+      queued: o.queued,
+    })),
+  }
+}
+
 export function useBookingForm(
   propertyId: number,
   selectedUserId: number | null,
-  onCreated?: () => void,
+  mode: BookingFormMode,
+  onSuccess?: () => void,
 ) {
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const [draft, dispatch] = useReducer(bookingDraftReducer, initialBookingDraft)
+  const [draft, dispatch] = useReducer(
+    bookingDraftReducer,
+    mode.kind === "edit" ? recordToDraft(mode.initialRecord) : initialBookingDraft,
+  )
 
-  if (selectedUserId != null && draft.booker_id !== selectedUserId) {
+  if (
+    mode.kind === "create"
+    && selectedUserId != null
+    && draft.booker_id !== selectedUserId
+  ) {
     dispatch(setBooker(selectedUserId, propertyId))
   }
 
-  const { data: conflicts, isFetching, hasWarnings } = usePreviewConflicts(draft)
+  const excludeBookingId =
+    mode.kind === "edit" ? mode.bookingId : undefined
+
+  const { data: conflicts, isFetching, hasWarnings } = usePreviewConflicts(
+    draft,
+    excludeBookingId,
+  )
 
   const createMutation = useMutation(trpc.booking.create.mutationOptions())
+  const updateMutation = useMutation(trpc.booking.update.mutationOptions())
 
   const runMutation = async (d: BookingDraft): Promise<SubmitState> => {
     if (!isDraftSubmittable(d)) return INITIAL_SUBMIT_STATE
     try {
-      await createMutation.mutateAsync({
+      const payload = {
         property_id: d.property_id!,
         booker_id: d.booker_id!,
         start_date: d.start_date!,
@@ -59,10 +98,15 @@ export function useBookingForm(
           room_id: o.room_id,
           queued: o.queued,
         })),
-      })
-      dispatch({ type: "RESET" })
+      }
+      if (mode.kind === "edit") {
+        await updateMutation.mutateAsync({ id: mode.bookingId, ...payload })
+      } else {
+        await createMutation.mutateAsync(payload)
+        dispatch({ type: "RESET" })
+      }
       void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
-      onCreated?.()
+      onSuccess?.()
       return INITIAL_SUBMIT_STATE
     } catch (err) {
       return {
@@ -75,6 +119,10 @@ export function useBookingForm(
   const [submitState, submit, isPending] = useActionState<SubmitState, SubmitAction>(
     async (_prev, action) => {
       if (action.kind === "cancel") return INITIAL_SUBMIT_STATE
+      if (action.kind === "cancel-stay") {
+        if (mode.kind !== "edit") return INITIAL_SUBMIT_STATE
+        return runMutation({ ...draft, status: "cancelled" })
+      }
       if (action.kind === "submit") {
         if (hasWarnings) return { error: null, confirming: true }
         return runMutation(draft)
@@ -100,5 +148,6 @@ export function useBookingForm(
     submit,
     isPending,
     canSubmit,
+    mode,
   }
 }

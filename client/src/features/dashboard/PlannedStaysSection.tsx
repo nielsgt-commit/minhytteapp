@@ -19,6 +19,8 @@ export default function PlannedStaysSection({ propertyId }: { propertyId: number
       <section>
         <Card.Block>
           <Heading>{t("This year at {{propertyName}}", { propertyName })}</Heading>
+          <Heading data-size="xs"> {t("My planned stays")}</Heading>
+
           <MyPlannedStay />
           <PlannedMaintenanceSummary mode="rest" />
         </Card.Block>

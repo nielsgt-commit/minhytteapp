@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./Calendar.module.css"
-import { PriorityWeeks } from "@/features/priority/PriorityWeeks"
+import { PriorityWeeks } from "@/routes/_authed/manageproperty/-priority/PriorityWeeks"
 import { useTRPC } from "@/trpc/trpc"
 import { AddStayFlow } from "@/features/calendar/addstayflow/AddStayFlow.tsx"
 

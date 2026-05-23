@@ -836,12 +836,64 @@ export const bookingRouter = router({
           status: bookingTable.status,
           start_date: bookingTable.start_date,
           end_date: bookingTable.end_date,
+          property_id: bookingTable.property_id,
+          booker_id: bookingTable.booker_id,
+          notes: bookingTable.notes,
         })
         .from(bookingTable)
         .where(eq(bookingTable.id, input.id))
         .limit(1)
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND" })
+      }
+
+      const callerId = ctx.user.id
+      if (callerId !== existing.booker_id) {
+        const existingOccupants = await ctx.db
+          .select({
+            user_id: bookingOccupantsTable.user_id,
+            room_id: bookingOccupantsTable.room_id,
+            queued: bookingOccupantsTable.queued,
+          })
+          .from(bookingOccupantsTable)
+          .where(eq(bookingOccupantsTable.booking_id, input.id))
+
+        const forbid = (message: string): never => {
+          throw new TRPCError({ code: "FORBIDDEN", message })
+        }
+
+        if (!existingOccupants.some(o => o.user_id === callerId)) {
+          forbid("only the booker can edit this booking")
+        }
+        if (
+          input.property_id !== existing.property_id
+          || input.booker_id !== existing.booker_id
+          || input.start_date !== existing.start_date
+          || input.end_date !== existing.end_date
+          || input.status !== existing.status
+          || (input.notes ?? null) !== existing.notes
+        ) {
+          forbid("non-booker may only remove themselves from this booking")
+        }
+        if (input.occupants.some(o => o.user_id === callerId)) {
+          forbid("non-booker may only remove themselves from this booking")
+        }
+        const expectedOthers = existingOccupants.filter(
+          o => o.user_id !== callerId,
+        )
+        if (input.occupants.length !== expectedOthers.length) {
+          forbid("non-booker may only remove themselves from this booking")
+        }
+        for (const e of expectedOthers) {
+          const m = input.occupants.find(o => o.user_id === e.user_id)
+          if (
+            !m
+            || (m.room_id ?? null) !== (e.room_id ?? null)
+            || (m.queued ?? false) !== e.queued
+          ) {
+            forbid("non-booker may only remove themselves from this booking")
+          }
+        }
       }
 
       await assertBookingsUnlocked(ctx.db, input.property_id, [
