@@ -62,6 +62,7 @@
   "Spot {{slot}} — free": "Plass {{slot}} — ledig",
   "Spot {{slot}} — taken by {{userName}}": "Plass {{slot}} — tatt av {{userName}}",
   "Stroller": "Barnevogn",
+  "Structure #{{id}}": "Bygning #{{id}}",
   "Structures": "Bygninger",
   "THU": "Tor",
   "TUE": "Tir",

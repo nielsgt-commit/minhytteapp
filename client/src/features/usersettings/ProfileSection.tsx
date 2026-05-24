@@ -6,6 +6,7 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
 import { ErrorAlert } from "./ErrorAlert"
@@ -22,6 +23,7 @@ type ProfileSectionProps = {
 }
 
 export function ProfileSection({ me }: ProfileSectionProps) {
+  const { t } = useTranslation("usersettings")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -67,9 +69,9 @@ export function ProfileSection({ me }: ProfileSectionProps) {
     <>
       <form onSubmit={handleNameSubmit}>
         <Fieldset>
-          <Fieldset.Legend>Display name</Fieldset.Legend>
+          <Fieldset.Legend>{t("Display name")}</Fieldset.Legend>
           <Textfield
-            label="Name"
+            label={t("Name")}
             type="text"
             name="name"
             defaultValue={me.name}
@@ -77,7 +79,7 @@ export function ProfileSection({ me }: ProfileSectionProps) {
             key={`name-${String(me.id)}-${me.name}`}
           />
           <Button type="submit" disabled={updateName.isPending}>
-            Save
+            {t("Save")}
           </Button>
           <ErrorAlert error={updateName.error} />
         </Fieldset>
@@ -85,26 +87,26 @@ export function ProfileSection({ me }: ProfileSectionProps) {
 
       <form onSubmit={handleBirthdaySubmit}>
         <Fieldset>
-          <Fieldset.Legend>Birthday</Fieldset.Legend>
+          <Fieldset.Legend>{t("Birthday")}</Fieldset.Legend>
           <Textfield
-            label="Birthday"
+            label={t("Birthday")}
             type="date"
             name="birthday"
             defaultValue={me.birthday ?? ""}
             key={`birthday-${String(me.id)}-${me.birthday ?? ""}`}
           />
           <Button type="submit" disabled={updateBirthday.isPending}>
-            Save
+            {t("Save")}
           </Button>
           <ErrorAlert error={updateBirthday.error} />
         </Fieldset>
       </form>
 
       <Fieldset>
-        <Fieldset.Legend>Household role</Fieldset.Legend>
+        <Fieldset.Legend>{t("Household role")}</Fieldset.Legend>
         <Checkbox
           name="is_head"
-          label="I am a household head (can be assigned a priority week and settlement)"
+          label={t("I am a household head (can be assigned a priority week and settlement)")}
           checked={me.is_head}
           disabled={updateIsHead.isPending}
           onChange={e => {

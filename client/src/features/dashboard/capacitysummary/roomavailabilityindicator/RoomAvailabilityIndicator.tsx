@@ -1,4 +1,5 @@
 import { Tag } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import styles from "./RoomAvailabilityIndicator.module.css"
 
 type RoomBeds = {
@@ -40,13 +41,14 @@ export default function RoomAvailabilityIndicator({
 }: {
   rooms: Room[]
 }) {
+  const { t } = useTranslation("dashboard")
   return (
     <ul className={styles.list}>
       {Array.from(
         rooms.reduce((acc, r) => {
           const prev = acc.get(r.structure_id)
           acc.set(r.structure_id, {
-            name: r.structure_name ?? `Structure #${String(r.structure_id)}`,
+            name: r.structure_name ?? t("Structure #{{id}}", { id: String(r.structure_id) }),
             beds: (prev?.beds ?? 0) + totalBeds(r),
           })
           return acc

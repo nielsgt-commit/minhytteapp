@@ -51,7 +51,7 @@ export function MyExpenseRow({
           <span>{expense.amount}</span>
         </Paragraph>
         <Paragraph asChild data-size="sm">
-          <span>,-</span>
+          <span>{t(",-")}</span>
         </Paragraph>
       </div>
       <Divider className={styles.divider} />

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import styles from "./WeatherSymbol.module.css"
 
 type Props = {
@@ -43,11 +44,13 @@ function symbolToEmoji(code: string): string {
 }
 
 export default function WeatherSymbol({ code, size = 20 }: Props) {
+  const { t } = useTranslation("dashboard")
   if (!code) return null
+  const td = t as (key: string, opts: { defaultValue: string }) => string
   return (
     <span
       role="img"
-      aria-label={code.replace(/_/g, " ")}
+      aria-label={td(`weather_${code}`, { defaultValue: code.replace(/_/g, " ") })}
       className={styles.symbol}
       style={{ ["--symbol-size" as string]: `${String(size)}px` }}
     >

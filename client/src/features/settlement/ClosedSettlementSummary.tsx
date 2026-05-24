@@ -57,7 +57,7 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
   const customPolicyName = data.split_policy_name
   const policyLabel =
     data.split_policy_id != null && customPolicyName != null
-      ? `${customPolicyName} (custom)`
+      ? t("{{name}} (custom)", { name: customPolicyName })
       : BUILT_IN_LABEL[data.split_policy]
   const policyExplanation =
     data.split_policy_id != null

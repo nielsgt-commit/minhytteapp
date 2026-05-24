@@ -9,11 +9,13 @@ import {
   Fieldset,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
 import { ErrorAlert } from "./ErrorAlert"
 
 export function ChildrenSection() {
+  const { t } = useTranslation("usersettings")
   const trpc = useTRPC()
   const qc = useQueryClient()
 
@@ -71,13 +73,13 @@ export function ChildrenSection() {
   }
 
   const handleRemove = (id: number, childName: string) => {
-    if (!window.confirm(`Remove ${childName}?`)) return
+    if (!window.confirm(t("Remove {{name}}?", { name: childName }))) return
     removeChild.mutate({ id })
   }
 
   return (
     <section>
-      <h2>My children (under 13)</h2>
+      <h2>{t("My children (under 13)")}</h2>
       {children && children.length > 0 ? (
         <ul>
           {children.map(c => (
@@ -85,7 +87,7 @@ export function ChildrenSection() {
               {editingId === c.id ? (
                 <form onSubmit={e => { handleEditSubmit(e, c.id) }}>
                   <Textfield
-                    label="Name"
+                    label={t("Name")}
                     type="text"
                     value={editDraft}
                     onChange={e => { setEditDraft(e.target.value) }}
@@ -93,7 +95,7 @@ export function ChildrenSection() {
                     autoFocus
                   />
                   <Button type="submit" disabled={updateChild.isPending}>
-                    Save
+                    {t("Save")}
                   </Button>
                   <Button
                     type="button"
@@ -101,7 +103,7 @@ export function ChildrenSection() {
                     onClick={() => { setEditingId(null) }}
                     disabled={updateChild.isPending}
                   >
-                    Cancel
+                    {t("Cancel")}
                   </Button>
                 </form>
               ) : (
@@ -111,7 +113,7 @@ export function ChildrenSection() {
                     type="button"
                     onClick={() => { startEdit(c.id, c.name) }}
                   >
-                    Edit
+                    {t("Edit")}
                   </Button>
                   <Button
                     type="button"
@@ -119,7 +121,7 @@ export function ChildrenSection() {
                     onClick={() => { handleRemove(c.id, c.name) }}
                     disabled={removeChild.isPending}
                   >
-                    Remove
+                    {t("Remove")}
                   </Button>
                 </>
               )}
@@ -127,16 +129,16 @@ export function ChildrenSection() {
           ))}
         </ul>
       ) : (
-        <p>No children yet.</p>
+        <p>{t("No children yet.")}</p>
       )}
       <ErrorAlert error={updateChild.error ?? removeChild.error} />
 
       <form onSubmit={handleAddChild}>
         <Fieldset>
-          <Fieldset.Legend>Add child (under 13)</Fieldset.Legend>
-          <Textfield label="Name" type="text" name="name" required />
+          <Fieldset.Legend>{t("Add child (under 13)")}</Fieldset.Legend>
+          <Textfield label={t("Name")} type="text" name="name" required />
           <Button type="submit" disabled={createChild.isPending}>
-            Add
+            {t("Add")}
           </Button>
           <ErrorAlert error={createChild.error} />
         </Fieldset>
