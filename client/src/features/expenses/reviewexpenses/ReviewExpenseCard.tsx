@@ -69,7 +69,7 @@ export function ReviewExpenseCard({
               <span className={styles.amount}>{expense.amount}</span>
             </Paragraph>
             <Paragraph asChild data-size="sm">
-              <span className={styles.postfix}>,-</span>
+              <span className={styles.postfix}>{t(",-")}</span>
             </Paragraph>
           </div>
           <Paragraph className={styles.submittedByLabel} data-size="sm">

@@ -1,7 +1,17 @@
 {
+  "Check your email": "Sjekk e-posten din",
+  "Could not send magic link": "Kunne ikke sende innloggingslenken",
+  "Enter your email and we'll send you a sign-in link.": "Skriv inn e-postadressen din, så sender vi deg en innloggingslenke.",
   "Home": "Hjem",
   "Log in": "Logg inn",
   "Log in or create account": "Logg inn eller opprett konto",
+  "Send magic link": "Send innloggingslenke",
+  "Sending…": "Sender…",
+  "Sign in": "Logg inn",
   "Signed in as <0>{{userName}}</0>": "Logget inn som <0>{{userName}}</0>",
-  "Visible when user is not logged in": "Synlig når du ikke er logget inn"
+  "This is a MVP in beta. Only test users have access.": "Dette er en MVP i beta. Kun testbrukere har tilgang.",
+  "Visible when user is not logged in": "Synlig når du ikke er logget inn",
+  "We sent a sign-in link to <1>{{email}}</1>. Click it to continue. (In dev, the link is printed to the API server console.)": "Vi sendte en innloggingslenke til <1>{{email}}</1>. Klikk på den for å fortsette. (I dev skrives lenken ut i API-serverkonsollen.)",
+  "Welcome to the new settlement system": "Velkommen til det nye oppgjørssystemet",
+  "you@example.com": "deg@eksempel.com"
 }

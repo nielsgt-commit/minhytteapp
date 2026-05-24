@@ -125,7 +125,7 @@ function ListButton({ listItem, label }: { listItem: string; label: string }) {
   )
 }
 
-function LinkButton({ label }: { label: string }) {
+function LinkButton({ label, promptLabel }: { label: string; promptLabel: string }) {
   const editor = useEditor()
   return (
     <Button
@@ -133,7 +133,7 @@ function LinkButton({ label }: { label: string }) {
       variant="tertiary"
       data-size="sm"
       onClick={() => {
-        const href = window.prompt("URL")
+        const href = window.prompt(promptLabel)
         if (!href) return
         editor.send({
           type: "annotation.toggle",
@@ -175,28 +175,29 @@ function BlockObjectButton({
 }
 
 function Toolbar() {
+  const { t } = useTranslation("maintenance")
   const toolbarSchema = useToolbarSchema({})
   const photo = toolbarSchema.blockObjects?.find((b) => b.name === "photo")
 
   return (
     <div className={styles.toolbar}>
-      <DecoratorButton decorator="strong" label="B" />
-      <DecoratorButton decorator="em" label="I" />
-      <StyleButton style="h2" label="H2" />
-      <StyleButton style="h3" label="H3" />
-      <StyleButton style="blockquote" label="❝" />
-      <ListButton listItem="bullet" label="• List" />
-      <ListButton listItem="number" label="1. List" />
-      <LinkButton label="Link" />
+      <DecoratorButton decorator="strong" label={t("Bold (B)")} />
+      <DecoratorButton decorator="em" label={t("Italic (I)")} />
+      <StyleButton style="h2" label={t("Heading 2")} />
+      <StyleButton style="h3" label={t("Heading 3")} />
+      <StyleButton style="blockquote" label={t("Blockquote")} />
+      <ListButton listItem="bullet" label={t("Bullet list")} />
+      <ListButton listItem="number" label={t("Numbered list")} />
+      <LinkButton label={t("Link")} promptLabel={t("URL")} />
       <span className={styles.sep} />
       {photo && (
         <BlockObjectButton
           schemaType={photo}
-          label="+ Photo"
+          label={t("+ Photo")}
           buildValue={() => {
-            const url = window.prompt("Image URL")
+            const url = window.prompt(t("Image URL"))
             if (!url) return null
-            const caption = window.prompt("Caption (optional)") ?? undefined
+            const caption = window.prompt(t("Caption (optional)")) ?? undefined
             return { url, caption }
           }}
         />

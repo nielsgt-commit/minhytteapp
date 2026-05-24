@@ -1,5 +1,6 @@
 import { useActionState, useReducer } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import {
   bookingDraftReducer,
@@ -57,6 +58,7 @@ export function useBookingForm(
   mode: BookingFormMode,
   onSuccess?: () => void,
 ) {
+  const { t } = useTranslation("calendar")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [draft, dispatch] = useReducer(
@@ -110,7 +112,7 @@ export function useBookingForm(
       return INITIAL_SUBMIT_STATE
     } catch (err) {
       return {
-        error: err instanceof Error ? err.message : "Submit failed",
+        error: err instanceof Error ? err.message : t("Submit failed"),
         confirming: false,
       }
     }

@@ -35,24 +35,26 @@
 14. **Trust proxy / forwarded headers.** Behind Render's load balancer, you'll want correct client IPs in `sessionsTable.ip_address` — verify better-auth and Hono read `x-forwarded-for` correctly.
 15. **Cookie scope.** If you split to `api.minhytte.app`, session cookies must be set with `domain=.minhytte.app` and `SameSite=Lax`/`None` + `Secure`. Same-origin (everything on `minhytte.app`) avoids this entirely — worth deciding now.
 
-## Deployment topology on Render
+## Deployment topology on Render — DECIDED: single Web Service per env
 
-Open question — drives a lot of the auth/CORS/cookie work:
+Hono serves both `/api/*` and the built client static files. One Web Service per env on Starter ($7/mo × 2 = $14/mo for staging + prod, plus Postgres). No CORS, no cross-subdomain cookies, one `BETTER_AUTH_URL` per env, no `VITE_API_URL` indirection — relative `/api/trpc` keeps working.
 
-- **Single Web Service per env**: Hono serves both `/api/*` and the built client static files. Simplest, no CORS, no cross-domain cookies. On Starter ($7/mo Web Service) this is one service per env = $14/mo for staging + prod, plus Postgres.
-- **Static Site + Web Service per env**: Free Static Sites on Render (CDN, free SSL) for `client/dist`, plus a Web Service for the API on `api.<env>.minhytte.app`. Cleaner separation, but requires CORS and cross-subdomain cookies done right.
+### Implications
 
-The current Vite dev proxy and `CORS_ORIGIN` setup suggests two-service thinking; the single-domain `BETTER_AUTH_URL`/`CORS_ORIGIN` values suggest single-service. Worth resolving explicitly.
+- Add `hono/serve-static` to serve `client/dist`.
+- Add an SPA fallback so non-`/api` non-asset paths return `index.html` (TanStack Router needs deep links to work).
+- Keep `BETTER_AUTH_URL` and `CORS_ORIGIN` aligned to a single origin per env (already true in current `.env.*`).
+- Custom domains: `minhytte.app` (prod), `stage.minhytte.app` (staging). Two DNS records total.
 
 ### Render Blueprint (`render.yaml`)
 
-Use Render's Blueprint format to declare everything as code rather than clicking the dashboard:
+Declare everything as code rather than clicking the dashboard:
 
 - One project, two environments (`staging`, `production`).
 - Per env: a Web Service + a Postgres database + an env var group.
 - Auto-wire `DATABASE_URL` via `fromDatabase`, generate `BETTER_AUTH_SECRET` per env via `generateValue: true`, and use `fromGroup` for shared keys like `MET_USER_AGENT`.
 
-Benefits: PR previews stay consistent with staging, cloning the project to a new region is trivial, and the file lives in git so we can review env topology changes.
+Benefits: staging and prod stay symmetric by construction, env topology changes go through code review, and cloning to a new region is trivial.
 
 ## Frontend production behavior
 
@@ -78,16 +80,17 @@ Benefits: PR previews stay consistent with staging, cloning the project to a new
 
 ## Suggested order
 
-1. Decide single Web Service vs Static Site + Web Service topology — drives everything else.
-2. Add `build` + `start` scripts that Render can call; delete the stub Dockerfile (Render's Node buildpack is enough).
-3. Write `render.yaml` Blueprint declaring staging + production environments, Postgres DB, env var groups; set `pnpm db:migrate` as the Pre-Deploy Command.
-4. Make `dotenv` loading no-op on Render (don't mask missing vars).
-5. Tighten `devRouter` gating (`=== "development"`, not `!== "production"`) + rotate the committed dev secret.
-6. Magic-link transport (Resend/Postmark/SES) + rate-limit `/api/auth/*`.
-7. CI workflow (lint, type-check, test, build on PRs).
-8. `hono/secure-headers`, structured logging (`pino` + `hono/logger`), `/ready` endpoint hitting `SELECT 1`, graceful shutdown draining the `pg` pool.
-9. Observability (Sentry or equivalent).
-10. PWA cache scoping per env.
+1. **Hono serves the SPA**: add `hono/serve-static` for `client/dist` + SPA fallback for non-`/api` routes. Verify deep links and asset paths.
+2. **Build + start scripts**: `build` produces both server and client artifacts; `start` runs the server. Delete the stub Dockerfile (Render's Node buildpack handles it).
+3. **`render.yaml` Blueprint**: declare project → staging + production environments → Web Service + Postgres + env var groups. `pnpm db:migrate` as the Pre-Deploy Command. `BETTER_AUTH_SECRET` via `generateValue: true`, `DATABASE_URL` via `fromDatabase`.
+4. **Env loading**: make `dotenv` a no-op when running on Render (so missing vars fail loudly instead of silently).
+5. **Tighten `devRouter` gating** (`=== "development"`, not `!== "production"`) + rotate the committed dev `BETTER_AUTH_SECRET`.
+6. **Magic-link transport** (Resend/Postmark/SES) + rate-limit `/api/auth/*` (better-auth has built-in options).
+7. **CI workflow** (`.github/workflows/ci.yml`): lint, type-check, test, build on PRs. Postgres service container + `db:migrate` to exercise `connectivity.test.ts`.
+8. **Hardening**: `hono/secure-headers`, structured logging (`pino` + `hono/logger`), `/ready` endpoint hitting `SELECT 1`, graceful shutdown draining the `pg` pool on SIGTERM.
+9. **Observability** (Sentry or equivalent, server + client).
+10. **PWA cache scoping per env** (so staging/prod don't share a cache namespace in the same browser).
+11. **Delete dead code**: `server/src/backend.ts` + `server/src/db.ts` if confirmed unused.
 
 ## Open questions to confirm in Render UI
 

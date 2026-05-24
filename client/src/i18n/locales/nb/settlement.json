@@ -165,6 +165,8 @@
   "who were": "som var",
   "{{count}} booking days": "{{count}} bookingdager",
   "{{days}} days × {{occupantsCount}} {{occupantLabel}} = ": "{{days}} dager × {{occupantsCount}} {{occupantLabel}} = ",
+  "{{name}} (by {{creator}})": "{{name}} (av {{creator}})",
+  "{{name}} (custom)": "{{name}} (egendefinert)",
   "{{name}}'s priority week": "{{name}}s prioritetsuke",
   "— pick a participant —": "— velg en deltaker —",
   "— pick someone to exclude —": "— velg noen å ekskludere —",

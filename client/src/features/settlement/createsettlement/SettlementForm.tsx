@@ -77,7 +77,10 @@ export function SettlementForm({
             <Select.Option value="">{t("Occupancy days (built-in)")}</Select.Option>
             {customPolicies.map(p => (
               <Select.Option key={p.id} value={String(p.id)}>
-                {p.name} (by {p.created_by_name ?? `#${String(p.created_by_id)}`})
+                {t("{{name}} (by {{creator}})", {
+                  name: p.name,
+                  creator: p.created_by_name ?? `#${String(p.created_by_id)}`,
+                })}
               </Select.Option>
             ))}
           </Select>

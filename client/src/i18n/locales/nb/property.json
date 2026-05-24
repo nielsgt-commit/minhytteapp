@@ -204,5 +204,22 @@
   "Wipe database…": "Tøm database…",
   "Wipe everything": "Slett alt",
   "Wiping…": "Sletter…",
-  "yes": "ja"
+  "yes": "ja",
+  "Contacts": "Kontakter",
+  "Equipment": "Utstyr",
+  "Group users together to share access, costs, or bookings.": "Grupper brukere sammen for å dele tilgang, kostnader eller bookinger.",
+  "Habitable": "Beboelig",
+  "Infrastructure": "Infrastruktur",
+  "Name, address, link, and basic facts about the property.": "Navn, adresse, lenke og grunnleggende fakta om eiendommen.",
+  "Non-habitable": "Ikke beboelig",
+  "Ownership": "Eierskap",
+  "People to call for the property — caretakers, neighbours, service providers.": "Personer å kontakte for eiendommen — vaktmestere, naboer, tjenesteleverandører.",
+  "Per-property preferences and danger zone actions.": "Preferanser per eiendom og handlinger i faresonen.",
+  "Rules for how shared costs are split across owners and users.": "Regler for hvordan delte kostnader fordeles mellom eiere og brukere.",
+  "Settings": "Innstillinger",
+  "Split policy": "Fordelingsregler",
+  "Tools, appliances, and gear kept at the property.": "Verktøy, apparater og utstyr som oppbevares på eiendommen.",
+  "User groups": "Brukergrupper",
+  "Water, power, heating, network, and other systems serving the property.": "Vann, strøm, varme, nettverk og andre systemer som betjener eiendommen.",
+  "Who owns what share of the property.": "Hvem eier hvilken andel av eiendommen."
 }
