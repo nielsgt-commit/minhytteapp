@@ -90,38 +90,6 @@ export const roomTable = pgTable("rooms", {
   travel_cot: integer("travel_cot").notNull().default(0),
 })
 
-export const structureAdjacenciesTable = pgTable(
-  "structure_adjacencies",
-  {
-    structure_a: integer("structure_a")
-      .notNull()
-      .references(() => structuresTable.id),
-    structure_b: integer("structure_b")
-      .notNull()
-      .references(() => structuresTable.id),
-  },
-  (t) => [
-    primaryKey({ columns: [t.structure_a, t.structure_b] }),
-    check("structure_adj_order", sql`${t.structure_a} < ${t.structure_b}`),
-  ],
-)
-
-export const roomAdjacenciesTable = pgTable(
-  "room_adjacencies",
-  {
-    room_a: integer("room_a")
-      .notNull()
-      .references(() => roomTable.id),
-    room_b: integer("room_b")
-      .notNull()
-      .references(() => roomTable.id),
-  },
-  (t) => [
-    primaryKey({ columns: [t.room_a, t.room_b] }),
-    check("room_adj_order", sql`${t.room_a} < ${t.room_b}`),
-  ],
-)
-
 export const propertyOwnersTable = pgTable(
   "property_owners",
   {

@@ -8,9 +8,7 @@ import {
 import { eventTable } from "./schema/event.schema.ts"
 import {
   inspectionsTable,
-  maintenanceAttachmentsTable,
   maintenanceTable,
-  maintenanceUpdatesTable,
 } from "./schema/maintenance.schema.ts"
 import {
   parkingClaimsTable,
@@ -125,22 +123,6 @@ async function countReferences(user_id: number): Promise<RefCheck[]> {
         .select({ c: COUNT })
         .from(maintenanceTable)
         .where(eq(maintenanceTable.assigned_to_id, user_id)),
-    },
-    {
-      table: "maintenance_updates",
-      column: "author_id",
-      q: db
-        .select({ c: COUNT })
-        .from(maintenanceUpdatesTable)
-        .where(eq(maintenanceUpdatesTable.author_id, user_id)),
-    },
-    {
-      table: "maintenance_attachments",
-      column: "uploaded_by",
-      q: db
-        .select({ c: COUNT })
-        .from(maintenanceAttachmentsTable)
-        .where(eq(maintenanceAttachmentsTable.uploaded_by, user_id)),
     },
     {
       table: "inspections",

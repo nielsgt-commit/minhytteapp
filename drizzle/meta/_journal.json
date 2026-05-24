@@ -379,6 +379,20 @@
       "when": 1779444340773,
       "tag": "0053_married_ares",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1779609853489,
+      "tag": "0054_sudden_pride",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1779613945550,
+      "tag": "0055_graceful_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

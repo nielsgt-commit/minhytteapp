@@ -26,10 +26,9 @@ export const devRouter = router({
         TRUNCATE TABLE
           "booking_occupants", "booking_rooms", "bookings",
           "events",
-          "maintenance_attachments", "maintenance_updates", "maintenance", "routines",
+          "maintenance_attachments", "maintenance_updates", "maintenance",
           "shares", "expenses",
           "settlement_transfers", "settlement_user_group_totals", "settlements",
-          "structure_adjacencies", "room_adjacencies",
           "property_invitations", "property_owners",
           "rooms", "structures", "infrastructure",
           "user_group_members", "user_groups",

@@ -2,6 +2,7 @@ import "./env.ts"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { serve } from "@hono/node-server"
+import { serveStatic } from "@hono/node-server/serve-static"
 import { trpcServer } from "@hono/trpc-server"
 import { appRouter } from "./trpc/routers/_app.ts"
 import { createContext } from "./trpc/context.ts"
@@ -41,6 +42,14 @@ app.use(
       : undefined,
   }),
 )
+
+// Deployed environments also serve the built SPA from this process.
+// Locally Vite serves the client on :5173 and proxies /api here.
+const env = process.env.NODE_ENV
+if (env === "production" || env === "staging") {
+  app.use("/*", serveStatic({ root: "./client/dist" }))
+  app.get("*", serveStatic({ path: "./client/dist/index.html" }))
+}
 
 app.onError((err, c) => {
   console.error(err)

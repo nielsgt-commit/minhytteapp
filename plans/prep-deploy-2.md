@@ -81,11 +81,11 @@ Benefits: staging and prod stay symmetric by construction, env topology changes 
 ## Suggested order
 
 1. **Hono serves the SPA**: add `hono/serve-static` for `client/dist` + SPA fallback for non-`/api` routes. Verify deep links and asset paths.
-2. **Build + start scripts**: `build` produces both server and client artifacts; `start` runs the server. Delete the stub Dockerfile (Render's Node buildpack handles it).
+2. **Build + start scripts**: `build` produces the client bundle (`vite build client`); `start` runs `tsx server/src/index.ts` directly — no separate server compile step. Delete the stub Dockerfile (Render's Node buildpack handles it). Add `tsx` to `dependencies` (it currently only lives in `devDependencies`) so Render's production install includes it.
 3. **`render.yaml` Blueprint**: declare project → staging + production environments → Web Service + Postgres + env var groups. `pnpm db:migrate` as the Pre-Deploy Command. `BETTER_AUTH_SECRET` via `generateValue: true`, `DATABASE_URL` via `fromDatabase`.
 4. **Env loading**: make `dotenv` a no-op when running on Render (so missing vars fail loudly instead of silently).
 5. **Tighten `devRouter` gating** (`=== "development"`, not `!== "production"`) + rotate the committed dev `BETTER_AUTH_SECRET`.
-6. **Magic-link transport** (Resend/Postmark/SES) + rate-limit `/api/auth/*` (better-auth has built-in options).
+6. **Magic-link transport via Resend** + rate-limit `/api/auth/*` (better-auth has built-in options). Add `resend` to dependencies, `RESEND_API_KEY` + `MAGIC_LINK_FROM` to env contract (`.env.example`, staging, production), and replace the `console.log` / `throw` branches in `server/src/auth/auth.ts` (`sendMagicLink`) with a single Resend call. Use a verified sending domain (`auth@minhytte.app`) — needs DNS records (SPF + DKIM) in the Render-managed DNS or wherever the apex is hosted. Staging can send from the same domain (different `from` address or just same one) so the flow is genuinely exercised.
 7. **CI workflow** (`.github/workflows/ci.yml`): lint, type-check, test, build on PRs. Postgres service container + `db:migrate` to exercise `connectivity.test.ts`.
 8. **Hardening**: `hono/secure-headers`, structured logging (`pino` + `hono/logger`), `/ready` endpoint hitting `SELECT 1`, graceful shutdown draining the `pg` pool on SIGTERM.
 9. **Observability** (Sentry or equivalent, server + client).

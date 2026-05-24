@@ -17,9 +17,6 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 - `relationship_type` enum: `parent` | `child` | `guest`. Guest = associated, not a full member.
 - A user may belong to multiple families (no global uniqueness on `user_id`), but not twice in the same family (enforced by unique `(family_id, user_id)`).
 
-## Adjacencies (`structure_adjacencies`, `room_adjacencies`)
-- Always insert pairs in sorted order: smaller id first. A CHECK rejects otherwise. This keeps `(1, 2)` and `(2, 1)` from both existing.
-
 ## Bookings (`bookings`, `booking_rooms`, `booking_occupants`)
 - Booker should also appear in `booking_occupants` (store both at create time).
 - Every room in `booking_rooms` must belong to a structure whose `property_id` matches the booking's `property_id`.
@@ -58,20 +55,17 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 ## Infrastructure (`infrastructure`)
 - `property_id` is nullable — infrastructure can exist unattached and be linked to a property later.
 
-## Maintenance (`maintenance`, `routines`, `maintenance_updates`, `maintenance_attachments`)
+## Maintenance (`maintenance`)
 - Enforced by CHECK: exactly one of `structure_id` / `infrastructure_id` is set (XOR).
 - Enforced by CHECK: `status = 'done'` ⇔ `completed_at IS NOT NULL`. App code must set `completed_at` when transitioning to done (and clear it if status moves back).
-- Enforced by CHECK: `routine_id` and `routine_position` are both set or both null.
 - Enforced by CHECK: `recurrence = 'recurring'` ⇔ `recurrence_interval_days IS NOT NULL`.
-- `routine_position` uniqueness within a routine is not enforced — app code should assign unique positions (or add a `unique(routine_id, routine_position)` later if you want strict ordering).
 - Recurring tasks: after completing, app code should advance `due_at` by `recurrence_interval_days` and reset `status` to `todo` + clear `completed_at`. (Alternative: create a new task row per occurrence and keep the completed one as history — pick one and document.)
 - `due_at` is optional for ephemeral tasks (untimed todo) but should always be set for recurring tasks.
 - Cost of a maintenance task is derived, not stored: `SUM(expenses.amount WHERE expenses.maintenance_id = task.id)`. No denormalized `cost` column — the expenses ledger is the single source of truth.
 - `severity` (major/minor/patch), `status` (todo/doing/done), and `category` are independent; any combination is legal.
-- `maintenance_updates` and `maintenance_attachments` cascade on delete of the parent `maintenance` row.
 
 ## Deleting property / structure / room
 - No `ON DELETE CASCADE` on `structures.property_id` or `rooms.structure_id`. Deleting a parent while children exist fails with a Postgres FK violation — this is intentional: it prevents a misclick from wiping bookings, maintenance, and expenses transitively.
-- `propertyTable` is also referenced by `infrastructure`, `bookings`, and (via `structures` → `maintenance`) maintenance. `structuresTable` is referenced by `maintenance` and `structure_adjacencies`. `roomTable` is referenced by `booking_rooms` and `room_adjacencies`. A successful delete needs *all* of those cleared.
+- `propertyTable` is also referenced by `infrastructure`, `bookings`, and (via `structures` → `maintenance`) maintenance. `structuresTable` is referenced by `maintenance`. `roomTable` is referenced by `booking_rooms`. A successful delete needs *all* of those cleared.
 - If the UI ever needs a "delete this property and everything under it" action, implement it as a **transactional cascade in the tRPC router** (`ctx.db.transaction(...)`) deleting children before the parent — do **not** add DB-level `onDelete: "cascade"` on these FKs. Router-level cascade keeps the blast radius explicit (we pick which children to wipe); DB-level cascade would silently also take bookings/maintenance/expenses with it.
 - Minimum chain for a property cascade: rooms → structures → property. Bookings/owners/infrastructure still block — that's the desired safety net; surface the FK error to the user rather than expanding the cascade.
