@@ -7,11 +7,12 @@ import {
 import {
   Button,
   Card,
-  Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useCanEdit } from "@/hooks/useCanEdit"
+import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import styles from "./InfrastructurePanel.module.css"
 
 type Props = {
@@ -43,6 +44,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
+  const canEdit = useCanEdit()
 
   const { data: infrastructure } = useSuspenseQuery(
     trpc.infrastructure.listForProperty.queryOptions({ property_id: propertyId }),
@@ -66,7 +68,6 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     trpc.infrastructure.delete.mutationOptions({ onSuccess: invalidate }),
   )
 
-  const [editMode, setEditMode] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
 
@@ -74,10 +75,6 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     createInfrastructure.error ?? updateInfrastructure.error ?? deleteInfrastructure.error
   const pending =
     createInfrastructure.isPending || updateInfrastructure.isPending || deleteInfrastructure.isPending
-
-  const editingInfrastructure = editingId
-    ? infrastructure.find(p => p.id === editingId) ?? null
-    : null
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -120,116 +117,99 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     )
   }
 
+  const renderEditForm = (p: Infrastructure) => (
+    <form
+      onSubmit={handleSave(p)}
+      key={`edit-${String(p.id)}`}
+      className={styles.editForm}
+    >
+      <Textfield
+        label={t("Name")}
+        name="name"
+        required
+        autoFocus
+        defaultValue={p.name}
+        disabled={updateInfrastructure.isPending}
+      />
+      <Textfield
+        label={t("Description")}
+        name="description"
+        required
+        defaultValue={p.description}
+        disabled={updateInfrastructure.isPending}
+      />
+      <Textfield
+        label={t("Since")}
+        name="since_year"
+        type="number"
+        min={1500}
+        max={2100}
+        defaultValue={p.since_year ?? ""}
+        disabled={updateInfrastructure.isPending}
+      />
+      <div className={styles.actions}>
+        <Button type="submit" disabled={pending}>
+          {t("Save")}
+        </Button>
+        <Button
+          type="button"
+          variant="tertiary"
+          disabled={pending}
+          onClick={() => { setEditingId(null) }}
+        >
+          {t("Cancel")}
+        </Button>
+      </div>
+    </form>
+  )
+
   return (
     <section>
       <h3>{t("Infrastructure at {{name}}", { name: propertyName })}</h3>
 
-      <Switch
-        label={t("Edit mode")}
-        checked={editMode}
-        onChange={e => {
-          const next = e.target.checked
-          setEditMode(next)
-          if (!next) {
-            setEditingId(null)
-            setIsAdding(false)
-          }
-        }}
-      />
-
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {editingInfrastructure ? (
-        <form
-          onSubmit={handleSave(editingInfrastructure)}
-          key={`edit-${String(editingInfrastructure.id)}`}
-          className={styles.editForm}
-        >
-          <Textfield
-            label={t("Name")}
-            name="name"
-            required
-            autoFocus
-            defaultValue={editingInfrastructure.name}
-            disabled={updateInfrastructure.isPending}
-          />
-          <Textfield
-            label={t("Description")}
-            name="description"
-            required
-            defaultValue={editingInfrastructure.description}
-            disabled={updateInfrastructure.isPending}
-          />
-          <Textfield
-            label={t("Since")}
-            name="since_year"
-            type="number"
-            min={1500}
-            max={2100}
-            defaultValue={editingInfrastructure.since_year ?? ""}
-            disabled={updateInfrastructure.isPending}
-          />
-          <div className={styles.actions}>
-            <Button type="submit" disabled={pending}>
-              {t("Save")}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              data-color="danger"
-              disabled={pending}
-              onClick={() => { handleDelete(editingInfrastructure) }}
-            >
-              {t("Delete")}
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              disabled={pending}
-              onClick={() => { setEditingId(null) }}
-            >
-              {t("Cancel")}
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <ul className={styles.list}>
-          {infrastructure.map(p => (
-            <Card asChild key={p.id}>
-              <li>
-                <Card.Block className={styles.row}>
-                  <span className={styles.rowName}>{p.name}</span>
-                  {p.since_year != null && (
-                    <small title={t("Since")}>
-                      {t("Since {{year}}", { year: p.since_year })}
-                    </small>
-                  )}
-                  {editMode && (
+      <ul className={styles.list}>
+        {infrastructure.map(p => (
+          <Card asChild key={p.id}>
+            <li>
+              <Card.Block className={styles.row}>
+                <InlineEditRow
+                  editing={editingId === p.id}
+                  canEdit={canEdit}
+                  pending={pending}
+                  editLabel={t("Edit infrastructure {{name}}", { name: p.name })}
+                  onStartEdit={() => { setEditingId(p.id) }}
+                  view={
                     <>
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        disabled={pending}
-                        onClick={() => { setEditingId(p.id) }}
-                      >
-                        {t("Edit")}
-                      </Button>
-                      <Button
-                        variant="tertiary"
-                        data-color="danger"
-                        data-size="sm"
-                        disabled={pending}
-                        onClick={() => { handleDelete(p) }}
-                      >
-                        {t("Delete")}
-                      </Button>
+                      <span className={styles.rowName}>{p.name}</span>
+                      {p.since_year != null && (
+                        <small title={t("Since")}>
+                          {t("Since {{year}}", { year: p.since_year })}
+                        </small>
+                      )}
                     </>
-                  )}
-                </Card.Block>
-              </li>
-            </Card>
-          ))}
+                  }
+                  form={renderEditForm(p)}
+                  actions={
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      aria-label={t("Delete infrastructure \"{{name}}\"?", { name: p.name })}
+                      onClick={() => { handleDelete(p) }}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  }
+                />
+              </Card.Block>
+            </li>
+          </Card>
+        ))}
 
+        {canEdit && (
           <Card asChild key="__add">
             <li>
               <Card.Block className={styles.addBlock}>
@@ -289,8 +269,8 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
               </Card.Block>
             </li>
           </Card>
-        </ul>
-      )}
+        )}
+      </ul>
     </section>
   )
 }

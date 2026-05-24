@@ -1,0 +1,37 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: 0;
+  padding: 0.125rem 0.25rem;
+  margin: -0.125rem -0.25rem;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: text;
+  border-radius: 0.25rem;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  background: var(--ds-color-surface-hover, rgba(0, 0, 0, 0.05));
+  outline: none;
+}
+
+.trigger:disabled {
+  cursor: default;
+}
+
+.placeholder {
+  color: var(--ds-color-text-subtle, #6b6b6b);
+  font-style: italic;
+}
+
+.readOnly {
+  display: inline-block;
+}
+
+.editor {
+  display: block;
+}

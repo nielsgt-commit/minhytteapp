@@ -1,6 +1,7 @@
 import type { Ref } from "react"
 import {
   Chip,
+  Divider,
   EXPERIMENTAL_Suggestion as Suggestion,
 } from "@digdir/designsystemet-react"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
@@ -11,7 +12,7 @@ type Category = { id: number; name: string }
 
 type Props = {
   categories: Category[]
-  editMode: boolean
+  canManage: boolean
   selectedCats: SuggestionItem[]
   onCategoriesChange: (next: SuggestionItem[]) => void
   suggestionInputRef: Ref<HTMLInputElement>
@@ -22,7 +23,7 @@ type Props = {
 
 export function CategoryPicker({
   categories,
-  editMode,
+  canManage,
   selectedCats,
   onCategoriesChange,
   suggestionInputRef,
@@ -31,40 +32,43 @@ export function CategoryPicker({
   onOpenCategory,
 }: Props) {
   const { t } = useTranslation("expenses")
-  if (editMode) {
-    return (
-      <Suggestion
-        multiple
-        creatable
-        selected={selectedCats}
-        onSelectedChange={onCategoriesChange}
-      >
-        <Suggestion.Input
-          ref={suggestionInputRef}
-          placeholder={t("Add or remove categories")}
-        />
-        <Suggestion.List>
-          {categories.map(c => (
-            <Suggestion.Option key={c.id} value={String(c.id)}>
-              {c.name}
-            </Suggestion.Option>
-          ))}
-        </Suggestion.List>
-      </Suggestion>
-    )
-  }
   return (
-    <div className={styles.chipGroup}>
-      {categories.map(c => (
-        <Chip.Button
-          key={c.id}
-          type="button"
-          disabled={pending || openCategory === c.name}
-          onClick={() => { onOpenCategory(c.name) }}
-        >
-          {c.name}
-        </Chip.Button>
-      ))}
-    </div>
+    <>
+      <div className={styles.chipGroup}>
+        {categories.map(c => (
+          <Chip.Button
+            key={c.id}
+            type="button"
+            disabled={pending || openCategory === c.name}
+            onClick={() => { onOpenCategory(c.name) }}
+          >
+            {c.name}
+          </Chip.Button>
+        ))}
+      </div>
+      {canManage && (
+        <>
+          <Divider />
+          <Suggestion
+            multiple
+            creatable
+            selected={selectedCats}
+            onSelectedChange={onCategoriesChange}
+          >
+            <Suggestion.Input
+              ref={suggestionInputRef}
+              placeholder={t("Add or remove categories")}
+            />
+            <Suggestion.List>
+              {categories.map(c => (
+                <Suggestion.Option key={c.id} value={String(c.id)}>
+                  {c.name}
+                </Suggestion.Option>
+              ))}
+            </Suggestion.List>
+          </Suggestion>
+        </>
+      )}
+    </>
   )
 }

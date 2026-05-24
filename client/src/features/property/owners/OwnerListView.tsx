@@ -1,5 +1,6 @@
 import { Button, Card, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { InlineEditField } from "@/components/shared/InlineEditField"
 import { ownerLabel } from "./ownershipCalculations.ts"
 import styles from "./OwnerListView.module.css"
 
@@ -14,18 +15,18 @@ type Owner = {
 
 type Props = {
   owners: Owner[]
-  editMode: boolean
+  canEdit: boolean
   pending: boolean
-  onEdit: (id: number) => void
+  onPctSave: (o: Owner, pct: number) => void
   onRemove: (o: Owner) => void
   onStartAdd: () => void
 }
 
 export function OwnerListView({
   owners,
-  editMode,
+  canEdit,
   pending,
-  onEdit,
+  onPctSave,
   onRemove,
   onStartAdd,
 }: Props) {
@@ -38,37 +39,39 @@ export function OwnerListView({
         <ul className={styles.list}>
           {owners.map(o => {
             const isUser = o.user_id != null
+            const label = ownerLabel(o)
             return (
               <Card asChild key={o.id}>
                 <li>
                   <Card.Block className={styles.row}>
-                    <span className={styles.rowName}>
-                      {ownerLabel(o)}
-                    </span>
+                    <span className={styles.rowName}>{label}</span>
                     <Tag data-color={isUser ? "info" : "neutral"}>
                       {isUser ? t("User") : t("Group")}
                     </Tag>
-                    <span>{o.ownership_pct}%</span>
-                    {editMode && (
-                      <>
-                        <Button
-                          variant="tertiary"
-                          data-size="sm"
-                          disabled={pending}
-                          onClick={() => { onEdit(o.id) }}
-                        >
-                          {t("Edit")}
-                        </Button>
-                        <Button
-                          variant="tertiary"
-                          data-color="danger"
-                          data-size="sm"
-                          disabled={pending}
-                          onClick={() => { onRemove(o) }}
-                        >
-                          {t("Delete")}
-                        </Button>
-                      </>
+                    <span className={styles.pct}>
+                      <InlineEditField
+                        value={String(o.ownership_pct)}
+                        canEdit={canEdit}
+                        pending={pending}
+                        ariaLabel={t("Edit ownership % for {{label}}", { label })}
+                        onSave={next => {
+                          const pct = Number(next)
+                          if (Number.isFinite(pct)) onPctSave(o, pct)
+                        }}
+                      />
+                      %
+                    </span>
+                    {canEdit && (
+                      <Button
+                        variant="tertiary"
+                        data-color="danger"
+                        data-size="sm"
+                        disabled={pending}
+                        aria-label={t("Remove {{label}} as owner?", { label })}
+                        onClick={() => { onRemove(o) }}
+                      >
+                        {t("Delete")}
+                      </Button>
                     )}
                   </Card.Block>
                 </li>
@@ -78,7 +81,7 @@ export function OwnerListView({
         </ul>
       )}
 
-      {editMode && (
+      {canEdit && (
         <Button
           variant="secondary"
           disabled={pending}

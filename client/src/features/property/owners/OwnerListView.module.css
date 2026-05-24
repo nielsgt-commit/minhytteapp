@@ -16,3 +16,10 @@
   flex: 1;
   min-width: 0;
 }
+
+.pct {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  white-space: nowrap;
+}
