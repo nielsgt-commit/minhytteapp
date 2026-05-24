@@ -42,6 +42,10 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     title: "Split policy",
     description: "Rules for how shared costs are split across owners and users.",
   }],
+  ["/manageproperty/priority", {
+    title: "Priority weeks",
+    description: "Each household head claims one peak summer week.",
+  }],
   ["/manageproperty/settings", {
     title: "Settings",
     description: "Per-property preferences and danger zone actions.",
@@ -77,6 +81,7 @@ const DESKTOP_GROUPS = [
   ]},
   { label: "Admin", items: [
     { to: "/manageproperty/split-policy", label: "Split policy" },
+    { to: "/manageproperty/priority", label: "Priority weeks" },
     { to: "/manageproperty/settings", label: "Settings" },
   ]},
 ] as const
@@ -97,6 +102,7 @@ const MOBILE_GROUPS = [
   ]},
   { label: "Admin", items: [
     { to: "/manageproperty/split-policy", label: "Split policy" },
+    { to: "/manageproperty/priority", label: "Priority weeks" },
     { to: "/manageproperty/settings", label: "Settings" },
   ]},
 ] as const

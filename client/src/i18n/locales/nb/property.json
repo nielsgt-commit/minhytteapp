@@ -137,6 +137,8 @@
   "Permanently delete {{name}}": "Slett {{name}} permanent",
   "Permanently delete <1>{{name}}</1> and all data associated with it.": "Slett <1>{{name}}</1> permanent, sammen med alle tilknyttede data.",
   "Phone": "Telefon",
+  "Priority weeks": "Prioritetsuker",
+  "Each household head claims one peak summer week.": "Hvert husstandsoverhode tar én toppuke om sommeren.",
   "Property": "Eiendom",
   "Property contacts": "Eiendomskontakter",
   "Property description": "Eiendomsbeskrivelse",

@@ -5,7 +5,7 @@ import {
   type PeakWeek,
   formatRange,
   peakWeekRange,
-} from "@/features/priority/priorityUtils"
+} from "./priorityUtils"
 
 type PriorityWeekRowProps = {
   week: PeakWeek

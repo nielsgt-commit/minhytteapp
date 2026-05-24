@@ -91,6 +91,8 @@
   "Permanently delete {{name}}": "Permanently delete {{name}}",
   "Permanently delete <1>{{name}}</1> and all data associated with it.": "Permanently delete <1>{{name}}</1> and all data associated with it.",
   "Phone": "Phone",
+  "Priority weeks": "Priority weeks",
+  "Each household head claims one peak summer week.": "Each household head claims one peak summer week.",
   "Property contacts": "Property contacts",
   "Property description": "Property description",
   "Property Info": "Property Info",

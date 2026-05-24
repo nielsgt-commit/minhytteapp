@@ -1,6 +1,6 @@
 import { Paragraph, Table } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import type { PeakWeek } from "@/features/priority/priorityUtils"
+import type { PeakWeek } from "./priorityUtils"
 
 type ConflictRowProps = {
   week: PeakWeek

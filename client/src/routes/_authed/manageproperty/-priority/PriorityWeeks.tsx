@@ -14,10 +14,10 @@ import {
   type PeakWeek,
   buildOwnerLookups,
   defaultYear,
-} from "@/features/priority/priorityUtils"
-import { YearNavigator } from "@/features/priority/YearNavigator"
-import { PriorityWeeksTable } from "@/features/priority/PriorityWeeksTable"
-import { usePrioritySliceSync } from "@/features/priority/usePrioritySliceSync"
+} from "./priorityUtils"
+import { YearNavigator } from "./YearNavigator"
+import { PriorityWeeksTable } from "./PriorityWeeksTable"
+import { usePrioritySliceSync } from "./usePrioritySliceSync"
 
 export function PriorityWeeks() {
   const { t } = useTranslation("priority")

@@ -3,11 +3,11 @@ import { useAppDispatch } from "@/app/hooks"
 import {
   type PriorityWeekHolder,
   setPriorityYearAssignments,
-} from "@/features/priority/prioritySlice"
+} from "./prioritySlice"
 import type {
   EligibleOwner,
   PriorityAssignment,
-} from "@/features/priority/priorityUtils"
+} from "./priorityUtils"
 
 type PriorityListData = {
   eligibleOwners: readonly EligibleOwner[]
