@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react"
 import * as path from "node:path"
-import { defineConfig } from "vitest/config"
+import { configDefaults, defineConfig } from "vitest/config"
 import packageJson from "../package.json" with { type: "json" }
 import tanstackRouter from "@tanstack/router-plugin/vite"
 import { VitePWA } from "vite-plugin-pwa"
@@ -75,5 +75,13 @@ export default defineConfig({
     globals: true,
     watch: false,
     setupFiles: ["./src/setupTests.ts"],
+
+    exclude: [...configDefaults.exclude, "**/*.e2e.test.*"],
+
+    server: {
+      deps: {
+        inline: ["@navikt/aksel-icons"],
+      },
+    },
   },
 })

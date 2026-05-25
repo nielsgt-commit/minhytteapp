@@ -4,7 +4,12 @@ Quick way to verify the full stack is wired up: Vite/React → `@trpc/client` �
 Hono → Drizzle → Postgres. Runs one procedure per router and logs the
 response so you can eyeball it.
 
-Test file: `client/src/trpc/connectivity.test.ts`.
+Test file: `client/src/trpc/connectivity.e2e.test.ts`.
+
+This is an **end-to-end test**, separated from the default unit/integration
+suite. It runs via its own command (`pnpm test:e2e`) and its own config
+(`client/vite.config.e2e.ts`). The default `pnpm test` does *not* include it
+and stays hermetic — see [`ci.md`](./ci.md) for how that ties into CI.
 
 ## Prereqs
 
@@ -12,17 +17,17 @@ The test hits a real API and a real DB, so both must be running:
 
 ```sh
 docker compose up -d     # Postgres on :5432
-npm run db:migrate       # only needed on a fresh DB
-npm run dev:server       # Hono + tRPC on :3001
+pnpm db:migrate          # only needed on a fresh DB
+pnpm dev:server          # Hono + tRPC on :3001
 ```
 
-Optional: `npm run db:seed` to get a user (`id=1`) and property (`id=1`) so
+Optional: `pnpm db:seed` to get a user (`id=1`) and property (`id=1`) so
 `create` mutations using those FKs don't fail.
 
 ## Run
 
 ```sh
-npm test -- connectivity
+pnpm test:e2e
 ```
 
 The test pings `/health` in `beforeAll`, then calls each list/summary
@@ -34,7 +39,7 @@ Override endpoints via env if you need to point at a non-default host:
 ```sh
 VITE_TEST_API_URL=http://api.local/api/trpc \
 VITE_TEST_HEALTH_URL=http://api.local/health \
-npm test -- connectivity
+pnpm test:e2e
 ```
 
 ## What the output looks like
@@ -64,6 +69,7 @@ renamed or removed, this file stops type-checking.
 ## Adding a new router to the check
 
 When you add a router in `server/src/trpc/routers/` and mount it on
-`_app.ts`, append one `test(...)` block in `connectivity.test.ts` that calls
-its simplest read procedure and asserts the response shape. Keep it to list
-or summary queries — mutations belong in their own tests with setup/teardown.
+`_app.ts`, append one `test(...)` block in `connectivity.e2e.test.ts` that
+calls its simplest read procedure and asserts the response shape. Keep it
+to list or summary queries — mutations belong in their own tests with
+setup/teardown.

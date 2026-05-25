@@ -8,7 +8,10 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx tsc *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(pnpm vite *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm --filter client test src/features/onboarding/)"
     ]
   }
 }
