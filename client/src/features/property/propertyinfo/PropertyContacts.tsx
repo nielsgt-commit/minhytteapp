@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"

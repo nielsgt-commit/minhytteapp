@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./Calendar.module.css"

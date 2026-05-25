@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import {
   useMutation,
   useQueryClient,

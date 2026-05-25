@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds.ts"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,

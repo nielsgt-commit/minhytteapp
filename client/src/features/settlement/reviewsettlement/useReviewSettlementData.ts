@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 

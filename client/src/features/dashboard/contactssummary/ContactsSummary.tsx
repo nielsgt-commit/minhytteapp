@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useQuery } from "@tanstack/react-query"
 import { Details, Heading, Link, Paragraph } from "@digdir/designsystemet-react"
 import { EnvelopeClosedIcon, PhoneIcon } from "@navikt/aksel-icons"

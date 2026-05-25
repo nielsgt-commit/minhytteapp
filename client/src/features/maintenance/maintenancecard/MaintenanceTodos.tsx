@@ -1,4 +1,5 @@
-import { useSelectedUserId, useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedUserId } from "@/features/user/userSlice"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,

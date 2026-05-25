@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { startOfSunday, toIso } from "@/utils/dateUtils"
 import WeatherSymbol from "./WeatherSymbol"

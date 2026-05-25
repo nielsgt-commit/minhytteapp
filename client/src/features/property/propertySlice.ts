@@ -1,5 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit"
 import { createAppSlice } from "@/app/createAppSlice"
+import { useAppSelector } from "@/app/hooks"
 
 export type PropertySliceState = {
   selectedPropertyId: number | null
@@ -29,3 +30,6 @@ export const { reset: resetProperty, setSelectedPropertyId } =
   propertySlice.actions
 
 export const { selectSelectedPropertyId } = propertySlice.selectors
+
+export const useSelectedPropertyId = () =>
+  useAppSelector(selectSelectedPropertyId)

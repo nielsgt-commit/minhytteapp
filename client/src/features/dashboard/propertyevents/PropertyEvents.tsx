@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/app/useSelectedIds"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Heading, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
