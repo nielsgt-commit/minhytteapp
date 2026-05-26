@@ -1,19 +1,36 @@
-This is a basic example Blueprint for a Django web service and
-# the Render Postgres database it connects to.
+# Render Blueprint for minhytteapp.
+#
+# One production environment: a single Hono Web Service that serves both
+# /api/* and the built React SPA from client/dist, plus the Postgres
+# database it talks to.
+#
+# Apply with: Render Dashboard → Blueprints → New Blueprint Instance →
+# point at this repo. Render reads render.yaml on every push and reconciles.
+
 services:
-  - type: web # A Python web service named django-app running on a free instance
-    plan: free
+  - type: web
     name: minhytteapp
-    runtime: node
-    repo: https://github.com/nielsgt-commit/minhytteapp.git
-    buildCommand: './build.sh'
-    startCommand: 'python -m gunicorn mysite.asgi:application -k uvicorn.workers.UvicornWorker'
     envVars:
-      - key: DATABASE_URL # Sets DATABASE_URL to the connection string of the django-app-db database
-        fromDatabase:
-          name: django-app-db
-          property: connectionString
+      - fromGroup: minhytteapp
+    runtime: node
+    plan: free
+    region: frankfurt
+    repo: https://github.com/nielsgt-commit/minhytteapp.git
+    branch: master
+    autoDeploy: true
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    preDeployCommand: pnpm db:migrate
+    startCommand: pnpm start
+    healthCheckPath: /health
+    domains:
+      - minhytte.app
+
+    envVarGroups:
+      - name: minhytteapp
+
 
 databases:
-  - name: django-app-db # A Render Postgres database named django-app-db running on a free instance
+  - name: minhytteapp_production
     plan: free
+    region: frankfurt
+    postgresMajorVersion: 17
