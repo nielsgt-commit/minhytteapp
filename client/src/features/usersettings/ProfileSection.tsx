@@ -1,14 +1,9 @@
-import {
-  Button,
-  Checkbox,
-  Fieldset,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Checkbox, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
-import { useFormSubmit } from "@/hooks/useFormSubmit"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { ErrorAlert } from "./ErrorAlert"
 
 type Me = {
@@ -43,28 +38,19 @@ export function ProfileSection({ me }: ProfileSectionProps) {
     meKeys,
   )
 
-  const handleNameSubmit = useFormSubmit(
-    fd => {
-      const trimmed = fdString(fd, "name").trim()
-      if (!trimmed || trimmed === me.name) return null
-      return { name: trimmed }
-    },
-    payload => { updateName.mutate(payload) },
-  )
-
-  const handleBirthdaySubmit = useFormSubmit(
-    fd => {
-      const raw = fdString(fd, "birthday").trim()
-      const next = raw === "" ? null : raw
-      if (next === (me.birthday ?? null)) return null
-      return { birthday: next }
-    },
-    payload => { updateBirthday.mutate(payload) },
-  )
-
   return (
     <>
-      <form onSubmit={handleNameSubmit}>
+      <form
+        action={async fd => {
+          const trimmed = fdString(fd, "name").trim()
+          if (!trimmed || trimmed === me.name) return
+          try {
+            await updateName.mutateAsync({ name: trimmed })
+          } catch {
+            /* surfaced via updateName.error */
+          }
+        }}
+      >
         <Fieldset>
           <Fieldset.Legend>{t("Display name")}</Fieldset.Legend>
           <Textfield
@@ -75,14 +61,23 @@ export function ProfileSection({ me }: ProfileSectionProps) {
             required
             key={`name-${String(me.id)}-${me.name}`}
           />
-          <Button type="submit" disabled={updateName.isPending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton>{t("Save")}</SubmitButton>
           <ErrorAlert error={updateName.error} />
         </Fieldset>
       </form>
 
-      <form onSubmit={handleBirthdaySubmit}>
+      <form
+        action={async fd => {
+          const raw = fdString(fd, "birthday").trim()
+          const next = raw === "" ? null : raw
+          if (next === (me.birthday ?? null)) return
+          try {
+            await updateBirthday.mutateAsync({ birthday: next })
+          } catch {
+            /* surfaced via updateBirthday.error */
+          }
+        }}
+      >
         <Fieldset>
           <Fieldset.Legend>{t("Birthday")}</Fieldset.Legend>
           <Textfield
@@ -92,9 +87,7 @@ export function ProfileSection({ me }: ProfileSectionProps) {
             defaultValue={me.birthday ?? ""}
             key={`birthday-${String(me.id)}-${me.birthday ?? ""}`}
           />
-          <Button type="submit" disabled={updateBirthday.isPending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton>{t("Save")}</SubmitButton>
           <ErrorAlert error={updateBirthday.error} />
         </Fieldset>
       </form>

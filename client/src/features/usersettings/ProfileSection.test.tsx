@@ -31,14 +31,13 @@ vi.mock("@/trpc/trpc", () => ({
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
   useMutation: (opts: { mutationFn?: unknown } & Record<string, unknown>) => {
-    // Pick the right mutate fn based on which mutation option object came through.
-    // We piggyback on the captured mutate spies in test setup via a counter.
     const fn: MutationStub = mutationDispatcher.shift() ?? {
       mutate: vi.fn(),
       state: { isPending: false, error: null },
     }
     return {
       mutate: fn.mutate,
+      mutateAsync: fn.mutate,
       isPending: fn.state.isPending,
       error: fn.state.error,
       _opts: opts,
@@ -162,12 +161,6 @@ describe("ProfileSection", () => {
       ),
     )
     expect(isHeadMutate).toHaveBeenCalledWith({ is_head: true })
-  })
-
-  test("disables the name save button while pending", () => {
-    nameState.isPending = true
-    render(<ProfileSection me={me} />)
-    expect(screen.getAllByRole("button", { name: "Save" })[0]).toBeDisabled()
   })
 
   test("renders an alert when updateName has an error", () => {

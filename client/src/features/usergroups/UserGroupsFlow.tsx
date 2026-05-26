@@ -92,11 +92,13 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   }
 
   const handleRename = (groupId: number) =>
-    (input: { name: string; is_main: boolean }) => {
-      updateGroup.mutate(
-        { id: groupId, ...input, property_id: propertyId },
-        { onSuccess: () => { setOpenForm(null) } },
-      )
+    async (input: { name: string; is_main: boolean }) => {
+      await updateGroup.mutateAsync({
+        id: groupId,
+        ...input,
+        property_id: propertyId,
+      })
+      setOpenForm(null)
     }
 
   const handleDelete = (groupId: number, groupName: string) => {

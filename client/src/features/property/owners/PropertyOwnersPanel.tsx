@@ -7,7 +7,6 @@ import { fdNumber } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
-import { useFormSubmit } from "@/hooks/useFormSubmit"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import {
   ownerLabel,
@@ -112,45 +111,32 @@ export function PropertyOwnersPanel() {
     })
   }
 
-  const handleAddSubmit = useFormSubmit(
-    fd => {
-      const pct = fdNumber(fd, "ownership_pct")
-      if (!Number.isFinite(pct)) return null
+  const handleAddSubmit = async (fd: FormData) => {
+    const pct = fdNumber(fd, "ownership_pct")
+    if (!Number.isFinite(pct)) return
+    try {
       if (addKind === "user") {
         const user_id = fdNumber(fd, "user_id")
-        if (!Number.isFinite(user_id)) return null
-        return { kind: "user" as const, user_id, ownership_pct: pct }
-      }
-      const user_group_id = fdNumber(fd, "user_group_id")
-      if (!Number.isFinite(user_group_id)) return null
-      return {
-        kind: "group" as const,
-        user_group_id,
-        ownership_pct: pct,
-      }
-    },
-    payload => {
-      if (payload.kind === "user") {
-        addUser.mutate(
-          {
-            property_id: selectedPropertyId,
-            user_id: payload.user_id,
-            ownership_pct: payload.ownership_pct,
-          },
-          { onSuccess: adding.close },
-        )
+        if (!Number.isFinite(user_id)) return
+        await addUser.mutateAsync({
+          property_id: selectedPropertyId,
+          user_id,
+          ownership_pct: pct,
+        })
       } else {
-        addGroup.mutate(
-          {
-            property_id: selectedPropertyId,
-            user_group_id: payload.user_group_id,
-            ownership_pct: payload.ownership_pct,
-          },
-          { onSuccess: adding.close },
-        )
+        const user_group_id = fdNumber(fd, "user_group_id")
+        if (!Number.isFinite(user_group_id)) return
+        await addGroup.mutateAsync({
+          property_id: selectedPropertyId,
+          user_group_id,
+          ownership_pct: pct,
+        })
       }
-    },
-  )
+      adding.close()
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
+    }
+  }
 
   const handleRemove = (o: Owner) => {
     const label = ownerLabel(o)

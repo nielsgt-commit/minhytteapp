@@ -32,7 +32,6 @@ export function OnboardingFlow() {
   )
 
   const lastError = createUser.error ?? createProperty.error
-  const pending = createUser.isPending || createProperty.isPending
 
   const currentUser = me ?? null
   const anyUser = users[0] ?? null
@@ -73,15 +72,17 @@ export function OnboardingFlow() {
 
       {step === "user" && (
         <UserCreationForm
-          pending={pending}
-          onSubmit={input => { createUser.mutate({ ...input, is_admin: true }) }}
+          onSubmit={async input => {
+            await createUser.mutateAsync({ ...input, is_admin: true })
+          }}
         />
       )}
 
       {step === "property" && (
         <PropertyCreationForm
-          pending={pending}
-          onSubmit={input => { createProperty.mutate(input) }}
+          onSubmit={async input => {
+            await createProperty.mutateAsync(input)
+          }}
         />
       )}
 

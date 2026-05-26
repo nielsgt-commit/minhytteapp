@@ -1,7 +1,7 @@
 import { Button, Card, Checkbox, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
-import { useFormSubmit } from "@/hooks/useFormSubmit.ts"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import { AddMemberForm } from "../AddMemberForm.tsx"
 import { CreateUserForm } from "../users/CreateUserForm.tsx"
@@ -32,7 +32,7 @@ type GroupCardProps = {
   onStartRename: () => void
   onToggleAddMember: () => void
   onDelete: () => void
-  onRenameSubmit: (input: { name: string; is_main: boolean }) => void
+  onRenameSubmit: (input: { name: string; is_main: boolean }) => Promise<void>
   onAddMember: (userId: number, reset: () => void) => void
   onCreateAndAddMember: (name: string, reset: () => void) => void
   onSwitchToCreateUser: () => void
@@ -66,17 +66,20 @@ export function GroupCard({
   onRemoveMember,
 }: GroupCardProps) {
   const { t } = useTranslation("usergroups")
-  const handleRename = useFormSubmit(
-    fd => {
-      const name = fdString(fd, "name").trim()
-      if (!name) return null
-      return { name, is_main: fdBoolean(fd, "is_main") }
-    },
-    onRenameSubmit,
-  )
 
   const renameForm = (
-    <form onSubmit={handleRename} key={`rename-${String(group.id)}`}>
+    <form
+      key={`rename-${String(group.id)}`}
+      action={async fd => {
+        const name = fdString(fd, "name").trim()
+        if (!name) return
+        try {
+          await onRenameSubmit({ name, is_main: fdBoolean(fd, "is_main") })
+        } catch {
+          /* surfaced by caller */
+        }
+      }}
+    >
       <fieldset>
         <legend>{t("Edit group")}</legend>
         <div>
@@ -97,9 +100,7 @@ export function GroupCard({
           />
         </div>
         <div>
-          <Button type="submit" disabled={renamePending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton>{t("Save")}</SubmitButton>
           <Button
             type="button"
             variant="secondary"
