@@ -180,6 +180,9 @@ importers:
       vitest:
         specifier: ^3.1.1
         version: 3.2.4(@types/node@22.19.17)(jiti@2.7.0)(jsdom@26.1.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)
+      workbox-window:
+        specifier: ^7.4.1
+        version: 7.4.1
 
 packages:
 

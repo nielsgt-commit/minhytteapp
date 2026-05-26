@@ -1,10 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -15,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 
@@ -25,7 +22,6 @@ type ListUsersProps = {
 export function ListUsers({ canEdit }: ListUsersProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
@@ -33,16 +29,14 @@ export function ListUsers({ canEdit }: ListUsersProps) {
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
-    void qc.invalidateQueries({ queryKey: trpc.userGroup.pathKey() })
-  }
-
-  const updateUser = useMutation(
-    trpc.user.update.mutationOptions({ onSuccess: invalidate }),
+  const userAndGroupKeys = [trpc.user.pathKey(), trpc.userGroup.pathKey()]
+  const updateUser = useMutationWithInvalidation(
+    trpc.user.update.mutationOptions(),
+    userAndGroupKeys,
   )
-  const deleteUser = useMutation(
-    trpc.user.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteUser = useMutationWithInvalidation(
+    trpc.user.delete.mutationOptions(),
+    userAndGroupKeys,
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)

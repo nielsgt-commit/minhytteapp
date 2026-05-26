@@ -1,12 +1,8 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { UserCreationForm } from "./UserCreationForm"
 import { PropertyCreationForm } from "./PropertyCreationForm"
 
@@ -15,7 +11,6 @@ type Step = "user" | "property" | "done"
 export function OnboardingFlow() {
   const { t } = useTranslation("onboarding")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: properties } = useSuspenseQuery(
@@ -23,16 +18,17 @@ export function OnboardingFlow() {
   )
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
-  const invalidateAll = () => {
-    void qc.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
-    void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
-  }
-
-  const createUser = useMutation(
-    trpc.user.create.mutationOptions({ onSuccess: invalidateAll }),
+  const onboardingKeys = [
+    trpc.user.list.queryKey(),
+    trpc.property.list.queryKey(),
+  ]
+  const createUser = useMutationWithInvalidation(
+    trpc.user.create.mutationOptions(),
+    onboardingKeys,
   )
-  const createProperty = useMutation(
-    trpc.property.create.mutationOptions({ onSuccess: invalidateAll }),
+  const createProperty = useMutationWithInvalidation(
+    trpc.property.create.mutationOptions(),
+    onboardingKeys,
   )
 
   const lastError = createUser.error ?? createProperty.error

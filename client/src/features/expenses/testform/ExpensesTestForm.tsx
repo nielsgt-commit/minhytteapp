@@ -1,11 +1,8 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import {
   AddNewExpenseFlow,
   type ExpenseDraft,
@@ -16,17 +13,14 @@ const todayIso = () => new Date().toISOString().slice(0, 10)
 export function ExpensesTestForm() {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: categories } = useSuspenseQuery(
     trpc.expenseCategory.list.queryOptions(),
   )
 
-  const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
-
-  const createMutation = useMutation(
-    trpc.expense.create.mutationOptions({ onSuccess: invalidate }),
+  const createMutation = useMutationWithInvalidation(
+    trpc.expense.create.mutationOptions(),
+    [trpc.expense.pathKey()],
   )
 
   const submitDrafts = (drafts: ExpenseDraft[], description: string) => {

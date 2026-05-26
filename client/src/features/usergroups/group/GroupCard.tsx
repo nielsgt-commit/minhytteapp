@@ -1,7 +1,7 @@
-import { type SyntheticEvent } from "react"
 import { Button, Card, Checkbox, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
+import { useFormSubmit } from "@/hooks/useFormSubmit.ts"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import { AddMemberForm } from "../AddMemberForm.tsx"
 import { CreateUserForm } from "../users/CreateUserForm.tsx"
@@ -66,13 +66,14 @@ export function GroupCard({
   onRemoveMember,
 }: GroupCardProps) {
   const { t } = useTranslation("usergroups")
-  const handleRename = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const name = fdString(fd, "name").trim()
-    if (!name) return
-    onRenameSubmit({ name, is_main: fdBoolean(fd, "is_main") })
-  }
+  const handleRename = useFormSubmit(
+    fd => {
+      const name = fdString(fd, "name").trim()
+      if (!name) return null
+      return { name, is_main: fdBoolean(fd, "is_main") }
+    },
+    onRenameSubmit,
+  )
 
   const renameForm = (
     <form onSubmit={handleRename} key={`rename-${String(group.id)}`}>

@@ -1,14 +1,11 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { CreateGroupForm } from "./CreateGroupForm.tsx"
 import { GroupCard } from "./group/GroupCard.tsx"
 import styles from "./UserGroupsFlow.module.css"
@@ -26,7 +23,6 @@ type UserGroupsFlowProps = {
 export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
@@ -39,31 +35,32 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const invalidateGroups = () => {
-    void qc.invalidateQueries({ queryKey: trpc.userGroup.pathKey() })
-  }
-  const invalidateUsers = () => {
-    void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
-  }
+  const groupKeys = [trpc.userGroup.pathKey()]
 
-  const createGroup = useMutation(
-    trpc.userGroup.create.mutationOptions({ onSuccess: invalidateGroups }),
+  const createGroup = useMutationWithInvalidation(
+    trpc.userGroup.create.mutationOptions(),
+    groupKeys,
   )
-  const updateGroup = useMutation(
-    trpc.userGroup.update.mutationOptions({ onSuccess: invalidateGroups }),
+  const updateGroup = useMutationWithInvalidation(
+    trpc.userGroup.update.mutationOptions(),
+    groupKeys,
   )
-  const deleteGroup = useMutation(
-    trpc.userGroup.delete.mutationOptions({ onSuccess: invalidateGroups }),
+  const deleteGroup = useMutationWithInvalidation(
+    trpc.userGroup.delete.mutationOptions(),
+    groupKeys,
   )
-  const addMember = useMutation(
-    trpc.userGroup.addMember.mutationOptions({ onSuccess: invalidateGroups }),
+  const addMember = useMutationWithInvalidation(
+    trpc.userGroup.addMember.mutationOptions(),
+    groupKeys,
   )
-  const removeMember = useMutation(
-    trpc.userGroup.removeMember.mutationOptions({
-      onSuccess: invalidateGroups,
-    }),
+  const removeMember = useMutationWithInvalidation(
+    trpc.userGroup.removeMember.mutationOptions(),
+    groupKeys,
   )
-  const createUser = useMutation(trpc.user.create.mutationOptions())
+  const createUser = useMutationWithInvalidation(
+    trpc.user.create.mutationOptions(),
+    [trpc.user.pathKey()],
+  )
 
   const [openForm, setOpenForm] = useState<OpenForm>(null)
   const [addingUserForGroup, setAddingUserForGroup] = useState<number | null>(
@@ -130,7 +127,6 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
         { name, email },
         {
           onSuccess: created => {
-            invalidateUsers()
             addMember.mutate(
               {
                 user_group_id: groupId,

@@ -1,9 +1,5 @@
 import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import {
   Button,
   Fieldset,
@@ -12,40 +8,35 @@ import {
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { ErrorAlert } from "./ErrorAlert"
 
 export function ChildrenSection() {
   const { t } = useTranslation("usersettings")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const { data: children } = useQuery(trpc.user.listMyChildren.queryOptions())
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState("")
 
-  const invalidateChildren = () =>
-    qc.invalidateQueries({ queryKey: trpc.user.listMyChildren.queryKey() })
+  const childrenKeys = [trpc.user.listMyChildren.queryKey()]
 
-  const createChild = useMutation(
-    trpc.user.createChild.mutationOptions({
-      onSuccess: () => { void invalidateChildren() },
-    }),
+  const createChild = useMutationWithInvalidation(
+    trpc.user.createChild.mutationOptions(),
+    childrenKeys,
   )
 
-  const updateChild = useMutation(
+  const updateChild = useMutationWithInvalidation(
     trpc.user.updateChild.mutationOptions({
-      onSuccess: () => {
-        setEditingId(null)
-        void invalidateChildren()
-      },
+      onSuccess: () => { setEditingId(null) },
     }),
+    childrenKeys,
   )
 
-  const removeChild = useMutation(
-    trpc.user.removeChild.mutationOptions({
-      onSuccess: () => { void invalidateChildren() },
-    }),
+  const removeChild = useMutationWithInvalidation(
+    trpc.user.removeChild.mutationOptions(),
+    childrenKeys,
   )
 
   const handleAddChild = (e: SyntheticEvent<HTMLFormElement>) => {

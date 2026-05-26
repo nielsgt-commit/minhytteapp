@@ -1,8 +1,7 @@
-import { useMutation } from "@tanstack/react-query"
 import type { ExpenseRow } from "../types.ts"
 import { basePayload } from "../buildUpdatePayload.ts"
-import { useInvalidateExpenses } from "../useInvalidateExpenses.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 
 type Params = {
   settlementId: number
@@ -16,10 +15,10 @@ export function useReviewMutations({
   fallbackPropertyId,
 }: Params) {
   const trpc = useTRPC()
-  const invalidate = useInvalidateExpenses()
 
-  const updateExpense = useMutation(
-    trpc.expense.update.mutationOptions({ onSuccess: invalidate }),
+  const updateExpense = useMutationWithInvalidation(
+    trpc.expense.update.mutationOptions(),
+    [trpc.expense.pathKey()],
   )
 
   const reimburse = (e: ExpenseRow) => {

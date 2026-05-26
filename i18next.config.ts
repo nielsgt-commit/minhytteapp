@@ -8,7 +8,7 @@ export default defineConfig({
     output: "client/src/i18n/locales/{{language}}/{{namespace}}.json",
     defaultNS: "common",
     keySeparator: false,
-    nsSeparator: ":",
+    nsSeparator: false,
     primaryLanguage: "en",
     secondaryLanguages: ["nb"],
     // Natural-key strategy: use the key itself as the EN value

@@ -5,11 +5,11 @@ on:
     branches: [master]
     paths-ignore:
       - '**/*.md'
-      - 'plans/**'
+      - '../../.plans/**'
   pull_request:
     paths-ignore:
       - '**/*.md'
-      - 'plans/**'
+      - '../../.plans/**'
 
 permissions:
   contents: read

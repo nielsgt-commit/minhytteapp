@@ -1,4 +1,5 @@
 import { Card, Paragraph } from "@digdir/designsystemet-react"
+import type { PortableTextBlock } from "@portabletext/types"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 
 type MaintenanceEntry = {
@@ -20,8 +21,8 @@ type InspectionEntry = {
     infrastructure_id: number | null
     equipment_id: number | null
     inspected_by: string
-    recurrence: "once" | "yearly" | "5year"
-    notes: string | null
+    recurrence: "yearly" | "5year" | "spring" | "fall"
+    notes_pt: PortableTextBlock[] | null
     started_at: string | Date
     completed_at: string | Date | null
   }

@@ -49,7 +49,7 @@ export default function PropertyEvents() {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading level={6} size="medium">{t("Property events")}</Heading>
+          <Heading level={6} data-size="md">{t("Property events")}</Heading>
           {events.length === 0 ? (
             <p>{t("No events.")}</p>
           ) : (

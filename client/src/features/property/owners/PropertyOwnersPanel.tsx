@@ -1,14 +1,13 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useState } from "react"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useToggleState } from "@/hooks/useToggleState"
+import { useFormSubmit } from "@/hooks/useFormSubmit"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import {
   ownerLabel,
@@ -32,7 +31,6 @@ type Owner = {
 export function PropertyOwnersPanel() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const canEdit = useCanEdit()
 
   const selectedPropertyId = useSelectedPropertyId()
@@ -49,33 +47,29 @@ export function PropertyOwnersPanel() {
     ),
   )
 
-  const invalidateOwners = () => {
-    if (selectedPropertyId == null) return
-    void qc.invalidateQueries({
-      queryKey: trpc.propertyOwner.list.queryKey({
-        property_id: selectedPropertyId,
-      }),
-    })
-  }
-
-  const addUser = useMutation(
-    trpc.propertyOwner.addUser.mutationOptions({ onSuccess: invalidateOwners }),
-  )
-  const addGroup = useMutation(
-    trpc.propertyOwner.addGroup.mutationOptions({
-      onSuccess: invalidateOwners,
+  const ownerKeys = [
+    trpc.propertyOwner.list.queryKey({
+      property_id: selectedPropertyId ?? 0,
     }),
+  ]
+  const addUser = useMutationWithInvalidation(
+    trpc.propertyOwner.addUser.mutationOptions(),
+    ownerKeys,
   )
-  const updatePct = useMutation(
-    trpc.propertyOwner.updatePct.mutationOptions({
-      onSuccess: invalidateOwners,
-    }),
+  const addGroup = useMutationWithInvalidation(
+    trpc.propertyOwner.addGroup.mutationOptions(),
+    ownerKeys,
   )
-  const removeOwner = useMutation(
-    trpc.propertyOwner.remove.mutationOptions({ onSuccess: invalidateOwners }),
+  const updatePct = useMutationWithInvalidation(
+    trpc.propertyOwner.updatePct.mutationOptions(),
+    ownerKeys,
+  )
+  const removeOwner = useMutationWithInvalidation(
+    trpc.propertyOwner.remove.mutationOptions(),
+    ownerKeys,
   )
 
-  const [isAdding, setIsAdding] = useState(false)
+  const adding = useToggleState()
   const [addKind, setAddKind] = useState<AddKind>("user")
 
   const { pending, error: lastError } = useMutationsStatus(
@@ -118,42 +112,45 @@ export function PropertyOwnersPanel() {
     })
   }
 
-  const handleAddSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const pct = fdNumber(fd, "ownership_pct")
-    if (!Number.isFinite(pct)) return
-    if (addKind === "user") {
-      const user_id = fdNumber(fd, "user_id")
-      if (!Number.isFinite(user_id)) return
-      addUser.mutate(
-        { property_id: selectedPropertyId, user_id, ownership_pct: pct },
-        {
-          onSuccess: () => {
-            form.reset()
-            setIsAdding(false)
-          },
-        },
-      )
-    } else {
+  const handleAddSubmit = useFormSubmit(
+    fd => {
+      const pct = fdNumber(fd, "ownership_pct")
+      if (!Number.isFinite(pct)) return null
+      if (addKind === "user") {
+        const user_id = fdNumber(fd, "user_id")
+        if (!Number.isFinite(user_id)) return null
+        return { kind: "user" as const, user_id, ownership_pct: pct }
+      }
       const user_group_id = fdNumber(fd, "user_group_id")
-      if (!Number.isFinite(user_group_id)) return
-      addGroup.mutate(
-        {
-          property_id: selectedPropertyId,
-          user_group_id,
-          ownership_pct: pct,
-        },
-        {
-          onSuccess: () => {
-            form.reset()
-            setIsAdding(false)
+      if (!Number.isFinite(user_group_id)) return null
+      return {
+        kind: "group" as const,
+        user_group_id,
+        ownership_pct: pct,
+      }
+    },
+    payload => {
+      if (payload.kind === "user") {
+        addUser.mutate(
+          {
+            property_id: selectedPropertyId,
+            user_id: payload.user_id,
+            ownership_pct: payload.ownership_pct,
           },
-        },
-      )
-    }
-  }
+          { onSuccess: adding.close },
+        )
+      } else {
+        addGroup.mutate(
+          {
+            property_id: selectedPropertyId,
+            user_group_id: payload.user_group_id,
+            ownership_pct: payload.ownership_pct,
+          },
+          { onSuccess: adding.close },
+        )
+      }
+    },
+  )
 
   const handleRemove = (o: Owner) => {
     const label = ownerLabel(o)
@@ -184,7 +181,7 @@ export function PropertyOwnersPanel() {
 
       {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
 
-      {isAdding ? (
+      {adding.value ? (
         <OwnerAddForm
           addKind={addKind}
           pending={pending}
@@ -194,7 +191,7 @@ export function PropertyOwnersPanel() {
           totalGroups={groups.length}
           onKindChange={kind => { setAddKind(kind) }}
           onSubmit={handleAddSubmit}
-          onCancel={() => { setIsAdding(false) }}
+          onCancel={adding.close}
         />
       ) : (
         <OwnerListView
@@ -203,7 +200,7 @@ export function PropertyOwnersPanel() {
           pending={pending}
           onPctSave={handlePctSave}
           onRemove={handleRemove}
-          onStartAdd={() => { setIsAdding(true) }}
+          onStartAdd={adding.open}
         />
       )}
     </section>

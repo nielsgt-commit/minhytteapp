@@ -112,7 +112,7 @@ void i18n
     // Natural-key strategy: the English sentence IS the key, so disable
     // separators that would otherwise split keys on '.' or ':'.
     keySeparator: false,
-    nsSeparator: ":",
+    nsSeparator: false,
     returnNull: false,
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],

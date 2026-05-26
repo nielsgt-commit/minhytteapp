@@ -68,7 +68,7 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   return (
     <>
       <Divider className={styles.divider} />
-      <Heading level={6} size="medium">{t("Planned Maintenance")}</Heading>
+      <Heading level={6} data-size="md">{t("Planned Maintenance")}</Heading>
       {structuresWithItems.length === 0 ? (
         <p>{t("No planned maintenance.")}</p>
       ) : (

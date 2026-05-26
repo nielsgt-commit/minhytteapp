@@ -23,7 +23,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} size="medium">{t("Weather now")}</Heading>
+              <Heading level={6} data-size="md">{t("Weather now")}</Heading>
               <NowWeather />
             </div>
           </Card.Block>
@@ -33,7 +33,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} size="medium">{t("At property now")}</Heading>
+              <Heading level={6} data-size="md">{t("At property now")}</Heading>
               <AtPropertyNow />
             </div>
           </Card.Block>
@@ -43,7 +43,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} size="medium">{t("Available parking")}</Heading>
+              <Heading level={6} data-size="md">{t("Available parking")}</Heading>
               <AvailableParking />
             </div>
           </Card.Block>
@@ -53,7 +53,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} size="medium">{t("Available beds")}</Heading>
+              <Heading level={6} data-size="md">{t("Available beds")}</Heading>
               <RoomAvailabilityIndicator rooms={rooms} />
             </div>
           </Card.Block>

@@ -38,6 +38,15 @@ export default function DayCard({
   onToggle,
 }: Props) {
   const { t } = useTranslation("dashboard")
+  const weekdayT = {
+    SUN: t("SUN"),
+    MON: t("MON"),
+    TUE: t("TUE"),
+    WED: t("WED"),
+    THU: t("THU"),
+    FRI: t("FRI"),
+    SAT: t("SAT"),
+  } satisfies Record<WeekdayLabel, string>
   const isClickable = count > 0
   return (
     <Card asChild>
@@ -62,14 +71,14 @@ export default function DayCard({
                 <Badge.Position placement="top-right">
                   <Badge data-color="warning" />
                   <span>
-                    <strong>{t(weekdayLabel)}</strong>{" "}
+                    <strong>{weekdayT[weekdayLabel]}</strong>{" "}
                     {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
                     {isToday && ` · ${t("Today")}`}
                   </span>
                 </Badge.Position>
               ) : (
                 <span>
-                  <strong>{t(weekdayLabel)}</strong>{" "}
+                  <strong>{weekdayT[weekdayLabel]}</strong>{" "}
                   {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
                   {isToday && ` · ${t("Today")}`}
                 </span>

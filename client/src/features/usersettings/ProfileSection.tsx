@@ -1,5 +1,3 @@
-import { type SyntheticEvent } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
   Checkbox,
@@ -9,6 +7,8 @@ import {
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useFormSubmit } from "@/hooks/useFormSubmit"
 import { ErrorAlert } from "./ErrorAlert"
 
 type Me = {
@@ -25,45 +25,42 @@ type ProfileSectionProps = {
 export function ProfileSection({ me }: ProfileSectionProps) {
   const { t } = useTranslation("usersettings")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
-  const invalidateMe = () =>
-    qc.invalidateQueries({ queryKey: trpc.user.me.queryKey() })
+  const meKeys = [trpc.user.me.queryKey()]
 
-  const updateName = useMutation(
-    trpc.user.updateMyName.mutationOptions({
-      onSuccess: () => { void invalidateMe() },
-    }),
+  const updateName = useMutationWithInvalidation(
+    trpc.user.updateMyName.mutationOptions(),
+    meKeys,
   )
 
-  const updateBirthday = useMutation(
-    trpc.user.updateMyBirthday.mutationOptions({
-      onSuccess: () => { void invalidateMe() },
-    }),
+  const updateBirthday = useMutationWithInvalidation(
+    trpc.user.updateMyBirthday.mutationOptions(),
+    meKeys,
   )
 
-  const updateIsHead = useMutation(
-    trpc.user.updateMyIsHead.mutationOptions({
-      onSuccess: () => { void invalidateMe() },
-    }),
+  const updateIsHead = useMutationWithInvalidation(
+    trpc.user.updateMyIsHead.mutationOptions(),
+    meKeys,
   )
 
-  const handleNameSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const trimmed = fdString(fd, "name").trim()
-    if (!trimmed || trimmed === me.name) return
-    updateName.mutate({ name: trimmed })
-  }
+  const handleNameSubmit = useFormSubmit(
+    fd => {
+      const trimmed = fdString(fd, "name").trim()
+      if (!trimmed || trimmed === me.name) return null
+      return { name: trimmed }
+    },
+    payload => { updateName.mutate(payload) },
+  )
 
-  const handleBirthdaySubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const raw = fdString(fd, "birthday").trim()
-    const next = raw === "" ? null : raw
-    if (next === (me.birthday ?? null)) return
-    updateBirthday.mutate({ birthday: next })
-  }
+  const handleBirthdaySubmit = useFormSubmit(
+    fd => {
+      const raw = fdString(fd, "birthday").trim()
+      const next = raw === "" ? null : raw
+      if (next === (me.birthday ?? null)) return null
+      return { birthday: next }
+    },
+    payload => { updateBirthday.mutate(payload) },
+  )
 
   return (
     <>

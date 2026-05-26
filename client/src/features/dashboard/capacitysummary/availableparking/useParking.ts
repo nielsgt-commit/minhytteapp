@@ -47,7 +47,7 @@ export function useParking(propertyId: number, me: Me) {
         return { previous }
       },
       onError: (_err, _vars, ctx) => {
-        if (ctx.previous) qc.setQueryData(queryKey, ctx.previous)
+        if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
       },
       onSettled: () => void settle(),
     }),
@@ -64,7 +64,7 @@ export function useParking(propertyId: number, me: Me) {
         return { previous }
       },
       onError: (_err, _vars, ctx) => {
-        if (ctx.previous) qc.setQueryData(queryKey, ctx.previous)
+        if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
       },
       onSettled: () => void settle(),
     }),

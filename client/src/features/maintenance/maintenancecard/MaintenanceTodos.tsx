@@ -1,11 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSelectedUserId } from "@/features/user/userSlice"
 import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -17,6 +13,7 @@ import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceTodos.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
 import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
@@ -24,7 +21,6 @@ import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/Seve
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const selectedUserId = useSelectedUserId()
 
@@ -35,18 +31,18 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     ),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
-  }
-
-  const createMutation = useMutation(
-    trpc.maintenance.create.mutationOptions({ onSuccess: invalidate }),
+  const maintenanceKeys = [trpc.maintenance.pathKey()]
+  const createMutation = useMutationWithInvalidation(
+    trpc.maintenance.create.mutationOptions(),
+    maintenanceKeys,
   )
-  const updateMutation = useMutation(
-    trpc.maintenance.update.mutationOptions({ onSuccess: invalidate }),
+  const updateMutation = useMutationWithInvalidation(
+    trpc.maintenance.update.mutationOptions(),
+    maintenanceKeys,
   )
-  const deleteMutation = useMutation(
-    trpc.maintenance.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteMutation = useMutationWithInvalidation(
+    trpc.maintenance.delete.mutationOptions(),
+    maintenanceKeys,
   )
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {

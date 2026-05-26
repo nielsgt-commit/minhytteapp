@@ -111,7 +111,7 @@ describe("CreateUserForm", () => {
 
   test("invoking the reset callback clears the input", async () => {
     const user = userEvent.setup()
-    let capturedReset: (() => void) | null = null
+    let capturedReset: () => void = () => {}
     const onSubmit = vi.fn((_name, reset: () => void) => {
       capturedReset = reset
     })
@@ -129,7 +129,7 @@ describe("CreateUserForm", () => {
     await user.click(screen.getByRole("button", { name: "Save" }))
 
     expect(field.value).toBe("Eve")
-    capturedReset?.()
+    capturedReset()
     expect(field.value).toBe("")
   })
 })

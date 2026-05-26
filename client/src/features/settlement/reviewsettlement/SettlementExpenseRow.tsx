@@ -16,6 +16,7 @@ import styles from "./SettlementExpenseRow.module.css"
 import { EditExpenseDialog } from "./EditExpenseDialog"
 import type { ExpenseRow } from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
+import { useToggleState } from "@/hooks/useToggleState"
 
 type Props = {
   expense: ExpenseRow
@@ -46,7 +47,7 @@ export function SettlementExpenseRow({
 }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const [editOpen, setEditOpen] = useState(false)
+  const editDialog = useToggleState()
   const [category, setCategory] = useState<string>(
     expense.expense_types[0] ?? "",
   )
@@ -55,7 +56,7 @@ export function SettlementExpenseRow({
     trpc.expense.update.mutationOptions({
       onSuccess: () => {
         onSaved()
-        setEditOpen(false)
+        editDialog.close()
       },
     }),
   )
@@ -169,9 +170,9 @@ export function SettlementExpenseRow({
             </span>
             <EditExpenseDialog
               expenseId={expense.id}
-              open={editOpen}
-              onOpen={() => { setEditOpen(true) }}
-              onClose={() => { setEditOpen(false) }}
+              open={editDialog.value}
+              onOpen={editDialog.open}
+              onClose={editDialog.close}
               category={category}
               setCategory={setCategory}
               onSubmit={submitCategory}

@@ -82,7 +82,16 @@ export function StepDates({
             <Card.Block>
               <div className={styles.cardHeader}>
                 {availability !== null ? (
-                  <Tag data-color={availability.color}>{t(availability.label)}</Tag>
+                  <Tag data-color={availability.color}>
+                    {
+                      ({
+                        "At capacity": t("At capacity"),
+                        "Almost at capacity": t("Almost at capacity"),
+                        "Limited availability": t("Limited availability"),
+                        "High availability": t("High availability"),
+                      } satisfies Record<AvailabilityLabel, string>)[availability.label]
+                    }
+                  </Tag>
                 ) : (
                   <Paragraph data-size="sm" className={styles.subtleText}>
                     {t("Pick dates to see availability.")}

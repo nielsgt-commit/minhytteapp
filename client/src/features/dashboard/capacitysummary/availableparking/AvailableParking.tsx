@@ -95,7 +95,13 @@ export default function AvailableParking() {
           const slot = EXTRA_SLOT_BASE + offset
           const occupant = claimedBySlot.get(slot)
           const occupied = occupant != null
-          const vehicle = t(labelKey)
+          const vehicleLabels = {
+            Motorcycle: t("Motorcycle"),
+            Bicycle: t("Bicycle"),
+            Stroller: t("Stroller"),
+            Wheelbarrow: t("Wheelbarrow"),
+          } satisfies Record<typeof labelKey, string>
+          const vehicle = vehicleLabels[labelKey]
           const title = occupied
             ? t("{{vehicle}} — taken by {{userName}}", {
                 vehicle,

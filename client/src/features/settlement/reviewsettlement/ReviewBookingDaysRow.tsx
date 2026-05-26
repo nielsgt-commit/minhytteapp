@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -18,6 +17,7 @@ import {
   type UserOption,
 } from "./ReviewBookingDaysRowEditor"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 
 type BookingOccupant = {
   user_id: number
@@ -105,7 +105,6 @@ export function ReviewBookingDaysRow({
 }) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const [editing, setEditing] = useState(false)
   const [draftStart, setDraftStart] = useState(booking.start_date)
@@ -115,33 +114,21 @@ export function ReviewBookingDaysRow({
   )
   const [inputValue, setInputValue] = useState("")
 
-  const updateBooking = useMutation(
+  const updateBooking = useMutationWithInvalidation(
     trpc.booking.update.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
-        setEditing(false)
-      },
+      onSuccess: () => { setEditing(false) },
     }),
+    [trpc.booking.pathKey()],
   )
 
-  const setExcluded = useMutation(
-    trpc.settlement.setBookingExcluded.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({
-          queryKey: trpc.settlement.getBookingAdjustments.queryKey(),
-        })
-      },
-    }),
+  const setExcluded = useMutationWithInvalidation(
+    trpc.settlement.setBookingExcluded.mutationOptions(),
+    [trpc.settlement.getBookingAdjustments.queryKey()],
   )
 
-  const setExtras = useMutation(
-    trpc.settlement.setBookingExtras.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({
-          queryKey: trpc.settlement.getBookingAdjustments.queryKey(),
-        })
-      },
-    }),
+  const setExtras = useMutationWithInvalidation(
+    trpc.settlement.setBookingExtras.mutationOptions(),
+    [trpc.settlement.getBookingAdjustments.queryKey()],
   )
 
   const enterEdit = () => {

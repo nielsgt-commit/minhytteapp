@@ -1,10 +1,7 @@
 import { type RefObject, useEffect, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 
 type Category = { id: number; name: string }
 
@@ -16,7 +13,6 @@ export function useCategoryMutations(
   suggestionInputRef: RefObject<HTMLInputElement | null>,
 ) {
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const [selectedCats, setSelectedCats] = useState<SuggestionItem[]>(
     toSuggestionItems(categories),
@@ -26,18 +22,14 @@ export function useCategoryMutations(
     setSelectedCats(toSuggestionItems(categories))
   }, [categories])
 
-  const invalidateCategories = () =>
-    qc.invalidateQueries({ queryKey: trpc.expenseCategory.list.queryKey() })
-
-  const createCategoryMutation = useMutation(
-    trpc.expenseCategory.create.mutationOptions({
-      onSuccess: () => { void invalidateCategories() },
-    }),
+  const categoryKey = [trpc.expenseCategory.list.queryKey()]
+  const createCategoryMutation = useMutationWithInvalidation(
+    trpc.expenseCategory.create.mutationOptions(),
+    categoryKey,
   )
-  const archiveCategoryMutation = useMutation(
-    trpc.expenseCategory.archive.mutationOptions({
-      onSuccess: () => { void invalidateCategories() },
-    }),
+  const archiveCategoryMutation = useMutationWithInvalidation(
+    trpc.expenseCategory.archive.mutationOptions(),
+    categoryKey,
   )
 
   const handleCategoriesChange = (next: SuggestionItem[]) => {

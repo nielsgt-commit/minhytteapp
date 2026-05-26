@@ -32,6 +32,14 @@ export default function BottomNavBar() {
   const { t } = useTranslation("shared")
   const { pathname } = useLocation()
 
+  const labels: Record<NavLabel, string> = {
+    Dashboard: t("Dashboard"),
+    Calendar: t("Calendar"),
+    Expenses: t("Expenses"),
+    Maintenance: t("Maintenance"),
+    Settlement: t("Settlement"),
+  }
+
   return (
     <nav className={styles.bar} aria-label={t("Primary")}>
       {navItems.map((item, i) => {
@@ -42,11 +50,11 @@ export default function BottomNavBar() {
             key={item.to}
             {...links[i]}
             className={`${styles.item} ${isActive ? styles.active : ""}`}
-            aria-label={t(item.label)}
+            aria-label={labels[item.label]}
             aria-current={isActive ? "page" : undefined}
           >
             <Glyph aria-hidden fontSize="1.5rem" />
-            <span>{t(item.label)}</span>
+            <span>{labels[item.label]}</span>
           </Link>
         )
       })}

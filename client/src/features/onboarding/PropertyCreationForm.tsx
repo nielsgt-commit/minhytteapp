@@ -1,7 +1,7 @@
-import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
+import { useFormSubmit } from "@/hooks/useFormSubmit"
 
 type PropertyCreationFormProps = {
   pending: boolean
@@ -13,14 +13,13 @@ export function PropertyCreationForm({
   onSubmit,
 }: PropertyCreationFormProps) {
   const { t } = useTranslation("onboarding")
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    onSubmit({
+  const handleSubmit = useFormSubmit(
+    fd => ({
       name: fdString(fd, "name"),
       address: fdString(fd, "address"),
-    })
-  }
+    }),
+    onSubmit,
+  )
 
   return (
     <form onSubmit={handleSubmit}>

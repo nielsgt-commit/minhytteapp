@@ -1,9 +1,9 @@
-import { useState } from "react"
 import { Card } from "@digdir/designsystemet-react"
 import styles from "./MyExpenses.module.css"
 import { MyExpenseRow } from "./MyExpenseRow.tsx"
 import { MyExpenseEditForm } from "./MyExpenseEditForm.tsx"
 import type { ExpenseRow } from "../types.ts"
+import { useToggleState } from "@/hooks/useToggleState"
 
 type Props = {
   expense: ExpenseRow
@@ -20,27 +20,27 @@ export function MyExpenseCard({
   onDelete,
   deletePending,
 }: Props) {
-  const [editing, setEditing] = useState(false)
+  const editing = useToggleState()
 
   return (
     <Card asChild>
       <article>
-        <Card.Block className={editing ? undefined : styles.row} data-size="sm">
-          {editing ? (
+        <Card.Block className={editing.value ? undefined : styles.row} data-size="sm">
+          {editing.value ? (
             <MyExpenseEditForm
               expense={expense}
               propertyId={propertyId}
               onSaved={() => {
-                setEditing(false)
+                editing.close()
                 onSaved()
               }}
-              onCancel={() => { setEditing(false) }}
+              onCancel={editing.close}
             />
           ) : (
             <MyExpenseRow
               expense={expense}
               deletePending={deletePending}
-              onEdit={() => { setEditing(true) }}
+              onEdit={editing.open}
               onDelete={onDelete}
             />
           )}

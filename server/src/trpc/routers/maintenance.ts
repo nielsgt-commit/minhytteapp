@@ -25,7 +25,7 @@ const maintenanceFields = {
   category: z.enum(["maintenance", "repair"]),
   severity: z.enum(["major", "minor", "patch"]),
   status: z.enum(["todo", "doing", "done"]),
-  recurrence: z.enum(["once", "yearly", "5year"]),
+  recurrence: z.enum(["once", "yearly", "5year", "spring", "fall"]),
   completed_at: z.coerce.date().optional(),
 }
 

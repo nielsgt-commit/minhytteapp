@@ -1,10 +1,6 @@
 import { useSelectedUserId } from "@/features/user/userSlice"
 import { type SyntheticEvent, useEffect, useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import {
   Button,
   Field,
@@ -15,6 +11,7 @@ import {
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import {
   FindingsSection,
   type AdHoc,
@@ -45,7 +42,6 @@ export function InspectionFlow(props: {
   const { t } = useTranslation("maintenance")
   const { scope, open, onClose } = props
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedUserId = useSelectedUserId()
 
   const { data: maintenanceItems } = useQuery(
@@ -88,23 +84,19 @@ export function InspectionFlow(props: {
     }
   }, [open, currentUser, inspectedBy])
 
-  const recordMutation = useMutation(
+  const recordMutation = useMutationWithInvalidation(
     trpc.inspection.record.mutationOptions({
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.inspection.pathKey() })
-        void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
         resetForm()
         onClose()
       },
     }),
+    [trpc.inspection.pathKey(), trpc.maintenance.pathKey()],
   )
 
-  const reorderMutation = useMutation(
-    trpc.maintenance.setProcedureOrder.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
-      },
-    }),
+  const reorderMutation = useMutationWithInvalidation(
+    trpc.maintenance.setProcedureOrder.mutationOptions(),
+    [trpc.maintenance.pathKey()],
   )
 
   const moveProcedureItem = (id: number, direction: -1 | 1) => {

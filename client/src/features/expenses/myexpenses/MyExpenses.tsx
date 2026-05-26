@@ -1,8 +1,5 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import {
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Details } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./MyExpenses.module.css"
@@ -11,6 +8,7 @@ import type { ExpenseRow } from "../types.ts"
 import { selectMyExpenses } from "../selectors.ts"
 import { useInvalidateExpenses } from "../useInvalidateExpenses.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 
 export function MyExpenses() {
   const { t } = useTranslation("expenses")
@@ -25,8 +23,9 @@ export function MyExpenses() {
 
   const invalidate = useInvalidateExpenses()
 
-  const deleteExpense = useMutation(
-    trpc.expense.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteExpense = useMutationWithInvalidation(
+    trpc.expense.delete.mutationOptions(),
+    [trpc.expense.pathKey()],
   )
 
   if (me == null || selectedPropertyId == null) return null

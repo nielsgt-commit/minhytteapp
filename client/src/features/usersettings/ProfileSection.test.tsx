@@ -33,7 +33,10 @@ vi.mock("@tanstack/react-query", () => ({
   useMutation: (opts: { mutationFn?: unknown } & Record<string, unknown>) => {
     // Pick the right mutate fn based on which mutation option object came through.
     // We piggyback on the captured mutate spies in test setup via a counter.
-    const fn = mutationDispatcher.shift() ?? vi.fn()
+    const fn: MutationStub = mutationDispatcher.shift() ?? {
+      mutate: vi.fn(),
+      state: { isPending: false, error: null },
+    }
     return {
       mutate: fn.mutate,
       isPending: fn.state.isPending,

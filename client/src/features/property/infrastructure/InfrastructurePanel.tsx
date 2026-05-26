@@ -1,9 +1,5 @@
 import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -11,7 +7,11 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useToggleState } from "@/hooks/useToggleState"
+import { useFormSubmit } from "@/hooks/useFormSubmit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import styles from "./InfrastructurePanel.module.css"
 
@@ -28,11 +28,6 @@ type Infrastructure = {
   since_year: number | null
 }
 
-function fdString(fd: FormData, key: string): string {
-  const v = fd.get(key)
-  return typeof v === "string" ? v : ""
-}
-
 function fdYear(fd: FormData, key: string): number | null {
   const raw = fdString(fd, key).trim()
   if (!raw) return null
@@ -43,57 +38,48 @@ function fdYear(fd: FormData, key: string): number | null {
 export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const canEdit = useCanEdit()
 
   const { data: infrastructure } = useSuspenseQuery(
     trpc.infrastructure.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.infrastructure.listForProperty.queryKey({
-        property_id: propertyId,
-      }),
-    })
-  }
-
-  const createInfrastructure = useMutation(
-    trpc.infrastructure.create.mutationOptions({ onSuccess: invalidate }),
+  const infrastructureKeys = [
+    trpc.infrastructure.listForProperty.queryKey({ property_id: propertyId }),
+  ]
+  const createInfrastructure = useMutationWithInvalidation(
+    trpc.infrastructure.create.mutationOptions(),
+    infrastructureKeys,
   )
-  const updateInfrastructure = useMutation(
-    trpc.infrastructure.update.mutationOptions({ onSuccess: invalidate }),
+  const updateInfrastructure = useMutationWithInvalidation(
+    trpc.infrastructure.update.mutationOptions(),
+    infrastructureKeys,
   )
-  const deleteInfrastructure = useMutation(
-    trpc.infrastructure.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteInfrastructure = useMutationWithInvalidation(
+    trpc.infrastructure.delete.mutationOptions(),
+    infrastructureKeys,
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [isAdding, setIsAdding] = useState(false)
+  const adding = useToggleState()
 
   const lastError =
     createInfrastructure.error ?? updateInfrastructure.error ?? deleteInfrastructure.error
   const pending =
     createInfrastructure.isPending || updateInfrastructure.isPending || deleteInfrastructure.isPending
 
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const name = fdString(fd, "name").trim()
-    const description = fdString(fd, "description").trim()
-    const since_year = fdYear(fd, "since_year")
-    if (!name || !description) return
-    createInfrastructure.mutate(
-      { name, description, property_id: propertyId, since_year },
-      {
-        onSuccess: () => {
-          form.reset()
-          setIsAdding(false)
-        },
-      },
-    )
-  }
+  const handleAdd = useFormSubmit(
+    fd => {
+      const name = fdString(fd, "name").trim()
+      const description = fdString(fd, "description").trim()
+      if (!name || !description) return null
+      const since_year = fdYear(fd, "since_year")
+      return { name, description, property_id: propertyId, since_year }
+    },
+    payload => {
+      createInfrastructure.mutate(payload, { onSuccess: adding.close })
+    },
+  )
 
   const handleSave =
     (p: Infrastructure) => (e: SyntheticEvent<HTMLFormElement>) => {
@@ -213,7 +199,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
           <Card asChild key="__add">
             <li>
               <Card.Block className={styles.addBlock}>
-                {isAdding ? (
+                {adding.value ? (
                   <>
                     <strong>{t("Add infrastructure")}</strong>
                     <form
@@ -249,7 +235,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                           type="button"
                           variant="tertiary"
                           disabled={createInfrastructure.isPending}
-                          onClick={() => { setIsAdding(false) }}
+                          onClick={adding.close}
                         >
                           {t("Cancel")}
                         </Button>
@@ -261,7 +247,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                     variant="tertiary"
                     className={styles.addButton}
                     disabled={pending}
-                    onClick={() => { setIsAdding(true) }}
+                    onClick={adding.open}
                   >
                     {t("+ Add infrastructure")}
                   </Button>

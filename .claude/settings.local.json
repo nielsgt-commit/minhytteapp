@@ -11,7 +11,11 @@
       "Bash(git commit -m ' *)",
       "Bash(pnpm vite *)",
       "Bash(pnpm test *)",
-      "Bash(pnpm --filter client test src/features/onboarding/)"
+      "Bash(pnpm --filter client test src/features/onboarding/)",
+      "Bash(pnpm tsc *)",
+      "Read(//c/Users/nielst/.claude/skills/context7-mcp/**)",
+      "Bash(node resolve-library-id.js \"React\" \"React 19 custom hooks best practices useTransition useOptimistic useDeferredValue use\\(\\) API\")",
+      "Bash(pnpm build *)"
     ]
   }
 }

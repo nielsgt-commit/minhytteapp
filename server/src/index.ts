@@ -43,10 +43,9 @@ app.use(
   }),
 )
 
-// Deployed environments also serve the built SPA from this process.
+// In production this process also serves the built SPA.
 // Locally Vite serves the client on :5173 and proxies /api here.
-const env = process.env.NODE_ENV
-if (env === "production" || env === "staging") {
+if (process.env.NODE_ENV === "production") {
   app.use("/*", serveStatic({ root: "./client/dist" }))
   app.get("*", serveStatic({ path: "./client/dist/index.html" }))
 }

@@ -1,14 +1,12 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card, Select, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
+import { useToggleState } from "@/hooks/useToggleState.ts"
+import { useFormSubmit } from "@/hooks/useFormSubmit.ts"
 import { fdString } from "@/utils/formData.ts"
 
 const GROUP_NONE = ""
@@ -20,7 +18,6 @@ type InvitesPanelProps = {
 export function InvitesPanel({ canEdit }: InvitesPanelProps) {
   const { t } = useTranslation("usergroups")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
@@ -33,20 +30,17 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     }),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.allowedEmail.list.queryKey(),
-    })
-  }
-
-  const add = useMutation(
-    trpc.allowedEmail.add.mutationOptions({ onSuccess: invalidate }),
+  const allowedKeys = [trpc.allowedEmail.list.queryKey()]
+  const add = useMutationWithInvalidation(
+    trpc.allowedEmail.add.mutationOptions(),
+    allowedKeys,
   )
-  const remove = useMutation(
-    trpc.allowedEmail.remove.mutationOptions({ onSuccess: invalidate }),
+  const remove = useMutationWithInvalidation(
+    trpc.allowedEmail.remove.mutationOptions(),
+    allowedKeys,
   )
 
-  const [open, setOpen] = useState(false)
+  const form = useToggleState()
 
   const { pending, error: lastError } = useMutationsStatus(add, remove)
 
@@ -55,33 +49,27 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
   const groupName = (id: number | null) =>
     id == null ? null : (groupsQuery.data.find(g => g.id === id)?.name ?? null)
 
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const email = fdString(fd, "email").trim()
-    if (!email) return
-    const groupRaw = fdString(fd, "user_group_id")
-    const pctRaw = fdString(fd, "ownership_pct").trim()
-    const user_group_id =
-      groupRaw && groupRaw !== GROUP_NONE ? Number(groupRaw) : null
-    const ownership_pct = pctRaw === "" ? null : Number(pctRaw)
-    if (ownership_pct != null && !Number.isFinite(ownership_pct)) return
-    add.mutate(
-      {
+  const handleAdd = useFormSubmit(
+    fd => {
+      const email = fdString(fd, "email").trim()
+      if (!email) return null
+      const groupRaw = fdString(fd, "user_group_id")
+      const pctRaw = fdString(fd, "ownership_pct").trim()
+      const user_group_id =
+        groupRaw && groupRaw !== GROUP_NONE ? Number(groupRaw) : null
+      const ownership_pct = pctRaw === "" ? null : Number(pctRaw)
+      if (ownership_pct != null && !Number.isFinite(ownership_pct)) return null
+      return {
         email,
         property_id: propertyId,
         user_group_id,
         ownership_pct,
-      },
-      {
-        onSuccess: () => {
-          form.reset()
-          setOpen(false)
-        },
-      },
-    )
-  }
+      }
+    },
+    payload => {
+      add.mutate(payload, { onSuccess: form.close })
+    },
+  )
 
   const handleRemove = (id: number, email: string) => {
     if (!window.confirm(t("Remove {{email}} from the allowlist?", { email }))) {
@@ -149,14 +137,14 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
               <Button
                 type="button"
                 disabled={pending}
-                onClick={() => { setOpen(v => !v) }}
+                onClick={form.toggle}
               >
-                {open ? t("Cancel") : t("Add email")}
+                {form.value ? t("Cancel") : t("Add email")}
               </Button>
             </div>
           )}
 
-          {canEdit && open && (
+          {canEdit && form.value && (
             <form onSubmit={handleAdd}>
               <fieldset>
                 <legend>{t("New invite")}</legend>
@@ -201,7 +189,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => { setOpen(false) }}
+                    onClick={form.close}
                     disabled={add.isPending}
                   >
                     {t("Cancel")}

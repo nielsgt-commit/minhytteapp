@@ -1,9 +1,5 @@
 import { type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -14,6 +10,9 @@ import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useToggleState } from "@/hooks/useToggleState"
+import { useFormSubmit } from "@/hooks/useFormSubmit"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import styles from "./EquipmentPanel.module.css"
@@ -44,33 +43,30 @@ function fdYear(fd: FormData, key: string): number | null {
 export function EquipmentPanel({ propertyId, propertyName }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const canEdit = useCanEdit()
 
   const { data: equipment } = useSuspenseQuery(
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.equipment.listForProperty.queryKey({
-        property_id: propertyId,
-      }),
-    })
-  }
-
-  const createEquipment = useMutation(
-    trpc.equipment.create.mutationOptions({ onSuccess: invalidate }),
+  const equipmentKeys = [
+    trpc.equipment.listForProperty.queryKey({ property_id: propertyId }),
+  ]
+  const createEquipment = useMutationWithInvalidation(
+    trpc.equipment.create.mutationOptions(),
+    equipmentKeys,
   )
-  const updateEquipment = useMutation(
-    trpc.equipment.update.mutationOptions({ onSuccess: invalidate }),
+  const updateEquipment = useMutationWithInvalidation(
+    trpc.equipment.update.mutationOptions(),
+    equipmentKeys,
   )
-  const deleteEquipment = useMutation(
-    trpc.equipment.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteEquipment = useMutationWithInvalidation(
+    trpc.equipment.delete.mutationOptions(),
+    equipmentKeys,
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [isAdding, setIsAdding] = useState(false)
+  const adding = useToggleState()
 
   const { pending, error: lastError } = useMutationsStatus(
     createEquipment,
@@ -78,19 +74,16 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     deleteEquipment,
   )
 
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const name = fdString(fd, "name").trim()
-    const brand = fdString(fd, "brand").trim()
-    const model = fdString(fd, "model").trim()
-    const category = fdString(fd, "category").trim()
-    const notes = fdString(fd, "notes").trim()
-    const acquired_year = fdYear(fd, "acquired_year")
-    if (!name) return
-    createEquipment.mutate(
-      {
+  const handleAdd = useFormSubmit(
+    fd => {
+      const name = fdString(fd, "name").trim()
+      if (!name) return null
+      const brand = fdString(fd, "brand").trim()
+      const model = fdString(fd, "model").trim()
+      const category = fdString(fd, "category").trim()
+      const notes = fdString(fd, "notes").trim()
+      const acquired_year = fdYear(fd, "acquired_year")
+      return {
         name,
         property_id: propertyId,
         brand: brand || undefined,
@@ -98,15 +91,12 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
         category: category || undefined,
         notes: notes || undefined,
         acquired_year,
-      },
-      {
-        onSuccess: () => {
-          form.reset()
-          setIsAdding(false)
-        },
-      },
-    )
-  }
+      }
+    },
+    payload => {
+      createEquipment.mutate(payload, { onSuccess: adding.close })
+    },
+  )
 
   const handleSave =
     (item: Equipment) => (e: SyntheticEvent<HTMLFormElement>) => {
@@ -263,7 +253,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
           <Card asChild key="__add">
             <li>
               <Card.Block className={styles.addBlock}>
-                {isAdding ? (
+                {adding.value ? (
                   <>
                     <strong>{t("Add equipment")}</strong>
                     <form
@@ -320,7 +310,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                             type="button"
                             variant="tertiary"
                             disabled={createEquipment.isPending}
-                            onClick={() => { setIsAdding(false) }}
+                            onClick={() => { adding.close() }}
                           >
                             {t("Cancel")}
                           </Button>
@@ -333,7 +323,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                     variant="tertiary"
                     className={styles.addButton}
                     disabled={pending}
-                    onClick={() => { setIsAdding(true) }}
+                    onClick={adding.open}
                   >
                     {t("+ Add equipment")}
                   </Button>

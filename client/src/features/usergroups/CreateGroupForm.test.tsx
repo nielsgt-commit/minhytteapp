@@ -93,7 +93,7 @@ describe("CreateGroupForm", () => {
 
   test("invoking the reset callback clears the form", async () => {
     const user = userEvent.setup()
-    let capturedReset: (() => void) | null = null
+    let capturedReset: () => void = () => {}
     const onSubmit = vi.fn((_input, reset: () => void) => {
       capturedReset = reset
     })
@@ -106,7 +106,7 @@ describe("CreateGroupForm", () => {
     await user.click(screen.getByRole("button", { name: "Save" }))
 
     expect(nameField.value).toBe("Temp")
-    capturedReset?.()
+    capturedReset()
     expect(nameField.value).toBe("")
   })
 })

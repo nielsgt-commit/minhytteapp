@@ -1,9 +1,10 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { Suspense, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { Button, Card, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import type { BookingDraftRecord } from "@/features/calendar/booking-logic"
 import { EditStayFlow } from "@/features/calendar/editstayflow/EditStayFlow.tsx"
 import styles from "./MyPlannedStay.module.css"
@@ -56,7 +57,6 @@ function bookingToRecord(b: BookingShape): BookingDraftRecord {
 export function MyPlannedStay() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
   const { data: bookings } = useQuery(
@@ -67,12 +67,9 @@ export function MyPlannedStay() {
   )
   const [openId, setOpenId] = useState<number | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const removeMeMutation = useMutation(
-    trpc.booking.update.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.booking.pathKey() })
-      },
-    }),
+  const removeMeMutation = useMutationWithInvalidation(
+    trpc.booking.update.mutationOptions(),
+    [trpc.booking.pathKey()],
   )
 
   if (selectedPropertyId == null) {

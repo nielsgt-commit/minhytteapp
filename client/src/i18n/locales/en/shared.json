@@ -1,5 +1,10 @@
 {
   "{{label}} sections": "{{label}} sections",
+  "Calendar": "Calendar",
+  "Dashboard": "Dashboard",
+  "Expenses": "Expenses",
+  "Maintenance": "Maintenance",
   "Primary": "Primary",
-  "Sections": "Sections"
+  "Sections": "Sections",
+  "Settlement": "Settlement"
 }

@@ -1,44 +1,40 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useInvalidateExpenses } from "./useInvalidateExpenses.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 
 export function useCategoryAdminMutations() {
   const trpc = useTRPC()
-  const qc = useQueryClient()
-  const invalidateExpenses = useInvalidateExpenses()
 
   const [newName, setNewName] = useState("")
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editingName, setEditingName] = useState("")
 
-  const invalidateCategories = () =>
-    qc.invalidateQueries({ queryKey: trpc.expenseCategory.list.queryKey() })
+  const categoryKey = [trpc.expenseCategory.list.queryKey()]
+  const categoryAndExpenseKeys = [
+    trpc.expenseCategory.list.queryKey(),
+    trpc.expense.pathKey(),
+  ]
 
-  const create = useMutation(
+  const create = useMutationWithInvalidation(
     trpc.expenseCategory.create.mutationOptions({
-      onSuccess: () => {
-        setNewName("")
-        void invalidateCategories()
-      },
+      onSuccess: () => { setNewName("") },
     }),
+    categoryKey,
   )
 
-  const rename = useMutation(
+  const rename = useMutationWithInvalidation(
     trpc.expenseCategory.rename.mutationOptions({
       onSuccess: () => {
         setEditingId(null)
         setEditingName("")
-        void invalidateCategories()
-        void invalidateExpenses()
       },
     }),
+    categoryAndExpenseKeys,
   )
 
-  const archive = useMutation(
-    trpc.expenseCategory.archive.mutationOptions({
-      onSuccess: () => { void invalidateCategories() },
-    }),
+  const archive = useMutationWithInvalidation(
+    trpc.expenseCategory.archive.mutationOptions(),
+    categoryKey,
   )
 
   const startEdit = (id: number, name: string) => {

@@ -1,7 +1,7 @@
-import { type SyntheticEvent } from "react"
 import { Button, Checkbox, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData"
+import { useFormSubmit } from "@/hooks/useFormSubmit"
 
 type UserCreationFormProps = {
   pending: boolean
@@ -10,15 +10,14 @@ type UserCreationFormProps = {
 
 export function UserCreationForm({ pending, onSubmit }: UserCreationFormProps) {
   const { t } = useTranslation("onboarding")
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    onSubmit({
+  const handleSubmit = useFormSubmit(
+    fd => ({
       name: fdString(fd, "name"),
       email: fdString(fd, "email"),
       is_child: fdBoolean(fd, "is_child"),
-    })
-  }
+    }),
+    onSubmit,
+  )
 
   return (
     <form onSubmit={handleSubmit}>

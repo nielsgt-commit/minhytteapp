@@ -6,5 +6,6 @@ declare module "i18next" {
     defaultNS: typeof defaultNS
     resources: (typeof resources)["en"]
     keySeparator: false
+    nsSeparator: false
   }
 }

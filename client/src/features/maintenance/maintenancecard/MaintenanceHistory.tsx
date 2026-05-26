@@ -1,14 +1,10 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import {
@@ -24,7 +20,6 @@ type DeletingState = { id: number; typed: string } | null
 export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   const { t } = useTranslation("maintenance")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
 
   const { data: items } = useSuspenseQuery(
@@ -39,15 +34,14 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     ),
   )
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
-  }
-
-  const updateMutation = useMutation(
-    trpc.maintenance.update.mutationOptions({ onSuccess: invalidate }),
+  const maintenanceKeys = [trpc.maintenance.pathKey()]
+  const updateMutation = useMutationWithInvalidation(
+    trpc.maintenance.update.mutationOptions(),
+    maintenanceKeys,
   )
-  const deleteMutation = useMutation(
-    trpc.maintenance.delete.mutationOptions({ onSuccess: invalidate }),
+  const deleteMutation = useMutationWithInvalidation(
+    trpc.maintenance.delete.mutationOptions(),
+    maintenanceKeys,
   )
 
   const [editing, setEditing] = useState<EditingState>(null)

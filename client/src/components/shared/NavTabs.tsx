@@ -16,6 +16,14 @@ export default function NavTabs({ children }: { children: ReactNode }) {
   const { t } = useTranslation("shared")
   const { pathname } = useLocation()
 
+  const labels: Record<(typeof navLinks)[number]["label"], string> = {
+    Dashboard: t("Dashboard"),
+    Calendar: t("Calendar"),
+    Maintenance: t("Maintenance"),
+    Expenses: t("Expenses"),
+    Settlement: t("Settlement"),
+  }
+
   const activeValue =
     navLinks.find(l => pathname.startsWith(l.to))?.to ?? ""
 
@@ -25,10 +33,10 @@ export default function NavTabs({ children }: { children: ReactNode }) {
         <Tabs.List className={`${styles.list}${activeValue ? "" : ` ${styles.noActive}`}`}>
           {navLinks.map(link => (
             <Tabs.Tab key={link.to} value={link.to} style={{ position: "relative" }}>
-              {t(link.label)}
+              {labels[link.label]}
               <Link
                 {...link}
-                aria-label={t(link.label)}
+                aria-label={labels[link.label]}
                 style={{ position: "absolute", inset: 0 }}
               />
             </Tabs.Tab>

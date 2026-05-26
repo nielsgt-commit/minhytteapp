@@ -15,7 +15,7 @@
   "Delete": "Delete",
   "Description": "Description",
   "Edit": "Edit",
-  "Edit mode": "Edit mode",
+  "Error: {{message}}": "Error: {{message}}",
   "Expenses": "Expenses",
   "Loading…": "Loading…",
   "My expenses ({{count}})_one": "My expenses ({{count}})_one",

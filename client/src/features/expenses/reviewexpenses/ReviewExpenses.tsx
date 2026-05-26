@@ -1,11 +1,8 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { ReviewExpenseCard } from "./ReviewExpenseCard.tsx"
 import { ReviewHeader } from "./ReviewHeader.tsx"
 import { EmptyReviewState } from "./EmptyReviewState.tsx"
@@ -27,7 +24,6 @@ type Props = {
 export function ReviewExpenses({ settlementId, phase }: Props) {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
   const { data: expenses } = useSuspenseQuery(
@@ -41,12 +37,9 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
     }),
   )
 
-  const advancePhase = useMutation(
-    trpc.settlement.advancePhase.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-      },
-    }),
+  const advancePhase = useMutationWithInvalidation(
+    trpc.settlement.advancePhase.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
 
   const myGroup = groups.find(
