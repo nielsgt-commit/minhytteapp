@@ -25,7 +25,7 @@ const defaults = {
   availableGroups: groups,
   totalGroups: 1,
   onKindChange: () => {},
-  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => { e.preventDefault() },
+  onSubmit: async (_fd: FormData) => {},
   onCancel: () => {},
 }
 

@@ -1,26 +1,30 @@
-import { Button, Checkbox, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { Checkbox, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData"
-import { useFormSubmit } from "@/hooks/useFormSubmit"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 
 type UserCreationFormProps = {
-  pending: boolean
-  onSubmit: (input: { name: string; email: string; is_child: boolean }) => void
+  onSubmit: (input: { name: string; email: string; is_child: boolean }) => Promise<void>
 }
 
-export function UserCreationForm({ pending, onSubmit }: UserCreationFormProps) {
+export function UserCreationForm({ onSubmit }: UserCreationFormProps) {
   const { t } = useTranslation("onboarding")
-  const handleSubmit = useFormSubmit(
-    fd => ({
-      name: fdString(fd, "name"),
-      email: fdString(fd, "email"),
-      is_child: fdBoolean(fd, "is_child"),
-    }),
-    onSubmit,
-  )
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      action={async fd => {
+        const input = {
+          name: fdString(fd, "name"),
+          email: fdString(fd, "email"),
+          is_child: fdBoolean(fd, "is_child"),
+        }
+        try {
+          await onSubmit(input)
+        } catch {
+          /* surfaced by caller via mutation.error */
+        }
+      }}
+    >
       <Fieldset>
         <Fieldset.Legend>{t("Step 1 – Create your admin account")}</Fieldset.Legend>
         <div>
@@ -33,9 +37,7 @@ export function UserCreationForm({ pending, onSubmit }: UserCreationFormProps) {
           <Checkbox label={t("Is child")} name="is_child" />
         </div>
         <div>
-          <Button type="submit" disabled={pending}>
-            {t("Create admin")}
-          </Button>
+          <SubmitButton>{t("Create admin")}</SubmitButton>
         </div>
       </Fieldset>
     </form>

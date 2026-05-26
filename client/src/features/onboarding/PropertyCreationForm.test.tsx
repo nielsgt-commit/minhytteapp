@@ -3,13 +3,16 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
 import { PropertyCreationForm } from "./PropertyCreationForm"
 
+type Input = { name: string; address: string }
+const noop = async () => {}
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
 describe("PropertyCreationForm", () => {
   test("renders name + address fields and the submit button", () => {
-    render(<PropertyCreationForm pending={false} onSubmit={() => {}} />)
+    render(<PropertyCreationForm onSubmit={noop} />)
     expect(screen.getByLabelText("Name")).toBeInTheDocument()
     expect(screen.getByLabelText("Address")).toBeInTheDocument()
     expect(
@@ -18,9 +21,9 @@ describe("PropertyCreationForm", () => {
   })
 
   test("submits typed name and address", async () => {
-    const onSubmit = vi.fn()
+    const onSubmit = vi.fn<(input: Input) => Promise<void>>().mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<PropertyCreationForm pending={false} onSubmit={onSubmit} />)
+    render(<PropertyCreationForm onSubmit={onSubmit} />)
 
     await user.type(screen.getByLabelText("Name"), "The Cabin")
     await user.type(screen.getByLabelText("Address"), "1 Mountain Rd")
@@ -33,31 +36,24 @@ describe("PropertyCreationForm", () => {
     })
   })
 
-  test("disables the submit button while pending", () => {
-    render(<PropertyCreationForm pending={true} onSubmit={() => {}} />)
-    expect(
-      screen.getByRole("button", { name: "Create property" }),
-    ).toBeDisabled()
-  })
-
   test("does not call onSubmit when required fields are empty", async () => {
-    const onSubmit = vi.fn()
+    const onSubmit = vi.fn<(input: Input) => Promise<void>>().mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<PropertyCreationForm pending={false} onSubmit={onSubmit} />)
+    render(<PropertyCreationForm onSubmit={onSubmit} />)
 
     await user.click(screen.getByRole("button", { name: "Create property" }))
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
   test("renders the step 2 legend", () => {
-    render(<PropertyCreationForm pending={false} onSubmit={() => {}} />)
+    render(<PropertyCreationForm onSubmit={noop} />)
     expect(screen.getByText("Step 2 – Add the property")).toBeInTheDocument()
   })
 
   test("can be submitted multiple times with new values", async () => {
-    const onSubmit = vi.fn()
+    const onSubmit = vi.fn<(input: Input) => Promise<void>>().mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<PropertyCreationForm pending={false} onSubmit={onSubmit} />)
+    render(<PropertyCreationForm onSubmit={onSubmit} />)
 
     const nameField = screen.getByLabelText("Name")
     const addressField = screen.getByLabelText("Address")

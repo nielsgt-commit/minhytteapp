@@ -1,17 +1,13 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Button, Card, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
-import { useFormSubmit } from "@/hooks/useFormSubmit"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import styles from "./InfrastructurePanel.module.css"
 
@@ -68,32 +64,35 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   const pending =
     createInfrastructure.isPending || updateInfrastructure.isPending || deleteInfrastructure.isPending
 
-  const handleAdd = useFormSubmit(
-    fd => {
-      const name = fdString(fd, "name").trim()
-      const description = fdString(fd, "description").trim()
-      if (!name || !description) return null
-      const since_year = fdYear(fd, "since_year")
-      return { name, description, property_id: propertyId, since_year }
-    },
-    payload => {
-      createInfrastructure.mutate(payload, { onSuccess: adding.close })
-    },
-  )
-
-  const handleSave =
-    (p: Infrastructure) => (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const fd = new FormData(e.currentTarget)
-      const name = fdString(fd, "name").trim()
-      const description = fdString(fd, "description").trim()
-      const since_year = fdYear(fd, "since_year")
-      if (!name || !description) return
-      updateInfrastructure.mutate(
-        { id: p.id, name, description, property_id: propertyId, since_year },
-        { onSuccess: () => { setEditingId(null) } },
-      )
+  const handleAdd = async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    const description = fdString(fd, "description").trim()
+    if (!name || !description) return
+    const since_year = fdYear(fd, "since_year")
+    try {
+      await createInfrastructure.mutateAsync({
+        name, description, property_id: propertyId, since_year,
+      })
+      adding.close()
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
     }
+  }
+
+  const handleSave = (p: Infrastructure) => async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    const description = fdString(fd, "description").trim()
+    const since_year = fdYear(fd, "since_year")
+    if (!name || !description) return
+    try {
+      await updateInfrastructure.mutateAsync({
+        id: p.id, name, description, property_id: propertyId, since_year,
+      })
+      setEditingId(null)
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
+    }
+  }
 
   const handleDelete = (p: Infrastructure) => {
     if (!window.confirm(t("Delete infrastructure \"{{name}}\"?", { name: p.name }))) return
@@ -105,7 +104,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
 
   const renderEditForm = (p: Infrastructure) => (
     <form
-      onSubmit={handleSave(p)}
+      action={handleSave(p)}
       key={`edit-${String(p.id)}`}
       className={styles.editForm}
     >
@@ -134,9 +133,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
         disabled={updateInfrastructure.isPending}
       />
       <div className={styles.actions}>
-        <Button type="submit" disabled={pending}>
-          {t("Save")}
-        </Button>
+        <SubmitButton>{t("Save")}</SubmitButton>
         <Button
           type="button"
           variant="tertiary"
@@ -202,10 +199,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                 {adding.value ? (
                   <>
                     <strong>{t("Add infrastructure")}</strong>
-                    <form
-                      onSubmit={handleAdd}
-                      className={styles.addForm}
-                    >
+                    <form action={handleAdd} className={styles.addForm}>
                       <Textfield
                         label={t("Name")}
                         name="name"
@@ -228,9 +222,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                         disabled={createInfrastructure.isPending}
                       />
                       <div className={styles.actions}>
-                        <Button type="submit" disabled={createInfrastructure.isPending}>
-                          {t("Add infrastructure")}
-                        </Button>
+                        <SubmitButton>{t("Add infrastructure")}</SubmitButton>
                         <Button
                           type="button"
                           variant="tertiary"

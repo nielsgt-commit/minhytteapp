@@ -1,18 +1,13 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Fieldset,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Button, Card, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
-import { useFormSubmit } from "@/hooks/useFormSubmit"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import styles from "./EquipmentPanel.module.css"
@@ -74,16 +69,16 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     deleteEquipment,
   )
 
-  const handleAdd = useFormSubmit(
-    fd => {
-      const name = fdString(fd, "name").trim()
-      if (!name) return null
-      const brand = fdString(fd, "brand").trim()
-      const model = fdString(fd, "model").trim()
-      const category = fdString(fd, "category").trim()
-      const notes = fdString(fd, "notes").trim()
-      const acquired_year = fdYear(fd, "acquired_year")
-      return {
+  const handleAdd = async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    if (!name) return
+    const brand = fdString(fd, "brand").trim()
+    const model = fdString(fd, "model").trim()
+    const category = fdString(fd, "category").trim()
+    const notes = fdString(fd, "notes").trim()
+    const acquired_year = fdYear(fd, "acquired_year")
+    try {
+      await createEquipment.mutateAsync({
         name,
         property_id: propertyId,
         brand: brand || undefined,
@@ -91,38 +86,37 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
         category: category || undefined,
         notes: notes || undefined,
         acquired_year,
-      }
-    },
-    payload => {
-      createEquipment.mutate(payload, { onSuccess: adding.close })
-    },
-  )
-
-  const handleSave =
-    (item: Equipment) => (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const fd = new FormData(e.currentTarget)
-      const name = fdString(fd, "name").trim()
-      const brand = fdString(fd, "brand").trim()
-      const model = fdString(fd, "model").trim()
-      const category = fdString(fd, "category").trim()
-      const notes = fdString(fd, "notes").trim()
-      const acquired_year = fdYear(fd, "acquired_year")
-      if (!name) return
-      updateEquipment.mutate(
-        {
-          id: item.id,
-          name,
-          property_id: propertyId,
-          brand: brand || undefined,
-          model: model || undefined,
-          category: category || undefined,
-          notes: notes || undefined,
-          acquired_year,
-        },
-        { onSuccess: () => { setEditingId(null) } },
-      )
+      })
+      adding.close()
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
     }
+  }
+
+  const handleSave = (item: Equipment) => async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    const brand = fdString(fd, "brand").trim()
+    const model = fdString(fd, "model").trim()
+    const category = fdString(fd, "category").trim()
+    const notes = fdString(fd, "notes").trim()
+    const acquired_year = fdYear(fd, "acquired_year")
+    if (!name) return
+    try {
+      await updateEquipment.mutateAsync({
+        id: item.id,
+        name,
+        property_id: propertyId,
+        brand: brand || undefined,
+        model: model || undefined,
+        category: category || undefined,
+        notes: notes || undefined,
+        acquired_year,
+      })
+      setEditingId(null)
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
+    }
+  }
 
   const handleDelete = (item: Equipment) => {
     if (!window.confirm(t("Delete equipment \"{{name}}\"?", { name: item.name }))) return
@@ -134,7 +128,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
 
   const renderEditForm = (item: Equipment) => (
     <form
-      onSubmit={handleSave(item)}
+      action={handleSave(item)}
       key={`edit-${String(item.id)}`}
       className={styles.editForm}
     >
@@ -187,9 +181,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
           disabled={updateEquipment.isPending}
         />
         <div className={styles.actions}>
-          <Button type="submit" disabled={pending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton>{t("Save")}</SubmitButton>
           <Button
             type="button"
             variant="tertiary"
@@ -256,10 +248,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                 {adding.value ? (
                   <>
                     <strong>{t("Add equipment")}</strong>
-                    <form
-                      onSubmit={handleAdd}
-                      className={styles.addForm}
-                    >
+                    <form action={handleAdd} className={styles.addForm}>
                       <Fieldset>
                         <Fieldset.Legend>{t("New equipment")}</Fieldset.Legend>
                         <Textfield
@@ -303,9 +292,7 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                           disabled={createEquipment.isPending}
                         />
                         <div className={styles.actions}>
-                          <Button type="submit" disabled={createEquipment.isPending}>
-                            {t("Add equipment")}
-                          </Button>
+                          <SubmitButton>{t("Add equipment")}</SubmitButton>
                           <Button
                             type="button"
                             variant="tertiary"

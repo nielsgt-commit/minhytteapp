@@ -6,7 +6,7 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
 import { useToggleState } from "@/hooks/useToggleState.ts"
-import { useFormSubmit } from "@/hooks/useFormSubmit.ts"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { fdString } from "@/utils/formData.ts"
 
 const GROUP_NONE = ""
@@ -49,27 +49,22 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
   const groupName = (id: number | null) =>
     id == null ? null : (groupsQuery.data.find(g => g.id === id)?.name ?? null)
 
-  const handleAdd = useFormSubmit(
-    fd => {
-      const email = fdString(fd, "email").trim()
-      if (!email) return null
-      const groupRaw = fdString(fd, "user_group_id")
-      const pctRaw = fdString(fd, "ownership_pct").trim()
-      const user_group_id =
-        groupRaw && groupRaw !== GROUP_NONE ? Number(groupRaw) : null
-      const ownership_pct = pctRaw === "" ? null : Number(pctRaw)
-      if (ownership_pct != null && !Number.isFinite(ownership_pct)) return null
-      return {
-        email,
-        property_id: propertyId,
-        user_group_id,
-        ownership_pct,
-      }
-    },
-    payload => {
-      add.mutate(payload, { onSuccess: form.close })
-    },
-  )
+  const handleAdd = async (fd: FormData) => {
+    const email = fdString(fd, "email").trim()
+    if (!email) return
+    const groupRaw = fdString(fd, "user_group_id")
+    const pctRaw = fdString(fd, "ownership_pct").trim()
+    const user_group_id =
+      groupRaw && groupRaw !== GROUP_NONE ? Number(groupRaw) : null
+    const ownership_pct = pctRaw === "" ? null : Number(pctRaw)
+    if (ownership_pct != null && !Number.isFinite(ownership_pct)) return
+    try {
+      await add.mutateAsync({ email, property_id: propertyId, user_group_id, ownership_pct })
+      form.close()
+    } catch {
+      /* surfaced via add.error / useMutationsStatus */
+    }
+  }
 
   const handleRemove = (id: number, email: string) => {
     if (!window.confirm(t("Remove {{email}} from the allowlist?", { email }))) {
@@ -145,7 +140,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
           )}
 
           {canEdit && form.value && (
-            <form onSubmit={handleAdd}>
+            <form action={handleAdd}>
               <fieldset>
                 <legend>{t("New invite")}</legend>
                 <div>
@@ -183,9 +178,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                   />
                 </div>
                 <div>
-                  <Button type="submit" disabled={add.isPending}>
-                    {t("Add")}
-                  </Button>
+                  <SubmitButton>{t("Add")}</SubmitButton>
                   <Button
                     type="button"
                     variant="secondary"

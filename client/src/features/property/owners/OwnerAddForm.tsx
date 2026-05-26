@@ -1,4 +1,3 @@
-import { type SyntheticEvent } from "react"
 import {
   Button,
   Chip,
@@ -8,6 +7,7 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import styles from "./OwnerAddForm.module.css"
 
 type AddKind = "user" | "group"
@@ -23,7 +23,7 @@ type Props = {
   availableGroups: GroupOption[]
   totalGroups: number
   onKindChange: (kind: AddKind) => void
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onSubmit: (fd: FormData) => Promise<void>
   onCancel: () => void
 }
 
@@ -41,7 +41,7 @@ export function OwnerAddForm({
   const { t } = useTranslation("property")
   return (
     <form
-      onSubmit={onSubmit}
+      action={onSubmit}
       key={`add-${addKind}`}
       className={styles.form}
     >
@@ -138,9 +138,7 @@ export function OwnerAddForm({
         />
 
         <div className={styles.actions}>
-          <Button type="submit" disabled={addDisabled}>
-            {t("Add owner")}
-          </Button>
+          <SubmitButton disabled={addDisabled}>{t("Add owner")}</SubmitButton>
           <Button
             type="button"
             variant="tertiary"

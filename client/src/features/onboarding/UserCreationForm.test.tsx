@@ -9,7 +9,7 @@ vi.mock("react-i18next", () => ({
 
 describe("UserCreationForm", () => {
   test("renders all required fields and the submit button", () => {
-    render(<UserCreationForm pending={false} onSubmit={() => {}} />)
+    render(<UserCreationForm onSubmit={async () => {}} />)
     expect(screen.getByLabelText("Name")).toBeInTheDocument()
     expect(screen.getByLabelText("Email")).toBeInTheDocument()
     expect(screen.getByLabelText("Is child")).toBeInTheDocument()
@@ -18,10 +18,11 @@ describe("UserCreationForm", () => {
     ).toBeInTheDocument()
   })
 
-  test("submits trimmed string values and is_child=false by default", async () => {
-    const onSubmit = vi.fn()
+  test("submits string values and is_child=false by default", async () => {
+    const onSubmit = vi.fn<(input: { name: string; email: string; is_child: boolean }) => Promise<void>>()
+      .mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<UserCreationForm pending={false} onSubmit={onSubmit} />)
+    render(<UserCreationForm onSubmit={onSubmit} />)
 
     await user.type(screen.getByLabelText("Name"), "Alice")
     await user.type(screen.getByLabelText("Email"), "alice@example.com")
@@ -36,9 +37,10 @@ describe("UserCreationForm", () => {
   })
 
   test("submits is_child=true when the checkbox is ticked", async () => {
-    const onSubmit = vi.fn()
+    const onSubmit = vi.fn<(input: { name: string; email: string; is_child: boolean }) => Promise<void>>()
+      .mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<UserCreationForm pending={false} onSubmit={onSubmit} />)
+    render(<UserCreationForm onSubmit={onSubmit} />)
 
     await user.type(screen.getByLabelText("Name"), "Kid")
     await user.type(screen.getByLabelText("Email"), "kid@example.com")
@@ -52,29 +54,18 @@ describe("UserCreationForm", () => {
     })
   })
 
-  test("disables the submit button while pending", () => {
-    render(<UserCreationForm pending={true} onSubmit={() => {}} />)
-    expect(screen.getByRole("button", { name: "Create admin" })).toBeDisabled()
-  })
-
-  test("enables the submit button when not pending", () => {
-    render(<UserCreationForm pending={false} onSubmit={() => {}} />)
-    expect(
-      screen.getByRole("button", { name: "Create admin" }),
-    ).not.toBeDisabled()
-  })
-
   test("does not call onSubmit when required fields are empty", async () => {
-    const onSubmit = vi.fn()
+    const onSubmit = vi.fn<(input: { name: string; email: string; is_child: boolean }) => Promise<void>>()
+      .mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<UserCreationForm pending={false} onSubmit={onSubmit} />)
+    render(<UserCreationForm onSubmit={onSubmit} />)
 
     await user.click(screen.getByRole("button", { name: "Create admin" }))
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
   test("email field has type=email for browser-level validation", () => {
-    render(<UserCreationForm pending={false} onSubmit={() => {}} />)
+    render(<UserCreationForm onSubmit={async () => {}} />)
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email")
   })
 })
