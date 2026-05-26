@@ -59,13 +59,15 @@ export const expenseCategoryRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.transaction(async tx => {
-        const [existing] = await tx
-          .select({
-            name: expenseCategoriesTable.name,
-            archived_at: expenseCategoriesTable.archived_at,
-          })
-          .from(expenseCategoriesTable)
-          .where(eq(expenseCategoriesTable.id, input.id))
+        const existing = (
+          await tx
+            .select({
+              name: expenseCategoriesTable.name,
+              archived_at: expenseCategoriesTable.archived_at,
+            })
+            .from(expenseCategoriesTable)
+            .where(eq(expenseCategoriesTable.id, input.id))
+        ).at(0)
         if (!existing) {
           throw new TRPCError({ code: "NOT_FOUND" })
         }
@@ -81,11 +83,9 @@ export const expenseCategoryRouter = router({
           .where(eq(expenseCategoriesTable.id, input.id))
           .returning()
         if (existing.name !== input.name) {
-          await tx
-            .update(expensesTable)
-            .set({
-              expense_types: sql`array_replace(${expensesTable.expense_types}, ${existing.name}, ${input.name})`,
-            })
+          await tx.update(expensesTable).set({
+            expense_types: sql`array_replace(${expensesTable.expense_types}, ${existing.name}, ${input.name})`,
+          })
         }
         return updated
       })
@@ -94,11 +94,13 @@ export const expenseCategoryRouter = router({
   archive: headProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [archived] = await ctx.db
-        .update(expenseCategoriesTable)
-        .set({ archived_at: new Date() })
-        .where(eq(expenseCategoriesTable.id, input.id))
-        .returning()
+      const archived = (
+        await ctx.db
+          .update(expenseCategoriesTable)
+          .set({ archived_at: new Date() })
+          .where(eq(expenseCategoriesTable.id, input.id))
+          .returning()
+      ).at(0)
       if (!archived) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
@@ -108,11 +110,13 @@ export const expenseCategoryRouter = router({
   unarchive: headProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [unarchived] = await ctx.db
-        .update(expenseCategoriesTable)
-        .set({ archived_at: null })
-        .where(eq(expenseCategoriesTable.id, input.id))
-        .returning()
+      const unarchived = (
+        await ctx.db
+          .update(expenseCategoriesTable)
+          .set({ archived_at: null })
+          .where(eq(expenseCategoriesTable.id, input.id))
+          .returning()
+      ).at(0)
       if (!unarchived) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }

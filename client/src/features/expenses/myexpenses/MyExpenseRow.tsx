@@ -1,9 +1,4 @@
-import {
-  Button,
-  Divider,
-  Paragraph,
-  Tag,
-} from "@digdir/designsystemet-react"
+import { Button, Divider, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./MyExpenses.module.css"
 import { STATUS_COLOR } from "../expenseStatus.ts"
@@ -69,7 +64,9 @@ export function MyExpenseRow({
           data-color="danger"
           data-size="sm"
           disabled={deletePending}
-          onClick={() => { onDelete() }}
+          onClick={() => {
+            onDelete()
+          }}
         >
           {t("Delete")}
         </Button>

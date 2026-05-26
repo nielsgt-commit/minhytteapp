@@ -7,11 +7,7 @@ import {
   usersTable,
 } from "../../db/schema/users.schema.ts"
 import type { Context } from "../context.ts"
-import {
-  propertyAdminProcedure,
-  protectedProcedure,
-  router,
-} from "../init.ts"
+import { propertyAdminProcedure, protectedProcedure, router } from "../init.ts"
 
 export async function relevantGroupIdsForProperty(
   ctx: Context,
@@ -70,10 +66,7 @@ const userGroupFields = {
   is_main: z.boolean().optional(),
 }
 
-async function fetchGroupsWithMembers(
-  ctx: Context,
-  groupIds: number[],
-) {
+async function fetchGroupsWithMembers(ctx: Context, groupIds: number[]) {
   if (groupIds.length === 0) return []
   const groups = await ctx.db
     .select({
@@ -96,10 +89,7 @@ async function fetchGroupsWithMembers(
     .where(inArray(userGroupMembersTable.user_group_id, groupIds))
     .orderBy(asc(usersTable.id))
 
-  const byGroup = new Map<
-    number,
-    { user_id: number; user_name: string }[]
-  >()
+  const byGroup = new Map<number, { user_id: number; user_name: string }[]>()
   for (const m of members) {
     const list = byGroup.get(m.user_group_id) ?? []
     list.push({ user_id: m.user_id, user_name: m.user_name })
@@ -140,10 +130,7 @@ export const userGroupRouter = router({
       .innerJoin(usersTable, eq(usersTable.id, userGroupMembersTable.user_id))
       .orderBy(asc(usersTable.id))
 
-    const byGroup = new Map<
-      number,
-      { user_id: number; user_name: string }[]
-    >()
+    const byGroup = new Map<number, { user_id: number; user_name: string }[]>()
     for (const m of members) {
       const list = byGroup.get(m.user_group_id) ?? []
       list.push({ user_id: m.user_id, user_name: m.user_name })

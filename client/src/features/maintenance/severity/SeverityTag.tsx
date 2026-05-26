@@ -41,16 +41,20 @@ export function SeverityTag(props: {
       className={interactive ? styles.interactive : undefined}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
-      aria-label={t("Severity: {{label}} (click to change)", { label: label[severity] })}
+      aria-label={t("Severity: {{label}} (click to change)", {
+        label: label[severity],
+      })}
       onClick={interactive ? onCycle : undefined}
-      onKeyDown={interactive
-        ? e => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            onCycle()
-          }
-        }
-        : undefined}
+      onKeyDown={
+        interactive
+          ? e => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                onCycle()
+              }
+            }
+          : undefined
+      }
     >
       {label[severity]}
     </Tag>

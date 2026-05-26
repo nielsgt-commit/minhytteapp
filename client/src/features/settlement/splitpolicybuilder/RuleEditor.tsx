@@ -84,10 +84,7 @@ export function RuleEditor({
             >
               <Select.Option value="total">{t("total")}</Select.Option>
               {activeCategories.map(c => (
-                <Select.Option
-                  key={c.id}
-                  value={`category:${String(c.id)}`}
-                >
+                <Select.Option key={c.id} value={`category:${String(c.id)}`}>
                   {t("category: {{name}}", { name: c.name })}
                 </Select.Option>
               ))}
@@ -119,7 +116,9 @@ export function RuleEditor({
                     type="button"
                     variant="tertiary"
                     data-size="sm"
-                    onClick={() => { onRemoveWho(idx, enc) }}
+                    onClick={() => {
+                      onRemoveWho(idx, enc)
+                    }}
                   >
                     {describeWho(w, groups)} ✕
                   </Button>
@@ -154,7 +153,9 @@ export function RuleEditor({
             </Select>
           </Paragraph>
           <Switch
-            label={t("Include extra guest names (attributed to booker's group)")}
+            label={t(
+              "Include extra guest names (attributed to booker's group)",
+            )}
             data-size="sm"
             checked={rule.include_extra_guests}
             onChange={e => {
@@ -165,7 +166,9 @@ export function RuleEditor({
             propertyUsers={propertyUsers}
             groups={groups}
             selectedEncoded={selectedWhoEncoded}
-            onAdd={enc => { onAddWho(idx, enc) }}
+            onAdd={enc => {
+              onAddWho(idx, enc)
+            }}
           />
         </Card.Block>
 
@@ -183,7 +186,9 @@ export function RuleEditor({
                     type="button"
                     variant="tertiary"
                     data-size="sm"
-                    onClick={() => { onRemoveExcept(idx, enc) }}
+                    onClick={() => {
+                      onRemoveExcept(idx, enc)
+                    }}
                   >
                     {describeExcept(e, groups)} ✕
                   </Button>
@@ -195,7 +200,9 @@ export function RuleEditor({
             propertyUsers={propertyUsers}
             groups={groups}
             selectedEncoded={selectedExceptEncoded}
-            onAdd={enc => { onAddExcept(idx, enc) }}
+            onAdd={enc => {
+              onAddExcept(idx, enc)
+            }}
           />
         </Card.Block>
 
@@ -205,7 +212,9 @@ export function RuleEditor({
             variant="tertiary"
             data-size="sm"
             disabled={idx === 0 || pending}
-            onClick={() => { onMove(idx, -1) }}
+            onClick={() => {
+              onMove(idx, -1)
+            }}
           >
             {t("↑ Up")}
           </Button>
@@ -214,7 +223,9 @@ export function RuleEditor({
             variant="tertiary"
             data-size="sm"
             disabled={isLast || pending}
-            onClick={() => { onMove(idx, 1) }}
+            onClick={() => {
+              onMove(idx, 1)
+            }}
           >
             {t("↓ Down")}
           </Button>
@@ -223,7 +234,9 @@ export function RuleEditor({
             variant="tertiary"
             data-size="sm"
             disabled={pending}
-            onClick={() => { onRemove(idx) }}
+            onClick={() => {
+              onRemove(idx)
+            }}
           >
             {t("Remove rule")}
           </Button>

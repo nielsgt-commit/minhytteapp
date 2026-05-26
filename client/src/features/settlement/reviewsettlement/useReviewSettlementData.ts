@@ -74,17 +74,13 @@ export function useReviewSettlementData(settlementId: number) {
   const reimbursed = expenses.filter(
     e => e.status === "reimbursed" && e.reimbursed_by_id != null,
   ) as ExpenseRow[]
-  const editableHeadId = me?.is_head ? me.id : null
+  const editableHeadId = me.is_head ? me.id : null
 
   const mainGroupForHead = (headId: number) =>
-    groups.find(
-      g => g.is_main && g.members.some(m => m.user_id === headId),
-    )
+    groups.find(g => g.is_main && g.members.some(m => m.user_id === headId))
 
   const mainGroupForUser = (userId: number) =>
-    groups.find(
-      g => g.is_main && g.members.some(m => m.user_id === userId),
-    )
+    groups.find(g => g.is_main && g.members.some(m => m.user_id === userId))
 
   const groupBookingDays = (memberIds: Set<number>) =>
     bookings
@@ -96,8 +92,7 @@ export function useReviewSettlementData(settlementId: number) {
         ).length
         const bookerGroup = mainGroupForUser(b.booker_id)
         const bookerInGroup =
-          bookerGroup != null
-          && bookerGroup.members.some(m => memberIds.has(m.user_id))
+          bookerGroup?.members.some(m => memberIds.has(m.user_id)) ?? false
         const extraHits = bookerInGroup
           ? (extraOccupants.get(b.id)?.length ?? 0)
           : 0
@@ -121,4 +116,6 @@ export function useReviewSettlementData(settlementId: number) {
   }
 }
 
-export type HeadUser = ReturnType<typeof useReviewSettlementData>["heads"][number]
+export type HeadUser = ReturnType<
+  typeof useReviewSettlementData
+>["heads"][number]

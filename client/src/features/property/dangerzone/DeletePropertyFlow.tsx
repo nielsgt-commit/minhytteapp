@@ -51,8 +51,7 @@ export function DeletePropertyFlow() {
   }
 
   const nameMatches = typedName === selectedProperty.name
-  const canDelete =
-    nameMatches && acknowledged && !deleteProperty.isPending
+  const canDelete = nameMatches && acknowledged && !deleteProperty.isPending
 
   const reset = () => {
     setIsArmed(false)
@@ -63,10 +62,7 @@ export function DeletePropertyFlow() {
   const handleDelete = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!canDelete) return
-    deleteProperty.mutate(
-      { id: selectedProperty.id },
-      { onSuccess: reset },
-    )
+    deleteProperty.mutate({ id: selectedProperty.id }, { onSuccess: reset })
   }
 
   if (!isArmed) {
@@ -81,7 +77,12 @@ export function DeletePropertyFlow() {
             components={{ 1: <strong /> }}
           />
         </p>
-        <Button type="button" onClick={() => { setIsArmed(true) }}>
+        <Button
+          type="button"
+          onClick={() => {
+            setIsArmed(true)
+          }}
+        >
           {t("Delete this property…")}
         </Button>
       </div>
@@ -117,7 +118,9 @@ export function DeletePropertyFlow() {
               }
               type="text"
               value={typedName}
-              onChange={e => { setTypedName(e.target.value) }}
+              onChange={e => {
+                setTypedName(e.target.value)
+              }}
               autoComplete="off"
               autoFocus
               required
@@ -126,15 +129,21 @@ export function DeletePropertyFlow() {
 
           <div>
             <Checkbox
-              label={t("I understand that this action is permanent and cannot be undone.")}
+              label={t(
+                "I understand that this action is permanent and cannot be undone.",
+              )}
               checked={acknowledged}
-              onChange={e => { setAcknowledged(e.target.checked) }}
+              onChange={e => {
+                setAcknowledged(e.target.checked)
+              }}
             />
           </div>
 
           <div>
             <Button type="submit" disabled={!canDelete}>
-              {t("Permanently delete {{name}}", { name: selectedProperty.name })}
+              {t("Permanently delete {{name}}", {
+                name: selectedProperty.name,
+              })}
             </Button>
             <Button
               type="button"
@@ -146,7 +155,11 @@ export function DeletePropertyFlow() {
           </div>
 
           {deleteProperty.error && (
-            <p role="alert">{t("Error: {{message}}", { message: deleteProperty.error.message })}</p>
+            <p role="alert">
+              {t("Error: {{message}}", {
+                message: deleteProperty.error.message,
+              })}
+            </p>
           )}
         </Fieldset>
       </form>

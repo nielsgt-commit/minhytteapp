@@ -30,10 +30,7 @@ const updateInput = z.object({
 
 export const propertyRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(propertyTable)
-      .orderBy(asc(propertyTable.id))
+    return ctx.db.select().from(propertyTable).orderBy(asc(propertyTable.id))
   }),
 
   listForUser: protectedProcedure

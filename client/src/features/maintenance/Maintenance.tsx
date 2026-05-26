@@ -10,7 +10,11 @@ export function Maintenance() {
     return (
       <section className={styles.page}>
         <h2 className={styles.title}>{t("Maintenance")}</h2>
-        <p>{t("Add or select a property to log issues, plan upkeep, and track work across Structures.")}</p>
+        <p>
+          {t(
+            "Add or select a property to log issues, plan upkeep, and track work across Structures.",
+          )}
+        </p>
       </section>
     )
   }

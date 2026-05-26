@@ -1,23 +1,10 @@
 import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
-import {
-  propertyOwnersTable,
-} from "../../db/schema/property.schema.ts"
-import {
-  userGroupsTable,
-  usersTable,
-} from "../../db/schema/users.schema.ts"
-import {
-  propertyAdminProcedure,
-  publicProcedure,
-  router,
-} from "../init.ts"
+import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
+import { userGroupsTable, usersTable } from "../../db/schema/users.schema.ts"
+import { propertyAdminProcedure, publicProcedure, router } from "../init.ts"
 
-const pctField = z
-  .number()
-  .min(0)
-  .max(100)
-  .multipleOf(0.01)
+const pctField = z.number().min(0).max(100).multipleOf(0.01)
 
 export const propertyOwnerRouter = router({
   list: publicProcedure

@@ -87,9 +87,7 @@ export const allowedEmailRouter = router({
           property_id,
           user_group_id: input.user_group_id ?? null,
           ownership_pct:
-            input.ownership_pct == null
-              ? null
-              : input.ownership_pct.toFixed(2),
+            input.ownership_pct == null ? null : input.ownership_pct.toFixed(2),
           added_by_user_id: ctx.user.id,
         })
         .returning()
@@ -99,10 +97,12 @@ export const allowedEmailRouter = router({
   remove: headOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(allowedEmailsTable)
-        .where(eq(allowedEmailsTable.id, input.id))
-        .returning()
+      const deleted = (
+        await ctx.db
+          .delete(allowedEmailsTable)
+          .where(eq(allowedEmailsTable.id, input.id))
+          .returning()
+      ).at(0)
       if (!deleted) {
         throw new TRPCError({ code: "NOT_FOUND", message: "entry not found" })
       }

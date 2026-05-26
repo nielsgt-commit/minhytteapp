@@ -12,7 +12,11 @@ export function Settlement() {
     return (
       <section className={styles.page}>
         <h2>{t("Settlement")}</h2>
-        <p>{t("Add or select a property to balance expenses between owners and settle up.")}</p>
+        <p>
+          {t(
+            "Add or select a property to balance expenses between owners and settle up.",
+          )}
+        </p>
       </section>
     )
   }

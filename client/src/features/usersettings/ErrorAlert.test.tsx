@@ -5,7 +5,9 @@ import { ErrorAlert } from "./ErrorAlert"
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, vars?: Record<string, string>) =>
-      vars ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "") : key,
+      vars
+        ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "")
+        : key,
   }),
 }))
 

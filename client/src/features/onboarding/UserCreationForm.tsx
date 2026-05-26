@@ -4,7 +4,11 @@ import { fdBoolean, fdString } from "@/utils/formData"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 
 type UserCreationFormProps = {
-  onSubmit: (input: { name: string; email: string; is_child: boolean }) => Promise<void>
+  onSubmit: (input: {
+    name: string
+    email: string
+    is_child: boolean
+  }) => Promise<void>
 }
 
 export function UserCreationForm({ onSubmit }: UserCreationFormProps) {
@@ -26,7 +30,9 @@ export function UserCreationForm({ onSubmit }: UserCreationFormProps) {
       }}
     >
       <Fieldset>
-        <Fieldset.Legend>{t("Step 1 – Create your admin account")}</Fieldset.Legend>
+        <Fieldset.Legend>
+          {t("Step 1 – Create your admin account")}
+        </Fieldset.Legend>
         <div>
           <Textfield label={t("Name")} type="text" name="name" required />
         </div>

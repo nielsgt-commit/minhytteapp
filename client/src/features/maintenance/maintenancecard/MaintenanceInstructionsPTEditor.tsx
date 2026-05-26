@@ -37,11 +37,14 @@ const schemaDefinition = defineSchema({
 
 const renderStyle: RenderStyleFunction = ({ schemaType, children }) => {
   switch (schemaType.name) {
-    case "h2": return <h2 className={styles.h2}>{children}</h2>
-    case "h3": return <h3 className={styles.h3}>{children}</h3>
+    case "h2":
+      return <h2 className={styles.h2}>{children}</h2>
+    case "h3":
+      return <h3 className={styles.h3}>{children}</h3>
     case "blockquote":
       return <blockquote className={styles.quote}>{children}</blockquote>
-    default: return <p className={styles.p}>{children}</p>
+    default:
+      return <p className={styles.p}>{children}</p>
   }
 }
 
@@ -51,23 +54,24 @@ const renderDecorator: RenderDecoratorFunction = ({ value, children }) => {
   return <>{children}</>
 }
 
-const renderListItem: RenderListItemFunction = (props) => (
+const renderListItem: RenderListItemFunction = props => (
   <div
     className={styles.listItem}
     data-list={props.schemaType.name}
-    style={{ marginLeft: `${(props.level - 1) * 1.25}rem` }}
+    style={{ marginLeft: `${String((props.level - 1) * 1.25)}rem` }}
   >
     {props.children}
   </div>
 )
 
-const renderBlock: RenderBlockFunction = (props) => {
+const renderBlock: RenderBlockFunction = props => {
   const v = props.value as Record<string, unknown>
   if (props.schemaType.name === "photo") {
+    const caption = typeof v.caption === "string" ? v.caption : ""
     return (
       <figure className={styles.figure}>
-        {typeof v.url === "string" && <img src={v.url} alt={String(v.caption ?? "")} />}
-        {v.caption ? <figcaption>{String(v.caption)}</figcaption> : null}
+        {typeof v.url === "string" && <img src={v.url} alt={caption} />}
+        {caption ? <figcaption>{caption}</figcaption> : null}
       </figure>
     )
   }
@@ -91,7 +95,13 @@ function StyleButton({ style, label }: { style: string; label: string }) {
   )
 }
 
-function DecoratorButton({ decorator, label }: { decorator: string; label: string }) {
+function DecoratorButton({
+  decorator,
+  label,
+}: {
+  decorator: string
+  label: string
+}) {
   const editor = useEditor()
   return (
     <Button
@@ -125,7 +135,13 @@ function ListButton({ listItem, label }: { listItem: string; label: string }) {
   )
 }
 
-function LinkButton({ label, promptLabel }: { label: string; promptLabel: string }) {
+function LinkButton({
+  label,
+  promptLabel,
+}: {
+  label: string
+  promptLabel: string
+}) {
   const editor = useEditor()
   return (
     <Button
@@ -177,7 +193,7 @@ function BlockObjectButton({
 function Toolbar() {
   const { t } = useTranslation("maintenance")
   const toolbarSchema = useToolbarSchema({})
-  const photo = toolbarSchema.blockObjects?.find((b) => b.name === "photo")
+  const photo = toolbarSchema.blockObjects.find(b => b.name === "photo")
 
   return (
     <div className={styles.toolbar}>
@@ -222,7 +238,8 @@ export function MaintenanceInstructionsPTEditor({
     <div className={styles.root} aria-label={t("Description")}>
       <EditorProvider initialConfig={{ schemaDefinition, initialValue: value }}>
         <EventListenerPlugin
-          on={(event) => {
+          on={event => {
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- the deprecation on `event.type` is on sibling union members (e.g. "loading"); "mutation" is the supported case.
             if (event.type === "mutation") {
               setValue(event.value)
               onChange((event.value ?? []) as unknown as PortableTextBlock[])

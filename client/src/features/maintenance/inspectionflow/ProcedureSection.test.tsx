@@ -72,14 +72,14 @@ describe("ProcedureSection", () => {
   test("clicking Move down on first item calls moveProcedureItem with +1", async () => {
     const user = userEvent.setup()
     const { moveProcedureItem } = setup()
-    await user.click(screen.getAllByRole("button", { name: "Move down" })[0]!)
+    await user.click(screen.getAllByRole("button", { name: "Move down" })[0])
     expect(moveProcedureItem).toHaveBeenCalledWith(1, 1)
   })
 
   test("selecting 'Needs followup' calls setProc with followup status", async () => {
     const user = userEvent.setup()
     const { setProc } = setup()
-    await user.click(screen.getAllByLabelText("Needs followup")[0]!)
+    await user.click(screen.getAllByLabelText("Needs followup")[0])
     expect(setProc).toHaveBeenCalledWith(1, { status: "followup" })
   })
 

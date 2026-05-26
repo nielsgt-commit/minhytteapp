@@ -71,9 +71,9 @@ export function useParking(propertyId: number, me: Me) {
   )
 
   const pendingSlot = claim.isPending
-    ? claim.variables?.slot_index
+    ? claim.variables.slot_index
     : release.isPending
-      ? release.variables?.slot_index
+      ? release.variables.slot_index
       : null
 
   const toggle = (slot: number, occupied: boolean) => {

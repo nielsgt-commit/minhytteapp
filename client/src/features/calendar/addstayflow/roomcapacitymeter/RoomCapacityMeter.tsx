@@ -1,4 +1,11 @@
-import { Button, Card, Label, Paragraph, Select, Tag } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Label,
+  Paragraph,
+  Select,
+  Tag,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { bedCapacity } from "@/features/calendar/booking-logic"
 import { BED_LABELS } from "../../constants.ts"
@@ -6,7 +13,14 @@ import { BedIconRow } from "../bedicons/BedIcons.tsx"
 import type { RoomShape, ExistingOccupant } from "../../types.ts"
 import styles from "./RoomCapacityMeter.module.css"
 
-const BED_KEYS = ["beds_sm", "beds_lg", "beds_double", "beds_kid", "travel_cot", "mattresses"] as const
+const BED_KEYS = [
+  "beds_sm",
+  "beds_lg",
+  "beds_double",
+  "beds_kid",
+  "travel_cot",
+  "mattresses",
+] as const
 
 export function RoomCapacityMeter({
   room,
@@ -42,9 +56,11 @@ export function RoomCapacityMeter({
   const over = placed > total
   const adultInKidOnly = adultInKidOnlyUserIds.length > 0
 
-  const bedSummary = BED_KEYS
-    .filter(key => room[key] > 0)
-    .map(key => `${room[key]}× ${BED_LABELS[key] ? td(BED_LABELS[key]) : key}`)
+  const bedSummary = BED_KEYS.filter(key => room[key] > 0)
+    .map(
+      key =>
+        `${String(room[key])}× ${BED_LABELS[key] ? td(BED_LABELS[key]) : key}`,
+    )
     .join(" · ")
 
   // Card's data-color type is narrower than Tag's; cast to allow feedback colors
@@ -52,16 +68,19 @@ export function RoomCapacityMeter({
   return (
     <Card data-color={cardColor} className={styles.roomCard}>
       <Card.Block>
-
         {/* Always visible: toggle header */}
-        <Button type="button" variant="tertiary" onClick={onToggle} className={styles.toggleButton} aria-expanded={isExpanded}>
+        <Button
+          type="button"
+          variant="tertiary"
+          onClick={onToggle}
+          className={styles.toggleButton}
+          aria-expanded={isExpanded}
+        >
           <div className={styles.header}>
             <div>
               <span>{room.name}</span>
               {structureName && (
-                <div className={styles.structureName}>
-                  {structureName}
-                </div>
+                <div className={styles.structureName}>{structureName}</div>
               )}
             </div>
             <div className={styles.headerRight}>
@@ -70,24 +89,23 @@ export function RoomCapacityMeter({
                 existingCount={existingOccupantsInRoom.length}
                 draftCount={occupantsInRoom.length}
               />
-              <Tag data-color={over ? "danger" : placed === total ? "warning" : "success"}>
+              <Tag
+                data-color={
+                  over ? "danger" : placed === total ? "warning" : "success"
+                }
+              >
                 {t("{{placed}}/{{total}} beds", { placed, total })}
               </Tag>
-              <span className={styles.chevron}>
-                {isExpanded ? "▴" : "▾"}
-              </span>
+              <span className={styles.chevron}>{isExpanded ? "▴" : "▾"}</span>
             </div>
           </div>
-
         </Button>
 
         {/* Expanded content */}
         {isExpanded && (
           <>
             {bedSummary && (
-              <div className={styles.bedSummary}>
-                {bedSummary}
-              </div>
+              <div className={styles.bedSummary}>{bedSummary}</div>
             )}
 
             {existingOccupantsInRoom.length > 0 && (
@@ -95,8 +113,12 @@ export function RoomCapacityMeter({
                 <Label data-size="sm">{t("Already booked")}</Label>
                 <div className={styles.tagRow}>
                   {existingOccupantsInRoom.map(o => (
-                    <Tag key={`existing-${o.user_id}`} data-color="neutral">
-                      {o.user_name ?? `#${String(o.user_id)}`}{o.queued ? t(" [Q]") : ""}
+                    <Tag
+                      key={`existing-${String(o.user_id)}`}
+                      data-color="neutral"
+                    >
+                      {o.user_name ?? `#${String(o.user_id)}`}
+                      {o.queued ? t(" [Q]") : ""}
                     </Tag>
                   ))}
                 </div>
@@ -105,12 +127,20 @@ export function RoomCapacityMeter({
 
             {occupantsInRoom.length > 0 && (
               <div className={styles.section}>
-                {existingOccupantsInRoom.length > 0 && <Label data-size="sm">{t("Adding")}</Label>}
+                {existingOccupantsInRoom.length > 0 && (
+                  <Label data-size="sm">{t("Adding")}</Label>
+                )}
                 <div className={styles.tagRowLg}>
                   {occupantsInRoom.map(o => {
                     const u = users.find(x => x.id === o.user_id)
-                    const isAdultKidOnly = adultInKidOnlyUserIds.includes(o.user_id)
-                    const color = isAdultKidOnly ? "danger" : o.queued ? "warning" : "accent"
+                    const isAdultKidOnly = adultInKidOnlyUserIds.includes(
+                      o.user_id,
+                    )
+                    const color = isAdultKidOnly
+                      ? "danger"
+                      : o.queued
+                        ? "warning"
+                        : "accent"
                     return (
                       <div key={o.user_id} className={styles.occupantItem}>
                         <Tag data-color={color}>
@@ -123,8 +153,12 @@ export function RoomCapacityMeter({
                           <Button
                             type="button"
                             variant="tertiary"
-                            onClick={() => { onRemove(o.user_id) }}
-                            aria-label={t("Remove {{name}}", { name: u?.name ?? String(o.user_id) })}
+                            onClick={() => {
+                              onRemove(o.user_id)
+                            }}
+                            aria-label={t("Remove {{name}}", {
+                              name: u?.name ?? String(o.user_id),
+                            })}
                             className={styles.removeButton}
                           >
                             ×
@@ -162,7 +196,8 @@ export function RoomCapacityMeter({
                     const u = users.find(x => x.id === o.user_id)
                     return (
                       <Select.Option key={o.user_id} value={o.user_id}>
-                        {u?.name ?? `#${String(o.user_id)}`}{u?.is_child ? t(" (kid)") : ""}
+                        {u?.name ?? `#${String(o.user_id)}`}
+                        {u?.is_child ? t(" (kid)") : ""}
                       </Select.Option>
                     )
                   })}
@@ -171,7 +206,6 @@ export function RoomCapacityMeter({
             )}
           </>
         )}
-
       </Card.Block>
     </Card>
   )

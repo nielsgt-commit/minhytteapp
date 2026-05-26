@@ -4,12 +4,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Heading,
-  Paragraph,
-} from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { PREV_PHASE } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
@@ -56,11 +51,15 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
       <Card asChild>
         <article>
           <Card.Block data-size="sm">
-            <Heading level={3} data-size="xs">{t("Review split policy")}</Heading>
+            <Heading level={3} data-size="xs">
+              {t("Review split policy")}
+            </Heading>
           </Card.Block>
           <Card.Block data-size="sm">
             <Paragraph role="alert">
-              {t("Couldn't build a split preview: {{message}}", { message: previewQuery.error.message })}
+              {t("Couldn't build a split preview: {{message}}", {
+                message: previewQuery.error.message,
+              })}
             </Paragraph>
             <Paragraph data-size="sm">
               <Trans
@@ -76,14 +75,16 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
   }
   const preview = previewQuery.data
   const { inputs, groups, transfers, policy, heads, closed } = preview
-  const myHead = me ? heads.find(h => h.user_id === me.id) : undefined
+  const myHead = heads.find(h => h.user_id === me.id)
   const acceptedCount = heads.filter(h => h.accepted).length
 
   return (
     <Card asChild>
       <article>
         <Card.Block data-size="sm">
-          <Heading level={3} data-size="xs">{t("Review split policy")}</Heading>
+          <Heading level={3} data-size="xs">
+            {t("Review split policy")}
+          </Heading>
           <Paragraph data-size="sm">
             {t("Policy:")} <strong>{policy}</strong>
             {closed ? t(" (closed)") : ""}
@@ -102,7 +103,9 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
         </Card.Block>
 
         <Card.Block data-size="sm">
-          <Heading level={4} data-size="2xs">{t("Per group")}</Heading>
+          <Heading level={4} data-size="2xs">
+            {t("Per group")}
+          </Heading>
           {groups.length === 0 ? (
             <Paragraph data-size="sm">{t("No groups.")}</Paragraph>
           ) : (
@@ -134,13 +137,17 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
         </Card.Block>
 
         <Card.Block data-size="sm">
-          <Heading level={4} data-size="2xs">{t("Transfers")}</Heading>
+          <Heading level={4} data-size="2xs">
+            {t("Transfers")}
+          </Heading>
           {transfers.length === 0 ? (
             <Paragraph data-size="sm">{t("No transfers needed.")}</Paragraph>
           ) : (
             <ul>
               {transfers.map((tr, i) => (
-                <li key={`${String(tr.from_group_id)}-${String(tr.to_group_id)}-${String(i)}`}>
+                <li
+                  key={`${String(tr.from_group_id)}-${String(tr.to_group_id)}-${String(i)}`}
+                >
                   {tr.from_group_name} → {tr.to_group_name}:{" "}
                   <strong>{String(tr.amount)},-</strong>
                 </li>
@@ -151,7 +158,10 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
 
         <Card.Block data-size="sm">
           <Heading level={4} data-size="2xs">
-            {t("Acceptance ({{accepted}}/{{total}})", { accepted: String(acceptedCount), total: String(heads.length) })}
+            {t("Acceptance ({{accepted}}/{{total}})", {
+              accepted: String(acceptedCount),
+              total: String(heads.length),
+            })}
           </Heading>
           {heads.length === 0 ? (
             <Paragraph data-size="sm">{t("No heads found.")}</Paragraph>
@@ -199,9 +209,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
                 type="button"
                 data-size="sm"
                 disabled={
-                  myHead == null
-                  || myHead.accepted
-                  || acceptSplit.isPending
+                  myHead == null || myHead.accepted || acceptSplit.isPending
                 }
                 onClick={() => {
                   acceptSplit.mutate({ id: settlementId })
@@ -217,10 +225,14 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
             </Paragraph>
           )}
           {acceptSplit.error && (
-            <p role="alert">{t("Error: {{message}}", { message: acceptSplit.error.message })}</p>
+            <p role="alert">
+              {t("Error: {{message}}", { message: acceptSplit.error.message })}
+            </p>
           )}
           {regressPhase.error && (
-            <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
+            <p role="alert">
+              {t("Error: {{message}}", { message: regressPhase.error.message })}
+            </p>
           )}
         </Card.Block>
       </article>

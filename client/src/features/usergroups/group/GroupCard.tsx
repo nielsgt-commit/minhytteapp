@@ -130,9 +130,7 @@ export function GroupCard({
                   {group.name}
                   {group.is_main && <small> {t("(main)")}</small>}
                 </h4>
-                <p>
-                  {t("{{count}} member", { count: group.members.length })}
-                </p>
+                <p>{t("{{count}} member", { count: group.members.length })}</p>
               </>
             }
             form={renameForm}
@@ -143,7 +141,9 @@ export function GroupCard({
                 data-color="danger"
                 data-size="sm"
                 disabled={pending}
-                aria-label={t("Delete group {{groupName}}", { groupName: group.name })}
+                aria-label={t("Delete group {{groupName}}", {
+                  groupName: group.name,
+                })}
                 onClick={onDelete}
               >
                 {t("Delete")}
@@ -200,8 +200,12 @@ export function GroupCard({
                       data-color="danger"
                       data-size="sm"
                       disabled={pending}
-                      aria-label={t("Remove {{userName}} from group", { userName: m.user_name })}
-                      onClick={() => { onRemoveMember(m.user_id, m.user_name) }}
+                      aria-label={t("Remove {{userName}} from group", {
+                        userName: m.user_name,
+                      })}
+                      onClick={() => {
+                        onRemoveMember(m.user_id, m.user_name)
+                      }}
                     >
                       {t("Remove")}
                     </Button>

@@ -39,7 +39,10 @@ const groups: GroupWithMembers[] = [
     id: 2,
     name: "Beta",
     is_main: false,
-    members: [{ user_id: 11, user_name: "Bob" }, { user_id: 12, user_name: "Carol" }],
+    members: [
+      { user_id: 11, user_name: "Bob" },
+      { user_id: 12, user_name: "Carol" },
+    ],
   },
 ]
 
@@ -183,16 +186,12 @@ describe("describe*", () => {
   test("describeWhen resolves owner name or falls back", () => {
     expect(describeWhen({ kind: "always" }, [])).toBe("anytime")
     expect(
-      describeWhen(
-        { kind: "during_priority_week", property_owner_id: 7 },
-        [{ property_owner_id: 7, user_id: 99, user_name: "Dana" }],
-      ),
+      describeWhen({ kind: "during_priority_week", property_owner_id: 7 }, [
+        { property_owner_id: 7, user_id: 99, user_name: "Dana" },
+      ]),
     ).toBe("Dana's priority week")
     expect(
-      describeWhen(
-        { kind: "during_priority_week", property_owner_id: 7 },
-        [],
-      ),
+      describeWhen({ kind: "during_priority_week", property_owner_id: 7 }, []),
     ).toBe("priority week (owner #7)")
   })
 })

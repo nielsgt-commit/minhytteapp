@@ -1,10 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
@@ -49,11 +45,17 @@ export function PriorityWeeks() {
   }
 
   const setMutation = useMutation(
-    trpc.priority.set.mutationOptions({ onSuccess: () => { invalidate() } }),
+    trpc.priority.set.mutationOptions({
+      onSuccess: () => {
+        invalidate()
+      },
+    }),
   )
   const clearMutation = useMutation(
     trpc.priority.clear.mutationOptions({
-      onSuccess: () => { invalidate() },
+      onSuccess: () => {
+        invalidate()
+      },
     }),
   )
   const { pending, error: lastError } = useMutationsStatus(
@@ -62,7 +64,9 @@ export function PriorityWeeks() {
   )
 
   if (selectedPropertyId == null) {
-    return <Paragraph>{t("Select a property to manage priority weeks.")}</Paragraph>
+    return (
+      <Paragraph>{t("Select a property to manage priority weeks.")}</Paragraph>
+    )
   }
 
   const data = priorityQuery.data
@@ -102,26 +106,39 @@ export function PriorityWeeks() {
       <Heading level={3}>{t("Priority weeks (peak summer)")}</Heading>
 
       <Paragraph>
-        {t("Each household head picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.")}
+        {t(
+          "Each household head picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
+        )}
       </Paragraph>
 
       <YearNavigator year={year} onChange={setYear} />
 
       {myOwnerId == null && !isAdmin && (
         <Paragraph>
-          {t("You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings.")}
+          {t(
+            "You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings.",
+          )}
         </Paragraph>
       )}
 
       {eligibleOwners.length === 0 ? (
         <Paragraph role="alert">
-          {t("No household heads found for this property. Owners must enable the \"household head\" flag in their user settings before they can be assigned a priority week.")}
+          {t(
+            'No household heads found for this property. Owners must enable the "household head" flag in their user settings before they can be assigned a priority week.',
+          )}
         </Paragraph>
       ) : (
         <>
           {unassigned.length > 0 && (
             <Paragraph role="status">
-              {t("{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).", { count: unassigned.length, total: PEAK_WEEKS.length, weeks: unassigned.join(", W") })}
+              {t(
+                "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).",
+                {
+                  count: unassigned.length,
+                  total: PEAK_WEEKS.length,
+                  weeks: unassigned.join(", W"),
+                },
+              )}
             </Paragraph>
           )}
 
@@ -139,7 +156,11 @@ export function PriorityWeeks() {
         </>
       )}
 
-      {lastError && <Paragraph role="alert">{t("Error: {{message}}", { message: lastError.message })}</Paragraph>}
+      {lastError && (
+        <Paragraph role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </Paragraph>
+      )}
     </section>
   )
 }

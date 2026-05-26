@@ -1,6 +1,13 @@
 import { type SyntheticEvent, useEffect, useState } from "react"
-import { Button, Divider, Dropdown, Label, Paragraph, Textfield } from '@digdir/designsystemet-react';
-import { ChevronDownIcon } from '@navikt/aksel-icons';
+import {
+  Button,
+  Divider,
+  Dropdown,
+  Label,
+  Paragraph,
+  Textfield,
+} from "@digdir/designsystemet-react"
+import { ChevronDownIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./PropertySwitcher.module.css"
 
@@ -51,7 +58,13 @@ export default function PropertySwitcher({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}
+    >
       <Label id="property-switcher-label" className={styles.label}></Label>
       <Dropdown.TriggerContext>
         <Dropdown.Trigger
@@ -71,35 +84,52 @@ export default function PropertySwitcher({
         <Dropdown
           placement="bottom-start"
           open={isOpen}
-          onOpen={() => { setIsOpen(true) }}
-          onClose={() => { setIsOpen(false) }}
+          onOpen={() => {
+            setIsOpen(true)
+          }}
+          onClose={() => {
+            setIsOpen(false)
+          }}
         >
           {isAddOpen ? (
             <form
               onSubmit={handleSubmit}
-              style={{ display: "flex", flexDirection: "column", gap: "0.5rem", padding: "0.5rem" }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+                padding: "0.5rem",
+              }}
             >
               <Textfield
                 label={t("New property name")}
                 name="name"
                 value={name}
-                onChange={e => { setName(e.target.value) }}
+                onChange={e => {
+                  setName(e.target.value)
+                }}
                 autoFocus
                 required
               />
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                <Button type="submit" loading={isAddPending}>{t("Save")}</Button>
+                <Button type="submit" loading={isAddPending}>
+                  {t("Save")}
+                </Button>
                 <Button
                   type="button"
                   variant="secondary"
                   disabled={isAddPending}
-                  onClick={() => { onAddOpenChange(false) }}
+                  onClick={() => {
+                    onAddOpenChange(false)
+                  }}
                 >
                   {t("Cancel")}
                 </Button>
               </div>
               {addError && (
-                <Paragraph data-color="danger" role="alert">{t("Error: {{message}}", { message: addError })}</Paragraph>
+                <Paragraph data-color="danger" role="alert">
+                  {t("Error: {{message}}", { message: addError })}
+                </Paragraph>
               )}
             </form>
           ) : (
@@ -111,14 +141,22 @@ export default function PropertySwitcher({
               )}
               {properties.map(p => (
                 <Dropdown.Item key={p.id}>
-                  <Dropdown.Button onClick={() => { onChange(p.id) }}>
+                  <Dropdown.Button
+                    onClick={() => {
+                      onChange(p.id)
+                    }}
+                  >
                     {p.name}
                   </Dropdown.Button>
                 </Dropdown.Item>
               ))}
               <Divider />
               <Dropdown.Item>
-                <Dropdown.Button onClick={() => { onAddOpenChange(true) }}>
+                <Dropdown.Button
+                  onClick={() => {
+                    onAddOpenChange(true)
+                  }}
+                >
                   {t("+ Add property")}
                 </Dropdown.Button>
               </Dropdown.Item>

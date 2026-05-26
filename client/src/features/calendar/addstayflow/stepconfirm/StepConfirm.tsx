@@ -1,11 +1,23 @@
 import type { Dispatch, ReactNode } from "react"
-import { Button, Field, Heading, Label, Paragraph, Select, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Field,
+  Heading,
+  Label,
+  Paragraph,
+  Select,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { setNotes, setStatus } from "@/features/calendar/booking-logic"
-import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
+import type {
+  BookingDraft,
+  BookingDraftAction,
+  PreviewConflicts,
+} from "@/features/calendar/booking-logic"
 import { ConfirmStep } from "../confirmstep/ConfirmStep.tsx"
 import type { SubmitAction, SubmitState } from "../../hooks/useBookingForm.ts"
-import { RoomShape } from "@/features/calendar/types.ts"
+import type { RoomShape } from "@/features/calendar/types.ts"
 import styles from "./StepConfirm.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
@@ -59,9 +71,14 @@ export function StepConfirm({
 }) {
   const { t } = useTranslation("calendar")
   const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
-  const nights = draft.start_date && draft.end_date
-    ? Math.round((new Date(draft.end_date).getTime() - new Date(draft.start_date).getTime()) / 86400000)
-    : null
+  const nights =
+    draft.start_date && draft.end_date
+      ? Math.round(
+          (new Date(draft.end_date).getTime() -
+            new Date(draft.start_date).getTime()) /
+            86400000,
+        )
+      : null
   const guestNames = draft.occupants
     .filter(o => o.user_id !== draft.booker_id)
     .map(o => {
@@ -75,7 +92,9 @@ export function StepConfirm({
       .map(r => {
         const occs = (occupantsByRoom.get(r.id) ?? []).map(o => {
           const u = users.find(x => x.id === o.user_id)
-          return u ? `${u.name}${u.is_child ? t(" (child)") : ""}` : `#${String(o.user_id)}`
+          return u
+            ? `${u.name}${u.is_child ? t(" (child)") : ""}`
+            : `#${String(o.user_id)}`
         })
         return { structureName: b.name, roomName: r.name, occupants: occs }
       })
@@ -127,16 +146,18 @@ export function StepConfirm({
               </ul>
             )}
             {unassignedNames.length > 0 && (
-              <div>{t("Unassigned: {{names}}", { names: unassignedNames.join(", ") })}</div>
+              <div>
+                {t("Unassigned: {{names}}", {
+                  names: unassignedNames.join(", "),
+                })}
+              </div>
             )}
           </dd>
 
           <dt>
             <strong>{t("Status")}</strong>
           </dt>
-          <dd className={styles.itemLast}>
-            {draft.status}
-          </dd>
+          <dd className={styles.itemLast}>{draft.status}</dd>
         </dl>
       </div>
 

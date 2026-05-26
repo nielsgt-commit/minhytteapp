@@ -83,11 +83,9 @@ describe("toUpdateInput", () => {
   })
 
   test("uses fallbackPropertyId when property_id is null", () => {
-    const result = toUpdateInput(
-      { ...baseExpense, property_id: null },
-      77,
-      { status: "submitted" },
-    )
+    const result = toUpdateInput({ ...baseExpense, property_id: null }, 77, {
+      status: "submitted",
+    })
     expect(result.property_id).toBe(77)
   })
 })

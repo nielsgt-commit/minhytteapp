@@ -32,7 +32,7 @@ const defaults = {
 describe("OwnerAddForm", () => {
   test("shows the user select with all available users when addKind is 'user'", () => {
     render(<OwnerAddForm {...defaults} addKind="user" />)
-    const select = screen.getByRole("combobox") as HTMLSelectElement
+    const select = screen.getByRole("combobox")
     expect(select).toHaveAttribute("name", "user_id")
     expect(screen.getByRole("option", { name: "Alice" })).toBeInTheDocument()
     expect(screen.getByRole("option", { name: "Bob" })).toBeInTheDocument()
@@ -40,9 +40,11 @@ describe("OwnerAddForm", () => {
 
   test("switches to the group select when addKind is 'group'", () => {
     render(<OwnerAddForm {...defaults} addKind="group" />)
-    const select = screen.getByRole("combobox") as HTMLSelectElement
+    const select = screen.getByRole("combobox")
     expect(select).toHaveAttribute("name", "user_group_id")
-    expect(screen.getByRole("option", { name: "Family (2 members)" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("option", { name: "Family (2 members)" }),
+    ).toBeInTheDocument()
   })
 
   test("clicking the Group chip fires onKindChange('group')", async () => {
@@ -57,7 +59,9 @@ describe("OwnerAddForm", () => {
 
   test("shows an empty-state message when no users are available", () => {
     render(<OwnerAddForm {...defaults} addKind="user" availableUsers={[]} />)
-    expect(screen.getByText("All users are already owners.")).toBeInTheDocument()
+    expect(
+      screen.getByText("All users are already owners."),
+    ).toBeInTheDocument()
   })
 
   test("shows 'create a group' hint when no groups exist at all", () => {

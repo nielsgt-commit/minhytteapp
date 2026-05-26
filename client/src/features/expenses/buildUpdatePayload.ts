@@ -40,13 +40,14 @@ export function toUpdateInput(
     property_id: e.property_id ?? fallbackPropertyId,
     description: overrides.description ?? e.description,
     amount: overrides.amount ?? e.amount,
-    reimbursed_by_id: overrides.reimbursed_by_id ?? e.reimbursed_by_id ?? undefined,
+    reimbursed_by_id:
+      overrides.reimbursed_by_id ?? e.reimbursed_by_id ?? undefined,
     booking_id: e.booking_id ?? undefined,
     maintenance_id: e.maintenance_id ?? undefined,
     settlement_id:
       overrides.settlement_id !== undefined
         ? overrides.settlement_id
-        : e.settlement_id ?? undefined,
+        : (e.settlement_id ?? undefined),
     date: overrides.date ?? e.date,
     status: overrides.status,
     receipt_url: e.receipt_url,

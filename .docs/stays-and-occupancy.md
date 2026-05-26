@@ -57,7 +57,7 @@ Total person-days for a user/settlement is the **union** of:
 - `stays` (clipped to the settlement's date range).
 
 Watch for double-counting: if a user has both a `booking_occupants` row and a
-`stays` row that overlap (e.g. they checked in *and* were on a planned booking
+`stays` row that overlap (e.g. they checked in _and_ were on a planned booking
 that got promoted to `confirmed`), the check-in path is supposed to skip
 inserting a stay — but the aggregation should still defensively merge
 overlapping intervals before summing days.

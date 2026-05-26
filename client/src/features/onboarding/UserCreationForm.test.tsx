@@ -19,7 +19,14 @@ describe("UserCreationForm", () => {
   })
 
   test("submits string values and is_child=false by default", async () => {
-    const onSubmit = vi.fn<(input: { name: string; email: string; is_child: boolean }) => Promise<void>>()
+    const onSubmit = vi
+      .fn<
+        (input: {
+          name: string
+          email: string
+          is_child: boolean
+        }) => Promise<void>
+      >()
       .mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<UserCreationForm onSubmit={onSubmit} />)
@@ -37,7 +44,14 @@ describe("UserCreationForm", () => {
   })
 
   test("submits is_child=true when the checkbox is ticked", async () => {
-    const onSubmit = vi.fn<(input: { name: string; email: string; is_child: boolean }) => Promise<void>>()
+    const onSubmit = vi
+      .fn<
+        (input: {
+          name: string
+          email: string
+          is_child: boolean
+        }) => Promise<void>
+      >()
       .mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<UserCreationForm onSubmit={onSubmit} />)
@@ -55,7 +69,14 @@ describe("UserCreationForm", () => {
   })
 
   test("does not call onSubmit when required fields are empty", async () => {
-    const onSubmit = vi.fn<(input: { name: string; email: string; is_child: boolean }) => Promise<void>>()
+    const onSubmit = vi
+      .fn<
+        (input: {
+          name: string
+          email: string
+          is_child: boolean
+        }) => Promise<void>
+      >()
       .mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<UserCreationForm onSubmit={onSubmit} />)

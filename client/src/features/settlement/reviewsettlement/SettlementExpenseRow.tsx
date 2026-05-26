@@ -62,8 +62,7 @@ export function SettlementExpenseRow({
   )
 
   const linkedToClosed =
-    expense.settlement_id != null
-    && expense.settlement_id !== openSettlementId
+    expense.settlement_id != null && expense.settlement_id !== openSettlementId
   const included = expense.settlement_id != null
 
   const toggleIncluded = (next: boolean) => {
@@ -78,7 +77,8 @@ export function SettlementExpenseRow({
   const submitCategory = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmed = category.trim()
-    const nextTypes = trimmed === "" ? [] : [trimmed, ...expense.expense_types.slice(1)]
+    const nextTypes =
+      trimmed === "" ? [] : [trimmed, ...expense.expense_types.slice(1)]
     updateExpense.mutate({
       ...basePayload(expense),
       expense_types: nextTypes,
@@ -108,7 +108,9 @@ export function SettlementExpenseRow({
                 </Dialog.Trigger>
                 <Dialog>
                   <Dialog.Block>
-                    <Heading level={3} data-size="xs">{t("Receipt")}</Heading>
+                    <Heading level={3} data-size="xs">
+                      {t("Receipt")}
+                    </Heading>
                   </Dialog.Block>
                   <Dialog.Block>
                     <Skeleton
@@ -160,12 +162,14 @@ export function SettlementExpenseRow({
                 data-size="sm"
                 checked={included}
                 disabled={
-                  !editable
-                  || linkedToClosed
-                  || openSettlementId == null
-                  || updateExpense.isPending
+                  !editable ||
+                  linkedToClosed ||
+                  openSettlementId == null ||
+                  updateExpense.isPending
                 }
-                onChange={e => { toggleIncluded(e.target.checked) }}
+                onChange={e => {
+                  toggleIncluded(e.target.checked)
+                }}
               />
             </span>
             <EditExpenseDialog
@@ -186,4 +190,3 @@ export function SettlementExpenseRow({
     </Card>
   )
 }
-

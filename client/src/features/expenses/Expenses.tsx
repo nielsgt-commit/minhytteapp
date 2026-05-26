@@ -13,7 +13,11 @@ export function Expenses() {
     return (
       <section className={styles.page}>
         <h1 className={styles.title}>{t("Expenses")}</h1>
-        <p>{t("Add or select a property to track shared costs and keep receipts in one place.")}</p>
+        <p>
+          {t(
+            "Add or select a property to track shared costs and keep receipts in one place.",
+          )}
+        </p>
       </section>
     )
   }

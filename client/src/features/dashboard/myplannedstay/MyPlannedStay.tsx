@@ -34,7 +34,12 @@ type BookingShape = {
   end_date: string
   status: "pending" | "confirmed" | "cancelled"
   notes: string | null
-  occupants: { user_id: number; room_id: number | null; queued: boolean; user_name: string | null }[]
+  occupants: {
+    user_id: number
+    room_id: number | null
+    queued: boolean
+    user_name: string | null
+  }[]
 }
 
 function bookingToRecord(b: BookingShape): BookingDraftRecord {
@@ -92,7 +97,15 @@ export function MyPlannedStay() {
       {myBookings.map(b => {
         const otherNames = new Set<string>()
         for (const other of active) {
-          if (!rangesOverlap(b.start_date, b.end_date, other.start_date, other.end_date)) continue
+          if (
+            !rangesOverlap(
+              b.start_date,
+              b.end_date,
+              other.start_date,
+              other.end_date,
+            )
+          )
+            continue
           for (const o of other.occupants) {
             if (o.user_id === me.id) continue
             otherNames.add(o.user_name ?? `#${String(o.user_id)}`)
@@ -107,8 +120,6 @@ export function MyPlannedStay() {
           setOpenId(prev => (prev === b.id ? null : b.id))
         }
         return (
-
-
           <Card asChild key={b.id}>
             <li>
               <Card.Block
@@ -116,12 +127,16 @@ export function MyPlannedStay() {
                 tabIndex={isEditing ? undefined : 0}
                 aria-expanded={isEditing ? undefined : isOpen}
                 onClick={isEditing ? undefined : toggle}
-                onKeyDown={isEditing ? undefined : e => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    toggle()
-                  }
-                }}
+                onKeyDown={
+                  isEditing
+                    ? undefined
+                    : e => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          toggle()
+                        }
+                      }
+                }
                 className={styles.cardBlock}
               >
                 <div>
@@ -134,7 +149,9 @@ export function MyPlannedStay() {
                         <>
                           <span>{t("Accompanied by:")}</span>
                           {names.map(n => (
-                            <Tag key={n} data-color="info">{n}</Tag>
+                            <Tag key={n} data-color="info">
+                              {n}
+                            </Tag>
                           ))}
                         </>
                       ) : (
@@ -196,15 +213,21 @@ export function MyPlannedStay() {
                 {isEditing && (
                   <div
                     className={styles.editPanel}
-                    onClick={e => { e.stopPropagation() }}
-                    onKeyDown={e => { e.stopPropagation() }}
+                    onClick={e => {
+                      e.stopPropagation()
+                    }}
+                    onKeyDown={e => {
+                      e.stopPropagation()
+                    }}
                   >
                     <Suspense fallback={<p>{t("Loading…")}</p>}>
                       <EditStayFlow
                         propertyId={b.property_id}
                         bookingId={b.id}
                         initialRecord={bookingToRecord(b)}
-                        onClose={() => { setEditingId(null) }}
+                        onClose={() => {
+                          setEditingId(null)
+                        }}
                       />
                     </Suspense>
                   </div>
@@ -212,8 +235,7 @@ export function MyPlannedStay() {
               </Card.Block>
             </li>
           </Card>
-
-          )
+        )
       })}
     </ul>
   )

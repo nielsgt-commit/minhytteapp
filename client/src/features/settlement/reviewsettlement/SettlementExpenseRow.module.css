@@ -31,7 +31,9 @@
   display: inline-flex;
   align-self: center;
 }
-.name { grid-area: name; }
+.name {
+  grid-area: name;
+}
 .actions {
   grid-area: actions;
   display: flex;
@@ -45,9 +47,17 @@
   gap: 0;
 }
 
-.sumLabel { grid-area: sumLabel; margin: 0; }
-.submittedByLabel { grid-area: submitter; margin: 0; }
-.divider { display: none; }
+.sumLabel {
+  grid-area: sumLabel;
+  margin: 0;
+}
+.submittedByLabel {
+  grid-area: submitter;
+  margin: 0;
+}
+.divider {
+  display: none;
+}
 
 .editForm {
   display: flex;

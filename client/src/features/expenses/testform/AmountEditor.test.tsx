@@ -89,6 +89,8 @@ describe("AmountEditor", () => {
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Remove" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Upload receipt" })).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Upload receipt" }),
+    ).toBeDisabled()
   })
 })

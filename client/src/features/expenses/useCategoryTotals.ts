@@ -11,9 +11,7 @@ export function useCategoryTotals(
   expenses: ExpenseRow[],
   categories: Category[],
 ): CategoryTotals {
-  const perCategory = new Map<string, number>(
-    categories.map(c => [c.name, 0]),
-  )
+  const perCategory = new Map<string, number>(categories.map(c => [c.name, 0]))
   let uncategorized = 0
   for (const e of expenses) {
     if (e.expense_types.length === 0) {

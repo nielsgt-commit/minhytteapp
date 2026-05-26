@@ -11,7 +11,9 @@ describe("useAcceptingToggle", () => {
 
   test("blocks turning off while items remain and surfaces the count", () => {
     const { result } = renderHook(() => useAcceptingToggle(3))
-    act(() => { result.current.onSwitchChange(false) })
+    act(() => {
+      result.current.onSwitchChange(false)
+    })
     expect(result.current.stillAccepting).toBe(true)
     expect(result.current.warningCount).toBe(3)
   })
@@ -21,20 +23,28 @@ describe("useAcceptingToggle", () => {
       ({ count }: { count: number }) => useAcceptingToggle(count),
       { initialProps: { count: 2 } },
     )
-    act(() => { result.current.onSwitchChange(false) })
+    act(() => {
+      result.current.onSwitchChange(false)
+    })
     expect(result.current.warningCount).toBe(2)
 
     rerender({ count: 0 })
-    act(() => { result.current.onSwitchChange(false) })
+    act(() => {
+      result.current.onSwitchChange(false)
+    })
     expect(result.current.stillAccepting).toBe(false)
     expect(result.current.warningCount).toBeNull()
   })
 
   test("turning back on always clears the warning", () => {
     const { result } = renderHook(() => useAcceptingToggle(1))
-    act(() => { result.current.onSwitchChange(false) })
+    act(() => {
+      result.current.onSwitchChange(false)
+    })
     expect(result.current.warningCount).toBe(1)
-    act(() => { result.current.onSwitchChange(true) })
+    act(() => {
+      result.current.onSwitchChange(true)
+    })
     expect(result.current.stillAccepting).toBe(true)
     expect(result.current.warningCount).toBeNull()
   })

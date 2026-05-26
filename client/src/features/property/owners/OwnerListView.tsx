@@ -53,7 +53,9 @@ export function OwnerListView({
                         value={String(o.ownership_pct)}
                         canEdit={canEdit}
                         pending={pending}
-                        ariaLabel={t("Edit ownership % for {{label}}", { label })}
+                        ariaLabel={t("Edit ownership % for {{label}}", {
+                          label,
+                        })}
                         onSave={next => {
                           const pct = Number(next)
                           if (Number.isFinite(pct)) onPctSave(o, pct)
@@ -68,7 +70,9 @@ export function OwnerListView({
                         data-size="sm"
                         disabled={pending}
                         aria-label={t("Remove {{label}} as owner?", { label })}
-                        onClick={() => { onRemove(o) }}
+                        onClick={() => {
+                          onRemove(o)
+                        }}
                       >
                         {t("Delete")}
                       </Button>
@@ -82,11 +86,7 @@ export function OwnerListView({
       )}
 
       {canEdit && (
-        <Button
-          variant="secondary"
-          disabled={pending}
-          onClick={onStartAdd}
-        >
+        <Button variant="secondary" disabled={pending} onClick={onStartAdd}>
           {t("+ Add owner")}
         </Button>
       )}

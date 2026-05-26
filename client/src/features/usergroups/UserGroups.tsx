@@ -9,7 +9,9 @@ export function UserGroups() {
   const canEdit = useCanEdit()
 
   if (selectedPropertyId == null) {
-    return <p>{t("Select a property to manage its user groups and members.")}</p>
+    return (
+      <p>{t("Select a property to manage its user groups and members.")}</p>
+    )
   }
 
   return (

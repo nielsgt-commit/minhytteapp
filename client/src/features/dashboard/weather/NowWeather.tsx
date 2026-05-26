@@ -39,10 +39,7 @@ export default function NowWeather() {
   if (!data?.now) return null
 
   return (
-    <span
-      aria-label={t("Current weather")}
-      className={styles.now}
-    >
+    <span aria-label={t("Current weather")} className={styles.now}>
       <WeatherSymbol code={data.now.symbol_code} />
       <strong>{Math.round(data.now.temperature_c)}°</strong>
     </span>

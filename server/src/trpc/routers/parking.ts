@@ -38,13 +38,18 @@ export const parkingRouter = router({
   claim: propertyAdminProcedure
     .input(slotExtra)
     .mutation(async ({ ctx, input }) => {
-      const [property] = await ctx.db
-        .select({ parking_spots: propertyTable.parking_spots })
-        .from(propertyTable)
-        .where(eq(propertyTable.id, input.property_id))
-        .limit(1)
+      const property = (
+        await ctx.db
+          .select({ parking_spots: propertyTable.parking_spots })
+          .from(propertyTable)
+          .where(eq(propertyTable.id, input.property_id))
+          .limit(1)
+      ).at(0)
       if (!property) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "property not found" })
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "property not found",
+        })
       }
       if (
         !isExtraSlot(input.slot_index) &&
@@ -80,15 +85,17 @@ export const parkingRouter = router({
   release: propertyAdminProcedure
     .input(slotExtra)
     .mutation(async ({ ctx, input }) => {
-      const [released] = await ctx.db
-        .delete(parkingClaimsTable)
-        .where(
-          and(
-            eq(parkingClaimsTable.property_id, input.property_id),
-            eq(parkingClaimsTable.slot_index, input.slot_index),
-          ),
-        )
-        .returning()
+      const released = (
+        await ctx.db
+          .delete(parkingClaimsTable)
+          .where(
+            and(
+              eq(parkingClaimsTable.property_id, input.property_id),
+              eq(parkingClaimsTable.slot_index, input.slot_index),
+            ),
+          )
+          .returning()
+      ).at(0)
       return released ?? null
     }),
 })

@@ -61,7 +61,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
       : BUILT_IN_LABEL[data.split_policy]
   const policyExplanation =
     data.split_policy_id != null
-      ? t("Custom rule-based policy with a default rule for everything unmatched. The settlement engine currently evaluates the built-in occupancy-days split until live preview lands.")
+      ? t(
+          "Custom rule-based policy with a default rule for everything unmatched. The settlement engine currently evaluates the built-in occupancy-days split until live preview lands.",
+        )
       : BUILT_IN_EXPLANATION[data.split_policy]
 
   return (
@@ -70,15 +72,21 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
         {t("Closed settlement: {{year}}", { year: String(data.year) })}
         {data.season ? ` (${data.season})` : ""}
       </Heading>
-      <Paragraph>{t("Closed at: {{when}}", { when: formatDateTime(data.closed_at) })}</Paragraph>
+      <Paragraph>
+        {t("Closed at: {{when}}", { when: formatDateTime(data.closed_at) })}
+      </Paragraph>
 
-      <Heading level={4} data-size="2xs">{t("Split policy")}</Heading>
+      <Heading level={4} data-size="2xs">
+        {t("Split policy")}
+      </Heading>
       <Paragraph>
         <strong>{policyLabel}</strong>
       </Paragraph>
       <Paragraph>{policyExplanation}</Paragraph>
 
-      <Heading level={4} data-size="2xs">{t("Per group")}</Heading>
+      <Heading level={4} data-size="2xs">
+        {t("Per group")}
+      </Heading>
       {data.groups.length === 0 ? (
         <Paragraph>{t("No group totals.")}</Paragraph>
       ) : (
@@ -104,7 +112,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
         </table>
       )}
 
-      <Heading level={4} data-size="2xs">{t("Transfers")}</Heading>
+      <Heading level={4} data-size="2xs">
+        {t("Transfers")}
+      </Heading>
       {data.transfers.length === 0 ? (
         <Paragraph>{t("No transfers.")}</Paragraph>
       ) : (
@@ -115,7 +125,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
               <strong>{String(tr.amount)},-</strong>{" "}
               {tr.status === "paid" ? (
                 <span>
-                  {t("(paid {{when}})", { when: tr.paid_at != null ? formatDateTime(tr.paid_at) : "" })}
+                  {t("(paid {{when}})", {
+                    when: tr.paid_at != null ? formatDateTime(tr.paid_at) : "",
+                  })}
                 </span>
               ) : (
                 <span>{t("(pending)")}</span>
@@ -141,7 +153,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
       )}
 
       {markTransferPaid.error && (
-        <p role="alert">{t("Error: {{message}}", { message: markTransferPaid.error.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: markTransferPaid.error.message })}
+        </p>
       )}
     </section>
   )

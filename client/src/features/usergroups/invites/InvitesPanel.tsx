@@ -59,7 +59,12 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     const ownership_pct = pctRaw === "" ? null : Number(pctRaw)
     if (ownership_pct != null && !Number.isFinite(ownership_pct)) return
     try {
-      await add.mutateAsync({ email, property_id: propertyId, user_group_id, ownership_pct })
+      await add.mutateAsync({
+        email,
+        property_id: propertyId,
+        user_group_id,
+        ownership_pct,
+      })
       form.close()
     } catch {
       /* surfaced via add.error / useMutationsStatus */
@@ -104,9 +109,16 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                     {entry.ownership_pct != null ? (
                       <span> – {entry.ownership_pct}%</span>
                     ) : null}
-                    <span> – <em>{status}</em></span>
+                    <span>
+                      {" "}
+                      – <em>{status}</em>
+                    </span>
                     {entry.added_by_name ? (
-                      <span> – {t("added by {{name}}", { name: entry.added_by_name })}</span>
+                      <span>
+                        {" "}
+                        –{" "}
+                        {t("added by {{name}}", { name: entry.added_by_name })}
+                      </span>
                     ) : null}
                     {!entry.used_at && canEdit && (
                       <div>
@@ -114,8 +126,12 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                           type="button"
                           variant="secondary"
                           disabled={pending}
-                          aria-label={t("Remove invite {{email}}", { email: entry.email })}
-                          onClick={() => { handleRemove(entry.id, entry.email) }}
+                          aria-label={t("Remove invite {{email}}", {
+                            email: entry.email,
+                          })}
+                          onClick={() => {
+                            handleRemove(entry.id, entry.email)
+                          }}
                         >
                           {t("Remove")}
                         </Button>
@@ -129,11 +145,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
 
           {canEdit && (
             <div>
-              <Button
-                type="button"
-                disabled={pending}
-                onClick={form.toggle}
-              >
+              <Button type="button" disabled={pending} onClick={form.toggle}>
                 {form.value ? t("Cancel") : t("Add email")}
               </Button>
             </div>

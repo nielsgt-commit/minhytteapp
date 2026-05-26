@@ -11,7 +11,11 @@ import {
   varchar,
 } from "drizzle-orm/pg-core"
 import type { PortableTextBlock } from "@portabletext/types"
-import { infrastructureTable, propertyTable, structuresTable } from "./property.schema.ts"
+import {
+  infrastructureTable,
+  propertyTable,
+  structuresTable,
+} from "./property.schema.ts"
 import { usersTable } from "./users.schema.ts"
 
 export const equipmentTable = pgTable(
@@ -29,7 +33,7 @@ export const equipmentTable = pgTable(
     acquired_year: integer("acquired_year"),
     created_at: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [
+  t => [
     check(
       "equipment_acquired_year_range",
       sql`${t.acquired_year} IS NULL OR (${t.acquired_year} BETWEEN 1500 AND 2100)`,
@@ -48,7 +52,9 @@ export const maintenanceTable = pgTable(
       .references(() => usersTable.id),
     assigned_to_id: integer("assigned_to_id").references(() => usersTable.id),
     structure_id: integer("structure_id").references(() => structuresTable.id),
-    infrastructure_id: integer("infrastructure_id").references(() => infrastructureTable.id),
+    infrastructure_id: integer("infrastructure_id").references(
+      () => infrastructureTable.id,
+    ),
     category: varchar("category", {
       length: 11,
       enum: ["maintenance", "repair"],
@@ -78,7 +84,7 @@ export const maintenanceTable = pgTable(
     created_at: timestamp("created_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),
   },
-  (t) => [
+  t => [
     check(
       "maintenance_location_xor",
       sql`(
@@ -99,7 +105,9 @@ export const inspectionsTable = pgTable(
   {
     id: serial("id").primaryKey(),
     structure_id: integer("structure_id").references(() => structuresTable.id),
-    infrastructure_id: integer("infrastructure_id").references(() => infrastructureTable.id),
+    infrastructure_id: integer("infrastructure_id").references(
+      () => infrastructureTable.id,
+    ),
     equipment_id: integer("equipment_id").references(() => equipmentTable.id),
     started_by_user_id: integer("started_by_user_id")
       .notNull()
@@ -113,7 +121,7 @@ export const inspectionsTable = pgTable(
     started_at: timestamp("started_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),
   },
-  (t) => [
+  t => [
     check(
       "inspection_target_exclusive",
       sql`(
@@ -124,4 +132,3 @@ export const inspectionsTable = pgTable(
     ),
   ],
 )
-

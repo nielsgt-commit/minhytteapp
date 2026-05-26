@@ -32,8 +32,6 @@
   color: var(--ds-color-neutral-text-subtle);
   display: block;
   margin-bottom: 0.25rem;
-
-
 }
 
 .roomList {
@@ -42,5 +40,4 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
 }

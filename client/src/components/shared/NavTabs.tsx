@@ -24,15 +24,20 @@ export default function NavTabs({ children }: { children: ReactNode }) {
     Settlement: t("Settlement"),
   }
 
-  const activeValue =
-    navLinks.find(l => pathname.startsWith(l.to))?.to ?? ""
+  const activeValue = navLinks.find(l => pathname.startsWith(l.to))?.to ?? ""
 
   return (
     <>
       <Tabs key={pathname} defaultValue={activeValue}>
-        <Tabs.List className={`${styles.list}${activeValue ? "" : ` ${styles.noActive}`}`}>
+        <Tabs.List
+          className={`${styles.list}${activeValue ? "" : ` ${styles.noActive}`}`}
+        >
           {navLinks.map(link => (
-            <Tabs.Tab key={link.to} value={link.to} style={{ position: "relative" }}>
+            <Tabs.Tab
+              key={link.to}
+              value={link.to}
+              style={{ position: "relative" }}
+            >
               {labels[link.label]}
               <Link
                 {...link}

@@ -8,7 +8,7 @@ Test file: `client/src/trpc/connectivity.e2e.test.ts`.
 
 This is an **end-to-end test**, separated from the default unit/integration
 suite. It runs via its own command (`pnpm test:e2e`) and its own config
-(`client/vite.config.e2e.ts`). The default `pnpm test` does *not* include it
+(`client/vite.config.e2e.ts`). The default `pnpm test` does _not_ include it
 and stays hermetic — see [`ci.md`](./ci.md) for how that ties into CI.
 
 ## Prereqs

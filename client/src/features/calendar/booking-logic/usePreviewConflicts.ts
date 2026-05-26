@@ -7,7 +7,7 @@ type PreviewInput = {
   property_id: number
   start_date: string
   end_date: string
-  occupants: Array<{ user_id: number; room_id?: number | null }>
+  occupants: { user_id: number; room_id?: number | null }[]
   exclude_booking_id?: number
 }
 
@@ -16,10 +16,10 @@ function extractInput(
   excludeBookingId?: number,
 ): PreviewInput | null {
   if (
-    draft.property_id == null
-    || draft.start_date == null
-    || draft.end_date == null
-    || draft.occupants.length === 0
+    draft.property_id == null ||
+    draft.start_date == null ||
+    draft.end_date == null ||
+    draft.occupants.length === 0
   ) {
     return null
   }
@@ -31,7 +31,9 @@ function extractInput(
       user_id: o.user_id,
       room_id: o.room_id,
     })),
-    ...(excludeBookingId != null ? { exclude_booking_id: excludeBookingId } : {}),
+    ...(excludeBookingId != null
+      ? { exclude_booking_id: excludeBookingId }
+      : {}),
   }
 }
 
@@ -62,12 +64,20 @@ export function usePreviewConflicts(
 
   const input = useMemo(
     () => extractInput(draft, excludeBookingId),
-    [draft.property_id, draft.start_date, draft.end_date, draft.occupants, excludeBookingId],
+    [
+      draft.property_id,
+      draft.start_date,
+      draft.end_date,
+      draft.occupants,
+      excludeBookingId,
+    ],
   )
   const deferredInput = useDeferredValue(input)
 
   const query = useQuery({
-    ...trpc.booking.previewConflicts.queryOptions(deferredInput ?? FALLBACK_INPUT),
+    ...trpc.booking.previewConflicts.queryOptions(
+      deferredInput ?? FALLBACK_INPUT,
+    ),
     enabled: deferredInput != null,
     placeholderData: prev => prev,
   })

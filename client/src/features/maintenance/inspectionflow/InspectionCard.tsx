@@ -1,12 +1,21 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Tag, Button, Card, Chip, Paragraph } from "@digdir/designsystemet-react"
+import {
+  Tag,
+  Button,
+  Card,
+  Chip,
+  Paragraph,
+} from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./InspectionCard.module.css"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
-import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
+import {
+  SeverityTag,
+  cycleSeverity,
+} from "@/features/maintenance/severity/SeverityTag.tsx"
 
 type Inspection = {
   id: number
@@ -31,7 +40,9 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [expanded, setExpanded] = useState(false)
-  const [expandedFindings, setExpandedFindings] = useState<Set<number>>(new Set())
+  const [expandedFindings, setExpandedFindings] = useState<Set<number>>(
+    new Set(),
+  )
   const toggleFindingExpanded = (id: number) => {
     setExpandedFindings(prev => {
       const next = new Set(prev)
@@ -89,11 +100,15 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
           <Paragraph data-size="sm" className={styles.inspector}>
             {inspection.inspected_by}
           </Paragraph>
-          <Paragraph data-size="sm">{cadenceLabel[inspection.recurrence]}</Paragraph>
+          <Paragraph data-size="sm">
+            {cadenceLabel[inspection.recurrence]}
+          </Paragraph>
           <Button
             variant="tertiary"
             data-size="sm"
-            onClick={() => { setExpanded(v => !v) }}
+            onClick={() => {
+              setExpanded(v => !v)
+            }}
           >
             {expanded ? t("Hide details") : t("Show details")}
           </Button>
@@ -106,7 +121,11 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
             {followups.length > 0 && (
               <>
                 <Paragraph data-size="sm">
-                  <strong>{t("Followups raised ({{count}})", { count: followups.length })}</strong>
+                  <strong>
+                    {t("Followups raised ({{count}})", {
+                      count: followups.length,
+                    })}
+                  </strong>
                 </Paragraph>
                 <ul>
                   {followups.map(f => {
@@ -118,7 +137,9 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                         <div className={styles.finding}>
                           <SeverityTag
                             severity={f.severity}
-                            onCycle={() => { cycleFindingSeverity(f) }}
+                            onCycle={() => {
+                              cycleFindingSeverity(f)
+                            }}
                             disabled={updateMutation.isPending}
                           />
                           <Paragraph data-size="sm">{f.description}</Paragraph>
@@ -127,15 +148,21 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                               type="button"
                               data-size="sm"
                               aria-expanded={isExpanded}
-                              onClick={() => { toggleFindingExpanded(f.id) }}
+                              onClick={() => {
+                                toggleFindingExpanded(f.id)
+                              }}
                             >
-                              {isExpanded ? t("Hide execution") : t("Show execution")}
+                              {isExpanded
+                                ? t("Hide execution")
+                                : t("Show execution")}
                             </Chip.Button>
                           )}
                         </div>
                         {hasInstructions && isExpanded && (
                           <div className={styles.instructions}>
-                            <MaintenanceInstructionsPT value={f.instructions_pt} />
+                            <MaintenanceInstructionsPT
+                              value={f.instructions_pt}
+                            />
                           </div>
                         )}
                       </li>
@@ -147,7 +174,9 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
             {adHocs.length > 0 && (
               <>
                 <Paragraph data-size="sm">
-                  <strong>{t("Findings added ({{count}})", { count: adHocs.length })}</strong>
+                  <strong>
+                    {t("Findings added ({{count}})", { count: adHocs.length })}
+                  </strong>
                 </Paragraph>
                 <ul>
                   {adHocs.map(f => {
@@ -159,7 +188,9 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                         <div className={styles.finding}>
                           <SeverityTag
                             severity={f.severity}
-                            onCycle={() => { cycleFindingSeverity(f) }}
+                            onCycle={() => {
+                              cycleFindingSeverity(f)
+                            }}
                             disabled={updateMutation.isPending}
                           />
                           <Paragraph data-size="sm">
@@ -171,15 +202,21 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                               type="button"
                               data-size="sm"
                               aria-expanded={isExpanded}
-                              onClick={() => { toggleFindingExpanded(f.id) }}
+                              onClick={() => {
+                                toggleFindingExpanded(f.id)
+                              }}
                             >
-                              {isExpanded ? t("Hide execution") : t("Show execution")}
+                              {isExpanded
+                                ? t("Hide execution")
+                                : t("Show execution")}
                             </Chip.Button>
                           )}
                         </div>
                         {hasInstructions && isExpanded && (
                           <div className={styles.instructions}>
-                            <MaintenanceInstructionsPT value={f.instructions_pt} />
+                            <MaintenanceInstructionsPT
+                              value={f.instructions_pt}
+                            />
                           </div>
                         )}
                       </li>

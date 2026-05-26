@@ -11,8 +11,12 @@ describe("useExpenseDrafts", () => {
 
   test("add appends drafts and updates total", () => {
     const { result } = renderHook(() => useExpenseDrafts())
-    act(() => { result.current.add("food", 100) })
-    act(() => { result.current.add("gas", 50) })
+    act(() => {
+      result.current.add("food", 100)
+    })
+    act(() => {
+      result.current.add("gas", 50)
+    })
     expect(result.current.drafts).toHaveLength(2)
     expect(result.current.drafts[0]?.category).toBe("food")
     expect(result.current.drafts[1]?.amount).toBe(50)
@@ -32,10 +36,16 @@ describe("useExpenseDrafts", () => {
 
   test("remove drops the matching draft", () => {
     const { result } = renderHook(() => useExpenseDrafts())
-    act(() => { result.current.add("food", 100) })
-    act(() => { result.current.add("gas", 50) })
-    const removedId = result.current.drafts[0]!.id
-    act(() => { result.current.remove(removedId) })
+    act(() => {
+      result.current.add("food", 100)
+    })
+    act(() => {
+      result.current.add("gas", 50)
+    })
+    const removedId = result.current.drafts[0].id
+    act(() => {
+      result.current.remove(removedId)
+    })
     expect(result.current.drafts).toHaveLength(1)
     expect(result.current.drafts[0]?.category).toBe("gas")
     expect(result.current.total).toBe(50)
@@ -43,8 +53,12 @@ describe("useExpenseDrafts", () => {
 
   test("reset clears all drafts", () => {
     const { result } = renderHook(() => useExpenseDrafts())
-    act(() => { result.current.add("food", 100) })
-    act(() => { result.current.reset() })
+    act(() => {
+      result.current.add("food", 100)
+    })
+    act(() => {
+      result.current.reset()
+    })
     expect(result.current.drafts).toEqual([])
     expect(result.current.total).toBe(0)
   })

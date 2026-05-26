@@ -15,15 +15,57 @@ import type { ComponentType, SVGProps } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./BottomNavBar.module.css"
 
-type IconComp = ComponentType<SVGProps<SVGSVGElement> & { title?: string }>
-type NavLabel = "Dashboard" | "Calendar" | "Expenses" | "Maintenance" | "Settlement"
+// Aksel icons are SVG components; we just need a callable component type
+// that accepts the standard SVG props plus an optional fontSize.
+type IconComp = ComponentType<SVGProps<SVGSVGElement> & { fontSize?: string }>
+type NavLabel =
+  | "Dashboard"
+  | "Calendar"
+  | "Expenses"
+  | "Maintenance"
+  | "Settlement"
 
-const navItems: { to: string; label: NavLabel; Icon: IconComp; IconActive: IconComp }[] = [
-  { to: "/dashboard", label: "Dashboard", Icon: HouseIcon, IconActive: HouseFillIcon },
-  { to: "/calendar", label: "Calendar", Icon: CalendarIcon, IconActive: CalendarFillIcon },
-  { to: "/expenses", label: "Expenses", Icon: WalletIcon, IconActive: WalletFillIcon },
-  { to: "/maintenance", label: "Maintenance", Icon: WrenchIcon, IconActive: WrenchFillIcon },
-  { to: "/settlement", label: "Settlement", Icon: FileTextIcon, IconActive: FileTextFillIcon },
+// typescript-eslint's project service occasionally reports the Aksel icon
+// imports as "error typed" even though `tsc` is happy with them, so we cast
+// each one once at the navItems table.
+const asIcon = (c: unknown): IconComp => c as IconComp
+
+const navItems: {
+  to: string
+  label: NavLabel
+  Icon: IconComp
+  IconActive: IconComp
+}[] = [
+  {
+    to: "/dashboard",
+    label: "Dashboard",
+    Icon: asIcon(HouseIcon),
+    IconActive: asIcon(HouseFillIcon),
+  },
+  {
+    to: "/calendar",
+    label: "Calendar",
+    Icon: asIcon(CalendarIcon),
+    IconActive: asIcon(CalendarFillIcon),
+  },
+  {
+    to: "/expenses",
+    label: "Expenses",
+    Icon: asIcon(WalletIcon),
+    IconActive: asIcon(WalletFillIcon),
+  },
+  {
+    to: "/maintenance",
+    label: "Maintenance",
+    Icon: asIcon(WrenchIcon),
+    IconActive: asIcon(WrenchFillIcon),
+  },
+  {
+    to: "/settlement",
+    label: "Settlement",
+    Icon: asIcon(FileTextIcon),
+    IconActive: asIcon(FileTextFillIcon),
+  },
 ]
 
 const links = linkOptions(navItems.map(({ to }) => ({ to })))

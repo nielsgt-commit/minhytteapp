@@ -16,7 +16,9 @@ async function main() {
   let admin_id: number
   if (existing.length > 0) {
     admin_id = existing[0].id
-    console.log(`found existing admin user #${String(admin_id)} (${ADMIN_EMAIL})`)
+    console.log(
+      `found existing admin user #${String(admin_id)} (${ADMIN_EMAIL})`,
+    )
   } else {
     const [inserted] = await db
       .insert(usersTable)

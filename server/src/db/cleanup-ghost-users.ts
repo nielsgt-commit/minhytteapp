@@ -1,10 +1,7 @@
 import "dotenv/config"
 import { eq, like, sql } from "drizzle-orm"
 import { db, pool } from "./client.ts"
-import {
-  bookingOccupantsTable,
-  bookingTable,
-} from "./schema/booking.schema.ts"
+import { bookingOccupantsTable, bookingTable } from "./schema/booking.schema.ts"
 import { eventTable } from "./schema/event.schema.ts"
 import {
   inspectionsTable,
@@ -35,7 +32,11 @@ type RefCheck = { table: string; column: string; count: number }
 const COUNT = sql<number>`count(*)::int`
 
 async function countReferences(user_id: number): Promise<RefCheck[]> {
-  const checks: { table: string; column: string; q: Promise<{ c: number }[]> }[] = [
+  const checks: {
+    table: string
+    column: string
+    q: Promise<{ c: number }[]>
+  }[] = [
     {
       table: "property_owners",
       column: "user_id",
@@ -223,7 +224,9 @@ async function main() {
     .from(usersTable)
     .where(like(usersTable.email, "%@oauth.local"))
 
-  console.log(`found ${String(candidates.length)} users with @oauth.local email`)
+  console.log(
+    `found ${String(candidates.length)} users with @oauth.local email`,
+  )
 
   const ghosts: typeof candidates = []
   for (const u of candidates) {

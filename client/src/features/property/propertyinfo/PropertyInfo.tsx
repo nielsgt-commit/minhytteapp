@@ -131,7 +131,11 @@ export default function PropertyInfo() {
         <Card.Block>
           <h1>{t("Property Info")}</h1>
           {updateProperty.error && (
-            <p role="alert">{t("Error: {{message}}", { message: updateProperty.error.message })}</p>
+            <p role="alert">
+              {t("Error: {{message}}", {
+                message: updateProperty.error.message,
+              })}
+            </p>
           )}
           <form onSubmit={handleSavePropertyInfo}>
             <Fieldset>
@@ -147,11 +151,15 @@ export default function PropertyInfo() {
               </div>
               <div>
                 <Paragraph data-size="sm">
-                  {t("Current address: {{address}}", { address: previewAddress })}
+                  {t("Current address: {{address}}", {
+                    address: previewAddress,
+                  })}
                 </Paragraph>
                 <AddressLookup
                   label={t("Search a new address")}
-                  onSelect={a => { setDraft(draftFromAddress(a)) }}
+                  onSelect={a => {
+                    setDraft(draftFromAddress(a))
+                  }}
                 />
                 {draft && (
                   <Paragraph data-size="sm">
@@ -216,7 +224,9 @@ export default function PropertyInfo() {
               type="button"
               variant="tertiary"
               data-size="sm"
-              onClick={() => { setShowRegister(v => !v) }}
+              onClick={() => {
+                setShowRegister(v => !v)
+              }}
             >
               {showRegister ? t("Hide register") : t("Show register")}
             </Button>
@@ -249,9 +259,18 @@ export default function PropertyInfo() {
           )}
         </p>
         <p> {t("Property description")} </p>
-        <p>{t("Parking spots: {{count}}", { count: selectedProperty.parking_spots })}</p>
+        <p>
+          {t("Parking spots: {{count}}", {
+            count: selectedProperty.parking_spots,
+          })}
+        </p>
 
-        <Button type="button" onClick={() => { setIsEditing(true) }}>
+        <Button
+          type="button"
+          onClick={() => {
+            setIsEditing(true)
+          }}
+        >
           {t("Edit property details")}
         </Button>
       </Card.Block>

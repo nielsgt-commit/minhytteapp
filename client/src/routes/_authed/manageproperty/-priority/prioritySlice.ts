@@ -37,7 +37,12 @@ export const prioritySlice = createAppSlice({
       state,
       year: number,
       week: number,
-    ): PriorityWeekHolder | null => state.byYear[year]?.[week] ?? null,
+    ): PriorityWeekHolder | null => {
+      const yearMap = state.byYear[year] as
+        | Record<number, PriorityWeekHolder>
+        | undefined
+      return yearMap?.[week] ?? null
+    },
   },
 })
 

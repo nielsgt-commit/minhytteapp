@@ -100,7 +100,9 @@ export function MaintenanceHistoryEditForm(props: {
                 >
                   {t("Cancel")}
                 </Button>
-                <Button type="submit" disabled={pending}>{t("Save")}</Button>
+                <Button type="submit" disabled={pending}>
+                  {t("Save")}
+                </Button>
               </div>
             </Fieldset>
           </form>

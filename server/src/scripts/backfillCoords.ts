@@ -26,16 +26,13 @@ async function main() {
       console.log("no match")
       continue
     }
-    await db
-      .update(propertyTable)
-      .set(coords)
-      .where(eq(propertyTable.id, p.id))
+    await db.update(propertyTable).set(coords).where(eq(propertyTable.id, p.id))
     console.log(`${coords.latitude}, ${coords.longitude}`)
   }
 }
 
 main()
-  .catch(err => {
+  .catch((err: unknown) => {
     console.error(err)
     process.exitCode = 1
   })

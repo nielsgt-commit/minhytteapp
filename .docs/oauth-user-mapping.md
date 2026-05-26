@@ -11,10 +11,10 @@ Two places assume this convenience:
 
 1. **Server** — `server/src/trpc/context.ts` does
    `where(eq(usersTable.oauth_sub, claims.sub))`. This is the right shape
-   long-term; only the *value* is convenience-flavoured.
+   long-term; only the _value_ is convenience-flavoured.
 2. **Client** — `client/src/components/core/header/UserMenu.tsx` filters
    `trpc.user.list` by `users.name === auth.user.name` to find "me" in the
-   list. This is the *wrong shape* long-term — a real opaque sub like
+   list. This is the _wrong shape_ long-term — a real opaque sub like
    `8f1a-...-c2` won't match any name.
 
 ## When you switch to a real IdP

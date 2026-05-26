@@ -42,9 +42,7 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const wkEnd = new Date(wkStart)
   wkEnd.setDate(wkEnd.getDate() + 7)
 
-  const pending = items.filter(
-    i => i.status === "todo" || i.status === "doing",
-  )
+  const pending = items.filter(i => i.status === "todo" || i.status === "doing")
   const inWeek = (due: Date | string | null) => {
     if (due == null) return false
     const d = new Date(due)
@@ -68,7 +66,9 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   return (
     <>
       <Divider className={styles.divider} />
-      <Heading level={6} data-size="md">{t("Planned Maintenance")}</Heading>
+      <Heading level={6} data-size="md">
+        {t("Planned Maintenance")}
+      </Heading>
       {structuresWithItems.length === 0 ? (
         <p>{t("No planned maintenance.")}</p>
       ) : (
@@ -77,13 +77,15 @@ export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
             const bucket = itemsByStructure.get(b.id) ?? []
             return (
               <Tag key={b.id} data-color={severityColor(bucket)}>
-                {t("{{name}} ({{count}} open)", { name: b.name, count: bucket.length })}
+                {t("{{name}} ({{count}} open)", {
+                  name: b.name,
+                  count: bucket.length,
+                })}
               </Tag>
             )
           })}
         </ul>
       )}
     </>
-
   )
 }

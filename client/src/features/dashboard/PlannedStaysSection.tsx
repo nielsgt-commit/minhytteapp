@@ -5,7 +5,11 @@ import { useTRPC } from "@/trpc/trpc"
 import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
 import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 
-export default function PlannedStaysSection({ propertyId }: { propertyId: number }) {
+export default function PlannedStaysSection({
+  propertyId,
+}: {
+  propertyId: number
+}) {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const { data: properties } = useSuspenseQuery(
@@ -18,7 +22,9 @@ export default function PlannedStaysSection({ propertyId }: { propertyId: number
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading>{t("This year at {{propertyName}}", { propertyName })}</Heading>
+          <Heading>
+            {t("This year at {{propertyName}}", { propertyName })}
+          </Heading>
           <Heading data-size="xs"> {t("My planned stays")}</Heading>
 
           <MyPlannedStay />

@@ -26,7 +26,9 @@ export function DraftList({ drafts, total, pending, onRemove }: Props) {
             data-color="danger"
             data-size="sm"
             disabled={pending}
-            onClick={() => { onRemove(d.id) }}
+            onClick={() => {
+              onRemove(d.id)
+            }}
           >
             {t("Remove")}
           </Button>

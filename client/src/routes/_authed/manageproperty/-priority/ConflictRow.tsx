@@ -14,7 +14,10 @@ export function ConflictRow({ week, names, colSpan }: ConflictRowProps) {
     <Table.Row>
       <Table.Cell colSpan={colSpan}>
         <Paragraph role="alert">
-          {t("Conflict on W{{week}}: {{names}} have both claimed this week. Resolve in person — the system will not pick a winner.", { week, names: names.join(t(" and ")) })}
+          {t(
+            "Conflict on W{{week}}: {{names}} have both claimed this week. Resolve in person — the system will not pick a winner.",
+            { week, names: names.join(t(" and ")) },
+          )}
         </Paragraph>
       </Table.Cell>
     </Table.Row>

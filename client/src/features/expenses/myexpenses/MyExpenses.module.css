@@ -30,7 +30,9 @@
   background: transparent;
 }
 
-.statusTag { grid-area: statusTag; }
+.statusTag {
+  grid-area: statusTag;
+}
 .actions {
   grid-area: actions;
   display: flex;
@@ -44,9 +46,17 @@
   gap: 0;
 }
 
-.sumLabel { grid-area: sumLabel; margin: 0; }
-.statusLabel { grid-area: statusLabel; margin: 0; }
-.divider { display: none; }
+.sumLabel {
+  grid-area: sumLabel;
+  margin: 0;
+}
+.statusLabel {
+  grid-area: statusLabel;
+  margin: 0;
+}
+.divider {
+  display: none;
+}
 
 .editForm {
   display: flex;

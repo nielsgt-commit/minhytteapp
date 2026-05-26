@@ -6,7 +6,7 @@
 
 - **Main groups** — distinct owner groups for the property where `is_main = true`. Members of those groups are mapped user → group.
 - **Total reimbursed** — sum of `amount` over expenses on this settlement with `status = "reimbursed"`. Each expense's `reimbursed_by_id` attributes the paid amount to that user's group → `paidByGroup`.
-- **Eligible bookings** — every booking on the property *except* cancelled ones and any flagged `excluded` via `settlement_booking_adjustments`.
+- **Eligible bookings** — every booking on the property _except_ cancelled ones and any flagged `excluded` via `settlement_booking_adjustments`.
 
 ## Per-group days (`settlement.ts:339-358`)
 
@@ -16,7 +16,7 @@ For each eligible booking:
 2. For every occupant in `booking_occupants`, add `days` to that occupant's group.
 3. If the adjustment row has `extra_names` (non-member guests the booker brought), add `extras.length * days` to the **booker's** group.
 
-So each group's `booking_days` is really *person-days* occupied by its members (+ extras attributed to the booker).
+So each group's `booking_days` is really _person-days_ occupied by its members (+ extras attributed to the booker).
 
 ## Share computation (`settlement.ts:361-387`)
 

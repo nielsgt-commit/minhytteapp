@@ -42,17 +42,18 @@ export function AddNewExpenseFlow({
   const [description, setDescription] = useState("")
   const suggestionInputRef = useRef<HTMLInputElement>(null)
 
-  const {
-    selectedCats,
-    handleCategoriesChange,
-    createError,
-    archiveError,
-  } = useCategoryMutations(categories, suggestionInputRef)
+  const { selectedCats, handleCategoriesChange, createError, archiveError } =
+    useCategoryMutations(categories, suggestionInputRef)
 
   const parsedAmount = Number(editor.amount)
 
   const addDraft = () => {
-    if (editor.openCategory == null || !Number.isFinite(parsedAmount) || parsedAmount <= 0) return
+    if (
+      editor.openCategory == null ||
+      !Number.isFinite(parsedAmount) ||
+      parsedAmount <= 0
+    )
+      return
     drafts.add(editor.openCategory, Math.floor(parsedAmount))
     editor.close()
   }
@@ -75,7 +76,9 @@ export function AddNewExpenseFlow({
       <form onSubmit={handleSubmit}>
         <Card.Block>
           <div className={styles.container}>
-            <Heading level={2} data-size="sm">{t("Add expense")}</Heading>
+            <Heading level={2} data-size="sm">
+              {t("Add expense")}
+            </Heading>
 
             <DraftList
               drafts={drafts.drafts}
@@ -122,7 +125,9 @@ export function AddNewExpenseFlow({
                 label={t("Description")}
                 description={t("Optional")}
                 value={description}
-                onChange={e => { setDescription(e.target.value) }}
+                onChange={e => {
+                  setDescription(e.target.value)
+                }}
               />
             )}
 

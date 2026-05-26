@@ -7,7 +7,6 @@ import reactHooksPlugin from "eslint-plugin-react-hooks"
 import globals from "globals"
 import { configs } from "typescript-eslint"
 
-
 const eslintConfig = defineConfig(
   {
     name: "global-ignores",
@@ -21,6 +20,10 @@ const eslintConfig = defineConfig(
       "**/.tmp/",
       "**/.yarn/",
       "**/coverage/",
+      // Claude Code agent worktrees contain duplicate copies of the
+      // codebase; linting them is noise and double-counts every issue.
+      "**/.claude/",
+      "client/src/routeTree.gen.ts",
     ],
   },
   {
@@ -85,6 +88,29 @@ const eslintConfig = defineConfig(
           ],
         },
       ],
+    },
+  },
+
+  {
+    // Test files routinely use stub callbacks (`() => {}`), loosely-typed
+    // mocks, and async-without-await placeholders. Relaxing these here
+    // keeps the strict checks where they matter — production source.
+    name: "tests-relaxed",
+    files: ["**/*.test.{ts,tsx}", "**/test-utils/**"],
+    rules: {
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/no-base-to-string": "off",
+      "@typescript-eslint/no-unnecessary-type-conversion": "off",
+      // testing-library's getByLabelText returns HTMLElement; the narrowing
+      // cast (as HTMLInputElement) is required for tsc to see `.value`, but
+      // eslint's project-service disagrees. The cast is genuinely needed.
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
     },
   },
 

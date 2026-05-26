@@ -1,26 +1,24 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useEffect, useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  Paragraph,
-  Tag,
-} from "@digdir/designsystemet-react"
+import { Button, Card, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import DayCard from "./DayCard"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
-import {
-  addDays,
-  isoWeekNumber,
-  isoWeekYear,
-  toIso,
-} from "@/utils/dateUtils"
+import { addDays, isoWeekNumber, isoWeekYear, toIso } from "@/utils/dateUtils"
 
-const WEEKDAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
+const WEEKDAY_LABELS = [
+  "SUN",
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+] as const
 
 type Props = {
   weekStart: Date
@@ -38,9 +36,7 @@ export default function PlannedAvailabilitySummary({
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
-  const { data: users } = useSuspenseQuery(
-    trpc.user.list.queryOptions(),
-  )
+  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: atProperty } = useSuspenseQuery(
     trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
   )
@@ -50,9 +46,7 @@ export default function PlannedAvailabilitySummary({
       { staleTime: 10 * 60_000, gcTime: 30 * 60_000 },
     ),
   )
-  const forecastByIso = new Map(
-    (weather?.days ?? []).map(d => [d.iso, d]),
-  )
+  const forecastByIso = new Map((weather?.days ?? []).map(d => [d.iso, d]))
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const thursday = addDays(weekStart, 4)
@@ -74,7 +68,9 @@ export default function PlannedAvailabilitySummary({
     return o?.user_name ?? null
   })()
 
-  const [selectedDay, setSelectedDay] = useState<string | null>(() => toIso(new Date()))
+  const [selectedDay, setSelectedDay] = useState<string | null>(() =>
+    toIso(new Date()),
+  )
 
   useEffect(() => {
     const todayIso = toIso(new Date())
@@ -88,8 +84,7 @@ export default function PlannedAvailabilitySummary({
     const active = bookings.filter(b => b.status !== "cancelled")
     const firstWithGuests = visible.find(iso =>
       active.some(
-        b =>
-          iso >= b.start_date && iso <= b.end_date && b.occupants.length > 0,
+        b => iso >= b.start_date && iso <= b.end_date && b.occupants.length > 0,
       ),
     )
     setSelectedDay(firstWithGuests ?? null)
@@ -167,7 +162,9 @@ export default function PlannedAvailabilitySummary({
             variant="tertiary"
             icon
             aria-label={t("Previous week")}
-            onClick={() => { onWeekStartChange(addDays(weekStart, -7)) }}
+            onClick={() => {
+              onWeekStartChange(addDays(weekStart, -7))
+            }}
           >
             <ChevronLeftIcon aria-hidden />
           </Button>
@@ -176,14 +173,18 @@ export default function PlannedAvailabilitySummary({
             variant="tertiary"
             icon
             aria-label={t("Next week")}
-            onClick={() => { onWeekStartChange(addDays(weekStart, 7)) }}
+            onClick={() => {
+              onWeekStartChange(addDays(weekStart, 7))
+            }}
           >
             <ChevronRightIcon aria-hidden />
           </Button>
         </div>
         <div className={styles.weekNavRight}>
           {weekBirthdayGuests.map(g => (
-            <Tag key={g.id} data-color="warning">{t("{{name}} birthday", { name: g.name })}</Tag>
+            <Tag key={g.id} data-color="warning">
+              {t("{{name}} birthday", { name: g.name })}
+            </Tag>
           ))}
           {priorityHolderName && <Tag>{priorityHolderName}</Tag>}
         </div>
@@ -194,7 +195,9 @@ export default function PlannedAvailabilitySummary({
         {isMobile && days.every(d => guestsOnDay(toIso(d)) === 0) ? (
           <Card asChild>
             <li>
-              <Card.Block className={`${styles.dayCardBlock} ${styles.dayCardBlockEmpty}`}>
+              <Card.Block
+                className={`${styles.dayCardBlock} ${styles.dayCardBlockEmpty}`}
+              >
                 <div className={styles.dayRow}>
                   <div className={styles.dayCount}>
                     <span>{t("No guests")}</span>
@@ -203,30 +206,32 @@ export default function PlannedAvailabilitySummary({
               </Card.Block>
             </li>
           </Card>
-        ) : days.map((d, i) => {
-          const iso = toIso(d)
-          const isSelected = selectedDay === iso
-          const count = guestsOnDay(iso)
-          const toggle = () => {
-            if (count === 0) return
-            setSelectedDay(isSelected ? null : iso)
-          }
-          return (
-            <DayCard
-              key={iso}
-              date={d}
-              weekdayLabel={WEEKDAY_LABELS[i]}
-              iso={iso}
-              isSelected={isSelected}
-              isToday={iso === todayIso}
-              hasBirthday={birthdayGuestsOnDay(iso).length > 0}
-              count={count}
-              names={guestNamesOnDay(iso)}
-              forecast={forecastByIso.get(iso)}
-              onToggle={toggle}
-            />
-          )
-        })}
+        ) : (
+          days.map((d, i) => {
+            const iso = toIso(d)
+            const isSelected = selectedDay === iso
+            const count = guestsOnDay(iso)
+            const toggle = () => {
+              if (count === 0) return
+              setSelectedDay(isSelected ? null : iso)
+            }
+            return (
+              <DayCard
+                key={iso}
+                date={d}
+                weekdayLabel={WEEKDAY_LABELS[i]}
+                iso={iso}
+                isSelected={isSelected}
+                isToday={iso === todayIso}
+                hasBirthday={birthdayGuestsOnDay(iso).length > 0}
+                count={count}
+                names={guestNamesOnDay(iso)}
+                forecast={forecastByIso.get(iso)}
+                onToggle={toggle}
+              />
+            )
+          })
+        )}
       </ul>
     </div>
   )

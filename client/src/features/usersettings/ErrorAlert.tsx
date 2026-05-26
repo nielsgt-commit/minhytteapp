@@ -7,5 +7,7 @@ type ErrorAlertProps = {
 export function ErrorAlert({ error }: ErrorAlertProps) {
   const { t } = useTranslation("usersettings")
   if (!error) return null
-  return <p role="alert">{t("Error: {{message}}", { message: error.message })}</p>
+  return (
+    <p role="alert">{t("Error: {{message}}", { message: error.message })}</p>
+  )
 }

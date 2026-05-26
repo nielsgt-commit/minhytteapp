@@ -64,13 +64,12 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
   return (
     <>
       {createStructure.error && (
-        <p role="alert">{t("Error: {{message}}", { message: createStructure.error.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: createStructure.error.message })}
+        </p>
       )}
 
-      <form
-        onSubmit={handleAddStructure}
-        className={styles.form}
-      >
+      <form onSubmit={handleAddStructure} className={styles.form}>
         <Textfield
           label={t("Name")}
           name="name"

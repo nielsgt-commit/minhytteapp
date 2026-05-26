@@ -18,9 +18,12 @@ export const BED_LABELS: Record<string, string> = {
 
 export const MAX_BED_ICONS = 12
 
-export const BED_ICON_COLOR: Record<"empty" | "existing" | "draft" | "over", string> = {
-  empty:    "var(--ds-color-neutral-border-default)",
+export const BED_ICON_COLOR: Record<
+  "empty" | "existing" | "draft" | "over",
+  string
+> = {
+  empty: "var(--ds-color-neutral-border-default)",
   existing: "var(--ds-color-neutral-base-default)",
-  draft:    "var(--ds-color-accent-base-default)",
-  over:     "var(--ds-color-danger-base-default, #c01c28)",
+  draft: "var(--ds-color-accent-base-default)",
+  over: "var(--ds-color-danger-base-default, #c01c28)",
 }

@@ -16,7 +16,9 @@ describe("SettlementPhaseStepper", () => {
 
   test("renders one step per SETTLEMENT_PHASES entry, numbered 1..5", () => {
     const { container } = render(<SettlementPhaseStepper phase="reviewing" />)
-    expect(container.querySelectorAll("[aria-current], div > span + span").length).toBeGreaterThan(0)
+    expect(
+      container.querySelectorAll("[aria-current], div > span + span").length,
+    ).toBeGreaterThan(0)
     for (const n of ["1", "2", "3", "4", "5"]) {
       expect(screen.getByText(n)).toBeInTheDocument()
     }
@@ -26,7 +28,7 @@ describe("SettlementPhaseStepper", () => {
     const { container } = render(<SettlementPhaseStepper phase="reviewing" />)
     const active = container.querySelectorAll("[aria-current='step']")
     expect(active).toHaveLength(1)
-    expect(active[0]?.textContent).toContain("Reviewing")
+    expect(active[0].textContent).toContain("Reviewing")
   })
 
   test("does not mark other phases as current", () => {

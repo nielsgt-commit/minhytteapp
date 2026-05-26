@@ -32,7 +32,9 @@ export function UnassignedPanel({
                 for (const o of occupants) onQueue(o.user_id, e.target.checked)
               }}
             />
-            <Tag data-color={isOverCap ? "warning" : "neutral"}>{occupants.length}</Tag>
+            <Tag data-color={isOverCap ? "warning" : "neutral"}>
+              {occupants.length}
+            </Tag>
           </div>
         </div>
       </Card.Block>

@@ -25,7 +25,7 @@ export const stayTable = pgTable(
     end_date: date("end_date"),
     created_at: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [
+  t => [
     check(
       "stay_date_order",
       sql`${t.end_date} IS NULL OR ${t.start_date} <= ${t.end_date}`,

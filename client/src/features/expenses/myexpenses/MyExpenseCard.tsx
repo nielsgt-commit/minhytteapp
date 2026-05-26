@@ -25,7 +25,10 @@ export function MyExpenseCard({
   return (
     <Card asChild>
       <article>
-        <Card.Block className={editing.value ? undefined : styles.row} data-size="sm">
+        <Card.Block
+          className={editing.value ? undefined : styles.row}
+          data-size="sm"
+        >
           {editing.value ? (
             <MyExpenseEditForm
               expense={expense}

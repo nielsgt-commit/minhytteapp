@@ -49,7 +49,9 @@ export function ReviewExpenseCard({
                 </Dialog.Trigger>
                 <Dialog>
                   <Dialog.Block>
-                    <Heading level={3} data-size="xs">{t("Receipt")}</Heading>
+                    <Heading level={3} data-size="xs">
+                      {t("Receipt")}
+                    </Heading>
                   </Dialog.Block>
                   <Dialog.Block>
                     <Skeleton
@@ -84,7 +86,9 @@ export function ReviewExpenseCard({
               variant="secondary"
               data-size="sm"
               disabled={pending}
-              onClick={() => { onReimburse(expense) }}
+              onClick={() => {
+                onReimburse(expense)
+              }}
             >
               {t("Reimburse")}
             </Button>
@@ -93,7 +97,9 @@ export function ReviewExpenseCard({
               data-color="danger"
               data-size="sm"
               disabled={pending}
-              onClick={() => { onReject(expense) }}
+              onClick={() => {
+                onReject(expense)
+              }}
             >
               {t("Reject")}
             </Button>

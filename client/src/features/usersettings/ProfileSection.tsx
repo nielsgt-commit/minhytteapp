@@ -96,7 +96,9 @@ export function ProfileSection({ me }: ProfileSectionProps) {
         <Fieldset.Legend>{t("Household role")}</Fieldset.Legend>
         <Checkbox
           name="is_head"
-          label={t("I am a household head (can be assigned a priority week and settlement)")}
+          label={t(
+            "I am a household head (can be assigned a priority week and settlement)",
+          )}
           checked={me.is_head}
           disabled={updateIsHead.isPending}
           onChange={e => {

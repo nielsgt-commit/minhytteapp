@@ -1,10 +1,5 @@
 import type { ReactNode } from "react"
-import {
-  Badge,
-  Card,
-  Divider,
-  Heading,
-} from "@digdir/designsystemet-react"
+import { Badge, Card, Divider, Heading } from "@digdir/designsystemet-react"
 import styles from "./PropertyStats.module.css"
 
 type Props = {

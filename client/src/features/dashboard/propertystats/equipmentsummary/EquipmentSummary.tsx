@@ -1,11 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import {
-  Button,
-  List,
-  Paragraph,
-} from "@digdir/designsystemet-react"
+import { Button, List, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import StatCard from "@/features/dashboard/propertystats/StatCard"
@@ -21,9 +17,7 @@ export default function EquipmentSummary() {
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const countByCategory = new Map<string, number>(
-    CATEGORIES.map(c => [c, 0]),
-  )
+  const countByCategory = new Map<string, number>(CATEGORIES.map(c => [c, 0]))
   for (const item of equipment) {
     const raw = item.category?.trim()
     if (!raw) continue
@@ -36,30 +30,34 @@ export default function EquipmentSummary() {
     <StatCard
       title={t("Equipment")}
       count={CATEGORIES.length}
-      content={equipment.length === 0 ? (
-        <Paragraph>{t("No equipment yet.")}</Paragraph>
-      ) : (
-        <List.Unordered className={styles.list}>
-          {CATEGORIES.map(cat => {
-            const count = countByCategory.get(cat) ?? 0
-            const label =
-              cat === "Boat" ? t("Boat")
-                : cat === "Appliance" ? t("Appliance")
-                  : t("Tool")
-            return (
-              <List.Item key={cat} className={styles.row}>
-                <span>{label}</span>
-                <span>{count}</span>
-              </List.Item>
-            )
-          })}
-        </List.Unordered>
-      )}
-      footer={(
+      content={
+        equipment.length === 0 ? (
+          <Paragraph>{t("No equipment yet.")}</Paragraph>
+        ) : (
+          <List.Unordered className={styles.list}>
+            {CATEGORIES.map(cat => {
+              const count = countByCategory.get(cat) ?? 0
+              const label =
+                cat === "Boat"
+                  ? t("Boat")
+                  : cat === "Appliance"
+                    ? t("Appliance")
+                    : t("Tool")
+              return (
+                <List.Item key={cat} className={styles.row}>
+                  <span>{label}</span>
+                  <span>{count}</span>
+                </List.Item>
+              )
+            })}
+          </List.Unordered>
+        )
+      }
+      footer={
         <Button asChild variant="secondary" className={styles.footerButton}>
           <Link to="/manageproperty">{t("Manage equipment")}</Link>
         </Button>
-      )}
+      }
     />
   )
 }

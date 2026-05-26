@@ -19,4 +19,3 @@ export const Route = createFileRoute("/_marketing/")({
 function RouteComponent() {
   return <Home />
 }
-

@@ -31,7 +31,9 @@ export function AddMemberForm({
     const fd = new FormData(form)
     const user_id = fdNumber(fd, "user_id")
     if (!Number.isFinite(user_id)) return
-    onSubmit(user_id, () => { form.reset() })
+    onSubmit(user_id, () => {
+      form.reset()
+    })
   }
 
   return (

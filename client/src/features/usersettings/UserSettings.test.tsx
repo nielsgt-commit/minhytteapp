@@ -5,7 +5,9 @@ import { UserSettings } from "./UserSettings"
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, vars?: Record<string, string>) =>
-      vars ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "") : key,
+      vars
+        ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "")
+        : key,
   }),
 }))
 
@@ -30,7 +32,9 @@ vi.mock("@/trpc/trpc", () => ({
   }),
 }))
 
-let meData: { id: number; name: string; birthday: string | null; is_head: boolean } | undefined
+let meData:
+  | { id: number; name: string; birthday: string | null; is_head: boolean }
+  | undefined
 
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),

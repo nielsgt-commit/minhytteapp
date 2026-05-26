@@ -48,7 +48,9 @@ export default function RoomAvailabilityIndicator({
         rooms.reduce((acc, r) => {
           const prev = acc.get(r.structure_id)
           acc.set(r.structure_id, {
-            name: r.structure_name ?? t("Structure #{{id}}", { id: String(r.structure_id) }),
+            name:
+              r.structure_name ??
+              t("Structure #{{id}}", { id: String(r.structure_id) }),
             beds: (prev?.beds ?? 0) + totalBeds(r),
           })
           return acc

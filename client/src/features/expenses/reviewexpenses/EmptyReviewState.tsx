@@ -44,7 +44,9 @@ export function EmptyReviewState({
         </Button>
       )}
       {advanceError && (
-        <p role="alert">{t("Error: {{message}}", { message: advanceError.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: advanceError.message })}
+        </p>
       )}
     </>
   )

@@ -31,10 +31,12 @@ export function SettlementProgressSummary({
   const openSettlement = settlements.find(s => s.id === settlementId)
   const openYear = openSettlement?.year ?? null
   const createdByName = openSettlement?.created_by_name ?? null
-  const activePolicy = openSettlement?.split_policy_id != null
-    ? policies.find(p => p.id === openSettlement.split_policy_id) ?? null
-    : null
-  const splitPolicyName = activePolicy?.name ?? openSettlement?.split_policy ?? null
+  const activePolicy =
+    openSettlement?.split_policy_id != null
+      ? (policies.find(p => p.id === openSettlement.split_policy_id) ?? null)
+      : null
+  const splitPolicyName =
+    activePolicy?.name ?? openSettlement?.split_policy ?? null
 
   return (
     <Card asChild>

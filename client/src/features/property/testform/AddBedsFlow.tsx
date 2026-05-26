@@ -93,9 +93,8 @@ export function AddBedsFlow({
 
   const removeBedType = (key: BedKey) => {
     setBeds(b => {
-      const next = { ...b }
-      delete next[key]
-      return next
+      const { [key]: _, ...rest } = b
+      return rest
     })
     setLastAddedKey(prev => (prev === key ? null : prev))
   }
@@ -123,7 +122,9 @@ export function AddBedsFlow({
           <Textfield
             label={t("Room name")}
             value={name}
-            onChange={e => { setName(e.target.value) }}
+            onChange={e => {
+              setName(e.target.value)
+            }}
             required
             autoFocus
           />
@@ -131,10 +132,7 @@ export function AddBedsFlow({
           {addedKeys.length > 0 && (
             <div className={styles.bedList}>
               {addedKeys.map(key => (
-                <div
-                  key={key}
-                  className={styles.bedRow}
-                >
+                <div key={key} className={styles.bedRow}>
                   <Textfield
                     label={(t as (k: string) => string)(BED_LABELS[key])}
                     type="number"
@@ -147,7 +145,8 @@ export function AddBedsFlow({
                         return
                       }
                       const n = Number(raw)
-                      if (Number.isFinite(n)) setBedCount(key, Math.max(1, Math.floor(n)))
+                      if (Number.isFinite(n))
+                        setBedCount(key, Math.max(1, Math.floor(n)))
                     }}
                     autoFocus={key === lastAddedKey}
                     className={styles.bedField}
@@ -155,7 +154,9 @@ export function AddBedsFlow({
                   <Button
                     type="button"
                     variant="tertiary"
-                    onClick={() => { removeBedType(key) }}
+                    onClick={() => {
+                      removeBedType(key)
+                    }}
                     disabled={pending}
                   >
                     {t("Remove")}
@@ -173,7 +174,9 @@ export function AddBedsFlow({
                   <Chip.Button
                     key={key}
                     type="button"
-                    onClick={() => { addBedType(key) }}
+                    onClick={() => {
+                      addBedType(key)
+                    }}
                   >
                     + {(t as (k: string) => string)(BED_LABELS[key])}
                   </Chip.Button>

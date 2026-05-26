@@ -95,20 +95,22 @@ function buildDays(series: YrTimeseries[], weekStart: string): DayForecast[] {
 
   return Array.from(targetIsos)
     .sort()
-    .filter(iso => byIso.has(iso))
-    .map(iso => {
-      const v = byIso.get(iso)!
-      return {
-        iso,
-        min_c: Math.round(v.min * 10) / 10,
-        max_c: Math.round(v.max * 10) / 10,
-        symbol_code: v.symbol,
-      }
+    .flatMap(iso => {
+      const v = byIso.get(iso)
+      if (!v) return []
+      return [
+        {
+          iso,
+          min_c: Math.round(v.min * 10) / 10,
+          max_c: Math.round(v.max * 10) / 10,
+          symbol_code: v.symbol,
+        },
+      ]
     })
 }
 
 function buildNow(series: YrTimeseries[]): NowWeather | null {
-  const first = series[0]
+  const first = series.at(0)
   if (!first) return null
   const temp = first.data.instant.details.air_temperature
   if (typeof temp !== "number") return null
@@ -128,14 +130,16 @@ export const weatherRouter = router({
       }),
     )
     .query(async ({ ctx, input }): Promise<ForecastResult> => {
-      const [property] = await ctx.db
-        .select({
-          latitude: propertyTable.latitude,
-          longitude: propertyTable.longitude,
-        })
-        .from(propertyTable)
-        .where(eq(propertyTable.id, input.property_id))
-        .limit(1)
+      const property = (
+        await ctx.db
+          .select({
+            latitude: propertyTable.latitude,
+            longitude: propertyTable.longitude,
+          })
+          .from(propertyTable)
+          .where(eq(propertyTable.id, input.property_id))
+          .limit(1)
+      ).at(0)
 
       if (!property?.latitude || !property.longitude) {
         return { now: null, days: [] }

@@ -33,9 +33,7 @@ describe("ClosedSettlementsList", () => {
         onDelete={() => {}}
       />,
     )
-    expect(
-      screen.getByText("No closed settlements yet."),
-    ).toBeInTheDocument()
+    expect(screen.getByText("No closed settlements yet.")).toBeInTheDocument()
   })
 
   test("renders year (season) and a View button per row", () => {
@@ -66,8 +64,12 @@ describe("ClosedSettlementsList", () => {
         onDelete={() => {}}
       />,
     )
-    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Edit" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Delete" }),
+    ).not.toBeInTheDocument()
   })
 
   test("clicking Edit fires onEdit with the row, Delete fires onDelete with the id", async () => {
@@ -124,7 +126,9 @@ describe("ClosedSettlementsList", () => {
       />,
     )
     expect(screen.getByRole("button", { name: "View" })).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Hide" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Hide" }),
+    ).not.toBeInTheDocument()
   })
 
   test("Edit / Delete are disabled when pending", () => {

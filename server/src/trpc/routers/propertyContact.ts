@@ -46,22 +46,24 @@ export const propertyContactRouter = router({
   update: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive(), ...contactFields }))
     .mutation(async ({ ctx, input }) => {
-      const [updated] = await ctx.db
-        .update(propertyContactsTable)
-        .set({
-          name: input.name,
-          phone: input.phone ?? null,
-          email: input.email ?? null,
-          info: input.info ?? null,
-          updated_at: new Date(),
-        })
-        .where(
-          and(
-            eq(propertyContactsTable.id, input.id),
-            eq(propertyContactsTable.property_id, input.property_id),
-          ),
-        )
-        .returning()
+      const updated = (
+        await ctx.db
+          .update(propertyContactsTable)
+          .set({
+            name: input.name,
+            phone: input.phone ?? null,
+            email: input.email ?? null,
+            info: input.info ?? null,
+            updated_at: new Date(),
+          })
+          .where(
+            and(
+              eq(propertyContactsTable.id, input.id),
+              eq(propertyContactsTable.property_id, input.property_id),
+            ),
+          )
+          .returning()
+      ).at(0)
       if (!updated) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
@@ -71,15 +73,17 @@ export const propertyContactRouter = router({
   delete: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(propertyContactsTable)
-        .where(
-          and(
-            eq(propertyContactsTable.id, input.id),
-            eq(propertyContactsTable.property_id, input.property_id),
-          ),
-        )
-        .returning()
+      const deleted = (
+        await ctx.db
+          .delete(propertyContactsTable)
+          .where(
+            and(
+              eq(propertyContactsTable.id, input.id),
+              eq(propertyContactsTable.property_id, input.property_id),
+            ),
+          )
+          .returning()
+      ).at(0)
       if (!deleted) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }

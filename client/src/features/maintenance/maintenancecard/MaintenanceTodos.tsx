@@ -14,9 +14,12 @@ import styles from "./MaintenanceTodos.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
-import { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
-import { SeverityTag, cycleSeverity } from "@/features/maintenance/severity/SeverityTag.tsx"
+import {
+  SeverityTag,
+  cycleSeverity,
+} from "@/features/maintenance/severity/SeverityTag.tsx"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   const { t } = useTranslation("maintenance")
@@ -45,6 +48,8 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     maintenanceKeys,
   )
 
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
+
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (selectedUserId == null) return
@@ -68,7 +73,11 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
         status: "todo",
         recurrence: "once",
       },
-      { onSuccess: () => { form.reset() } },
+      {
+        onSuccess: () => {
+          form.reset()
+        },
+      },
     )
   }
 
@@ -125,7 +134,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     })
   }
 
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
   const toggleExpanded = (id: number) => {
     setExpanded(prev => {
       const next = new Set(prev)
@@ -136,9 +144,9 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   }
 
   const pending =
-    createMutation.isPending
-    || updateMutation.isPending
-    || deleteMutation.isPending
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending
   const lastError =
     createMutation.error ?? updateMutation.error ?? deleteMutation.error
 
@@ -159,7 +167,11 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
           {t("Add")}
         </Button>
       </form>
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
       {todos.length === 0 ? (
         <p>{t("No active tasks.")}</p>
       ) : (
@@ -174,7 +186,9 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                   <Card.Block className={styles.row} data-size="sm">
                     <SeverityTag
                       severity={todo.severity}
-                      onCycle={() => { cycleItemSeverity(todo) }}
+                      onCycle={() => {
+                        cycleItemSeverity(todo)
+                      }}
                       disabled={pending}
                     />
                     <Paragraph className={styles.description} data-size="sm">
@@ -186,16 +200,22 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                           type="button"
                           data-size="sm"
                           aria-expanded={isExpanded}
-                          onClick={() => { toggleExpanded(todo.id) }}
+                          onClick={() => {
+                            toggleExpanded(todo.id)
+                          }}
                         >
-                          {isExpanded ? t("Hide execution") : t("Show execution")}
+                          {isExpanded
+                            ? t("Hide execution")
+                            : t("Show execution")}
                         </Chip.Button>
                       )}
                       <Button
                         variant="tertiary"
                         data-size="sm"
                         disabled={pending}
-                        onClick={() => { markDone(todo) }}
+                        onClick={() => {
+                          markDone(todo)
+                        }}
                       >
                         {t("Done")}
                       </Button>

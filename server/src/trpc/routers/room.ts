@@ -1,9 +1,6 @@
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
-import {
-  structuresTable,
-  roomTable,
-} from "../../db/schema/property.schema.ts"
+import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
 const roomFields = {
@@ -62,7 +59,10 @@ export const roomRouter = router({
           travel_cot: roomTable.travel_cot,
         })
         .from(roomTable)
-        .innerJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
+        .innerJoin(
+          structuresTable,
+          eq(structuresTable.id, roomTable.structure_id),
+        )
         .where(eq(structuresTable.property_id, input.property_id))
         .orderBy(asc(roomTable.id))
     }),
@@ -70,10 +70,7 @@ export const roomRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
-      const [created] = await ctx.db
-        .insert(roomTable)
-        .values(input)
-        .returning()
+      const [created] = await ctx.db.insert(roomTable).values(input).returning()
       return created
     }),
 

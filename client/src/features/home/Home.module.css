@@ -7,5 +7,9 @@
   gap: 0.4rem;
 }
 
-.title   { grid-area: title; }
-.content { grid-area: content; }
+.title {
+  grid-area: title;
+}
+.content {
+  grid-area: content;
+}

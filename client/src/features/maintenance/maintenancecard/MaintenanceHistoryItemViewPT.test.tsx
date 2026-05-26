@@ -11,8 +11,13 @@ vi.mock("react-i18next", () => ({
     t: (key: string, opts?: Record<string, unknown>) =>
       opts ? `${key} ${JSON.stringify(opts)}` : key,
   }),
-  Trans: ({ values, i18nKey }: { values?: Record<string, unknown>; i18nKey: string }) =>
-    `${i18nKey} ${JSON.stringify(values)}`,
+  Trans: ({
+    values,
+    i18nKey,
+  }: {
+    values?: Record<string, unknown>
+    i18nKey: string
+  }) => `${i18nKey} ${JSON.stringify(values)}`,
 }))
 
 const baseItem: MaintenanceHistoryItemViewPTData = {
@@ -110,9 +115,7 @@ describe("MaintenanceHistoryItemViewPT", () => {
     expect(
       screen.queryByRole("button", { name: "Delete" }),
     ).not.toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Cancel" }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
   })
 
   test("Edit and Delete buttons are disabled while pending", () => {

@@ -16,7 +16,13 @@ export default function MobileTabs({ propertyId }: { propertyId: number }) {
   const [tab, setTab] = useState<"now" | "week" | "summer">("now")
 
   return (
-    <Tabs className={styles.mobileTabs} value={tab} onChange={v => { setTab(v as "now" | "week" | "summer") }}>
+    <Tabs
+      className={styles.mobileTabs}
+      value={tab}
+      onChange={v => {
+        setTab(v as "now" | "week" | "summer")
+      }}
+    >
       <Tabs.List>
         <Tabs.Tab value="now" aria-label={t("Now")}>
           <Paragraph>{t("Now")} </Paragraph>
@@ -66,7 +72,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">{t("Weather now")}</Heading>
+            <Heading level={2} data-size="xs">
+              {t("Weather now")}
+            </Heading>
             <NowWeather />
           </Card.Block>
         </section>
@@ -74,7 +82,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">{t("At {{propertyName}} now", { propertyName })}</Heading>
+            <Heading level={2} data-size="xs">
+              {t("At {{propertyName}} now", { propertyName })}
+            </Heading>
             <AtPropertyNow />
           </Card.Block>
         </section>
@@ -82,7 +92,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">{t("Available parking")}</Heading>
+            <Heading level={2} data-size="xs">
+              {t("Available parking")}
+            </Heading>
             <AvailableParking />
           </Card.Block>
         </section>
@@ -90,7 +102,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">{t("Available beds")}</Heading>
+            <Heading level={2} data-size="xs">
+              {t("Available beds")}
+            </Heading>
             <RoomAvailabilityIndicator rooms={rooms} />
           </Card.Block>
         </section>

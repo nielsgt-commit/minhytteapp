@@ -51,7 +51,10 @@ export const stayRouter = router({
           ),
         )
 
-      const byId = new Map<number, { user_id: number; name: string; via: "booking" | "stay" | "both" }>()
+      const byId = new Map<
+        number,
+        { user_id: number; name: string; via: "booking" | "stay" | "both" }
+      >()
       for (const u of bookingOccupants) {
         byId.set(u.user_id, { ...u, via: "booking" })
       }
@@ -70,58 +73,27 @@ export const stayRouter = router({
     .query(async ({ ctx, input }) => {
       const today = sql<string>`CURRENT_DATE`
 
-      const [openStay] = await ctx.db
-        .select()
-        .from(stayTable)
-        .where(
-          and(
-            eq(stayTable.user_id, ctx.user.id),
-            eq(stayTable.property_id, input.property_id),
-            isNull(stayTable.end_date),
-          ),
-        )
-        .limit(1)
+      const openStay = (
+        await ctx.db
+          .select()
+          .from(stayTable)
+          .where(
+            and(
+              eq(stayTable.user_id, ctx.user.id),
+              eq(stayTable.property_id, input.property_id),
+              isNull(stayTable.end_date),
+            ),
+          )
+          .limit(1)
+      ).at(0)
 
-      const [coveringBooking] = await ctx.db
-        .select({
-          id: bookingTable.id,
-          status: bookingTable.status,
-          start_date: bookingTable.start_date,
-          end_date: bookingTable.end_date,
-        })
-        .from(bookingTable)
-        .innerJoin(
-          bookingOccupantsTable,
-          eq(bookingOccupantsTable.booking_id, bookingTable.id),
-        )
-        .where(
-          and(
-            eq(bookingTable.property_id, input.property_id),
-            eq(bookingOccupantsTable.user_id, ctx.user.id),
-            ne(bookingTable.status, "cancelled"),
-            sql`${bookingTable.start_date} <= ${today}`,
-            sql`${bookingTable.end_date} >= ${today}`,
-          ),
-        )
-        .limit(1)
-
-      return {
-        stay: openStay ?? null,
-        booking: coveringBooking ?? null,
-        checkedIn: openStay != null || coveringBooking?.status === "confirmed",
-      }
-    }),
-
-  checkIn: protectedProcedure
-    .input(propertyInput)
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.transaction(async tx => {
-        const today = sql<string>`CURRENT_DATE`
-
-        const [coveringBooking] = await tx
+      const coveringBooking = (
+        await ctx.db
           .select({
             id: bookingTable.id,
             status: bookingTable.status,
+            start_date: bookingTable.start_date,
+            end_date: bookingTable.end_date,
           })
           .from(bookingTable)
           .innerJoin(
@@ -138,6 +110,43 @@ export const stayRouter = router({
             ),
           )
           .limit(1)
+      ).at(0)
+
+      return {
+        stay: openStay ?? null,
+        booking: coveringBooking ?? null,
+        checkedIn: openStay != null || coveringBooking?.status === "confirmed",
+      }
+    }),
+
+  checkIn: protectedProcedure
+    .input(propertyInput)
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.transaction(async tx => {
+        const today = sql<string>`CURRENT_DATE`
+
+        const coveringBooking = (
+          await tx
+            .select({
+              id: bookingTable.id,
+              status: bookingTable.status,
+            })
+            .from(bookingTable)
+            .innerJoin(
+              bookingOccupantsTable,
+              eq(bookingOccupantsTable.booking_id, bookingTable.id),
+            )
+            .where(
+              and(
+                eq(bookingTable.property_id, input.property_id),
+                eq(bookingOccupantsTable.user_id, ctx.user.id),
+                ne(bookingTable.status, "cancelled"),
+                sql`${bookingTable.start_date} <= ${today}`,
+                sql`${bookingTable.end_date} >= ${today}`,
+              ),
+            )
+            .limit(1)
+        ).at(0)
 
         if (coveringBooking) {
           if (coveringBooking.status !== "confirmed") {
@@ -149,30 +158,41 @@ export const stayRouter = router({
           return { kind: "booking" as const, booking_id: coveringBooking.id }
         }
 
-        const [existingOpen] = await tx
-          .select({ id: stayTable.id })
-          .from(stayTable)
-          .where(
-            and(
-              eq(stayTable.user_id, ctx.user.id),
-              eq(stayTable.property_id, input.property_id),
-              isNull(stayTable.end_date),
-            ),
-          )
-          .limit(1)
+        const existingOpen = (
+          await tx
+            .select({ id: stayTable.id })
+            .from(stayTable)
+            .where(
+              and(
+                eq(stayTable.user_id, ctx.user.id),
+                eq(stayTable.property_id, input.property_id),
+                isNull(stayTable.end_date),
+              ),
+            )
+            .limit(1)
+        ).at(0)
 
         if (existingOpen) {
           return { kind: "stay" as const, stay_id: existingOpen.id }
         }
 
-        const [created] = await tx
-          .insert(stayTable)
-          .values({
-            user_id: ctx.user.id,
-            property_id: input.property_id,
-            start_date: sql`CURRENT_DATE`,
+        const created = (
+          await tx
+            .insert(stayTable)
+            .values({
+              user_id: ctx.user.id,
+              property_id: input.property_id,
+              start_date: sql`CURRENT_DATE`,
+            })
+            .returning({ id: stayTable.id })
+        ).at(0)
+
+        if (!created) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "failed to create stay",
           })
-          .returning({ id: stayTable.id })
+        }
 
         return { kind: "stay" as const, stay_id: created.id }
       })
@@ -181,17 +201,19 @@ export const stayRouter = router({
   checkOut: protectedProcedure
     .input(propertyInput)
     .mutation(async ({ ctx, input }) => {
-      const [closed] = await ctx.db
-        .update(stayTable)
-        .set({ end_date: sql`CURRENT_DATE` })
-        .where(
-          and(
-            eq(stayTable.user_id, ctx.user.id),
-            eq(stayTable.property_id, input.property_id),
-            isNull(stayTable.end_date),
-          ),
-        )
-        .returning({ id: stayTable.id })
+      const closed = (
+        await ctx.db
+          .update(stayTable)
+          .set({ end_date: sql`CURRENT_DATE` })
+          .where(
+            and(
+              eq(stayTable.user_id, ctx.user.id),
+              eq(stayTable.property_id, input.property_id),
+              isNull(stayTable.end_date),
+            ),
+          )
+          .returning({ id: stayTable.id })
+      ).at(0)
 
       if (!closed) {
         throw new TRPCError({

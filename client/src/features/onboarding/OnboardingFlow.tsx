@@ -34,8 +34,8 @@ export function OnboardingFlow() {
   const lastError = createUser.error ?? createProperty.error
 
   const currentUser = me ?? null
-  const anyUser = users[0] ?? null
-  const firstProperty = properties[0] ?? null
+  const anyUser = users.at(0) ?? null
+  const firstProperty = properties.at(0) ?? null
 
   const step: Step =
     anyUser == null ? "user" : firstProperty == null ? "property" : "done"
@@ -68,7 +68,11 @@ export function OnboardingFlow() {
         </li>
       </ol>
 
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
 
       {step === "user" && (
         <UserCreationForm

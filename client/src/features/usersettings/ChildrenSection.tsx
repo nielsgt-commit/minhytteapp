@@ -1,10 +1,6 @@
 import { type SyntheticEvent, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Fieldset,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
@@ -29,7 +25,9 @@ export function ChildrenSection() {
 
   const updateChild = useMutationWithInvalidation(
     trpc.user.updateChild.mutationOptions({
-      onSuccess: () => { setEditingId(null) },
+      onSuccess: () => {
+        setEditingId(null)
+      },
     }),
     childrenKeys,
   )
@@ -47,7 +45,11 @@ export function ChildrenSection() {
     if (!childName) return
     createChild.mutate(
       { name: childName },
-      { onSuccess: () => { form.reset() } },
+      {
+        onSuccess: () => {
+          form.reset()
+        },
+      },
     )
   }
 
@@ -76,12 +78,18 @@ export function ChildrenSection() {
           {children.map(c => (
             <li key={c.id}>
               {editingId === c.id ? (
-                <form onSubmit={e => { handleEditSubmit(e, c.id) }}>
+                <form
+                  onSubmit={e => {
+                    handleEditSubmit(e, c.id)
+                  }}
+                >
                   <Textfield
                     label={t("Name")}
                     type="text"
                     value={editDraft}
-                    onChange={e => { setEditDraft(e.target.value) }}
+                    onChange={e => {
+                      setEditDraft(e.target.value)
+                    }}
                     required
                     autoFocus
                   />
@@ -91,7 +99,9 @@ export function ChildrenSection() {
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => { setEditingId(null) }}
+                    onClick={() => {
+                      setEditingId(null)
+                    }}
                     disabled={updateChild.isPending}
                   >
                     {t("Cancel")}
@@ -102,14 +112,18 @@ export function ChildrenSection() {
                   <span>{c.name}</span>
                   <Button
                     type="button"
-                    onClick={() => { startEdit(c.id, c.name) }}
+                    onClick={() => {
+                      startEdit(c.id, c.name)
+                    }}
                   >
                     {t("Edit")}
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => { handleRemove(c.id, c.name) }}
+                    onClick={() => {
+                      handleRemove(c.id, c.name)
+                    }}
                     disabled={removeChild.isPending}
                   >
                     {t("Remove")}

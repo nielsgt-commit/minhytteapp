@@ -26,22 +26,27 @@ export default function PropertyEvents() {
   const structureName = new Map(structures.map(s => [s.id, s.name]))
 
   const events: EventItem[] = [
-    ...structures
-      .filter(s => s.built_year != null)
-      .map(s => ({
-        year: s.built_year as number,
-        description: t("{{name}} built", { name: s.name }),
-        buildingName: s.name,
-        key: `structure-${s.id}`,
-      })),
+    ...structures.flatMap(s =>
+      s.built_year != null
+        ? [
+            {
+              year: s.built_year,
+              description: t("{{name}} built", { name: s.name }),
+              buildingName: s.name,
+              key: `structure-${String(s.id)}`,
+            },
+          ]
+        : [],
+    ),
     ...items
       .filter(i => i.severity === "major" && i.completed_at != null)
       .map(i => ({
         year: new Date(i.completed_at as Date | string).getFullYear(),
         description: i.description,
         buildingName:
-          (i.structure_id != null && structureName.get(i.structure_id)) || "",
-        key: `maintenance-${i.id}`,
+          (i.structure_id != null ? structureName.get(i.structure_id) : null) ??
+          "",
+        key: `maintenance-${String(i.id)}`,
       })),
   ].sort((a, b) => a.year - b.year)
 
@@ -49,7 +54,9 @@ export default function PropertyEvents() {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading level={6} data-size="md">{t("Property events")}</Heading>
+          <Heading level={6} data-size="md">
+            {t("Property events")}
+          </Heading>
           {events.length === 0 ? (
             <p>{t("No events.")}</p>
           ) : (
@@ -59,7 +66,9 @@ export default function PropertyEvents() {
                   <Card asChild>
                     <article>
                       <Card.Block className={styles.eventBlock}>
-                        <span>{ev.year} {ev.description}</span>
+                        <span>
+                          {ev.year} {ev.description}
+                        </span>
                         {ev.buildingName && (
                           <Tag data-color="info">{ev.buildingName}</Tag>
                         )}

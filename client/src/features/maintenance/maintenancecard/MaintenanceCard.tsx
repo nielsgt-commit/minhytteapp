@@ -23,10 +23,14 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
 
   const todosLabel = isMobile
     ? t("Todos")
-    : showTodos ? t("Hide todos") : t("Show todos")
+    : showTodos
+      ? t("Hide todos")
+      : t("Show todos")
   const historyLabel = isMobile
     ? t("History")
-    : showHistory ? t("Hide history") : t("Show history")
+    : showHistory
+      ? t("Hide history")
+      : t("Show history")
 
   return (
     <Card asChild>
@@ -40,27 +44,31 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               className={styles.inspect}
               variant="secondary"
               data-size="sm"
-              onClick={() => { setInspecting(true) }}
+              onClick={() => {
+                setInspecting(true)
+              }}
             >
               {t("Start inspection")}
             </Button>
           )}
-          {!inspecting && (
-            <Divider className={styles.divider} />
-          )}
+          {!inspecting && <Divider className={styles.divider} />}
           {!inspecting && (
             <div className={styles.actions}>
               <Button
                 variant="tertiary"
                 data-size="sm"
-                onClick={() => { setView(v => v === "todos" ? "none" : "todos") }}
+                onClick={() => {
+                  setView(v => (v === "todos" ? "none" : "todos"))
+                }}
               >
                 {todosLabel}
               </Button>
               <Button
                 variant="tertiary"
                 data-size="sm"
-                onClick={() => { setView(v => v === "history" ? "none" : "history") }}
+                onClick={() => {
+                  setView(v => (v === "history" ? "none" : "history"))
+                }}
               >
                 {historyLabel}
               </Button>
@@ -82,7 +90,9 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
             <InspectionFlow
               scope={scope}
               open={inspecting}
-              onClose={() => { setInspecting(false) }}
+              onClose={() => {
+                setInspecting(false)
+              }}
             />
           </Card.Block>
         )}

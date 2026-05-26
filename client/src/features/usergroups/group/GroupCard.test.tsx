@@ -22,7 +22,9 @@ const availableUsers = [
   { id: 13, name: "Dan" },
 ]
 
-function makeProps(overrides: Partial<React.ComponentProps<typeof GroupCard>> = {}) {
+function makeProps(
+  overrides: Partial<React.ComponentProps<typeof GroupCard>> = {},
+) {
   return {
     group: baseGroup,
     availableUsers,
@@ -111,7 +113,9 @@ describe("GroupCard", () => {
     const user = userEvent.setup()
     render(<GroupCard {...makeProps({ onRemoveMember })} />)
     await user.click(
-      screen.getAllByRole("button", { name: "Remove {{userName}} from group" })[0],
+      screen.getAllByRole("button", {
+        name: "Remove {{userName}} from group",
+      })[0],
     )
     expect(onRemoveMember).toHaveBeenCalledTimes(1)
     expect(onRemoveMember).toHaveBeenCalledWith(10, "Alice")
@@ -120,9 +124,7 @@ describe("GroupCard", () => {
   test("renders the rename form when isRenaming and submits trimmed values", async () => {
     const onRenameSubmit = vi.fn()
     const user = userEvent.setup()
-    render(
-      <GroupCard {...makeProps({ isRenaming: true, onRenameSubmit })} />,
-    )
+    render(<GroupCard {...makeProps({ isRenaming: true, onRenameSubmit })} />)
 
     const nameField = screen.getByLabelText("Name") as HTMLInputElement
     expect(nameField.value).toBe("Owners")
@@ -140,9 +142,7 @@ describe("GroupCard", () => {
   })
 
   test("renders AddMemberForm when isAddingMember and not isCreatingUser", () => {
-    render(
-      <GroupCard {...makeProps({ isAddingMember: true })} />,
-    )
+    render(<GroupCard {...makeProps({ isAddingMember: true })} />)
     // The legend includes the group name interpolated via the mocked t key.
     expect(screen.getByLabelText("User")).toBeInTheDocument()
     expect(screen.getByRole("option", { name: "Carol" })).toBeInTheDocument()

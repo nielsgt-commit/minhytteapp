@@ -19,19 +19,26 @@ export function ReviewHeader({
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">{t("Review expenses")}</Heading>
+        <Heading level={4} data-size="sm">
+          {t("Review expenses")}
+        </Heading>
         <Switch
           label={t("Accept new expenses")}
           position="end"
           data-size="sm"
           checked={stillAccepting}
           disabled={disabled}
-          onChange={e => { onSwitchChange(e.target.checked) }}
+          onChange={e => {
+            onSwitchChange(e.target.checked)
+          }}
         />
       </div>
       {warningCount != null && (
         <Paragraph role="alert" data-size="sm">
-          {t("You still have {{count}} item to review — finish the list before continuing.", { count: warningCount })}
+          {t(
+            "You still have {{count}} item to review — finish the list before continuing.",
+            { count: warningCount },
+          )}
         </Paragraph>
       )}
     </>

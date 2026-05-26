@@ -51,7 +51,10 @@ export function InlineEditField({
   if (!canEdit) {
     return (
       <span className={styles.readOnly}>
-        {value || (placeholder ? <span className={styles.placeholder}>{placeholder}</span> : null)}
+        {value ||
+          (placeholder ? (
+            <span className={styles.placeholder}>{placeholder}</span>
+          ) : null)}
       </span>
     )
   }
@@ -69,7 +72,9 @@ export function InlineEditField({
           setEditing(true)
         }}
       >
-        {value || <span className={styles.placeholder}>{placeholder ?? ariaLabel}</span>}
+        {value || (
+          <span className={styles.placeholder}>{placeholder ?? ariaLabel}</span>
+        )}
       </button>
     )
   }
@@ -87,12 +92,16 @@ export function InlineEditField({
     setEditing(false)
   }
 
-  const handleBlur = (e: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleBlur = (
+    e: FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
     commit()
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     if (e.key === "Escape") {
       e.preventDefault()
       cancel()
@@ -104,7 +113,9 @@ export function InlineEditField({
     }
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setDraft(e.target.value)
   }
 

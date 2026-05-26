@@ -33,9 +33,24 @@ describe("RoomAvailabilityIndicator", () => {
     render(
       <RoomAvailabilityIndicator
         rooms={[
-          { ...emptyBeds, beds_sm: 2, structure_id: 1, structure_name: "Main cabin" },
-          { ...emptyBeds, beds_lg: 1, structure_id: 1, structure_name: "Main cabin" },
-          { ...emptyBeds, beds_sm: 1, structure_id: 2, structure_name: "Annex" },
+          {
+            ...emptyBeds,
+            beds_sm: 2,
+            structure_id: 1,
+            structure_name: "Main cabin",
+          },
+          {
+            ...emptyBeds,
+            beds_lg: 1,
+            structure_id: 1,
+            structure_name: "Main cabin",
+          },
+          {
+            ...emptyBeds,
+            beds_sm: 1,
+            structure_id: 2,
+            structure_name: "Annex",
+          },
         ]}
       />,
     )
@@ -55,7 +70,9 @@ describe("RoomAvailabilityIndicator", () => {
   test("uses 'success' color when many beds available", () => {
     const { container } = render(
       <RoomAvailabilityIndicator
-        rooms={[{ ...emptyBeds, beds_sm: 5, structure_id: 1, structure_name: "Big" }]}
+        rooms={[
+          { ...emptyBeds, beds_sm: 5, structure_id: 1, structure_name: "Big" },
+        ]}
       />,
     )
     expect(container.querySelector('[data-color="success"]')).not.toBeNull()
@@ -64,7 +81,9 @@ describe("RoomAvailabilityIndicator", () => {
   test("uses 'danger' color when total beds <= 1", () => {
     const { container } = render(
       <RoomAvailabilityIndicator
-        rooms={[{ ...emptyBeds, beds_sm: 1, structure_id: 1, structure_name: "Tiny" }]}
+        rooms={[
+          { ...emptyBeds, beds_sm: 1, structure_id: 1, structure_name: "Tiny" },
+        ]}
       />,
     )
     expect(container.querySelector('[data-color="danger"]')).not.toBeNull()
@@ -74,12 +93,19 @@ describe("RoomAvailabilityIndicator", () => {
     render(
       <RoomAvailabilityIndicator
         rooms={[
-          { ...emptyBeds, beds_double: 3, structure_id: 7, structure_name: "Double-house" },
+          {
+            ...emptyBeds,
+            beds_double: 3,
+            structure_id: 7,
+            structure_name: "Double-house",
+          },
         ]}
       />,
     )
     // 3 double beds = 6 capacity, well above 1 → 'success'
     const tag = screen.getByText("Double-house")
-    expect(tag.closest('[data-color]')?.getAttribute("data-color")).toBe("success")
+    expect(tag.closest("[data-color]")?.getAttribute("data-color")).toBe(
+      "success",
+    )
   })
 })

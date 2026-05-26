@@ -1,6 +1,4 @@
-export type What =
-  | { kind: "total" }
-  | { kind: "category"; category_id: number }
+export type What = { kind: "total" } | { kind: "category"; category_id: number }
 
 export type How =
   | { kind: "equally" }
@@ -123,11 +121,16 @@ export function decodeWhat(v: string): What {
 
 export function encodeWho(w: Who): string {
   switch (w.kind) {
-    case "all_users": return "all_users"
-    case "heads_only": return "heads_only"
-    case "main_groups": return "main_groups"
-    case "user_group": return `user_group:${String(w.group_id)}`
-    case "user": return `user:${String(w.user_id)}`
+    case "all_users":
+      return "all_users"
+    case "heads_only":
+      return "heads_only"
+    case "main_groups":
+      return "main_groups"
+    case "user_group":
+      return `user_group:${String(w.group_id)}`
+    case "user":
+      return `user:${String(w.user_id)}`
   }
 }
 
@@ -135,8 +138,13 @@ export function decodeWho(v: string): Who {
   if (v === "all_users") return { kind: "all_users" }
   if (v === "heads_only") return { kind: "heads_only" }
   if (v === "main_groups") return { kind: "main_groups" }
-  if (v.startsWith("user_group:")) return { kind: "user_group", group_id: Number(v.slice("user_group:".length)) }
-  if (v.startsWith("user:")) return { kind: "user", user_id: Number(v.slice("user:".length)) }
+  if (v.startsWith("user_group:"))
+    return {
+      kind: "user_group",
+      group_id: Number(v.slice("user_group:".length)),
+    }
+  if (v.startsWith("user:"))
+    return { kind: "user", user_id: Number(v.slice("user:".length)) }
   return { kind: "all_users" }
 }
 
@@ -165,7 +173,11 @@ export type GroupWithMembers = {
   members: { user_id: number; user_name: string }[]
 }
 
-export type EligibleOwner = { property_owner_id: number; user_id: number; user_name: string }
+export type EligibleOwner = {
+  property_owner_id: number
+  user_id: number
+  user_name: string
+}
 
 export type Category = { id: number; name: string }
 
@@ -188,28 +200,35 @@ export function nameForCategory(categories: Category[], id: number) {
 }
 
 export function describeWhat(w: What, categories: Category[]) {
-  return w.kind === "total" ? "total" : nameForCategory(categories, w.category_id)
+  return w.kind === "total"
+    ? "total"
+    : nameForCategory(categories, w.category_id)
 }
 
 export function describeWho(w: Who, groups: GroupWithMembers[]): string {
   switch (w.kind) {
-    case "all_users": return "all users"
-    case "heads_only": return "heads of this property"
-    case "main_groups": return "main owner groups"
-    case "user_group": return `group "${nameForGroup(groups, w.group_id)}"`
-    case "user": return nameForUser(groups, w.user_id)
+    case "all_users":
+      return "all users"
+    case "heads_only":
+      return "heads of this property"
+    case "main_groups":
+      return "main owner groups"
+    case "user_group":
+      return `group "${nameForGroup(groups, w.group_id)}"`
+    case "user":
+      return nameForUser(groups, w.user_id)
   }
 }
 
-export function describeWhoList(who: Who[], groups: GroupWithMembers[]): string {
+export function describeWhoList(
+  who: Who[],
+  groups: GroupWithMembers[],
+): string {
   if (who.length === 0) return "nobody"
   return who.map(w => describeWho(w, groups)).join(", ")
 }
 
-export function describeExcept(
-  item: ExceptItem,
-  groups: GroupWithMembers[],
-) {
+export function describeExcept(item: ExceptItem, groups: GroupWithMembers[]) {
   if (item.kind === "kids") return "Kids"
   return item.kind === "user"
     ? nameForUser(groups, item.user_id)
@@ -218,7 +237,9 @@ export function describeExcept(
 
 export function describeWhen(w: When, eligibleOwners: EligibleOwner[]): string {
   if (w.kind === "during_priority_week") {
-    const owner = eligibleOwners.find(o => o.property_owner_id === w.property_owner_id)
+    const owner = eligibleOwners.find(
+      o => o.property_owner_id === w.property_owner_id,
+    )
     return owner
       ? `${owner.user_name}'s priority week`
       : `priority week (owner #${String(w.property_owner_id)})`

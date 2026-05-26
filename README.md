@@ -7,6 +7,7 @@ Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via D
 ## Tech stack
 
 **Frontend** (`client/`)
+
 - React 19 + TypeScript, bundled with Vite 6
 - TanStack Router (file-based, code-split) for routing
 - TanStack React Query for server state, paired with `@trpc/tanstack-react-query` for typed hooks (`useTRPC()`, `useSuspenseQuery`, `useMutation`)
@@ -16,6 +17,7 @@ Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via D
 - Flatpickr for date inputs
 
 **Backend** (`server/`)
+
 - Hono 4 on `@hono/node-server`, with `hono/cors` and `@hono/trpc-server` as the tRPC adapter
 - tRPC v11 — routers under `server/src/trpc/routers/`, composed in `_app.ts`
 - Drizzle ORM (`drizzle-orm/node-postgres`) talking to Postgres via `pg`
@@ -23,10 +25,12 @@ Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via D
 - `dotenv` for env loading
 
 **Database & infra**
+
 - Postgres 17 (Docker, see `docker-compose.yml`) — primary store
 - Drizzle Kit for schema migrations (`drizzle/` directory, generated SQL)
 
 **Tooling**
+
 - TypeScript (project references across `client/` and `server/`)
 - ESLint (flat config) + Prettier
 - Vitest + Testing Library + jsdom for client tests
@@ -100,20 +104,20 @@ To run them separately: `npm run dev` (client) and `npm run dev:server` (api).
 
 ### Other useful scripts
 
-| Script | What it does |
-| --- | --- |
-| `npm run db:studio` | Opens Drizzle Studio to browse the DB in a browser |
-| `npm run type-check` | `tsc -b --noEmit` across the workspace |
-| `npm run lint` / `lint:fix` | ESLint |
-| `npm run format` / `format:check` | Prettier |
-| `npm test` | Vitest |
-| `npm run build` | Type-check then build the client |
+| Script                            | What it does                                       |
+| --------------------------------- | -------------------------------------------------- |
+| `npm run db:studio`               | Opens Drizzle Studio to browse the DB in a browser |
+| `npm run type-check`              | `tsc -b --noEmit` across the workspace             |
+| `npm run lint` / `lint:fix`       | ESLint                                             |
+| `npm run format` / `format:check` | Prettier                                           |
+| `npm test`                        | Vitest                                             |
+| `npm run build`                   | Type-check then build the client                   |
 
 ---
 
 ## How a query gets from the DB to the UI
 
-The end-to-end pattern is **Drizzle table → tRPC procedure → tRPC router → `useTRPC()` in component → loader prefetch**. Each layer has one responsibility, and the client never imports server runtime code — only the `AppRouter` *type*.
+The end-to-end pattern is **Drizzle table → tRPC procedure → tRPC router → `useTRPC()` in component → loader prefetch**. Each layer has one responsibility, and the client never imports server runtime code — only the `AppRouter` _type_.
 
 ```
 server/src/db/schema/*          ← table definitions (Drizzle)
@@ -171,10 +175,7 @@ import { publicProcedure, router } from "../init.ts"
 
 export const propertyRouter = router({
   list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(propertyTable)
-      .orderBy(asc(propertyTable.name))
+    return ctx.db.select().from(propertyTable).orderBy(asc(propertyTable.name))
   }),
 })
 ```
@@ -199,11 +200,11 @@ create: protectedProcedure
 ```ts
 import { router } from "../init.ts"
 import { bookingRouter } from "./booking.ts"
-import { propertyRouter } from "./property.ts"   // ← add
+import { propertyRouter } from "./property.ts" // ← add
 
 export const appRouter = router({
   booking: bookingRouter,
-  property: propertyRouter,                       // ← add
+  property: propertyRouter, // ← add
 })
 
 export type AppRouter = typeof appRouter
@@ -253,7 +254,13 @@ export function PropertyList() {
     }),
   )
 
-  return <ul>{data.map(p => <li key={p.id}>{p.name}</li>)}</ul>
+  return (
+    <ul>
+      {data.map(p => (
+        <li key={p.id}>{p.name}</li>
+      ))}
+    </ul>
+  )
 }
 ```
 

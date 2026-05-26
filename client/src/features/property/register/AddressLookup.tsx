@@ -37,8 +37,12 @@ export function AddressLookup({ label, placeholder, onSelect }: Props) {
   const [debouncedQuery, setDebouncedQuery] = useState("")
 
   useEffect(() => {
-    const id = setTimeout(() => { setDebouncedQuery(query.trim()) }, 250)
-    return () => { clearTimeout(id) }
+    const id = setTimeout(() => {
+      setDebouncedQuery(query.trim())
+    }, 250)
+    return () => {
+      clearTimeout(id)
+    }
   }, [query])
 
   const { data, isFetching, error } = useQuery({
@@ -68,12 +72,18 @@ export function AddressLookup({ label, placeholder, onSelect }: Props) {
       <Textfield
         label={resolvedLabel}
         value={query}
-        onChange={e => { setQuery(e.target.value) }}
+        onChange={e => {
+          setQuery(e.target.value)
+        }}
         placeholder={placeholder ?? t("e.g. Karl Johans gate 1")}
       />
 
       {isFetching && <Paragraph data-size="sm">{t("Searching…")}</Paragraph>}
-      {error && <Paragraph data-size="sm" role="alert">{t("Error: {{message}}", { message: error.message })}</Paragraph>}
+      {error && (
+        <Paragraph data-size="sm" role="alert">
+          {t("Error: {{message}}", { message: error.message })}
+        </Paragraph>
+      )}
       {noMatches && <Paragraph data-size="sm">{t("No matches.")}</Paragraph>}
 
       {results.length > 0 && (

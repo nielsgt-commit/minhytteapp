@@ -5,7 +5,6 @@ import { QueryClientProvider } from "@tanstack/react-query"
 // Import generated route tree.
 import { routeTree } from "./routeTree.gen"
 
-
 import { createRoot } from "react-dom/client"
 import { Provider } from "react-redux"
 import { store } from "./app/store"
@@ -18,8 +17,11 @@ import "@digdir/designsystemet-css"
 import "./i18n"
 import "./index.css"
 
-registerSW({ immediate: true })
-
+// Only install the service worker for real production builds. In dev the
+// SW would cache stale assets and mask hot-reload changes.
+if (import.meta.env.PROD) {
+  registerSW({ immediate: true })
+}
 
 const router = createRouter({
   routeTree,
@@ -28,7 +30,7 @@ const router = createRouter({
   },
 })
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Register {
     router: typeof router

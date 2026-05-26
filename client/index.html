@@ -17,15 +17,15 @@
     />
     <title>minhytte.app</title>
     <script>
-      (function () {
+      ;(function () {
         try {
-          var s = localStorage.getItem("color-scheme");
-          if (s !== "light" && s !== "dark") s = "light";
-          document.documentElement.dataset.colorScheme = s;
+          var s = localStorage.getItem("color-scheme")
+          if (s !== "light" && s !== "dark") s = "light"
+          document.documentElement.dataset.colorScheme = s
         } catch (_) {
-          document.documentElement.dataset.colorScheme = "light";
+          document.documentElement.dataset.colorScheme = "light"
         }
-      })();
+      })()
     </script>
   </head>
   <body data-color="accent">

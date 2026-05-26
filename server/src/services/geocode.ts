@@ -27,7 +27,11 @@ export async function geocodeNorwayAddress(
   }
   const body = (await res.json()) as KartverketResponse
   const point = body.adresser?.[0]?.representasjonspunkt
-  if (!point || typeof point.lat !== "number" || typeof point.lon !== "number") {
+  if (
+    !point ||
+    typeof point.lat !== "number" ||
+    typeof point.lon !== "number"
+  ) {
     return null
   }
   return {

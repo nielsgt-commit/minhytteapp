@@ -19,7 +19,11 @@ vi.mock("react-i18next", () => ({
   }: {
     i18nKey: string
     values?: Record<string, unknown>
-  }) => <span>{values?.email ? `${i18nKey} ${String(values.email)}` : i18nKey}</span>,
+  }) => (
+    <span>
+      {values?.email ? `${i18nKey} ${String(values.email)}` : i18nKey}
+    </span>
+  ),
 }))
 
 beforeEach(() => {
@@ -34,9 +38,7 @@ describe("UnauthenticatedView", () => {
         name: "Welcome to the new settlement system",
       }),
     ).toBeInTheDocument()
-    expect(
-      screen.getByPlaceholderText("you@example.com"),
-    ).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Send magic link" }),
     ).toBeInTheDocument()
@@ -52,10 +54,7 @@ describe("UnauthenticatedView", () => {
   test("submit button becomes enabled after typing an email", async () => {
     const user = userEvent.setup()
     render(<UnauthenticatedView />)
-    await user.type(
-      screen.getByPlaceholderText("you@example.com"),
-      "a@b.com",
-    )
+    await user.type(screen.getByPlaceholderText("you@example.com"), "a@b.com")
     expect(
       screen.getByRole("button", { name: "Send magic link" }),
     ).toBeEnabled()

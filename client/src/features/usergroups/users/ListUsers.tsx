@@ -41,10 +41,13 @@ export function ListUsers({ canEdit }: ListUsersProps) {
 
   const [editingId, setEditingId] = useState<number | null>(null)
 
-  const { pending, error: lastError } = useMutationsStatus(updateUser, deleteUser)
+  const { pending, error: lastError } = useMutationsStatus(
+    updateUser,
+    deleteUser,
+  )
 
-  const handleSubmit = (userId: number) =>
-    (e: SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit =
+    (userId: number) => (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       const form = e.currentTarget
       const fd = new FormData(form)
@@ -59,16 +62,20 @@ export function ListUsers({ canEdit }: ListUsersProps) {
           is_admin: fdBoolean(fd, "is_admin"),
           is_child: fdBoolean(fd, "is_child"),
         },
-        { onSuccess: () => { setEditingId(null) } },
+        {
+          onSuccess: () => {
+            setEditingId(null)
+          },
+        },
       )
     }
 
   const handleDelete = (userId: number, userName: string) => {
-    if (!window.confirm(t("Delete user \"{{userName}}\"?", { userName }))) return
+    if (!window.confirm(t('Delete user "{{userName}}"?', { userName }))) return
     deleteUser.mutate({ id: userId })
   }
 
-  const renderEditForm = (u: typeof users[number]) => (
+  const renderEditForm = (u: (typeof users)[number]) => (
     <form onSubmit={handleSubmit(u.id)} key={`edit-${String(u.id)}`}>
       <fieldset>
         <legend>{t("Edit user")}</legend>
@@ -112,7 +119,9 @@ export function ListUsers({ canEdit }: ListUsersProps) {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => { setEditingId(null) }}
+            onClick={() => {
+              setEditingId(null)
+            }}
             disabled={updateUser.isPending}
           >
             {t("Cancel")}
@@ -127,20 +136,26 @@ export function ListUsers({ canEdit }: ListUsersProps) {
       <section>
         <Heading level={2}>{t("Users")}</Heading>
         <p>
-          {t("Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.")}
+          {t(
+            "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.",
+          )}
         </p>
 
-        {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+        {lastError && (
+          <p role="alert">
+            {t("Error: {{message}}", { message: lastError.message })}
+          </p>
+        )}
 
         {users.length === 0 ? (
           <p>{t("No users yet.")}</p>
         ) : (
           <ul>
             {users.map(u => {
-              const roles = [
-                u.is_admin ? t("admin") : null,
-                u.is_child ? t("child") : null,
-              ].filter(Boolean).join(", ") || t("user")
+              const roles =
+                [u.is_admin ? t("admin") : null, u.is_child ? t("child") : null]
+                  .filter(Boolean)
+                  .join(", ") || t("user")
               return (
                 <Card asChild key={u.id}>
                   <li>
@@ -149,13 +164,19 @@ export function ListUsers({ canEdit }: ListUsersProps) {
                         editing={editingId === u.id}
                         canEdit={canEdit}
                         pending={pending}
-                        editLabel={t("Edit user {{userName}}", { userName: u.name })}
-                        onStartEdit={() => { setEditingId(u.id) }}
+                        editLabel={t("Edit user {{userName}}", {
+                          userName: u.name,
+                        })}
+                        onStartEdit={() => {
+                          setEditingId(u.id)
+                        }}
                         view={
                           <>
                             <h4>{u.name}</h4>
                             <p>{u.email}</p>
-                            <p><small>{roles}</small></p>
+                            <p>
+                              <small>{roles}</small>
+                            </p>
                           </>
                         }
                         form={renderEditForm(u)}
@@ -166,8 +187,12 @@ export function ListUsers({ canEdit }: ListUsersProps) {
                             data-color="danger"
                             data-size="sm"
                             disabled={pending}
-                            aria-label={t("Delete user {{userName}}", { userName: u.name })}
-                            onClick={() => { handleDelete(u.id, u.name) }}
+                            aria-label={t("Delete user {{userName}}", {
+                              userName: u.name,
+                            })}
+                            onClick={() => {
+                              handleDelete(u.id, u.name)
+                            }}
                           >
                             {t("Delete")}
                           </Button>

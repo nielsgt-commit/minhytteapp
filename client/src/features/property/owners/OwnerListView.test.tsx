@@ -75,7 +75,9 @@ describe("OwnerListView", () => {
         onStartAdd={noop}
       />,
     )
-    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Delete" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole("button", { name: "+ Add owner" }),
     ).not.toBeInTheDocument()
@@ -111,7 +113,9 @@ describe("OwnerListView", () => {
         onStartAdd={noop}
       />,
     )
-    await user.click(screen.getByRole("button", { name: "Remove Alice as owner?" }))
+    await user.click(
+      screen.getByRole("button", { name: "Remove Alice as owner?" }),
+    )
     expect(onRemove).toHaveBeenCalledWith(userOwner)
   })
 

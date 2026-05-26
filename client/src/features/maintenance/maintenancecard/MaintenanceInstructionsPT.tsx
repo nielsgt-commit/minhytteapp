@@ -1,9 +1,17 @@
-import { PortableText, type PortableTextReactComponents } from "@portabletext/react"
+import {
+  PortableText,
+  type PortableTextReactComponents,
+} from "@portabletext/react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceInstructionsPT.module.css"
 
-type PhotoValue = { _type: "photo"; url: string; caption?: string; alt?: string }
+type PhotoValue = {
+  _type: "photo"
+  url: string
+  caption?: string
+  alt?: string
+}
 
 const components: Partial<PortableTextReactComponents> = {
   block: {
@@ -32,7 +40,11 @@ const components: Partial<PortableTextReactComponents> = {
   types: {
     photo: ({ value }: { value: PhotoValue }) => (
       <figure className={styles.figure}>
-        <img src={value.url} alt={value.alt ?? value.caption ?? ""} loading="lazy" />
+        <img
+          src={value.url}
+          alt={value.alt ?? value.caption ?? ""}
+          loading="lazy"
+        />
         {value.caption && <figcaption>{value.caption}</figcaption>}
       </figure>
     ),

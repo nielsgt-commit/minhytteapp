@@ -12,16 +12,18 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 type Db = typeof dbClient
 
 async function assertExpensesUnlocked(db: Db, propertyId: number) {
-  const [open] = await db
-    .select({ phase: settlementsTable.phase })
-    .from(settlementsTable)
-    .where(
-      and(
-        eq(settlementsTable.property_id, propertyId),
-        eq(settlementsTable.status, "open"),
-      ),
-    )
-    .limit(1)
+  const open = (
+    await db
+      .select({ phase: settlementsTable.phase })
+      .from(settlementsTable)
+      .where(
+        and(
+          eq(settlementsTable.property_id, propertyId),
+          eq(settlementsTable.status, "open"),
+        ),
+      )
+      .limit(1)
+  ).at(0)
   if (open && open.phase !== "collecting_expenses") {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -41,7 +43,7 @@ const expenseFields = {
   settlement_id: z.number().int().positive().nullish(),
   date: z.iso.date(),
   status: z.enum(["draft", "submitted", "reimbursed", "rejected"]),
-  receipt_url: z.string().url().optional().nullable(),
+  receipt_url: z.url().optional().nullable(),
   expense_types: z.array(z.string().min(1).max(64)).default([]),
 }
 
@@ -134,25 +136,25 @@ export const expenseRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [existing] = await ctx.db
-        .select({
-          property_id: expensesTable.property_id,
-          status: expensesTable.status,
-        })
-        .from(expensesTable)
-        .where(eq(expensesTable.id, input.id))
-        .limit(1)
-      if (
-        existing
-        && existing.status === "submitted"
-        && existing.property_id != null
-      ) {
+      const existing = (
+        await ctx.db
+          .select({
+            property_id: expensesTable.property_id,
+            status: expensesTable.status,
+          })
+          .from(expensesTable)
+          .where(eq(expensesTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (existing?.status === "submitted" && existing.property_id != null) {
         await assertExpensesUnlocked(ctx.db, existing.property_id)
       }
-      const [deleted] = await ctx.db
-        .delete(expensesTable)
-        .where(eq(expensesTable.id, input.id))
-        .returning()
+      const deleted = (
+        await ctx.db
+          .delete(expensesTable)
+          .where(eq(expensesTable.id, input.id))
+          .returning()
+      ).at(0)
       return deleted
     }),
 })

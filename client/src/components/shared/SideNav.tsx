@@ -1,10 +1,4 @@
-import {
-  type KeyboardEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
@@ -28,7 +22,9 @@ export function SideNav({ groups, ariaLabel }: Props) {
   const flatItems = useMemo(() => groups.flatMap(g => g.items), [groups])
   const indexByTo = useMemo(() => {
     const m = new Map<string, number>()
-    flatItems.forEach((item, i) => { m.set(item.to, i) })
+    flatItems.forEach((item, i) => {
+      m.set(item.to, i)
+    })
     return m
   }, [flatItems])
 
@@ -73,7 +69,9 @@ export function SideNav({ groups, ariaLabel }: Props) {
       <nav aria-label={ariaLabel ?? t("Sections")} onKeyDown={handleKeyDown}>
         {groups.map(group => (
           <Card.Block key={group.label}>
-            <Heading level={2} data-size="xs">{group.label}</Heading>
+            <Heading level={2} data-size="xs">
+              {group.label}
+            </Heading>
             <ul className={styles.list}>
               {group.items.map(item => {
                 const idx = indexByTo.get(item.to) ?? 0
@@ -87,7 +85,9 @@ export function SideNav({ groups, ariaLabel }: Props) {
                       className={styles.link}
                       aria-current={active ? "page" : undefined}
                       tabIndex={idx === focusedIndex ? 0 : -1}
-                      ref={el => { itemRefs.current[idx] = el }}
+                      ref={el => {
+                        itemRefs.current[idx] = el
+                      }}
                       onFocus={() => {
                         setFocusedIndex(idx)
                         void router.preloadRoute({ to: item.to })

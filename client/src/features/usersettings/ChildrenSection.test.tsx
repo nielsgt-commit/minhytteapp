@@ -6,7 +6,9 @@ import { ChildrenSection } from "./ChildrenSection"
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, vars?: Record<string, string>) =>
-      vars ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "") : key,
+      vars
+        ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "")
+        : key,
   }),
 }))
 
@@ -44,7 +46,7 @@ vi.mock("@tanstack/react-query", () => ({
   },
   useMutation: (opts: Record<string, unknown>) => {
     const stubs = [createStub, updateStub, removeStub]
-    const stub = stubs[mutationCallIndex++ % stubs.length]!
+    const stub = stubs[mutationCallIndex++ % stubs.length]
     return {
       mutate: stub.mutate,
       isPending: stub.state.isPending,
@@ -91,7 +93,7 @@ describe("ChildrenSection", () => {
     await user.type(nameInput, "  Newkid  ")
     await user.click(screen.getByRole("button", { name: "Add" }))
     expect(createStub.mutate).toHaveBeenCalledTimes(1)
-    expect(createStub.mutate.mock.calls[0]![0]).toEqual({ name: "Newkid" })
+    expect(createStub.mutate.mock.calls[0][0]).toEqual({ name: "Newkid" })
   })
 
   test("does not call createChild when name is blank", async () => {
@@ -122,7 +124,9 @@ describe("ChildrenSection", () => {
     await user.click(screen.getByRole("button", { name: "Edit" }))
     await user.click(screen.getByRole("button", { name: "Cancel" }))
     expect(updateStub.mutate).not.toHaveBeenCalled()
-    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Save" }),
+    ).not.toBeInTheDocument()
   })
 
   test("submitting edit form calls updateChild with id and trimmed name", async () => {
@@ -130,7 +134,7 @@ describe("ChildrenSection", () => {
     const user = userEvent.setup()
     render(<ChildrenSection />)
     await user.click(screen.getByRole("button", { name: "Edit" }))
-    const editInput = screen.getAllByLabelText("Name")[0]!
+    const editInput = screen.getAllByLabelText("Name")[0]
     await user.clear(editInput)
     await user.type(editInput, "  Pippa  ")
     await user.click(screen.getByRole("button", { name: "Save" }))

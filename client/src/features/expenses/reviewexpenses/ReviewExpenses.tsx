@@ -43,25 +43,27 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
   )
 
   const myGroup = groups.find(
-    g => g.is_main && g.members.some(m => m.user_id === me?.id),
+    g => g.is_main && g.members.some(m => m.user_id === me.id),
   )
   const memberIds = new Set(myGroup?.members.map(m => m.user_id) ?? [])
 
-  const toReview =
-    me != null
-      ? selectExpensesToReview(expenses as ExpenseRow[], memberIds, me.id)
-      : []
+  const toReview = selectExpensesToReview(
+    expenses as ExpenseRow[],
+    memberIds,
+    me.id,
+  )
 
-  const { stillAccepting, warningCount, onSwitchChange } =
-    useAcceptingToggle(toReview.length)
+  const { stillAccepting, warningCount, onSwitchChange } = useAcceptingToggle(
+    toReview.length,
+  )
 
   const { reimburse, reject, pending, error } = useReviewMutations({
     settlementId,
-    reviewerId: me?.id ?? 0,
+    reviewerId: me.id,
     fallbackPropertyId: selectedPropertyId ?? 0,
   })
 
-  if (me == null || selectedPropertyId == null) return null
+  if (selectedPropertyId == null) return null
 
   if (!me.is_head) {
     return <p>{t("Only the group head can review submitted expenses.")}</p>
@@ -106,7 +108,9 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
       {header}
       <div className={styles.list}>
         {error && (
-          <p role="alert">{t("Error: {{message}}", { message: error.message })}</p>
+          <p role="alert">
+            {t("Error: {{message}}", { message: error.message })}
+          </p>
         )}
         {toReview.map(e => (
           <ReviewExpenseCard

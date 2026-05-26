@@ -31,5 +31,7 @@ function EquipmentRoute() {
   const property =
     propertyId != null ? properties.find(p => p.id === propertyId) : undefined
   if (!property) return null
-  return <EquipmentPanel propertyId={property.id} propertyName={property.name} />
+  return (
+    <EquipmentPanel propertyId={property.id} propertyName={property.name} />
+  )
 }

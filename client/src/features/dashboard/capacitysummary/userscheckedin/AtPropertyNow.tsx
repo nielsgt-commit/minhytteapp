@@ -16,7 +16,7 @@ function initials(name: string) {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map(p => p[0]?.toUpperCase() ?? "")
+    .map(p => p[0].toUpperCase())
     .join("")
 }
 
@@ -36,12 +36,15 @@ export default function AtPropertyNow() {
   if (isLoading) return <p>{t("Loading…")}</p>
 
   const guests = data ?? []
-  if (guests.length === 0) return <p>{t("No one at the property right now.")}</p>
+  if (guests.length === 0)
+    return <p>{t("No one at the property right now.")}</p>
 
   const canTruncate = guests.length > VISIBLE_LIMIT
   const collapsed = canTruncate && !expanded
   const hiddenCount = collapsed ? guests.length - VISIBLE_LIMIT : 0
-  const toggle = () => { setExpanded(e => !e) }
+  const toggle = () => {
+    setExpanded(e => !e)
+  }
 
   if (collapsed) {
     return (
@@ -50,7 +53,7 @@ export default function AtPropertyNow() {
         overlap={8}
         suffix={`+${String(hiddenCount)}`}
         onClick={toggle}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
             toggle()
@@ -80,7 +83,7 @@ export default function AtPropertyNow() {
         tabIndex={0}
         aria-expanded
         onClick={toggle}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault()
             toggle()
