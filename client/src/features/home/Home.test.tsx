@@ -26,9 +26,7 @@ describe("Home", () => {
 
   test("exposes the sign-in form to the user", () => {
     render(<Home />)
-    expect(
-      screen.getByPlaceholderText("you@example.com"),
-    ).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Send magic link" }),
     ).toBeInTheDocument()

@@ -39,22 +39,22 @@ Cross-reference each hit against the **Inventory** table below before delegating
 
 ## Inventory
 
-| Panel | Path | Status | Pattern | Notes |
-|---|---|---|---|---|
-| PropertyContacts | `client/src/features/property/propertyinfo/PropertyContacts.tsx` + `ContactListView.tsx` | ✅ migrated | Save/Cancel | Pilot. Uses `renderEditForm` render-prop. |
-| PropertyOwnersPanel | `client/src/features/property/owners/PropertyOwnersPanel.tsx` + `OwnerListView.tsx` | ✅ migrated | Blur-save | `OwnerEditForm.tsx` deleted. |
-| InfrastructurePanel | `client/src/features/property/infrastructure/InfrastructurePanel.tsx` | ✅ migrated | Save/Cancel | Form inlined as `renderEditForm` in same file. |
-| EquipmentPanel | `client/src/features/property/equipment/EquipmentPanel.tsx` | ✅ migrated | Save/Cancel | Form inlined as `renderEditForm` in same file. |
-| ListPropertyStructures | `client/src/features/property/testform/ListPropertyStructures.tsx` | ✅ migrated | Blur-save (name) + canEdit gating (expand/add) | Replaced double-click rename with single-click via `InlineEditField`. |
-| UserGroups | `client/src/features/usergroups/UserGroups.tsx` + `UserGroupsFlow.tsx` + `group/GroupCard.tsx` | ✅ migrated | Save/Cancel | Rename + `is_main` checkbox inside `InlineEditRow` form slot in `GroupCard`. Delete moved to row `actions`. "+ New group" / "Add member" always visible to editors. |
-| Users | `client/src/features/usergroups/Users.tsx` + `users/ListUsers.tsx` | ✅ migrated | Save/Cancel | Behavioural: list rewritten from `<table>` to `<ul>` of `<Card>` rows to match `GroupCard` precedent. |
-| Invites | `client/src/features/usergroups/Invites.tsx` + `invites/InvitesPanel.tsx` | ✅ migrated | Affordance-gating only | Invites are add-only + remove; no per-row `InlineEditRow`. |
-| PropertyInfo | `client/src/features/property/propertyinfo/PropertyInfo.tsx` | 🛑 excluded | n/a | Uses button-trigger + full-form replace (Matrikel address-lookup flow). Intentional. |
-| AddNewExpenseFlow | `client/src/features/expenses/testform/AddNewExpenseFlow.tsx` + `CategoryPicker.tsx` | ✅ migrated | Coexisting affordances | Switch dropped; browse-chips + category-management `<Suggestion>` now coexist for heads (always visible). Uses inline `me?.is_head` (not `useCanEdit`) because the backend `expenseCategory` procedures require `is_head` strictly, not `is_admin || is_head`. Prop `editMode` → `canManage`. |
-| SplitPolicyBuilder | `client/src/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx` | 🛑 excluded | n/a | Switch toggles policy-load-for-edit, not edit-mode for a list. |
-| ReviewSettlement / ReviewBookingDays / ReviewBookingDaysRow | `client/src/features/settlement/reviewsettlement/*.tsx` | 🛑 excluded | n/a | Switches gate review-progress and approval flows. |
-| FindingsSection | `client/src/features/maintenance/inspectionflow/FindingsSection.tsx` | 🛑 excluded | n/a | Switch belongs to the inspection finding flow. |
-| RuleEditor | (settlement/expenses rule editor) | 🛑 excluded | n/a | Switch is rule-state, not edit-mode. |
+| Panel                                                       | Path                                                                                           | Status      | Pattern                                        | Notes                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | -------------------------------------- |
+| PropertyContacts                                            | `client/src/features/property/propertyinfo/PropertyContacts.tsx` + `ContactListView.tsx`       | ✅ migrated | Save/Cancel                                    | Pilot. Uses `renderEditForm` render-prop.                                                                                                                                                                                                         |
+| PropertyOwnersPanel                                         | `client/src/features/property/owners/PropertyOwnersPanel.tsx` + `OwnerListView.tsx`            | ✅ migrated | Blur-save                                      | `OwnerEditForm.tsx` deleted.                                                                                                                                                                                                                      |
+| InfrastructurePanel                                         | `client/src/features/property/infrastructure/InfrastructurePanel.tsx`                          | ✅ migrated | Save/Cancel                                    | Form inlined as `renderEditForm` in same file.                                                                                                                                                                                                    |
+| EquipmentPanel                                              | `client/src/features/property/equipment/EquipmentPanel.tsx`                                    | ✅ migrated | Save/Cancel                                    | Form inlined as `renderEditForm` in same file.                                                                                                                                                                                                    |
+| ListPropertyStructures                                      | `client/src/features/property/testform/ListPropertyStructures.tsx`                             | ✅ migrated | Blur-save (name) + canEdit gating (expand/add) | Replaced double-click rename with single-click via `InlineEditField`.                                                                                                                                                                             |
+| UserGroups                                                  | `client/src/features/usergroups/UserGroups.tsx` + `UserGroupsFlow.tsx` + `group/GroupCard.tsx` | ✅ migrated | Save/Cancel                                    | Rename + `is_main` checkbox inside `InlineEditRow` form slot in `GroupCard`. Delete moved to row `actions`. "+ New group" / "Add member" always visible to editors.                                                                               |
+| Users                                                       | `client/src/features/usergroups/Users.tsx` + `users/ListUsers.tsx`                             | ✅ migrated | Save/Cancel                                    | Behavioural: list rewritten from `<table>` to `<ul>` of `<Card>` rows to match `GroupCard` precedent.                                                                                                                                             |
+| Invites                                                     | `client/src/features/usergroups/Invites.tsx` + `invites/InvitesPanel.tsx`                      | ✅ migrated | Affordance-gating only                         | Invites are add-only + remove; no per-row `InlineEditRow`.                                                                                                                                                                                        |
+| PropertyInfo                                                | `client/src/features/property/propertyinfo/PropertyInfo.tsx`                                   | 🛑 excluded | n/a                                            | Uses button-trigger + full-form replace (Matrikel address-lookup flow). Intentional.                                                                                                                                                              |
+| AddNewExpenseFlow                                           | `client/src/features/expenses/testform/AddNewExpenseFlow.tsx` + `CategoryPicker.tsx`           | ✅ migrated | Coexisting affordances                         | Switch dropped; browse-chips + category-management `<Suggestion>` now coexist for heads (always visible). Uses inline `me?.is_head` (not `useCanEdit`) because the backend `expenseCategory` procedures require `is_head` strictly, not `is_admin |     | is_head`. Prop `editMode`→`canManage`. |
+| SplitPolicyBuilder                                          | `client/src/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx`                     | 🛑 excluded | n/a                                            | Switch toggles policy-load-for-edit, not edit-mode for a list.                                                                                                                                                                                    |
+| ReviewSettlement / ReviewBookingDays / ReviewBookingDaysRow | `client/src/features/settlement/reviewsettlement/*.tsx`                                        | 🛑 excluded | n/a                                            | Switches gate review-progress and approval flows.                                                                                                                                                                                                 |
+| FindingsSection                                             | `client/src/features/maintenance/inspectionflow/FindingsSection.tsx`                           | 🛑 excluded | n/a                                            | Switch belongs to the inspection finding flow.                                                                                                                                                                                                    |
+| RuleEditor                                                  | (settlement/expenses rule editor)                                                              | 🛑 excluded | n/a                                            | Switch is rule-state, not edit-mode.                                                                                                                                                                                                              |
 
 **When you add a new migration, update this table.** Status, path, pattern, and one-line note. Keep it current — this is how the next agent decides what to pick up.
 
@@ -62,18 +62,19 @@ Cross-reference each hit against the **Inventory** table below before delegating
 
 Read the panel and its edit form. Then pick:
 
-| Pattern | When | Primitive |
-|---|---|---|
-| **Blur-save** | Editing one field (a name, a number, a percentage) | `<InlineEditField>` |
-| **Save/Cancel** | Editing multiple fields together | `<InlineEditRow>` with a form (with its own Save/Cancel buttons) in the `form` slot |
+| Pattern                    | When                                                   | Primitive                                                                             |
+| -------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| **Blur-save**              | Editing one field (a name, a number, a percentage)     | `<InlineEditField>`                                                                   |
+| **Save/Cancel**            | Editing multiple fields together                       | `<InlineEditRow>` with a form (with its own Save/Cancel buttons) in the `form` slot   |
 | **Affordance-gating only** | No per-row edit (e.g. add-only + remove, like Invites) | Neither primitive — just gate Add/Remove buttons on `canEdit`. Still drop the Switch. |
-| **Both** | One inline-editable field + a multi-field expansion | Use both primitives where they fit. |
+| **Both**                   | One inline-editable field + a multi-field expansion    | Use both primitives where they fit.                                                   |
 
 ## Required steps, in order
 
 ### 1. Read the target
 
 Read the panel file end-to-end, plus any sibling `*ListView` / `*Flow` / `*Panel` / `*EditForm` / `*AddForm` files it imports. Identify:
+
 - Where `useState(false)` for `editMode` lives
 - Where `<Switch label={t("Edit mode")} ...>` or `<Checkbox label={t("Edit mode")} ...>` is rendered
 - The cleanup branch inside `onChange` (`if (!next) { setEditingId(null); setIsAdding(false); ... }`)
@@ -84,6 +85,7 @@ Read the panel file end-to-end, plus any sibling `*ListView` / `*Flow` / `*Panel
 ### 2. Common changes (every pattern)
 
 In the **panel/wrapper** file:
+
 - Add `import { useCanEdit } from "@/hooks/useCanEdit"` and `const canEdit = useCanEdit()` near the top.
 - Delete `const [editMode, setEditMode] = useState(false)`.
 - Delete the entire `<Switch label={t("Edit mode")} ...>` or `<Checkbox label={t("Edit mode")} ...>` block.
@@ -92,6 +94,7 @@ In the **panel/wrapper** file:
 - Keep `useMutationsStatus` / manual `pending` / `lastError` exactly as they were.
 
 In the **list-view** subcomponent (if any):
+
 - Rename prop `editMode` → `canEdit`.
 - Replace `{editMode && <Edit/Delete buttons>}` with the new gated affordances (see pattern sections below).
 - Wrap the `{editMode && <Add button>}` block with `{canEdit && ...}` (the "+ Add X" stays in place; it's just always-visible to canEdit users now, no toggle).
@@ -110,7 +113,9 @@ Pass the edit form down via a render prop. In the panel:
       item={item}
       pending={pending}
       onSubmit={handleSave(item)}
-      onCancel={() => { setEditingId(null) }}
+      onCancel={() => {
+        setEditingId(null)
+      }}
       /* drop onDelete from the form — Delete moves to the row's actions slot */
     />
   )}
@@ -125,7 +130,9 @@ In the list-view, wrap each row in `<InlineEditRow>`:
   canEdit={canEdit}
   pending={pending}
   editLabel={t("Edit <thing> {{name}}", { name: item.name })}
-  onStartEdit={() => { onEdit(item.id) }}
+  onStartEdit={() => {
+    onEdit(item.id)
+  }}
   view={<>{/* the existing read-only row content */}</>}
   form={renderEditForm(item)}
   actions={
@@ -135,7 +142,9 @@ In the list-view, wrap each row in `<InlineEditRow>`:
       data-size="sm"
       disabled={pending}
       aria-label={t("Delete <thing> {{name}}", { name: item.name })}
-      onClick={() => { onDelete(item) }}
+      onClick={() => {
+        onDelete(item)
+      }}
     >
       {t("Delete")}
     </Button>
@@ -174,6 +183,7 @@ Replace the inline field display with `<InlineEditField>` and **delete** the sep
 ### 3c. Affordance-gating only (add-only / remove-only panels)
 
 No `InlineEditField` or `InlineEditRow` needed. Just:
+
 - Drop the Switch + `editMode` state.
 - Wrap Add buttons and Remove buttons in `{canEdit && (...)}`.
 - Drop any `useEffect` that cleared the add-form state when edit mode toggled off — non-canEdit users can't open the form to begin with.
@@ -185,6 +195,7 @@ Reference: Invites.
 Any new `t("...")` keys you introduce — typically aria-labels like `"Edit <thing> {{name}}"`, `"Delete <thing> {{name}}"`, `"Edit <field> for {{label}}"` — **must** be added to **both** the en and nb files of the namespace the panel uses (the namespace is the argument to `useTranslation(...)` at the top of the wrapper).
 
 Common namespaces:
+
 - `client/src/i18n/locales/{en,nb}/property.json` — used by PropertyContacts, PropertyOwners, Infrastructure, Equipment, ListPropertyStructures
 - `client/src/i18n/locales/{en,nb}/usergroups.json` — used by UserGroups, Users, Invites
 - `client/src/i18n/locales/{en,nb}/expenses.json` — used by expense panels
@@ -244,6 +255,7 @@ Edit the **Inventory** table at the top of this skill to mark your panel ✅ mig
 ## Handback report (what to tell the parent)
 
 When done, report:
+
 1. Panel(s) modified (paths).
 2. Pattern used (Save/Cancel / blur-save / affordance-gating / mixed).
 3. Any files deleted (unused EditForm + CSS).

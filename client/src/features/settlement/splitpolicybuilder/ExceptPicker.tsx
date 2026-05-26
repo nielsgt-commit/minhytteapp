@@ -26,7 +26,9 @@ export function ExceptPicker({
           e.target.value = ""
         }}
       >
-        <Select.Option value="">{t("— pick someone to exclude —")}</Select.Option>
+        <Select.Option value="">
+          {t("— pick someone to exclude —")}
+        </Select.Option>
         <Select.Option value="kids" disabled={selectedEncoded.has("kids")}>
           {t("Kids (all child users)")}
         </Select.Option>

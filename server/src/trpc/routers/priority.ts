@@ -6,11 +6,7 @@ import {
   propertyPriorityWeeksTable,
 } from "../../db/schema/property.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import {
-  propertyAdminProcedure,
-  publicProcedure,
-  router,
-} from "../init.ts"
+import { propertyAdminProcedure, publicProcedure, router } from "../init.ts"
 
 const yearField = z.number().int().min(2000).max(2100)
 const peakWeek = z.union([z.literal(28), z.literal(29), z.literal(30)])
@@ -99,10 +95,7 @@ export const priorityRouter = router({
             is_head: usersTable.is_head,
           })
           .from(propertyOwnersTable)
-          .innerJoin(
-            usersTable,
-            eq(usersTable.id, propertyOwnersTable.user_id),
-          )
+          .innerJoin(usersTable, eq(usersTable.id, propertyOwnersTable.user_id))
           .where(
             and(
               eq(propertyOwnersTable.id, input.property_owner_id),

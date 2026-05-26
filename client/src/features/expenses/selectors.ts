@@ -9,9 +9,9 @@ export function selectExpensesToReview(
   return expenses
     .filter(
       e =>
-        e.status === "submitted"
-        && memberIds.has(e.payer_id)
-        && e.payer_id !== reviewerId,
+        e.status === "submitted" &&
+        memberIds.has(e.payer_id) &&
+        e.payer_id !== reviewerId,
     )
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date))

@@ -1,11 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSelectedUserId } from "@/features/user/userSlice"
 import { useEffect, useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
@@ -77,11 +73,17 @@ export default function PropertyMenu() {
       <PropertySwitcher
         properties={list}
         value={selectedId}
-        onChange={id => { dispatch(setSelectedPropertyId(id)) }}
+        onChange={id => {
+          dispatch(setSelectedPropertyId(id))
+        }}
         isAddOpen={isAddOpen}
         onAddOpenChange={setIsAddOpen}
-        onAdd={name => { createProperty.mutate({ name, address: "—" }) }}
-        onManageProperty={() => { void navigate({ to: "/manageproperty" }) }}
+        onAdd={name => {
+          createProperty.mutate({ name, address: "—" })
+        }}
+        onManageProperty={() => {
+          void navigate({ to: "/manageproperty" })
+        }}
         isAddPending={createProperty.isPending}
         addError={createProperty.error?.message ?? null}
       />

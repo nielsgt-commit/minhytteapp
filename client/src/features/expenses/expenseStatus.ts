@@ -7,7 +7,10 @@ export const STATUS_ORDER: Record<Status, number> = {
   rejected: 3,
 }
 
-export const STATUS_COLOR: Record<Status, "info" | "success" | "warning" | "danger" | "neutral"> = {
+export const STATUS_COLOR: Record<
+  Status,
+  "info" | "success" | "warning" | "danger" | "neutral"
+> = {
   draft: "neutral",
   submitted: "info",
   reimbursed: "success",

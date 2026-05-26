@@ -19,7 +19,11 @@ export function Dashboard() {
     return (
       <section className={styles.page}>
         <h2 className={styles.title}>{t("Dashboard")}</h2>
-        <p>{t("No property selected. You don't own any properties yet, or none is picked from the header.")}</p>
+        <p>
+          {t(
+            "No property selected. You don't own any properties yet, or none is picked from the header.",
+          )}
+        </p>
       </section>
     )
   }
@@ -27,7 +31,9 @@ export function Dashboard() {
   if (isMobile) {
     return (
       <section className={styles.page}>
-        <Heading level={2} className={styles.title}>{t("Dashboard")}</Heading>
+        <Heading level={2} className={styles.title}>
+          {t("Dashboard")}
+        </Heading>
         <MobileTabs propertyId={selectedPropertyId} />
       </section>
     )

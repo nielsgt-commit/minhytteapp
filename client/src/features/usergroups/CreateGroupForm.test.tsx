@@ -10,7 +10,11 @@ vi.mock("react-i18next", () => ({
 describe("CreateGroupForm", () => {
   test("renders name field, main checkbox, and action buttons", () => {
     render(
-      <CreateGroupForm pending={false} onSubmit={() => {}} onCancel={() => {}} />,
+      <CreateGroupForm
+        pending={false}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
     )
     expect(screen.getByLabelText("Name")).toBeInTheDocument()
     expect(screen.getByLabelText("Main")).toBeInTheDocument()
@@ -22,7 +26,11 @@ describe("CreateGroupForm", () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
-      <CreateGroupForm pending={false} onSubmit={onSubmit} onCancel={() => {}} />,
+      <CreateGroupForm
+        pending={false}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />,
     )
 
     await user.type(screen.getByLabelText("Name"), "Owners")
@@ -38,7 +46,11 @@ describe("CreateGroupForm", () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
-      <CreateGroupForm pending={false} onSubmit={onSubmit} onCancel={() => {}} />,
+      <CreateGroupForm
+        pending={false}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />,
     )
 
     await user.type(screen.getByLabelText("Name"), "  Family  ")
@@ -55,7 +67,11 @@ describe("CreateGroupForm", () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
-      <CreateGroupForm pending={false} onSubmit={onSubmit} onCancel={() => {}} />,
+      <CreateGroupForm
+        pending={false}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />,
     )
 
     // The required attribute would normally stop empty submit, but the
@@ -85,7 +101,11 @@ describe("CreateGroupForm", () => {
 
   test("disables both buttons while pending", () => {
     render(
-      <CreateGroupForm pending={true} onSubmit={() => {}} onCancel={() => {}} />,
+      <CreateGroupForm
+        pending={true}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
     )
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
@@ -98,7 +118,11 @@ describe("CreateGroupForm", () => {
       capturedReset = reset
     })
     render(
-      <CreateGroupForm pending={false} onSubmit={onSubmit} onCancel={() => {}} />,
+      <CreateGroupForm
+        pending={false}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />,
     )
 
     const nameField = screen.getByLabelText("Name") as HTMLInputElement

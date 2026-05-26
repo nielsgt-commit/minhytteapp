@@ -135,16 +135,19 @@ export const stayRelations = relations(stayTable, ({ one }) => ({
   }),
 }))
 
-export const parkingClaimsRelations = relations(parkingClaimsTable, ({ one }) => ({
-  property: one(propertyTable, {
-    fields: [parkingClaimsTable.property_id],
-    references: [propertyTable.id],
+export const parkingClaimsRelations = relations(
+  parkingClaimsTable,
+  ({ one }) => ({
+    property: one(propertyTable, {
+      fields: [parkingClaimsTable.property_id],
+      references: [propertyTable.id],
+    }),
+    user: one(usersTable, {
+      fields: [parkingClaimsTable.user_id],
+      references: [usersTable.id],
+    }),
   }),
-  user: one(usersTable, {
-    fields: [parkingClaimsTable.user_id],
-    references: [usersTable.id],
-  }),
-}))
+)
 
 export const propertyOwnersRelations = relations(
   propertyOwnersTable,
@@ -164,15 +167,18 @@ export const propertyOwnersRelations = relations(
   }),
 )
 
-export const structuresRelations = relations(structuresTable, ({ one, many }) => ({
-  property: one(propertyTable, {
-    fields: [structuresTable.property_id],
-    references: [propertyTable.id],
+export const structuresRelations = relations(
+  structuresTable,
+  ({ one, many }) => ({
+    property: one(propertyTable, {
+      fields: [structuresTable.property_id],
+      references: [propertyTable.id],
+    }),
+    rooms: many(roomTable),
+    maintenance: many(maintenanceTable),
+    inspections: many(inspectionsTable),
   }),
-  rooms: many(roomTable),
-  maintenance: many(maintenanceTable),
-  inspections: many(inspectionsTable),
-}))
+)
 
 export const roomRelations = relations(roomTable, ({ one, many }) => ({
   structure: one(structuresTable, {
@@ -182,14 +188,17 @@ export const roomRelations = relations(roomTable, ({ one, many }) => ({
   bookings: many(bookingRoomsTable),
 }))
 
-export const infrastructureRelations = relations(infrastructureTable, ({ one, many }) => ({
-  property: one(propertyTable, {
-    fields: [infrastructureTable.property_id],
-    references: [propertyTable.id],
+export const infrastructureRelations = relations(
+  infrastructureTable,
+  ({ one, many }) => ({
+    property: one(propertyTable, {
+      fields: [infrastructureTable.property_id],
+      references: [propertyTable.id],
+    }),
+    maintenance: many(maintenanceTable),
+    inspections: many(inspectionsTable),
   }),
-  maintenance: many(maintenanceTable),
-  inspections: many(inspectionsTable),
-}))
+)
 
 export const bookingRelations = relations(bookingTable, ({ one, many }) => ({
   property: one(propertyTable, {
@@ -211,16 +220,19 @@ export const bookingRelations = relations(bookingTable, ({ one, many }) => ({
   expenses: many(expensesTable),
 }))
 
-export const bookingRoomsRelations = relations(bookingRoomsTable, ({ one }) => ({
-  booking: one(bookingTable, {
-    fields: [bookingRoomsTable.booking_id],
-    references: [bookingTable.id],
+export const bookingRoomsRelations = relations(
+  bookingRoomsTable,
+  ({ one }) => ({
+    booking: one(bookingTable, {
+      fields: [bookingRoomsTable.booking_id],
+      references: [bookingTable.id],
+    }),
+    room: one(roomTable, {
+      fields: [bookingRoomsTable.room_id],
+      references: [roomTable.id],
+    }),
   }),
-  room: one(roomTable, {
-    fields: [bookingRoomsTable.room_id],
-    references: [roomTable.id],
-  }),
-}))
+)
 
 export const bookingOccupantsRelations = relations(
   bookingOccupantsTable,
@@ -240,41 +252,44 @@ export const bookingOccupantsRelations = relations(
   }),
 )
 
-export const maintenanceRelations = relations(maintenanceTable, ({ one, many }) => ({
-  addedByUser: one(usersTable, {
-    fields: [maintenanceTable.added_by],
-    references: [usersTable.id],
-    relationName: "maintenance_added_by",
+export const maintenanceRelations = relations(
+  maintenanceTable,
+  ({ one, many }) => ({
+    addedByUser: one(usersTable, {
+      fields: [maintenanceTable.added_by],
+      references: [usersTable.id],
+      relationName: "maintenance_added_by",
+    }),
+    assignedToUser: one(usersTable, {
+      fields: [maintenanceTable.assigned_to_id],
+      references: [usersTable.id],
+      relationName: "maintenance_assigned_to",
+    }),
+    structure: one(structuresTable, {
+      fields: [maintenanceTable.structure_id],
+      references: [structuresTable.id],
+    }),
+    infrastructure: one(infrastructureTable, {
+      fields: [maintenanceTable.infrastructure_id],
+      references: [infrastructureTable.id],
+    }),
+    equipment: one(equipmentTable, {
+      fields: [maintenanceTable.equipment_id],
+      references: [equipmentTable.id],
+    }),
+    parent: one(maintenanceTable, {
+      fields: [maintenanceTable.parent_maintenance_id],
+      references: [maintenanceTable.id],
+      relationName: "maintenance_parent",
+    }),
+    followups: many(maintenanceTable, { relationName: "maintenance_parent" }),
+    inspection: one(inspectionsTable, {
+      fields: [maintenanceTable.inspection_id],
+      references: [inspectionsTable.id],
+    }),
+    expenses: many(expensesTable),
   }),
-  assignedToUser: one(usersTable, {
-    fields: [maintenanceTable.assigned_to_id],
-    references: [usersTable.id],
-    relationName: "maintenance_assigned_to",
-  }),
-  structure: one(structuresTable, {
-    fields: [maintenanceTable.structure_id],
-    references: [structuresTable.id],
-  }),
-  infrastructure: one(infrastructureTable, {
-    fields: [maintenanceTable.infrastructure_id],
-    references: [infrastructureTable.id],
-  }),
-  equipment: one(equipmentTable, {
-    fields: [maintenanceTable.equipment_id],
-    references: [equipmentTable.id],
-  }),
-  parent: one(maintenanceTable, {
-    fields: [maintenanceTable.parent_maintenance_id],
-    references: [maintenanceTable.id],
-    relationName: "maintenance_parent",
-  }),
-  followups: many(maintenanceTable, { relationName: "maintenance_parent" }),
-  inspection: one(inspectionsTable, {
-    fields: [maintenanceTable.inspection_id],
-    references: [inspectionsTable.id],
-  }),
-  expenses: many(expensesTable),
-}))
+)
 
 export const inspectionsRelations = relations(
   inspectionsTable,
@@ -299,24 +314,30 @@ export const inspectionsRelations = relations(
   }),
 )
 
-export const equipmentRelations = relations(equipmentTable, ({ one, many }) => ({
-  property: one(propertyTable, {
-    fields: [equipmentTable.property_id],
-    references: [propertyTable.id],
+export const equipmentRelations = relations(
+  equipmentTable,
+  ({ one, many }) => ({
+    property: one(propertyTable, {
+      fields: [equipmentTable.property_id],
+      references: [propertyTable.id],
+    }),
+    maintenance: many(maintenanceTable),
+    inspections: many(inspectionsTable),
   }),
-  maintenance: many(maintenanceTable),
-  inspections: many(inspectionsTable),
-}))
+)
 
-export const settlementsRelations = relations(settlementsTable, ({ one, many }) => ({
-  property: one(propertyTable, {
-    fields: [settlementsTable.property_id],
-    references: [propertyTable.id],
+export const settlementsRelations = relations(
+  settlementsTable,
+  ({ one, many }) => ({
+    property: one(propertyTable, {
+      fields: [settlementsTable.property_id],
+      references: [propertyTable.id],
+    }),
+    expenses: many(expensesTable),
+    userGroupTotals: many(settlementUserGroupTotalsTable),
+    transfers: many(settlementTransfersTable),
   }),
-  expenses: many(expensesTable),
-  userGroupTotals: many(settlementUserGroupTotalsTable),
-  transfers: many(settlementTransfersTable),
-}))
+)
 
 export const expensesRelations = relations(expensesTable, ({ one, many }) => ({
   property: one(propertyTable, {
@@ -348,16 +369,19 @@ export const expensesRelations = relations(expensesTable, ({ one, many }) => ({
   shares: many(expenseSharesTable),
 }))
 
-export const expenseSharesRelations = relations(expenseSharesTable, ({ one }) => ({
-  expense: one(expensesTable, {
-    fields: [expenseSharesTable.expense_id],
-    references: [expensesTable.id],
+export const expenseSharesRelations = relations(
+  expenseSharesTable,
+  ({ one }) => ({
+    expense: one(expensesTable, {
+      fields: [expenseSharesTable.expense_id],
+      references: [expensesTable.id],
+    }),
+    user: one(usersTable, {
+      fields: [expenseSharesTable.user_id],
+      references: [usersTable.id],
+    }),
   }),
-  user: one(usersTable, {
-    fields: [expenseSharesTable.user_id],
-    references: [usersTable.id],
-  }),
-}))
+)
 
 export const settlementUserGroupTotalsRelations = relations(
   settlementUserGroupTotalsTable,

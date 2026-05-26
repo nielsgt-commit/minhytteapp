@@ -23,15 +23,25 @@ export function CreateUserForm({
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
     if (!name) return
-    onSubmit(name, () => { form.reset() })
+    onSubmit(name, () => {
+      form.reset()
+    })
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <fieldset>
-        <legend>{t("Create user and add to {{groupName}}", { groupName })}</legend>
+        <legend>
+          {t("Create user and add to {{groupName}}", { groupName })}
+        </legend>
         <div>
-          <Textfield label={t("Name")} type="text" name="name" required autoFocus />
+          <Textfield
+            label={t("Name")}
+            type="text"
+            name="name"
+            required
+            autoFocus
+          />
         </div>
         <div>
           <Button type="submit" disabled={pending}>

@@ -1,16 +1,23 @@
 .page {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-areas:
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
     "header  header  header  header  header  header"
     "groups  groups  groups  groups  groups  groups"
     "invites invites invites invites invites invites"
-    "users   users   users   users   users   users"
-;
-    gap: 1rem;
+    "users   users   users   users   users   users";
+  gap: 1rem;
 }
 
-.header  { grid-area: header; }
-.groups  { grid-area: groups; }
-.invites { grid-area: invites; }
-.users   { grid-area: users; }
+.header {
+  grid-area: header;
+}
+.groups {
+  grid-area: groups;
+}
+.invites {
+  grid-area: invites;
+}
+.users {
+  grid-area: users;
+}

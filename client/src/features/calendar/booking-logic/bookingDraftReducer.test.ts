@@ -49,10 +49,7 @@ describe("setBooker", () => {
   })
 
   test("does not duplicate booker if already present", () => {
-    const seeded = bookingDraftReducer(
-      initialBookingDraft,
-      addOccupant(7, 3),
-    )
+    const seeded = bookingDraftReducer(initialBookingDraft, addOccupant(7, 3))
     const next = bookingDraftReducer(seeded, setBooker(7, 42))
     expect(next.occupants).toHaveLength(1)
     expect(next.occupants[0]?.room_id).toBe(3)
@@ -121,6 +118,8 @@ describe("loadForEdit / resetDraft", () => {
 
   test("RESET returns the initial draft", () => {
     const dirty = bookingDraftReducer(initialBookingDraft, setNotes("x"))
-    expect(bookingDraftReducer(dirty, resetDraft())).toEqual(initialBookingDraft)
+    expect(bookingDraftReducer(dirty, resetDraft())).toEqual(
+      initialBookingDraft,
+    )
   })
 })

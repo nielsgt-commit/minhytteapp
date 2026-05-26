@@ -65,16 +65,22 @@ export function SettlementForm({
           label={t("Year")}
           type="number"
           value={year}
-          onChange={e => { setYear(e.target.value) }}
+          onChange={e => {
+            setYear(e.target.value)
+          }}
           required
         />
         <Field>
           <Label>{t("Split policy")}</Label>
           <Select
             value={splitPolicyId}
-            onChange={e => { setSplitPolicyId(e.target.value) }}
+            onChange={e => {
+              setSplitPolicyId(e.target.value)
+            }}
           >
-            <Select.Option value="">{t("Occupancy days (built-in)")}</Select.Option>
+            <Select.Option value="">
+              {t("Occupancy days (built-in)")}
+            </Select.Option>
             {customPolicies.map(p => (
               <Select.Option key={p.id} value={String(p.id)}>
                 {t("{{name}} (by {{creator}})", {
@@ -91,7 +97,9 @@ export function SettlementForm({
           data-size="sm"
           onClick={onToggleBuilder}
         >
-          {builderOpen ? t("Close split policy builder") : t("Add split policy")}
+          {builderOpen
+            ? t("Close split policy builder")
+            : t("Add split policy")}
         </Button>
         <Button type="submit" disabled={pending}>
           {editing == null

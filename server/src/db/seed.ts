@@ -107,9 +107,7 @@ const SEED_STRUCTURES: SeedStructure[] = [
   },
   {
     name: "Slabeslottet",
-    rooms: [
-      { name: "Slabeslottet", beds_double: 1, travel_cot: 1 },
-    ],
+    rooms: [{ name: "Slabeslottet", beds_double: 1, travel_cot: 1 }],
   },
   {
     name: "Nybygget",
@@ -202,9 +200,7 @@ async function upsertProperty() {
       .limit(1)
   ).at(0)
   if (existing) {
-    console.log(
-      `found property #${String(existing.id)} (${existing.name})`,
-    )
+    console.log(`found property #${String(existing.id)} (${existing.name})`)
     return existing
   }
   const created = (
@@ -233,10 +229,7 @@ async function upsertStructure(property_id: number, name: string) {
     return existing
   }
   const created = (
-    await db
-      .insert(structuresTable)
-      .values({ name, property_id })
-      .returning()
+    await db.insert(structuresTable).values({ name, property_id }).returning()
   ).at(0)
   if (!created) throw new Error(`failed to insert structure ${name}`)
   console.log(`inserted structure #${String(created.id)} (${created.name})`)
@@ -306,7 +299,8 @@ async function upsertOwner(property_id: number, user_id: number, pct: string) {
       .values({ property_id, user_id, ownership_pct: pct })
       .returning()
   ).at(0)
-  if (!created) throw new Error(`failed to insert owner for user ${String(user_id)}`)
+  if (!created)
+    throw new Error(`failed to insert owner for user ${String(user_id)}`)
   console.log(
     `inserted owner #${String(created.id)} (user ${String(user_id)}, ${created.ownership_pct}%)`,
   )
@@ -480,7 +474,7 @@ async function seedExpenses(payerIds: number[], reimburserIds: number[]) {
   }
 
   const rng = mulberry32(0xc0ffee)
-  const pick = <T,>(arr: T[]) => arr[Math.floor(rng() * arr.length)]
+  const pick = <T>(arr: T[]) => arr[Math.floor(rng() * arr.length)]
   const pickInt = (lo: number, hi: number) =>
     lo + Math.floor(rng() * (hi - lo + 1))
 
@@ -647,7 +641,7 @@ async function seedBookings(
   }
 
   const rng = mulberry32(0xb00b1e5)
-  const pick = <T,>(arr: T[]) => arr[Math.floor(rng() * arr.length)]
+  const pick = <T>(arr: T[]) => arr[Math.floor(rng() * arr.length)]
   const pickInt = (lo: number, hi: number) =>
     lo + Math.floor(rng() * (hi - lo + 1))
 
@@ -785,7 +779,7 @@ async function seedMaintenance(structureIds: number[], userIds: number[]) {
   }
 
   const rng = mulberry32(0xfa11ed)
-  const pick = <T,>(arr: readonly T[]) => arr[Math.floor(rng() * arr.length)]
+  const pick = <T>(arr: readonly T[]) => arr[Math.floor(rng() * arr.length)]
 
   const referenceMs = Date.UTC(SEED_PRIORITY_YEAR, 0, 1)
   const yearMs = 365 * 24 * 3600 * 1000
@@ -912,7 +906,9 @@ async function seedContacts(property_id: number) {
     info: c.info ?? null,
   }))
   if (rows.length === 0) {
-    console.log(`found ${String(existing.length)} property contacts, skipping seed`)
+    console.log(
+      `found ${String(existing.length)} property contacts, skipping seed`,
+    )
     return
   }
   const inserted = await db
@@ -986,15 +982,13 @@ async function main() {
 
   const heads = users.filter(u => u.is_head)
   for (const [idx, head] of heads.entries()) {
-    const week = PEAK_WEEKS[idx % PEAK_WEEKS.length]
+    const week = PEAK_WEEKS.at(idx % PEAK_WEEKS.length)
     const ownerId = owners.get(head.id)
     if (ownerId === undefined || week === undefined) continue
     await upsertPriorityWeek(property.id, ownerId, SEED_PRIORITY_YEAR, week)
   }
 
-  const payerIds = users
-    .filter(u => !u.is_admin)
-    .map(u => u.id)
+  const payerIds = users.filter(u => !u.is_admin).map(u => u.id)
   const reimburserIds = users.filter(u => u.is_head).map(u => u.id)
   await seedExpenses(payerIds, reimburserIds)
 

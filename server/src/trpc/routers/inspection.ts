@@ -19,15 +19,16 @@ const targetXor = {
     infrastructure_id?: number
     equipment_id?: number
   }) =>
-    [v.structure_id, v.infrastructure_id, v.equipment_id].filter(x => x != null).length
-    === 1,
-  error: "exactly one of structure_id, infrastructure_id, equipment_id must be set",
+    [v.structure_id, v.infrastructure_id, v.equipment_id].filter(x => x != null)
+      .length === 1,
+  error:
+    "exactly one of structure_id, infrastructure_id, equipment_id must be set",
 }
 
 const recurrenceEnum = z.enum(["yearly", "5year", "spring", "fall"])
 
 const notesPtSchema = z
-  .custom<PortableTextBlock[]>((v) => v == null || Array.isArray(v))
+  .custom<PortableTextBlock[]>(v => v == null || Array.isArray(v))
   .optional()
 
 const startInput = z
@@ -82,7 +83,10 @@ export const inspectionRouter = router({
           structuresTable,
           eq(structuresTable.id, inspectionsTable.structure_id),
         )
-        .leftJoin(infrastructureTable, eq(infrastructureTable.id, inspectionsTable.infrastructure_id))
+        .leftJoin(
+          infrastructureTable,
+          eq(infrastructureTable.id, inspectionsTable.infrastructure_id),
+        )
         .leftJoin(
           equipmentTable,
           eq(equipmentTable.id, inspectionsTable.equipment_id),
@@ -156,7 +160,14 @@ export const inspectionRouter = router({
           if (existing.equipment_id != null) {
             return { equipment_id: existing.equipment_id }
           }
-          return { structure_id: existing.structure_id! }
+          if (existing.structure_id == null) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message:
+                "inspection has no associated structure/infrastructure/equipment",
+            })
+          }
+          return { structure_id: existing.structure_id }
         }
 
         const toInsert = input.findings.filter(
@@ -253,9 +264,18 @@ export const inspectionRouter = router({
           .returning()
 
         const findingLocation = () => {
-          if (input.infrastructure_id != null) return { infrastructure_id: input.infrastructure_id }
-          if (input.equipment_id != null) return { equipment_id: input.equipment_id }
-          return { structure_id: input.structure_id! }
+          if (input.infrastructure_id != null)
+            return { infrastructure_id: input.infrastructure_id }
+          if (input.equipment_id != null)
+            return { equipment_id: input.equipment_id }
+          if (input.structure_id == null) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message:
+                "one of structure_id, infrastructure_id, or equipment_id is required",
+            })
+          }
+          return { structure_id: input.structure_id }
         }
 
         const toInsert = input.findings.filter(

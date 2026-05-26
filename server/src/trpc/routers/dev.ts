@@ -9,7 +9,7 @@ import { usersTable } from "../../db/schema/users.schema.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import { adminProcedure, router } from "../init.ts"
 
-const isDev = process.env.NODE_ENV !== "production"
+const isDev = process.env.NODE_ENV === "development"
 
 export const devRouter = router({
   wipe: adminProcedure

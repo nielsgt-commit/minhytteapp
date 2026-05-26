@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { magicLink } from "better-auth/plugins"
+import { Resend } from "resend"
 import { db } from "../db/client.ts"
 import {
   accountsTable,
@@ -103,10 +104,28 @@ export const auth = betterAuth({
   }),
   secret,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
-  trustedOrigins: [
-    process.env.CORS_ORIGIN ?? "http://localhost:5173",
-  ],
-  advanced: { database: { generateId: "serial" } },
+  trustedOrigins: [process.env.CORS_ORIGIN ?? "http://localhost:5173"],
+  advanced: {
+    database: { generateId: "serial" },
+    // Render's load balancer terminates TLS and sets X-Forwarded-For with the
+    // real client IP. Without this, `sessionsTable.ip_address` and the
+    // built-in rate limiter would see Render's internal LB IP for every
+    // request. better-auth defaults to ["x-forwarded-for"], but declaring it
+    // explicitly so the choice is documented in our code.
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for"],
+    },
+  },
+  // Default window/max apply to all /api/auth/* paths; the magic-link
+  // issuance endpoint gets a tighter rule because each request triggers
+  // an outbound email.
+  rateLimit: {
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/magic-link": { window: 60, max: 5 },
+    },
+  },
   user: {
     fields: {
       emailVerified: "email_verified",
@@ -202,7 +221,22 @@ export const auth = betterAuth({
           console.log(`[magic-link] ${email} -> ${url}`)
           return
         }
-        throw new Error("Email transport not configured for production")
+        const apiKey = process.env.RESEND_API_KEY
+        const from = process.env.MAGIC_LINK_FROM
+        if (!apiKey) throw new Error("RESEND_API_KEY is not set")
+        if (!from) throw new Error("MAGIC_LINK_FROM is not set")
+        const resend = new Resend(apiKey)
+        const { error } = await resend.emails.send({
+          from,
+          to: email,
+          subject: "Sign in to minhytte.app",
+          html: `<p>Click the link below to sign in:</p>
+<p><a href="${url}">Sign in to minhytte.app</a></p>
+<p>The link expires shortly. If you didn't request this, ignore the email.</p>`,
+        })
+        if (error) {
+          throw new Error(`Resend send failed: ${error.message}`)
+        }
       },
     }),
   ],

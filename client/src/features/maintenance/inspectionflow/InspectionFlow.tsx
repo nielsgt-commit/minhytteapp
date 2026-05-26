@@ -59,7 +59,8 @@ export function InspectionFlow(props: {
       if (scope.kind === "structure") {
         return m.structure_id === scope.id && m.equipment_id == null
       }
-      if (scope.kind === "infrastructure") return m.infrastructure_id === scope.id
+      if (scope.kind === "infrastructure")
+        return m.infrastructure_id === scope.id
       return m.equipment_id === scope.id
     })
     .slice()
@@ -145,9 +146,7 @@ export function InspectionFlow(props: {
   }
 
   const updateAdHoc = (key: string, patch: Partial<AdHoc>) => {
-    setAdHocs(prev =>
-      prev.map(a => (a.key === key ? { ...a, ...patch } : a)),
-    )
+    setAdHocs(prev => prev.map(a => (a.key === key ? { ...a, ...patch } : a)))
   }
 
   const removeAdHoc = (key: string) => {
@@ -195,7 +194,9 @@ export function InspectionFlow(props: {
 
     recordMutation.mutate({
       ...(scope.kind === "structure" ? { structure_id: scope.id } : {}),
-      ...(scope.kind === "infrastructure" ? { infrastructure_id: scope.id } : {}),
+      ...(scope.kind === "infrastructure"
+        ? { infrastructure_id: scope.id }
+        : {}),
       ...(scope.kind === "equipment" ? { equipment_id: scope.id } : {}),
       started_by_user_id: selectedUserId,
       added_by: selectedUserId,
@@ -212,7 +213,9 @@ export function InspectionFlow(props: {
 
   return (
     <form onSubmit={handleSubmit} className={styles.wrap}>
-      <Heading level={4} data-size="xs">{t("Inspect {{name}}", { name: scope.name })}</Heading>
+      <Heading level={4} data-size="xs">
+        {t("Inspect {{name}}", { name: scope.name })}
+      </Heading>
 
       <MetadataSection
         inspectedBy={inspectedBy}

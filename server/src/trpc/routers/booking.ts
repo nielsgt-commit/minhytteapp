@@ -7,10 +7,7 @@ import {
   bookingRoomsTable,
   bookingTable,
 } from "../../db/schema/booking.schema.ts"
-import {
-  structuresTable,
-  roomTable,
-} from "../../db/schema/property.schema.ts"
+import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
@@ -65,25 +62,27 @@ type Db = typeof dbClient
 async function assertBookingsUnlocked(
   db: Db,
   propertyId: number,
-  ranges: Array<{ start_date: string; end_date: string }>,
+  ranges: { start_date: string; end_date: string }[],
 ) {
-  const [open] = await db
-    .select({
-      year: settlementsTable.year,
-      phase: settlementsTable.phase,
-    })
-    .from(settlementsTable)
-    .where(
-      and(
-        eq(settlementsTable.property_id, propertyId),
-        eq(settlementsTable.status, "open"),
-      ),
-    )
-    .limit(1)
+  const open = (
+    await db
+      .select({
+        year: settlementsTable.year,
+        phase: settlementsTable.phase,
+      })
+      .from(settlementsTable)
+      .where(
+        and(
+          eq(settlementsTable.property_id, propertyId),
+          eq(settlementsTable.status, "open"),
+        ),
+      )
+      .limit(1)
+  ).at(0)
   if (!open) return
   if (
-    open.phase === "collecting_expenses"
-    || open.phase === "collecting_bookings"
+    open.phase === "collecting_expenses" ||
+    open.phase === "collecting_bookings"
   ) {
     return
   }
@@ -139,12 +138,12 @@ function zeroBeds(): BedCounts {
 /** Total person-slots a room can hold (beds_double counts 2 slots). */
 function roomTotalCapacity(room: RoomCapacity): number {
   return (
-    room.travel_cot
-    + room.beds_kid
-    + room.beds_sm
-    + room.beds_lg
-    + room.beds_double * 2
-    + room.mattresses
+    room.travel_cot +
+    room.beds_kid +
+    room.beds_sm +
+    room.beds_lg +
+    room.beds_double * 2 +
+    room.mattresses
   )
 }
 
@@ -308,10 +307,7 @@ async function resolveRoomsAndUsers(
   return { roomById, userById }
 }
 
-function ensureBookerIsOccupant(
-  bookerId: number,
-  occupants: OccupantInput[],
-) {
+function ensureBookerIsOccupant(bookerId: number, occupants: OccupantInput[]) {
   if (!occupants.some(o => o.user_id === bookerId)) {
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -372,10 +368,7 @@ function computeBookingRooms(
   return { bookingRooms, overflowByRoom, adultInKidOnlyByRoom }
 }
 
-async function loadBookings(
-  db: Db,
-  filter?: { property_id: number },
-) {
+async function loadBookings(db: Db, filter?: { property_id: number }) {
   const query = db
     .select({
       id: bookingTable.id,
@@ -453,7 +446,13 @@ export const bookingRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { property_id, start_date, end_date, occupants, exclude_booking_id } = input
+      const {
+        property_id,
+        start_date,
+        end_date,
+        occupants,
+        exclude_booking_id,
+      } = input
 
       // 1. Find all overlapping non-cancelled bookings for this property
       const overlappingBookingsRaw = await ctx.db
@@ -518,18 +517,20 @@ export const bookingRouter = router({
         const end = a_end < b_end ? a_end : b_end
         if (start > end) return 0
         const msPerDay = 86400000
-        const diff =
-          new Date(end).getTime() - new Date(start).getTime()
+        const diff = new Date(end).getTime() - new Date(start).getTime()
         return Math.floor(diff / msPerDay) + 1
       }
 
       const draftUserIds = new Set(occupants.map(o => o.user_id))
 
       const overlappingBookings = overlappingBookingsRaw.map(b => {
-        const bookingOccs = existingOccupants.filter(
-          o => o.booking_id === b.id,
+        const bookingOccs = existingOccupants.filter(o => o.booking_id === b.id)
+        const sharedDays = daysOverlap(
+          start_date,
+          end_date,
+          b.start_date,
+          b.end_date,
         )
-        const sharedDays = daysOverlap(start_date, end_date, b.start_date, b.end_date)
 
         // sameUserOccupants: occupants in this overlapping booking who are ALSO in draft
         const sameUserOccupants = bookingOccs
@@ -538,7 +539,7 @@ export const bookingRouter = router({
 
         // sharedRoomOccupants: rooms where draft occupants and existing occupants overlap
         const draftRoomIds = new Set(
-          occupants.filter(o => o.room_id != null).map(o => o.room_id as number),
+          occupants.flatMap(o => (o.room_id != null ? [o.room_id] : [])),
         )
         const sharedRoomMap = new Map<
           number,
@@ -587,7 +588,10 @@ export const bookingRouter = router({
           structure_category: structuresTable.category,
         })
         .from(roomTable)
-        .innerJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
+        .innerJoin(
+          structuresTable,
+          eq(structuresTable.id, roomTable.structure_id),
+        )
         .where(
           and(
             eq(structuresTable.property_id, property_id),
@@ -667,13 +671,15 @@ export const bookingRouter = router({
 
         const draftUserIdsForRoom = draftByRoom.get(room.id) ?? []
         const existingUserIdsForRoom = existingByRoom.get(room.id) ?? []
-        const allUserIdsForRoom = [...new Set([...draftUserIdsForRoom, ...existingUserIdsForRoom])]
+        const allUserIdsForRoom = [
+          ...new Set([...draftUserIdsForRoom, ...existingUserIdsForRoom]),
+        ]
         const placedCount = allUserIdsForRoom.length
 
         // Compute adult-in-kid-only: draft adults placed in rooms where shared beds are exhausted
         const draftAdultIds = draftUserIdsForRoom.filter(uid => {
           const u = userMap.get(uid)
-          return u == null || u.is_child !== true
+          return u?.is_child !== true
         })
         const draftKidIds = draftUserIdsForRoom.filter(uid => {
           const u = userMap.get(uid)
@@ -759,10 +765,10 @@ export const bookingRouter = router({
       // otherwise infer from overflowByRoom for room-assigned occupants.
       const occupantQueued = new Map<number, boolean>()
       for (const o of occupants) {
-        const clientQueued = o.queued === true
+        const clientQueued = o.queued
         const roomOverflow =
-          o.room_id != null
-          && (overflowByRoom.get(o.room_id)?.includes(o.user_id) ?? false)
+          o.room_id != null &&
+          (overflowByRoom.get(o.room_id)?.includes(o.user_id) ?? false)
         occupantQueued.set(o.user_id, clientQueued || roomOverflow)
       }
 
@@ -789,9 +795,7 @@ export const bookingRouter = router({
         if (bookingRooms.length > 0) {
           await tx
             .insert(bookingRoomsTable)
-            .values(
-              bookingRooms.map(r => ({ ...r, booking_id: created.id })),
-            )
+            .values(bookingRooms.map(r => ({ ...r, booking_id: created.id })))
         }
         await tx.insert(bookingOccupantsTable).values(
           occupants.map(o => ({
@@ -824,25 +828,27 @@ export const bookingRouter = router({
 
       const occupantQueued = new Map<number, boolean>()
       for (const o of occupants) {
-        const clientQueued = o.queued === true
+        const clientQueued = o.queued
         const roomOverflow =
-          o.room_id != null
-          && (overflowByRoom.get(o.room_id)?.includes(o.user_id) ?? false)
+          o.room_id != null &&
+          (overflowByRoom.get(o.room_id)?.includes(o.user_id) ?? false)
         occupantQueued.set(o.user_id, clientQueued || roomOverflow)
       }
 
-      const [existing] = await ctx.db
-        .select({
-          status: bookingTable.status,
-          start_date: bookingTable.start_date,
-          end_date: bookingTable.end_date,
-          property_id: bookingTable.property_id,
-          booker_id: bookingTable.booker_id,
-          notes: bookingTable.notes,
-        })
-        .from(bookingTable)
-        .where(eq(bookingTable.id, input.id))
-        .limit(1)
+      const existing = (
+        await ctx.db
+          .select({
+            status: bookingTable.status,
+            start_date: bookingTable.start_date,
+            end_date: bookingTable.end_date,
+            property_id: bookingTable.property_id,
+            booker_id: bookingTable.booker_id,
+            notes: bookingTable.notes,
+          })
+          .from(bookingTable)
+          .where(eq(bookingTable.id, input.id))
+          .limit(1)
+      ).at(0)
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
@@ -866,12 +872,12 @@ export const bookingRouter = router({
           forbid("only the booker can edit this booking")
         }
         if (
-          input.property_id !== existing.property_id
-          || input.booker_id !== existing.booker_id
-          || input.start_date !== existing.start_date
-          || input.end_date !== existing.end_date
-          || input.status !== existing.status
-          || (input.notes ?? null) !== existing.notes
+          input.property_id !== existing.property_id ||
+          input.booker_id !== existing.booker_id ||
+          input.start_date !== existing.start_date ||
+          input.end_date !== existing.end_date ||
+          input.status !== existing.status ||
+          (input.notes ?? null) !== existing.notes
         ) {
           forbid("non-booker may only remove themselves from this booking")
         }
@@ -887,9 +893,9 @@ export const bookingRouter = router({
         for (const e of expectedOthers) {
           const m = input.occupants.find(o => o.user_id === e.user_id)
           if (
-            !m
-            || (m.room_id ?? null) !== (e.room_id ?? null)
-            || (m.queued ?? false) !== e.queued
+            !m ||
+            (m.room_id ?? null) !== (e.room_id ?? null) ||
+            m.queued !== e.queued
           ) {
             forbid("non-booker may only remove themselves from this booking")
           }
@@ -957,16 +963,18 @@ export const bookingRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [existing] = await ctx.db
-        .select({
-          property_id: bookingTable.property_id,
-          start_date: bookingTable.start_date,
-          end_date: bookingTable.end_date,
-        })
-        .from(bookingTable)
-        .where(eq(bookingTable.id, input.id))
-        .limit(1)
-      if (existing && existing.property_id != null) {
+      const existing = (
+        await ctx.db
+          .select({
+            property_id: bookingTable.property_id,
+            start_date: bookingTable.start_date,
+            end_date: bookingTable.end_date,
+          })
+          .from(bookingTable)
+          .where(eq(bookingTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (existing?.property_id != null) {
         await assertBookingsUnlocked(ctx.db, existing.property_id, [
           { start_date: existing.start_date, end_date: existing.end_date },
         ])

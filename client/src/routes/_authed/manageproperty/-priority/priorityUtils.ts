@@ -26,7 +26,9 @@ export function formatRange(r: WeekRange): string {
 
 export function defaultYear(): number {
   const now = new Date()
-  return now.getUTCMonth() >= 8 ? now.getUTCFullYear() + 1 : now.getUTCFullYear()
+  return now.getUTCMonth() >= 8
+    ? now.getUTCFullYear() + 1
+    : now.getUTCFullYear()
 }
 
 export type EligibleOwner = {

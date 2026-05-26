@@ -56,12 +56,16 @@ export default function DayCard({
           tabIndex={isClickable ? 0 : undefined}
           aria-expanded={isClickable ? isSelected : undefined}
           onClick={isClickable ? onToggle : undefined}
-          onKeyDown={isClickable ? e => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              onToggle()
-            }
-          } : undefined}
+          onKeyDown={
+            isClickable
+              ? e => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    onToggle()
+                  }
+                }
+              : undefined
+          }
           className={styles.dayCardBlock}
           style={isClickable ? undefined : { cursor: "default" }}
         >
@@ -86,9 +90,7 @@ export default function DayCard({
             </div>
             <div className={styles.dayCount}>
               {count > 0 ? (
-                <strong>
-                  {t("{{count}} guest", { count })}
-                </strong>
+                <strong>{t("{{count}} guest", { count })}</strong>
               ) : (
                 <span>{t("No guests")}</span>
               )}

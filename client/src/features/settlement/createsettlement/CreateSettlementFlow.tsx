@@ -6,7 +6,10 @@ import {
 } from "@tanstack/react-query"
 import { Button, Card } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { ClosedSettlementsList, type SettlementRow } from "./ClosedSettlementsList"
+import {
+  ClosedSettlementsList,
+  type SettlementRow,
+} from "./ClosedSettlementsList"
 import { SettlementForm } from "./SettlementForm"
 import { useTRPC } from "@/trpc/trpc"
 
@@ -79,7 +82,9 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
 
   const deleteMutation = useMutation(
     trpc.settlement.delete.mutationOptions({
-      onSuccess: () => { void invalidate() },
+      onSuccess: () => {
+        void invalidate()
+      },
     }),
   )
 
@@ -139,7 +144,9 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
                       setBuilderOpen(false)
                     }}
                     builderOpen={builderOpen}
-                    onToggleBuilder={() => { setBuilderOpen(v => !v) }}
+                    onToggleBuilder={() => {
+                      setBuilderOpen(v => !v)
+                    }}
                     onBuilderSaved={id => {
                       setSplitPolicyId(String(id))
                       setBuilderOpen(false)
@@ -151,7 +158,9 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
                   type="button"
                   variant="primary"
                   data-size="sm"
-                  onClick={() => { setOpenBlock("form") }}
+                  onClick={() => {
+                    setOpenBlock("form")
+                  }}
                 >
                   {editing == null
                     ? t("Start the settlement…")
@@ -185,13 +194,19 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
                 isHead={isHead}
                 pending={pending}
                 onEdit={startEditing}
-                onDelete={id => { deleteMutation.mutate({ id }) }}
+                onDelete={id => {
+                  deleteMutation.mutate({ id })
+                }}
               />
             )}
           </Card.Block>
         </article>
       </Card>
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
     </>
   )
 }

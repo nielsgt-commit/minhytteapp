@@ -59,20 +59,26 @@ export function MyExpenseEditForm({
         label={t("Date")}
         type="date"
         value={date}
-        onChange={ev => { setDate(ev.target.value) }}
+        onChange={ev => {
+          setDate(ev.target.value)
+        }}
         required
       />
       <Textfield
         label={t("Description")}
         value={description}
-        onChange={ev => { setDescription(ev.target.value) }}
+        onChange={ev => {
+          setDescription(ev.target.value)
+        }}
       />
       <Textfield
         label={t("Amount")}
         type="number"
         step={1}
         value={amount}
-        onChange={ev => { setAmount(ev.target.value) }}
+        onChange={ev => {
+          setAmount(ev.target.value)
+        }}
         required
       />
       <div className={styles.editActions}>
@@ -83,13 +89,17 @@ export function MyExpenseEditForm({
           type="button"
           variant="secondary"
           disabled={updateExpense.isPending}
-          onClick={() => { cancel() }}
+          onClick={() => {
+            cancel()
+          }}
         >
           {t("Cancel")}
         </Button>
       </div>
       {updateExpense.error && (
-        <span role="alert">{t("Error: {{message}}", { message: updateExpense.error.message })}</span>
+        <span role="alert">
+          {t("Error: {{message}}", { message: updateExpense.error.message })}
+        </span>
       )}
     </form>
   )

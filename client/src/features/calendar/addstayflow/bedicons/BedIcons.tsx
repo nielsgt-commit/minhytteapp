@@ -1,11 +1,27 @@
 import { BedFillIcon, BedIcon } from "@navikt/aksel-icons"
+import type { ComponentType, SVGProps } from "react"
 import { BED_ICON_COLOR, MAX_BED_ICONS } from "../../constants.ts"
 import styles from "./BedIcons.module.css"
 
-function BedSvg({ variant }: { variant: "empty" | "existing" | "draft" | "over" }) {
+type IconComp = ComponentType<SVGProps<SVGSVGElement> & { fontSize?: string }>
+
+function BedSvg({
+  variant,
+}: {
+  variant: "empty" | "existing" | "draft" | "over"
+}) {
   const color = BED_ICON_COLOR[variant]
-  const Icon = variant === "empty" ? BedIcon : BedFillIcon
-  return <Icon fontSize="1.4rem" className={styles.bedIcon} style={{ "--bed-icon-color": color } as React.CSSProperties} aria-hidden />
+  const Icon = (variant === "empty"
+    ? BedIcon
+    : BedFillIcon) as unknown as IconComp
+  return (
+    <Icon
+      fontSize="1.4rem"
+      className={styles.bedIcon}
+      style={{ "--bed-icon-color": color } as React.CSSProperties}
+      aria-hidden
+    />
+  )
 }
 
 export function BedIconRow({
@@ -31,14 +47,11 @@ export function BedIconRow({
         return <BedSvg key={i} variant={variant} />
       })}
       {overCount > 0 &&
-        Array.from({ length: Math.min(overCount, MAX_BED_ICONS - shown) }, (_, i) => (
-          <BedSvg key={`over-${i}`} variant="over" />
-        ))}
-      {overflow > 0 && (
-        <span className={styles.overflow}>
-          +{overflow}
-        </span>
-      )}
+        Array.from(
+          { length: Math.min(overCount, MAX_BED_ICONS - shown) },
+          (_, i) => <BedSvg key={`over-${String(i)}`} variant="over" />,
+        )}
+      {overflow > 0 && <span className={styles.overflow}>+{overflow}</span>}
     </div>
   )
 }

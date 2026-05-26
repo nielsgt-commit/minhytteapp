@@ -10,7 +10,9 @@ type MutationsStatus = {
   error: ErrorLike | null
 }
 
-export function useMutationsStatus(...mutations: MutationLike[]): MutationsStatus {
+export function useMutationsStatus(
+  ...mutations: MutationLike[]
+): MutationsStatus {
   return {
     pending: mutations.some(m => m.isPending),
     error: mutations.reduce<ErrorLike | null>((acc, m) => acc ?? m.error, null),

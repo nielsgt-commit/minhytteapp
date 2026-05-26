@@ -11,7 +11,10 @@
   flex-wrap: wrap;
 }
 
-.date { margin: 0; flex: 0 0 auto; }
+.date {
+  margin: 0;
+  flex: 0 0 auto;
+}
 .description {
   margin: 0;
   flex: 1 1 auto;

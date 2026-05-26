@@ -7,14 +7,19 @@ import "../flatpickr-digdir.css"
 import { useTranslation } from "react-i18next"
 import { SEASON_MIN, SEASON_MAX } from "../constants"
 import { setDates, toIso } from "@/features/calendar/booking-logic"
-import type { BookingDraft, BookingDraftAction } from "@/features/calendar/booking-logic"
+import type {
+  BookingDraft,
+  BookingDraftAction,
+} from "@/features/calendar/booking-logic"
 
 const WIDE_QUERY = "(min-width: 640px)"
 
 function subscribeWide(callback: () => void) {
   const mq = window.matchMedia(WIDE_QUERY)
   mq.addEventListener("change", callback)
-  return () => { mq.removeEventListener("change", callback) }
+  return () => {
+    mq.removeEventListener("change", callback)
+  }
 }
 
 function getShowMonthsSnapshot() {
@@ -46,21 +51,23 @@ export function useFlatpickr(
       locale: language === "nb" ? Norwegian : "default",
       minDate: SEASON_MIN,
       maxDate: SEASON_MAX,
-      defaultDate: [draftRef.current.start_date, draftRef.current.end_date].filter(
-        (d): d is string => d != null,
-      ),
+      defaultDate: [
+        draftRef.current.start_date,
+        draftRef.current.end_date,
+      ].filter((d): d is string => d != null),
       onChange(selectedDates) {
         if (selectedDates.length === 2) {
-          dispatch(setDates(toIso(selectedDates[0]!), toIso(selectedDates[1]!)))
+          dispatch(setDates(toIso(selectedDates[0]), toIso(selectedDates[1])))
         } else if (selectedDates.length === 1) {
-          const s = toIso(selectedDates[0]!)
+          const s = toIso(selectedDates[0])
           dispatch(setDates(s, s))
         }
       },
       onReady(_dates, _str, instance) {
         ro = new ResizeObserver(() => {
           const h = instance.calendarContainer.offsetHeight
-          if (h > 0) rowRef.current?.style.setProperty("--fp-height", `${String(h)}px`)
+          if (h > 0)
+            rowRef.current?.style.setProperty("--fp-height", `${String(h)}px`)
         })
         ro.observe(instance.calendarContainer)
       },

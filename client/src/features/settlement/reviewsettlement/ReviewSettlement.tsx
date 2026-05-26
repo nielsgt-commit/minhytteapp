@@ -1,8 +1,5 @@
 import { useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
   Heading,
@@ -45,12 +42,8 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [showWaiting, setShowWaiting] = useState(false)
-  const {
-    heads,
-    reimbursed,
-    editableHeadId,
-    invalidate,
-  } = useReviewSettlementData(settlementId)
+  const { heads, reimbursed, editableHeadId, invalidate } =
+    useReviewSettlementData(settlementId)
   const { visibleIds } = useHeadVisibility()
 
   const updateProgress = useMutation(
@@ -81,31 +74,27 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
 
   const myHead = heads.find(h => h.id === editableHeadId)
   const myProgress: Progress =
-    (myHead?.settlement_progress as Progress | null | undefined)
-    ?? "in_progress"
+    (myHead?.settlement_progress as Progress | null | undefined) ??
+    "in_progress"
   const stillReviewing = myProgress !== "all_done"
 
   const otherHeads = heads.filter(h => h.id !== editableHeadId)
   const displayedHeads =
     editableHeadId == null
       ? heads
-      : heads.filter(
-        h => h.id === editableHeadId || visibleIds.has(h.id),
-      )
+      : heads.filter(h => h.id === editableHeadId || visibleIds.has(h.id))
   const displayedHeadIds = new Set(displayedHeads.map(h => h.id))
   const expensesToShow = sortExpenses(
     reimbursed.filter(
       e =>
-        e.reimbursed_by_id != null
-        && displayedHeadIds.has(e.reimbursed_by_id),
+        e.reimbursed_by_id != null && displayedHeadIds.has(e.reimbursed_by_id),
     ),
   )
 
   const pendingOthers = otherHeads.filter(
     h => h.settlement_progress !== "all_done",
   )
-  const allHeadsDone =
-    pendingOthers.length === 0 && myProgress === "all_done"
+  const allHeadsDone = pendingOthers.length === 0 && myProgress === "all_done"
 
   const onProgressToggle = (checked: boolean) => {
     setShowWaiting(false)
@@ -133,14 +122,18 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">{t("Review settlement")}</Heading>
+        <Heading level={4} data-size="sm">
+          {t("Review settlement")}
+        </Heading>
         <Switch
           label={t("Still reviewing")}
           position="end"
           data-size="sm"
           checked={stillReviewing}
           disabled={updateProgress.isPending}
-          onChange={e => { onProgressToggle(e.target.checked) }}
+          onChange={e => {
+            onProgressToggle(e.target.checked)
+          }}
         />
       </div>
 
@@ -192,17 +185,25 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
       )}
       {showWaiting && pendingOthers.length > 0 && (
         <Paragraph role="alert" data-size="sm">
-          {t("Waiting for {{names}} to complete the settlement.", { names: pendingOthers.map(h => h.name).join(", ") })}
+          {t("Waiting for {{names}} to complete the settlement.", {
+            names: pendingOthers.map(h => h.name).join(", "),
+          })}
         </Paragraph>
       )}
       {advancePhase.error && (
-        <p role="alert">{t("Error: {{message}}", { message: advancePhase.error.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: advancePhase.error.message })}
+        </p>
       )}
       {regressPhase.error && (
-        <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: regressPhase.error.message })}
+        </p>
       )}
       {updateProgress.error && (
-        <p role="alert">{t("Error: {{message}}", { message: updateProgress.error.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: updateProgress.error.message })}
+        </p>
       )}
     </>
   )

@@ -68,7 +68,10 @@ The `AuthRouterContext` / `AuthUser` types live in `client/src/routes/__root.tsx
      return (
        <RouterProvider
          router={router}
-         context={{ auth: { isAuthenticated: user !== null, user }, queryClient }}
+         context={{
+           auth: { isAuthenticated: user !== null, user },
+           queryClient,
+         }}
        />
      )
    }

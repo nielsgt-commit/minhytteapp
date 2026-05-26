@@ -1,8 +1,8 @@
 {
   " (you)": " (you)",
   " and ": " and ",
-  "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}})._one": "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}})._one",
-  "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}})._other": "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}})._other",
+  "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}})._one": "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).",
+  "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}})._other": "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).",
   "Clear": "Clear",
   "Conflict on W{{week}}: {{names}} have both claimed this week. Resolve in person — the system will not pick a winner.": "Conflict on W{{week}}: {{names}} have both claimed this week. Resolve in person — the system will not pick a winner.",
   "Dates": "Dates",

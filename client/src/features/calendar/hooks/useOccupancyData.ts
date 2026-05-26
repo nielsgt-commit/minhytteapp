@@ -1,5 +1,11 @@
-import { bedCapacity, propertyCapacity } from "@/features/calendar/booking-logic"
-import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
+import {
+  bedCapacity,
+  propertyCapacity,
+} from "@/features/calendar/booking-logic"
+import type {
+  BookingDraft,
+  PreviewConflicts,
+} from "@/features/calendar/booking-logic"
 import type { RoomShape, ExistingOccupant } from "../types"
 
 type Booking = {
@@ -9,7 +15,12 @@ type Booking = {
   end_date: string
   booker_id: number
   booker_name: string | null
-  occupants: { user_id: number; room_id: number | null; queued: boolean; user_name: string | null }[]
+  occupants: {
+    user_id: number
+    room_id: number | null
+    queued: boolean
+    user_name: string | null
+  }[]
 }
 
 type Structure = { id: number; category: string }
@@ -48,7 +59,10 @@ export function useOccupancyData({
     return peak
   })()
 
-  const occupantsByRoom = new Map<number | null, { user_id: number; queued: boolean }[]>()
+  const occupantsByRoom = new Map<
+    number | null,
+    { user_id: number; queued: boolean }[]
+  >()
   for (const o of draft.occupants) {
     const key = o.room_id ?? null
     const list = occupantsByRoom.get(key) ?? []
@@ -63,16 +77,28 @@ export function useOccupancyData({
     adultInKidOnlyByRoom.set(r.room_id, r.adultInKidOnlyUserIds)
   }
 
-  const overlappingBookings = (!draft.start_date || !draft.end_date)
-    ? []
-    : bookings.filter(b => b.status !== "cancelled" && b.start_date <= draft.end_date! && b.end_date >= draft.start_date!)
+  const startDate = draft.start_date
+  const endDate = draft.end_date
+  const overlappingBookings =
+    !startDate || !endDate
+      ? []
+      : bookings.filter(
+          b =>
+            b.status !== "cancelled" &&
+            b.start_date <= endDate &&
+            b.end_date >= startDate,
+        )
 
   const existingOccupantsByRoom = new Map<number, ExistingOccupant[]>()
   for (const b of overlappingBookings) {
     for (const o of b.occupants) {
       if (o.room_id == null) continue
       const list = existingOccupantsByRoom.get(o.room_id) ?? []
-      list.push({ user_id: o.user_id, user_name: o.user_name, queued: o.queued })
+      list.push({
+        user_id: o.user_id,
+        user_name: o.user_name,
+        queued: o.queued,
+      })
       existingOccupantsByRoom.set(o.room_id, list)
     }
   }

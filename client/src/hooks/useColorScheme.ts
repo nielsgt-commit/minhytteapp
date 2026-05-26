@@ -34,7 +34,9 @@ export function useColorScheme() {
       }
     }
     window.addEventListener("storage", onStorage)
-    return () => { window.removeEventListener("storage", onStorage) }
+    return () => {
+      window.removeEventListener("storage", onStorage)
+    }
   }, [])
 
   const toggle = useCallback(() => {

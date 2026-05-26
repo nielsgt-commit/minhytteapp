@@ -10,19 +10,29 @@ vi.mock("react-i18next", () => ({
 describe("ContactAddForm", () => {
   test("renders Name, Phone, Email, Info fields and submit/cancel buttons", () => {
     render(
-      <ContactAddForm createPending={false} onSubmit={() => {}} onCancel={() => {}} />,
+      <ContactAddForm
+        createPending={false}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
     )
     expect(screen.getByLabelText("Name")).toBeInTheDocument()
     expect(screen.getByLabelText("Phone")).toBeInTheDocument()
     expect(screen.getByLabelText("Email")).toBeInTheDocument()
     expect(screen.getByLabelText("Info")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Add contact" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Add contact" }),
+    ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
   })
 
   test("Phone has type=tel and Email has type=email", () => {
     render(
-      <ContactAddForm createPending={false} onSubmit={() => {}} onCancel={() => {}} />,
+      <ContactAddForm
+        createPending={false}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
     )
     expect(screen.getByLabelText("Phone")).toHaveAttribute("type", "tel")
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email")
@@ -30,7 +40,11 @@ describe("ContactAddForm", () => {
 
   test("disables all inputs and both buttons while createPending", () => {
     render(
-      <ContactAddForm createPending={true} onSubmit={() => {}} onCancel={() => {}} />,
+      <ContactAddForm
+        createPending={true}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
     )
     expect(screen.getByLabelText("Name")).toBeDisabled()
     expect(screen.getByRole("button", { name: "Add contact" })).toBeDisabled()
@@ -41,7 +55,11 @@ describe("ContactAddForm", () => {
     const onCancel = vi.fn()
     const user = userEvent.setup()
     render(
-      <ContactAddForm createPending={false} onSubmit={() => {}} onCancel={onCancel} />,
+      <ContactAddForm
+        createPending={false}
+        onSubmit={() => {}}
+        onCancel={onCancel}
+      />,
     )
     await user.click(screen.getByRole("button", { name: "Cancel" }))
     expect(onCancel).toHaveBeenCalledTimes(1)
@@ -53,7 +71,11 @@ describe("ContactAddForm", () => {
     })
     const user = userEvent.setup()
     render(
-      <ContactAddForm createPending={false} onSubmit={onSubmit} onCancel={() => {}} />,
+      <ContactAddForm
+        createPending={false}
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+      />,
     )
     await user.type(screen.getByLabelText("Name"), "Caretaker")
     await user.click(screen.getByRole("button", { name: "Add contact" }))

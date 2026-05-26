@@ -12,9 +12,7 @@ export function phaseAtLeast(
   current: SettlementPhase,
   target: SettlementPhase,
 ): boolean {
-  return (
-    SETTLEMENT_PHASES.indexOf(current) >= SETTLEMENT_PHASES.indexOf(target)
-  )
+  return SETTLEMENT_PHASES.indexOf(current) >= SETTLEMENT_PHASES.indexOf(target)
 }
 
 export const NEXT_PHASE: Record<SettlementPhase, SettlementPhase | null> = {

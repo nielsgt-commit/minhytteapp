@@ -1,7 +1,10 @@
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { groupConsecutive } from "@/features/calendar/booking-logic"
-import type { BookingDraft, PreviewConflicts } from "@/features/calendar/booking-logic"
+import type {
+  BookingDraft,
+  PreviewConflicts,
+} from "@/features/calendar/booking-logic"
 import styles from "./ConfirmStep.module.css"
 
 function formatDateRanges(isos: string[]): string {
@@ -32,7 +35,9 @@ export function ConfirmStep({
   }
   if (conflicts.property.overCapacityBy > 0) {
     let rem = conflicts.property.overCapacityBy
-    for (const o of [...draft.occupants.filter(x => x.room_id == null)].reverse()) {
+    for (const o of [
+      ...draft.occupants.filter(x => x.room_id == null),
+    ].reverse()) {
       if (rem <= 0) break
       overflowIds.add(o.user_id)
       rem--
@@ -45,7 +50,9 @@ export function ConfirmStep({
 
       {conflicts.property.overCapacityBy > 0 && (
         <Paragraph>
-          {t("Property over capacity by {{count}} person", { count: conflicts.property.overCapacityBy })}
+          {t("Property over capacity by {{count}} person", {
+            count: conflicts.property.overCapacityBy,
+          })}
         </Paragraph>
       )}
 
@@ -55,12 +62,19 @@ export function ConfirmStep({
           <div key={r.room_id}>
             {r.overCapacityBy > 0 && days.length > 0 && (
               <Paragraph>
-                {t("Room \"{{room}}\" over capacity by {{count}} on {{days}}.", { room: r.room_name, count: r.overCapacityBy, days: formatDateRanges(days) })}
+                {t('Room "{{room}}" over capacity by {{count}} on {{days}}.', {
+                  room: r.room_name,
+                  count: r.overCapacityBy,
+                  days: formatDateRanges(days),
+                })}
               </Paragraph>
             )}
             {r.adultInKidOnlyUserIds.length > 0 && (
               <Paragraph data-color="danger">
-                {t("Adult assigned to \"{{room}}\" where only kid-only beds remain.", { room: r.room_name })}
+                {t(
+                  'Adult assigned to "{{room}}" where only kid-only beds remain.',
+                  { room: r.room_name },
+                )}
               </Paragraph>
             )}
           </div>
@@ -69,7 +83,9 @@ export function ConfirmStep({
 
       {overflowIds.size > 0 && (
         <Paragraph className={styles.queueNote}>
-          {t("{{count}} occupant will be marked queued on submit.", { count: overflowIds.size })}
+          {t("{{count}} occupant will be marked queued on submit.", {
+            count: overflowIds.size,
+          })}
         </Paragraph>
       )}
 
@@ -89,7 +105,12 @@ export function ConfirmStep({
         >
           {t("Request anyway")}
         </Button>
-        <Button type="button" variant="secondary" onClick={onCancel} disabled={isMutating}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onCancel}
+          disabled={isMutating}
+        >
           {t("Cancel")}
         </Button>
       </div>

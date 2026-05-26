@@ -26,7 +26,10 @@ describe("useCategoryTotals", () => {
   test("seeds perCategory with every category at zero", () => {
     const { perCategory, uncategorized } = useCategoryTotals(
       [],
-      [{ id: 1, name: "food" }, { id: 2, name: "gas" }],
+      [
+        { id: 1, name: "food" },
+        { id: 2, name: "gas" },
+      ],
     )
     expect(perCategory.get("food")).toBe(0)
     expect(perCategory.get("gas")).toBe(0)

@@ -40,7 +40,9 @@ export function CategoryPicker({
             key={c.id}
             type="button"
             disabled={pending || openCategory === c.name}
-            onClick={() => { onOpenCategory(c.name) }}
+            onClick={() => {
+              onOpenCategory(c.name)
+            }}
           >
             {c.name}
           </Chip.Button>

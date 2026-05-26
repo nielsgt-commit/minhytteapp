@@ -51,9 +51,16 @@ export function WipeDbFlow() {
       <div>
         <h4>{t("Wipe database")}</h4>
         <p>
-          {t("Truncate every data table and (optionally) reseed with the default Owner / Member / Hytta state. For dev use only.")}
+          {t(
+            "Truncate every data table and (optionally) reseed with the default Owner / Member / Hytta state. For dev use only.",
+          )}
         </p>
-        <Button type="button" onClick={() => { setIsArmed(true) }}>
+        <Button
+          type="button"
+          onClick={() => {
+            setIsArmed(true)
+          }}
+        >
           {t("Wipe database…")}
         </Button>
       </div>
@@ -88,7 +95,9 @@ export function WipeDbFlow() {
               }
               type="text"
               value={typed}
-              onChange={e => { setTyped(e.target.value) }}
+              onChange={e => {
+                setTyped(e.target.value)
+              }}
               autoComplete="off"
               autoFocus
               required
@@ -99,7 +108,9 @@ export function WipeDbFlow() {
             <Checkbox
               label={t("Reseed with Owner / Member / Hytta after wipe")}
               checked={reseed}
-              onChange={e => { setReseed(e.target.checked) }}
+              onChange={e => {
+                setReseed(e.target.checked)
+              }}
             />
           </div>
 
@@ -107,7 +118,9 @@ export function WipeDbFlow() {
             <Checkbox
               label={t("I understand all data will be permanently destroyed.")}
               checked={acknowledged}
-              onChange={e => { setAcknowledged(e.target.checked) }}
+              onChange={e => {
+                setAcknowledged(e.target.checked)
+              }}
             />
           </div>
 
@@ -115,16 +128,16 @@ export function WipeDbFlow() {
             <Button type="submit" disabled={!canWipe}>
               {wipe.isPending ? t("Wiping…") : t("Wipe everything")}
             </Button>
-            <Button
-              type="button"
-              onClick={reset}
-              disabled={wipe.isPending}
-            >
+            <Button type="button" onClick={reset} disabled={wipe.isPending}>
               {t("Cancel")}
             </Button>
           </div>
 
-          {wipe.error && <p role="alert">{t("Error: {{message}}", { message: wipe.error.message })}</p>}
+          {wipe.error && (
+            <p role="alert">
+              {t("Error: {{message}}", { message: wipe.error.message })}
+            </p>
+          )}
         </Fieldset>
       </form>
     </div>

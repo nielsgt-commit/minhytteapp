@@ -46,11 +46,11 @@ export type BookingDraftRecord = {
   end_date: string
   status: BookingStatus
   notes: string | null
-  occupants: Array<{
+  occupants: {
     user_id: number
     room_id: number | null
     queued: boolean
-  }>
+  }[]
 }
 
 // ---- Action creators ----
@@ -109,7 +109,11 @@ export function bookingDraftReducer(
 ): BookingDraft {
   switch (action.type) {
     case "SET_DATES":
-      return { ...state, start_date: action.start_date, end_date: action.end_date }
+      return {
+        ...state,
+        start_date: action.start_date,
+        end_date: action.end_date,
+      }
 
     case "SET_STATUS":
       return { ...state, status: action.status }
@@ -119,7 +123,9 @@ export function bookingDraftReducer(
 
     case "SET_BOOKER": {
       // Ensure booker is in occupants list
-      const alreadyIn = state.occupants.some(o => o.user_id === action.booker_id)
+      const alreadyIn = state.occupants.some(
+        o => o.user_id === action.booker_id,
+      )
       const occupants = alreadyIn
         ? state.occupants
         : [
@@ -155,9 +161,7 @@ export function bookingDraftReducer(
       return {
         ...state,
         occupants: state.occupants.map(o =>
-          o.user_id === action.user_id
-            ? { ...o, room_id: action.room_id }
-            : o,
+          o.user_id === action.user_id ? { ...o, room_id: action.room_id } : o,
         ),
       }
 

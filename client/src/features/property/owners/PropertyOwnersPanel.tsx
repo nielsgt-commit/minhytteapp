@@ -93,12 +93,10 @@ export function PropertyOwnersPanel() {
   const offBy = ownershipOffBy(owners)
 
   const takenUserIds = new Set(
-    owners.filter(o => o.user_id != null).map(o => o.user_id as number),
+    owners.flatMap(o => (o.user_id != null ? [o.user_id] : [])),
   )
   const takenGroupIds = new Set(
-    owners
-      .filter(o => o.user_group_id != null)
-      .map(o => o.user_group_id as number),
+    owners.flatMap(o => (o.user_group_id != null ? [o.user_group_id] : [])),
   )
   const availableUsers = users.filter(u => !takenUserIds.has(u.id))
   const availableGroups = groups.filter(g => !takenGroupIds.has(g.id))
@@ -165,7 +163,11 @@ export function PropertyOwnersPanel() {
         )}
       </p>
 
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
 
       {adding.value ? (
         <OwnerAddForm
@@ -175,7 +177,9 @@ export function PropertyOwnersPanel() {
           availableUsers={availableUsers}
           availableGroups={availableGroups}
           totalGroups={groups.length}
-          onKindChange={kind => { setAddKind(kind) }}
+          onKindChange={kind => {
+            setAddKind(kind)
+          }}
           onSubmit={handleAddSubmit}
           onCancel={adding.close}
         />

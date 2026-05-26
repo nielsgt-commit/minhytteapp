@@ -30,7 +30,9 @@ export function EditDates({
         className={styles.dateField}
         type="date"
         value={draftStart}
-        onChange={e => { onChangeStart(e.target.value) }}
+        onChange={e => {
+          onChangeStart(e.target.value)
+        }}
       />
       <Textfield
         label={t("To")}
@@ -39,7 +41,9 @@ export function EditDates({
         type="date"
         value={draftEnd}
         min={draftStart}
-        onChange={e => { onChangeEnd(e.target.value) }}
+        onChange={e => {
+          onChangeEnd(e.target.value)
+        }}
       />
     </div>
   )
@@ -76,7 +80,9 @@ export function OccupantChipInput({
           <Chip.Removable
             aria-label={t("Remove {{name}}", { name: d.name })}
             data-size="sm"
-            onClick={() => { onRemoveAt(i) }}
+            onClick={() => {
+              onRemoveAt(i)
+            }}
           >
             {d.name}
           </Chip.Removable>
@@ -88,21 +94,25 @@ export function OccupantChipInput({
         list={datalistId}
         value={inputValue}
         placeholder={t("Add occupant…")}
-        onChange={e => { setInputValue(e.target.value) }}
+        onChange={e => {
+          setInputValue(e.target.value)
+        }}
         onKeyDown={e => {
           if (e.key === "Enter" || e.key === ",") {
             e.preventDefault()
             onCommit()
           } else if (
-            e.key === "Backspace"
-            && inputValue === ""
-            && drafts.length > 0
+            e.key === "Backspace" &&
+            inputValue === "" &&
+            drafts.length > 0
           ) {
             e.preventDefault()
             onRemoveAt(drafts.length - 1)
           }
         }}
-        onBlur={() => { onCommit() }}
+        onBlur={() => {
+          onCommit()
+        }}
       />
       <datalist id={datalistId}>
         {users.map(u => (
@@ -133,7 +143,9 @@ export function EditActions({
         variant="secondary"
         data-size="sm"
         type="button"
-        onClick={() => { onSave() }}
+        onClick={() => {
+          onSave()
+        }}
         disabled={saving || bookerMissing}
       >
         {t("Save")}
@@ -142,7 +154,9 @@ export function EditActions({
         variant="tertiary"
         data-size="sm"
         type="button"
-        onClick={() => { onCancel() }}
+        onClick={() => {
+          onCancel()
+        }}
         disabled={saving}
       >
         {t("Cancel")}

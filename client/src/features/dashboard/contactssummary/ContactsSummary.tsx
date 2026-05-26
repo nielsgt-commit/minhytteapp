@@ -29,7 +29,9 @@ export default function ContactsSummary() {
           <ul className={styles.list}>
             {contacts.map(c => (
               <li key={c.id} className={styles.item}>
-                <Heading level={4} data-size="xs">{c.name}</Heading>
+                <Heading level={4} data-size="xs">
+                  {c.name}
+                </Heading>
                 {c.phone && (
                   <div className={styles.line}>
                     <PhoneIcon aria-hidden className={styles.icon} />

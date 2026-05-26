@@ -23,8 +23,7 @@
   color: var(--ds-color-neutral-text-subtle);
 }
 
-.roomCard{
-
+.roomCard {
   background-color: var(--ds-color-accent-surface-tinted);
 }
 

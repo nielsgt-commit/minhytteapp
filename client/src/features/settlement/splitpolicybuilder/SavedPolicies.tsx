@@ -69,7 +69,9 @@ export function SavedPolicies({
   const { t } = useTranslation("settlement")
   return (
     <>
-      <Heading level={4} data-size="2xs">{t("Saved policies")}</Heading>
+      <Heading level={4} data-size="2xs">
+        {t("Saved policies")}
+      </Heading>
       <Paragraph data-size="sm">
         <em>
           <Trans
@@ -83,87 +85,128 @@ export function SavedPolicies({
         <Paragraph data-size="sm">{t("No custom policies yet.")}</Paragraph>
       ) : (
         policies.map(policy => {
-          const canEdit = me != null
-            && (policy.created_by_id === me.id || me.is_admin)
+          const canEdit =
+            me != null && (policy.created_by_id === me.id || me.is_admin)
           return (
-          <Card key={policy.id} asChild>
-            <article>
-              <Card.Block data-size="sm">
-                <Heading level={5} data-size="2xs">{policy.name}</Heading>
-                <Paragraph data-size="sm">
-                  {t("by")}{" "}
-                  <strong>
-                    {policy.created_by_name ?? t("user #{{id}}", { id: String(policy.created_by_id) })}
-                  </strong>
-                </Paragraph>
-                <ol>
-                  {policy.config.rules.map((rule, i) => (
-                    <li key={`${String(policy.id)}-${String(i)}`}>
-                      {t("Split")} <strong>{describeWhat(rule.what, categories)}</strong>{" "}
-                      <strong>{(t as (k: string) => string)(HOW_LABEL[rule.how.kind])}</strong> {t("between")}{" "}
-                      <strong>{describeWhoList(Array.isArray(rule.who) ? rule.who : [rule.who], groups)}</strong> {t("who were")}{" "}
-                      <strong>{describeWhen(rule.when, eligibleOwners)}</strong>
-                      {rule.except.length > 0 && (
+            <Card key={policy.id} asChild>
+              <article>
+                <Card.Block data-size="sm">
+                  <Heading level={5} data-size="2xs">
+                    {policy.name}
+                  </Heading>
+                  <Paragraph data-size="sm">
+                    {t("by")}{" "}
+                    <strong>
+                      {policy.created_by_name ??
+                        t("user #{{id}}", { id: String(policy.created_by_id) })}
+                    </strong>
+                  </Paragraph>
+                  <ol>
+                    {policy.config.rules.map((rule, i) => (
+                      <li key={`${String(policy.id)}-${String(i)}`}>
+                        {t("Split")}{" "}
+                        <strong>{describeWhat(rule.what, categories)}</strong>{" "}
+                        <strong>
+                          {(t as (k: string) => string)(
+                            HOW_LABEL[rule.how.kind],
+                          )}
+                        </strong>{" "}
+                        {t("between")}{" "}
+                        <strong>
+                          {describeWhoList(
+                            Array.isArray(rule.who) ? rule.who : [rule.who],
+                            groups,
+                          )}
+                        </strong>{" "}
+                        {t("who were")}{" "}
+                        <strong>
+                          {describeWhen(rule.when, eligibleOwners)}
+                        </strong>
+                        {rule.except.length > 0 && (
+                          <>
+                            {" "}
+                            {t("except")}{" "}
+                            {rule.except
+                              .map(e => describeExcept(e, groups))
+                              .join(", ")}
+                          </>
+                        )}
+                        {rule.include_extra_guests && (
+                          <>
+                            {" "}
+                            · <em>{t("includes extra guests")}</em>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                    <li>
+                      <em>{t("Default:")}</em> {t("split the rest")}{" "}
+                      <strong>
+                        {(t as (k: string) => string)(
+                          HOW_LABEL[policy.config.fallback.how.kind],
+                        )}
+                      </strong>{" "}
+                      {t("between")}{" "}
+                      <strong>
+                        {describeWhoList(
+                          Array.isArray(policy.config.fallback.who)
+                            ? policy.config.fallback.who
+                            : [policy.config.fallback.who],
+                          groups,
+                        )}
+                      </strong>{" "}
+                      {t("who were")}{" "}
+                      <strong>
+                        {describeWhen(
+                          policy.config.fallback.when,
+                          eligibleOwners,
+                        )}
+                      </strong>
+                      {policy.config.fallback.except.length > 0 && (
                         <>
-                          {" "}{t("except")}{" "}
-                          {rule.except
+                          {" "}
+                          {t("except")}{" "}
+                          {policy.config.fallback.except
                             .map(e => describeExcept(e, groups))
                             .join(", ")}
                         </>
                       )}
-                      {rule.include_extra_guests && (
-                        <> · <em>{t("includes extra guests")}</em></>
+                      {policy.config.fallback.include_extra_guests && (
+                        <>
+                          {" "}
+                          · <em>{t("includes extra guests")}</em>
+                        </>
                       )}
                     </li>
-                  ))}
-                  <li>
-                    <em>{t("Default:")}</em> {t("split the rest")}{" "}
-                    <strong>{(t as (k: string) => string)(HOW_LABEL[policy.config.fallback.how.kind])}</strong>{" "}
-                    {t("between")}{" "}
-                    <strong>
-                      {describeWhoList(Array.isArray(policy.config.fallback.who) ? policy.config.fallback.who : [policy.config.fallback.who], groups)}
-                    </strong>{" "}
-                    {t("who were")}{" "}
-                    <strong>
-                      {describeWhen(policy.config.fallback.when, eligibleOwners)}
-                    </strong>
-                    {policy.config.fallback.except.length > 0 && (
-                      <>
-                        {" "}{t("except")}{" "}
-                        {policy.config.fallback.except
-                          .map(e => describeExcept(e, groups))
-                          .join(", ")}
-                      </>
-                    )}
-                    {policy.config.fallback.include_extra_guests && (
-                      <> · <em>{t("includes extra guests")}</em></>
-                    )}
-                  </li>
-                </ol>
-              </Card.Block>
-              {canEdit && (
-                <Card.Block data-size="sm">
-                  <Button
-                    type="button"
-                    data-size="sm"
-                    onClick={() => { onEdit(policy) }}
-                    disabled={pending}
-                  >
-                    {t("Edit")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    data-size="sm"
-                    onClick={() => { onDelete(policy.id, propertyId) }}
-                    disabled={pending}
-                  >
-                    {t("Delete")}
-                  </Button>
+                  </ol>
                 </Card.Block>
-              )}
-            </article>
-          </Card>
+                {canEdit && (
+                  <Card.Block data-size="sm">
+                    <Button
+                      type="button"
+                      data-size="sm"
+                      onClick={() => {
+                        onEdit(policy)
+                      }}
+                      disabled={pending}
+                    >
+                      {t("Edit")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="tertiary"
+                      data-size="sm"
+                      onClick={() => {
+                        onDelete(policy.id, propertyId)
+                      }}
+                      disabled={pending}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  </Card.Block>
+                )}
+              </article>
+            </Card>
           )
         })
       )}

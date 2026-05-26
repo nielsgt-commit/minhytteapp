@@ -21,9 +21,7 @@ export function useMutationWithInvalidation<
     ...options,
     onSuccess: async (data, variables, onMutateResult, context) => {
       await Promise.all(
-        invalidateQueryKeys.map(queryKey =>
-          qc.invalidateQueries({ queryKey }),
-        ),
+        invalidateQueryKeys.map(queryKey => qc.invalidateQueries({ queryKey })),
       )
       await options.onSuccess?.(data, variables, onMutateResult, context)
     },

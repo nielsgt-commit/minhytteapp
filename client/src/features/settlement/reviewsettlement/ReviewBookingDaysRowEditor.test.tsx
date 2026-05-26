@@ -151,9 +151,7 @@ describe("OccupantChipInput", () => {
         onCommit={() => {}}
       />,
     )
-    await user.click(
-      screen.getByRole("button", { name: "Remove Sam" }),
-    )
+    await user.click(screen.getByRole("button", { name: "Remove Sam" }))
     expect(onRemoveAt).toHaveBeenCalledWith(1)
   })
 })

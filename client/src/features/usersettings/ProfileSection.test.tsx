@@ -6,16 +6,27 @@ import { ProfileSection } from "./ProfileSection"
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, vars?: Record<string, string>) =>
-      vars ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "") : key,
+      vars
+        ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "")
+        : key,
   }),
 }))
 
 const nameMutate = vi.fn()
 const birthdayMutate = vi.fn()
 const isHeadMutate = vi.fn()
-const nameState = { isPending: false, error: null as { message: string } | null }
-const birthdayState = { isPending: false, error: null as { message: string } | null }
-const isHeadState = { isPending: false, error: null as { message: string } | null }
+const nameState = {
+  isPending: false,
+  error: null as { message: string } | null,
+}
+const birthdayState = {
+  isPending: false,
+  error: null as { message: string } | null,
+}
+const isHeadState = {
+  isPending: false,
+  error: null as { message: string } | null,
+}
 
 vi.mock("@/trpc/trpc", () => ({
   useTRPC: () => ({
@@ -107,7 +118,7 @@ describe("ProfileSection", () => {
     const user = userEvent.setup()
     render(<ProfileSection me={me} />)
     const saveButtons = screen.getAllByRole("button", { name: "Save" })
-    await user.click(saveButtons[0]!)
+    await user.click(saveButtons[0])
     expect(nameMutate).not.toHaveBeenCalled()
   })
 
@@ -118,7 +129,7 @@ describe("ProfileSection", () => {
     await user.clear(nameInput)
     await user.type(nameInput, "  Bob  ")
     const saveButtons = screen.getAllByRole("button", { name: "Save" })
-    await user.click(saveButtons[0]!)
+    await user.click(saveButtons[0])
     expect(nameMutate).toHaveBeenCalledWith({ name: "Bob" })
   })
 
@@ -130,7 +141,7 @@ describe("ProfileSection", () => {
     // Required field — bypass by removing required attr so submission proceeds.
     nameInput.removeAttribute("required")
     const saveButtons = screen.getAllByRole("button", { name: "Save" })
-    await user.click(saveButtons[0]!)
+    await user.click(saveButtons[0])
     expect(nameMutate).not.toHaveBeenCalled()
   })
 
@@ -140,7 +151,7 @@ describe("ProfileSection", () => {
     const birthdayInput = screen.getByLabelText("Birthday")
     await user.clear(birthdayInput)
     const saveButtons = screen.getAllByRole("button", { name: "Save" })
-    await user.click(saveButtons[1]!)
+    await user.click(saveButtons[1])
     expect(birthdayMutate).toHaveBeenCalledWith({ birthday: null })
   })
 
@@ -148,7 +159,7 @@ describe("ProfileSection", () => {
     const user = userEvent.setup()
     render(<ProfileSection me={me} />)
     const saveButtons = screen.getAllByRole("button", { name: "Save" })
-    await user.click(saveButtons[1]!)
+    await user.click(saveButtons[1])
     expect(birthdayMutate).not.toHaveBeenCalled()
   })
 

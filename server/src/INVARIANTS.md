@@ -3,6 +3,7 @@
 Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/services.
 
 ## Ownership (`property_owners`)
+
 - One row per owner of a property. An owner is **either** a `user_id` **or** a `user_group_id`, never both — enforced by the `property_owners_exactly_one_ref` CHECK.
 - Partial unique indexes prevent the same user or the same group from owning a property twice.
 - `ownership_pct` is numeric(5,2). App code should ensure the sum per `property_id` equals 100.00 before treating a property's ownership as complete — the DB does not enforce this.
@@ -10,28 +11,33 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 - Deleting a user / user_group / property while `property_owners` rows reference it will fail with an FK violation. This is intentional — cascade via the router if the UI ever offers a "wipe" action.
 
 ## User group membership (`user_group_members`)
+
 - PK `(user_group_id, user_id)` — a user may belong to many groups, but not twice in the same group.
 - No ON DELETE CASCADE on either FK. Deleting a user or group while memberships exist will fail.
 
 ## Family membership (`family_members`)
+
 - `relationship_type` enum: `parent` | `child` | `guest`. Guest = associated, not a full member.
 - A user may belong to multiple families (no global uniqueness on `user_id`), but not twice in the same family (enforced by unique `(family_id, user_id)`).
 
 ## Bookings (`bookings`, `booking_rooms`, `booking_occupants`)
+
 - Booker should also appear in `booking_occupants` (store both at create time).
 - Every room in `booking_rooms` must belong to a structure whose `property_id` matches the booking's `property_id`.
 - Per room and overlapping date window: `SUM(booking_rooms.beds_sm)` ≤ `rooms.beds_sm` (same for `beds_lg`, `beds_double`, `mattresses`). Not expressible as a single CHECK — validate on insert/update.
 - Sleeping-spot sanity: `SUM(beds_* + mattresses)` across a booking's rooms should cover `COUNT(booking_occupants)`, unless your house rules allow shared beds (e.g. small children).
 
 ## Expenses (`expenses`, `shares`)
+
 - `SUM(shares.share_amount) = expenses.amount` for each expense — but only when the settlement's `split_policy = 'shares'`. For other policies, `shares` may be absent or ignored.
 - `booking_id` and `maintenance_id` are both optional and independent — an expense can be tied to a booking, a maintenance task, both (e.g. tap replaced during a booking), or neither (e.g. annual insurance).
 - `settlement_id` is nullable — set when an expense is rolled into a settlement. An expense belongs to at most one settlement (scalar FK). Don't attach `settlement_id` until the expense has `status='submitted'`.
-- Enforced by CHECK: `status='reimbursed'` implies `reimbursed_by_id IS NOT NULL`. The reverse is not enforced — you can pre-record who *will* reimburse before the status flips.
+- Enforced by CHECK: `status='reimbursed'` implies `reimbursed_by_id IS NOT NULL`. The reverse is not enforced — you can pre-record who _will_ reimburse before the status flips.
 - Enforced by CHECK: `reimbursed_by_id <> payer_id` (no self-reimbursement). Null-safe: the CHECK evaluates to NULL when `reimbursed_by_id` is null, which Postgres accepts.
 - `reimbursed_by_id` is the settlement-time "effective payer". App-code formula: `effective_payer = COALESCE(reimbursed_by_id, payer_id)`. This is what gets attributed to a family when computing `total_paid`.
 
 ## Settlements (`settlements`, `settlement_family_totals`, `settlement_transfers`)
+
 - `settlements` is the season/year container. Unique `(year, season)` so there can't be two "summer 2025" settlements.
 - Enforced by CHECK: `status='closed'` ⇔ `closed_at IS NOT NULL`.
 - `split_policy` is chosen at settlement creation (not at close) so the intent is explicit and auditable. Supported values:
@@ -53,9 +59,11 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 - Expenses with `status='rejected'` should be skipped when computing totals.
 
 ## Infrastructure (`infrastructure`)
+
 - `property_id` is nullable — infrastructure can exist unattached and be linked to a property later.
 
 ## Maintenance (`maintenance`)
+
 - Enforced by CHECK: exactly one of `structure_id` / `infrastructure_id` is set (XOR).
 - Enforced by CHECK: `status = 'done'` ⇔ `completed_at IS NOT NULL`. App code must set `completed_at` when transitioning to done (and clear it if status moves back).
 - Enforced by CHECK: `recurrence = 'recurring'` ⇔ `recurrence_interval_days IS NOT NULL`.
@@ -65,7 +73,8 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 - `severity` (major/minor/patch), `status` (todo/doing/done), and `category` are independent; any combination is legal.
 
 ## Deleting property / structure / room
+
 - No `ON DELETE CASCADE` on `structures.property_id` or `rooms.structure_id`. Deleting a parent while children exist fails with a Postgres FK violation — this is intentional: it prevents a misclick from wiping bookings, maintenance, and expenses transitively.
-- `propertyTable` is also referenced by `infrastructure`, `bookings`, and (via `structures` → `maintenance`) maintenance. `structuresTable` is referenced by `maintenance`. `roomTable` is referenced by `booking_rooms`. A successful delete needs *all* of those cleared.
+- `propertyTable` is also referenced by `infrastructure`, `bookings`, and (via `structures` → `maintenance`) maintenance. `structuresTable` is referenced by `maintenance`. `roomTable` is referenced by `booking_rooms`. A successful delete needs _all_ of those cleared.
 - If the UI ever needs a "delete this property and everything under it" action, implement it as a **transactional cascade in the tRPC router** (`ctx.db.transaction(...)`) deleting children before the parent — do **not** add DB-level `onDelete: "cascade"` on these FKs. Router-level cascade keeps the blast radius explicit (we pick which children to wipe); DB-level cascade would silently also take bookings/maintenance/expenses with it.
 - Minimum chain for a property cascade: rooms → structures → property. Bookings/owners/infrastructure still block — that's the desired safety net; surface the FK error to the user rather than expanding the cascade.

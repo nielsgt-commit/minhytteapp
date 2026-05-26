@@ -15,7 +15,7 @@ import { protectedProcedure, publicProcedure, router } from "../init.ts"
 const maintenanceFields = {
   description: z.string().min(1),
   instructions_pt: z
-    .custom<PortableTextBlock[]>((v) => v == null || Array.isArray(v))
+    .custom<PortableTextBlock[]>(v => v == null || Array.isArray(v))
     .nullish(),
   added_by: z.number().int().positive(),
   assigned_to_id: z.number().int().positive().optional(),
@@ -35,20 +35,17 @@ const locationXor = {
     infrastructure_id?: number
     equipment_id?: number
   }) =>
-    [v.structure_id, v.infrastructure_id, v.equipment_id].filter(
-      x => x != null,
-    ).length === 1,
+    [v.structure_id, v.infrastructure_id, v.equipment_id].filter(x => x != null)
+      .length === 1,
   error:
     "exactly one of structure_id, infrastructure_id, or equipment_id must be set",
   path: ["equipment_id"] as const,
 }
 
-const createInput = z
-  .object(maintenanceFields)
-  .refine(locationXor.check, {
-    error: locationXor.error,
-    path: [...locationXor.path],
-  })
+const createInput = z.object(maintenanceFields).refine(locationXor.check, {
+  error: locationXor.error,
+  path: [...locationXor.path],
+})
 
 const updateInput = z
   .object({ id: z.number().int().positive(), ...maintenanceFields })
@@ -102,9 +99,7 @@ export const maintenanceRouter = router({
         .values({
           ...input,
           completed_at:
-            input.status === "done"
-              ? (input.completed_at ?? new Date())
-              : null,
+            input.status === "done" ? (input.completed_at ?? new Date()) : null,
         })
         .returning()
       return created
@@ -122,7 +117,10 @@ export const maintenanceRouter = router({
           .limit(1)
       ).at(0)
       if (!existing) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "maintenance not found" })
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "maintenance not found",
+        })
       }
       const completed_at =
         rest.status === "done"

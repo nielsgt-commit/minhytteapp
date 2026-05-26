@@ -40,11 +40,7 @@ export function OwnerAddForm({
 }: Props) {
   const { t } = useTranslation("property")
   return (
-    <form
-      action={onSubmit}
-      key={`add-${addKind}`}
-      className={styles.form}
-    >
+    <form action={onSubmit} key={`add-${addKind}`} className={styles.form}>
       <Fieldset>
         <Fieldset.Legend>{t("Add owner")}</Fieldset.Legend>
         <div className={styles.chipRow}>
@@ -52,7 +48,9 @@ export function OwnerAddForm({
             name="kind"
             value="user"
             checked={addKind === "user"}
-            onChange={() => { onKindChange("user") }}
+            onChange={() => {
+              onKindChange("user")
+            }}
           >
             {t("User")}
           </Chip.Radio>
@@ -60,7 +58,9 @@ export function OwnerAddForm({
             name="kind"
             value="group"
             checked={addKind === "group"}
-            onChange={() => { onKindChange("group") }}
+            onChange={() => {
+              onKindChange("group")
+            }}
           >
             {t("Group")}
           </Chip.Radio>
@@ -107,8 +107,14 @@ export function OwnerAddForm({
               {availableGroups.map(g => (
                 <Select.Option key={g.id} value={String(g.id)}>
                   {g.members.length === 1
-                    ? t("{{name}} ({{count}} member)", { name: g.name, count: g.members.length })
-                    : t("{{name}} ({{count}} members)", { name: g.name, count: g.members.length })}
+                    ? t("{{name}} ({{count}} member)", {
+                        name: g.name,
+                        count: g.members.length,
+                      })
+                    : t("{{name}} ({{count}} members)", {
+                        name: g.name,
+                        count: g.members.length,
+                      })}
                 </Select.Option>
               ))}
             </Select>

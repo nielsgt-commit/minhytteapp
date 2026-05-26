@@ -49,7 +49,9 @@ describe("resetProperty", () => {
 
 describe("selectSelectedPropertyId", () => {
   test("returns the id from slice-shaped state", () => {
-    expect(selectSelectedPropertyId.unwrapped({ selectedPropertyId: 5 })).toBe(5)
+    expect(selectSelectedPropertyId.unwrapped({ selectedPropertyId: 5 })).toBe(
+      5,
+    )
   })
 
   test("returns null when nothing is selected", () => {
@@ -66,6 +68,9 @@ describe("action creators", () => {
   })
 
   test("resetProperty has no payload", () => {
-    expect(resetProperty()).toEqual({ type: "property/reset", payload: undefined })
+    expect(resetProperty()).toEqual({
+      type: "property/reset",
+      payload: undefined,
+    })
   })
 })

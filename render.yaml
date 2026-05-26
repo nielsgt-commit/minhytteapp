@@ -1,19 +1,67 @@
-This is a basic example Blueprint for a Django web service and
-# the Render Postgres database it connects to.
+# Render Blueprint for minhytteapp.
+#
+# Single Hono Web Service that serves both /api/* and the built React SPA
+# from client/dist, paired with a managed Postgres database. Shared
+# non-secret env lives in the minhytteapp env var group; the service adds
+# the wired secrets (DATABASE_URL, BETTER_AUTH_SECRET, RESEND_API_KEY).
+#
+# Apply with: Render Dashboard → Blueprints → New Blueprint Instance →
+# point at this repo. Render reads render.yaml on every push and reconciles.
+
+envVarGroups:
+  - name: minhytteapp
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: BETTER_AUTH_URL
+        value: https://minhytte.app
+      - key: CORS_ORIGIN
+        value: https://minhytte.app
+      - key: MAGIC_LINK_FROM
+        value: auth@epost.minhytte.app
+      - key: MET_USER_AGENT
+        value: minhytteapp/1.0 weather@minhytte.app
+
 services:
-  - type: web # A Python web service named django-app running on a free instance
-    plan: free
+  - type: web
     name: minhytteapp
     runtime: node
+    plan: free
+    region: frankfurt
     repo: https://github.com/nielsgt-commit/minhytteapp.git
-    buildCommand: './build.sh'
-    startCommand: 'python -m gunicorn mysite.asgi:application -k uvicorn.workers.UvicornWorker'
+    branch: master
+    autoDeploy: true
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    preDeployCommand: pnpm db:migrate
+    startCommand: pnpm start
+    # /ready runs a SELECT 1 against Postgres so DB outages pull the
+    # service out of rotation. /health stays as the cheap liveness probe.
+    healthCheckPath: /ready
+    domains:
+      - minhytte.app
     envVars:
-      - key: DATABASE_URL # Sets DATABASE_URL to the connection string of the django-app-db database
+      - fromGroup: minhytteapp
+      # Wired to Render Postgres's internal connection string — same region,
+      # private network, no SSL config needed in the pg Pool.
+      - key: DATABASE_URL
         fromDatabase:
-          name: django-app-db
+          name: minhytteapp_production
           property: connectionString
+      # Generated once by Render on first deploy and persisted on the
+      # service. Rotate from the dashboard if it ever needs replacing.
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      # Secret: set manually in the Render dashboard. sync:false stops the
+      # Blueprint from clobbering the value on reconciliation, and keeps it
+      # out of git. Cannot live in an envVarGroup (sync:false isn't
+      # supported there).
+      - key: RESEND_API_KEY
+        sync: false
 
 databases:
-  - name: django-app-db # A Render Postgres database named django-app-db running on a free instance
+  - name: minhytteapp_production
     plan: free
+    region: frankfurt
+    postgresMajorVersion: "18"

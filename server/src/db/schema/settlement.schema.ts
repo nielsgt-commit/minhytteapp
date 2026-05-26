@@ -59,7 +59,7 @@ export const settlementsTable = pgTable(
     opened_at: timestamp("opened_at").notNull().defaultNow(),
     closed_at: timestamp("closed_at"),
   },
-  (t) => [
+  t => [
     unique().on(t.property_id, t.year, t.season),
     uniqueIndex("settlements_one_open_per_property")
       .on(t.property_id)
@@ -78,7 +78,7 @@ export const expenseCategoriesTable = pgTable(
     name: varchar("name", { length: 64 }).notNull(),
     archived_at: timestamp("archived_at"),
   },
-  (t) => [
+  t => [
     uniqueIndex("expense_categories_name_active")
       .on(t.name)
       .where(sql`${t.archived_at} IS NULL`),
@@ -95,10 +95,16 @@ export const expensesTable = pgTable(
     payer_id: integer("payer_id")
       .notNull()
       .references(() => usersTable.id),
-    reimbursed_by_id: integer("reimbursed_by_id").references(() => usersTable.id),
+    reimbursed_by_id: integer("reimbursed_by_id").references(
+      () => usersTable.id,
+    ),
     booking_id: integer("booking_id").references(() => bookingTable.id),
-    maintenance_id: integer("maintenance_id").references(() => maintenanceTable.id),
-    settlement_id: integer("settlement_id").references(() => settlementsTable.id),
+    maintenance_id: integer("maintenance_id").references(
+      () => maintenanceTable.id,
+    ),
+    settlement_id: integer("settlement_id").references(
+      () => settlementsTable.id,
+    ),
     date: date("date", { mode: "string" }).notNull(),
     status: varchar("status", {
       length: 11,
@@ -110,7 +116,7 @@ export const expensesTable = pgTable(
       .notNull()
       .default(sql`'{}'::text[]`),
   },
-  (t) => [
+  t => [
     check(
       "expense_reimbursed_has_reimburser",
       sql`${t.status} <> 'reimbursed' OR ${t.reimbursed_by_id} IS NOT NULL`,
@@ -133,7 +139,7 @@ export const expenseSharesTable = pgTable(
       .references(() => usersTable.id),
     share_amount: integer("share_amount").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.expense_id, t.user_id] })],
+  t => [primaryKey({ columns: [t.expense_id, t.user_id] })],
 )
 
 export const settlementUserGroupTotalsTable = pgTable(
@@ -149,7 +155,7 @@ export const settlementUserGroupTotalsTable = pgTable(
     total_share: integer("total_share").notNull(),
     net: integer("net").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.settlement_id, t.user_group_id] })],
+  t => [primaryKey({ columns: [t.settlement_id, t.user_group_id] })],
 )
 
 export const settlementAcceptancesTable = pgTable(
@@ -163,7 +169,7 @@ export const settlementAcceptancesTable = pgTable(
       .references(() => usersTable.id),
     accepted_at: timestamp("accepted_at").notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.settlement_id, t.head_user_id] })],
+  t => [primaryKey({ columns: [t.settlement_id, t.head_user_id] })],
 )
 
 export const settlementBookingAdjustmentsTable = pgTable(
@@ -181,7 +187,7 @@ export const settlementBookingAdjustmentsTable = pgTable(
       .notNull()
       .default(sql`'{}'::text[]`),
   },
-  (t) => [primaryKey({ columns: [t.settlement_id, t.booking_id] })],
+  t => [primaryKey({ columns: [t.settlement_id, t.booking_id] })],
 )
 
 export type SplitPolicyWhat =
@@ -243,7 +249,7 @@ export const propertySplitPoliciesTable = pgTable(
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [unique().on(t.property_id, t.name)],
+  t => [unique().on(t.property_id, t.name)],
 )
 
 export const settlementTransfersTable = pgTable(
@@ -266,7 +272,7 @@ export const settlementTransfersTable = pgTable(
     }).notNull(),
     paid_at: timestamp("paid_at"),
   },
-  (t) => [
+  t => [
     check(
       "transfer_distinct_parties",
       sql`${t.from_user_group_id} <> ${t.to_user_group_id}`,

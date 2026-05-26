@@ -23,7 +23,12 @@ describe("DraftList", () => {
 
   test("renders one row per draft plus a total row", () => {
     render(
-      <DraftList drafts={drafts} total={150} pending={false} onRemove={() => {}} />,
+      <DraftList
+        drafts={drafts}
+        total={150}
+        pending={false}
+        onRemove={() => {}}
+      />,
     )
     expect(screen.getByText("food — 100")).toBeInTheDocument()
     expect(screen.getByText("gas — 50")).toBeInTheDocument()
@@ -35,16 +40,26 @@ describe("DraftList", () => {
     const onRemove = vi.fn()
     const user = userEvent.setup()
     render(
-      <DraftList drafts={drafts} total={150} pending={false} onRemove={onRemove} />,
+      <DraftList
+        drafts={drafts}
+        total={150}
+        pending={false}
+        onRemove={onRemove}
+      />,
     )
     const buttons = screen.getAllByRole("button", { name: "Remove" })
-    await user.click(buttons[0]!)
+    await user.click(buttons[0])
     expect(onRemove).toHaveBeenCalledWith("a")
   })
 
   test("disables every Remove button while pending", () => {
     render(
-      <DraftList drafts={drafts} total={150} pending={true} onRemove={() => {}} />,
+      <DraftList
+        drafts={drafts}
+        total={150}
+        pending={true}
+        onRemove={() => {}}
+      />,
     )
     for (const btn of screen.getAllByRole("button", { name: "Remove" })) {
       expect(btn).toBeDisabled()

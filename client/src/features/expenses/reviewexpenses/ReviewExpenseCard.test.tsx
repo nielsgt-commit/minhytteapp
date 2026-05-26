@@ -46,7 +46,11 @@ describe("ReviewExpenseCard", () => {
   test("falls back to '(no category)' and '#id' label when fields are missing", () => {
     render(
       <ReviewExpenseCard
-        expense={makeExpense({ expense_types: [], payer_name: null, payer_id: 42 })}
+        expense={makeExpense({
+          expense_types: [],
+          payer_name: null,
+          payer_id: 42,
+        })}
         pending={false}
         onReimburse={() => {}}
         onReject={() => {}}

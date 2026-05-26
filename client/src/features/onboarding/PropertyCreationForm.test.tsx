@@ -21,7 +21,9 @@ describe("PropertyCreationForm", () => {
   })
 
   test("submits typed name and address", async () => {
-    const onSubmit = vi.fn<(input: Input) => Promise<void>>().mockResolvedValue(undefined)
+    const onSubmit = vi
+      .fn<(input: Input) => Promise<void>>()
+      .mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<PropertyCreationForm onSubmit={onSubmit} />)
 
@@ -37,7 +39,9 @@ describe("PropertyCreationForm", () => {
   })
 
   test("does not call onSubmit when required fields are empty", async () => {
-    const onSubmit = vi.fn<(input: Input) => Promise<void>>().mockResolvedValue(undefined)
+    const onSubmit = vi
+      .fn<(input: Input) => Promise<void>>()
+      .mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<PropertyCreationForm onSubmit={onSubmit} />)
 
@@ -51,7 +55,9 @@ describe("PropertyCreationForm", () => {
   })
 
   test("can be submitted multiple times with new values", async () => {
-    const onSubmit = vi.fn<(input: Input) => Promise<void>>().mockResolvedValue(undefined)
+    const onSubmit = vi
+      .fn<(input: Input) => Promise<void>>()
+      .mockResolvedValue(undefined)
     const user = userEvent.setup()
     render(<PropertyCreationForm onSubmit={onSubmit} />)
 

@@ -5,11 +5,8 @@ import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
-import type {
-  ModalState} from "@/features/maintenance/equipment/EquipmentCard.tsx";
-import {
-  EquipmentCard
-} from "@/features/maintenance/equipment/EquipmentCard.tsx"
+import type { ModalState } from "@/features/maintenance/equipment/EquipmentCard.tsx"
+import { EquipmentCard } from "@/features/maintenance/equipment/EquipmentCard.tsx"
 
 export function Equipment() {
   const { t } = useTranslation("maintenance")
@@ -51,50 +48,47 @@ export function Equipment() {
     return bT - aT
   })
 
-  const body = sortedEquipment.length === 0 ? (
-    <p>{t("No equipment registered for this property yet.")}</p>
-  ) : (
-    <div className={styles.list}>
-      {sortedEquipment.map(item => {
-        const itemMaintenance = maintenanceItems
-          .filter(m => m.equipment_id === item.id && m.status === "done")
-          .slice()
-          .sort((a, b) => {
-            const aT = a.completed_at
-              ? new Date(a.completed_at).getTime()
-              : 0
-            const bT = b.completed_at
-              ? new Date(b.completed_at).getTime()
-              : 0
-            return bT - aT
-          })
-        const itemInspections = inspections.filter(
-          i => i.equipment_id === item.id && i.completed_at != null,
-        )
-        const historyEntries: EquipmentHistoryEntryData[] = [
-          ...itemMaintenance.map(m => ({
-            kind: "maintenance" as const,
-            t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
-            m,
-          })),
-          ...itemInspections.map(i => ({
-            kind: "inspection" as const,
-            t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
-            i,
-          })),
-        ].sort((a, b) => b.t - a.t)
-        return (
-          <EquipmentCard
-            key={item.id}
-            item={item}
-            historyEntries={historyEntries}
-            modalState={modalState}
-            setModalState={setModalState}
-          />
-        )
-      })}
-    </div>
-  )
+  const body =
+    sortedEquipment.length === 0 ? (
+      <p>{t("No equipment registered for this property yet.")}</p>
+    ) : (
+      <div className={styles.list}>
+        {sortedEquipment.map(item => {
+          const itemMaintenance = maintenanceItems
+            .filter(m => m.equipment_id === item.id && m.status === "done")
+            .slice()
+            .sort((a, b) => {
+              const aT = a.completed_at ? new Date(a.completed_at).getTime() : 0
+              const bT = b.completed_at ? new Date(b.completed_at).getTime() : 0
+              return bT - aT
+            })
+          const itemInspections = inspections.filter(
+            i => i.equipment_id === item.id && i.completed_at != null,
+          )
+          const historyEntries: EquipmentHistoryEntryData[] = [
+            ...itemMaintenance.map(m => ({
+              kind: "maintenance" as const,
+              t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
+              m,
+            })),
+            ...itemInspections.map(i => ({
+              kind: "inspection" as const,
+              t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
+              i,
+            })),
+          ].sort((a, b) => b.t - a.t)
+          return (
+            <EquipmentCard
+              key={item.id}
+              item={item}
+              historyEntries={historyEntries}
+              modalState={modalState}
+              setModalState={setModalState}
+            />
+          )
+        })}
+      </div>
+    )
 
   return <section>{body}</section>
 }

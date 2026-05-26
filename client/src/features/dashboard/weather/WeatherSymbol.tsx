@@ -50,7 +50,9 @@ export default function WeatherSymbol({ code, size = 20 }: Props) {
   return (
     <span
       role="img"
-      aria-label={td(`weather_${code}`, { defaultValue: code.replace(/_/g, " ") })}
+      aria-label={td(`weather_${code}`, {
+        defaultValue: code.replace(/_/g, " "),
+      })}
       className={styles.symbol}
       style={{ ["--symbol-size" as string]: `${String(size)}px` }}
     >

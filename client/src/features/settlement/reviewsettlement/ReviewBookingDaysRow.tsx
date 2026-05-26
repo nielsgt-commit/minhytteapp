@@ -70,9 +70,7 @@ function commitOccupantInput(
 ): { drafts: DraftOccupant[]; inputValue: string } {
   const trimmed = inputValue.trim()
   if (trimmed === "") return { drafts, inputValue }
-  const match = users.find(
-    u => u.name.toLowerCase() === trimmed.toLowerCase(),
-  )
+  const match = users.find(u => u.name.toLowerCase() === trimmed.toLowerCase())
   const next: DraftOccupant = match
     ? {
         kind: "user",
@@ -82,8 +80,8 @@ function commitOccupantInput(
       }
     : { kind: "guest", name: trimmed }
   if (
-    next.kind === "user"
-    && drafts.some(d => d.kind === "user" && d.user_id === next.user_id)
+    next.kind === "user" &&
+    drafts.some(d => d.kind === "user" && d.user_id === next.user_id)
   ) {
     return { drafts, inputValue: "" }
   }
@@ -116,7 +114,9 @@ export function ReviewBookingDaysRow({
 
   const updateBooking = useMutationWithInvalidation(
     trpc.booking.update.mutationOptions({
-      onSuccess: () => { setEditing(false) },
+      onSuccess: () => {
+        setEditing(false)
+      },
     }),
     [trpc.booking.pathKey()],
   )
@@ -160,8 +160,9 @@ export function ReviewBookingDaysRow({
       (d): d is Extract<DraftOccupant, { kind: "user" }> => d.kind === "user",
     )
     const guestNames = drafts
-      .filter((d): d is Extract<DraftOccupant, { kind: "guest" }> =>
-        d.kind === "guest",
+      .filter(
+        (d): d is Extract<DraftOccupant, { kind: "guest" }> =>
+          d.kind === "guest",
       )
       .map(d => d.name)
     if (!userOccupants.some(u => u.user_id === booking.booker_id)) return
@@ -197,12 +198,14 @@ export function ReviewBookingDaysRow({
     editing ? draftStart : booking.start_date,
     editing ? draftEnd : booking.end_date,
   )
-  const occupantsCount = editing ? drafts.length : booking.occupants.length + extras.length
+  const occupantsCount = editing
+    ? drafts.length
+    : booking.occupants.length + extras.length
   const included = !excluded
   const datalistId = `booking-occupants-${String(booking.id)}`
   const bookerMissing =
-    editing
-    && !drafts.some(d => d.kind === "user" && d.user_id === booking.booker_id)
+    editing &&
+    !drafts.some(d => d.kind === "user" && d.user_id === booking.booker_id)
 
   return (
     <Card asChild>
@@ -266,9 +269,12 @@ export function ReviewBookingDaysRow({
               {t("{{days}} days × {{occupantsCount}} {{occupantLabel}} = ", {
                 days: String(days),
                 occupantsCount: String(occupantsCount),
-                occupantLabel: occupantsCount === 1 ? t("occupant") : t("occupants"),
+                occupantLabel:
+                  occupantsCount === 1 ? t("occupant") : t("occupants"),
               })}
-              <strong>{t("{{count}} booking days", { count: days * occupantsCount })}</strong>
+              <strong>
+                {t("{{count}} booking days", { count: days * occupantsCount })}
+              </strong>
             </Paragraph>
             {bookerMissing && (
               <Paragraph role="alert" data-size="sm">
@@ -277,7 +283,9 @@ export function ReviewBookingDaysRow({
             )}
             {updateBooking.error && (
               <Paragraph role="alert" data-size="sm">
-                {t("Error: {{message}}", { message: updateBooking.error.message })}
+                {t("Error: {{message}}", {
+                  message: updateBooking.error.message,
+                })}
               </Paragraph>
             )}
           </div>
@@ -310,7 +318,9 @@ export function ReviewBookingDaysRow({
                 variant="tertiary"
                 data-size="sm"
                 type="button"
-                onClick={() => { enterEdit() }}
+                onClick={() => {
+                  enterEdit()
+                }}
               >
                 {t("Edit")}
               </Button>

@@ -45,17 +45,23 @@ export default function PropertyContacts() {
 
   const createMutation = useMutation(
     trpc.propertyContact.create.mutationOptions({
-      onSuccess: () => { void invalidate() },
+      onSuccess: () => {
+        void invalidate()
+      },
     }),
   )
   const updateMutation = useMutation(
     trpc.propertyContact.update.mutationOptions({
-      onSuccess: () => { void invalidate() },
+      onSuccess: () => {
+        void invalidate()
+      },
     }),
   )
   const deleteMutation = useMutation(
     trpc.propertyContact.delete.mutationOptions({
-      onSuccess: () => { void invalidate() },
+      onSuccess: () => {
+        void invalidate()
+      },
     }),
   )
 
@@ -93,30 +99,38 @@ export default function PropertyContacts() {
     )
   }
 
-  const handleSave =
-    (c: Contact) => (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const fd = new FormData(e.currentTarget)
-      const name = fdString(fd, "name").trim()
-      if (!name) return
-      updateMutation.mutate(
-        {
-          id: c.id,
-          property_id,
-          name,
-          phone: nullable(fdString(fd, "phone")),
-          email: nullable(fdString(fd, "email")),
-          info: nullable(fdString(fd, "info")),
+  const handleSave = (c: Contact) => (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    const name = fdString(fd, "name").trim()
+    if (!name) return
+    updateMutation.mutate(
+      {
+        id: c.id,
+        property_id,
+        name,
+        phone: nullable(fdString(fd, "phone")),
+        email: nullable(fdString(fd, "email")),
+        info: nullable(fdString(fd, "info")),
+      },
+      {
+        onSuccess: () => {
+          setEditingId(null)
         },
-        { onSuccess: () => { setEditingId(null) } },
-      )
-    }
+      },
+    )
+  }
 
   const handleDelete = (c: Contact) => {
-    if (!window.confirm(t("Remove contact \"{{name}}\"?", { name: c.name }))) return
+    if (!window.confirm(t('Remove contact "{{name}}"?', { name: c.name })))
+      return
     deleteMutation.mutate(
       { id: c.id, property_id },
-      { onSuccess: () => { setEditingId(null) } },
+      {
+        onSuccess: () => {
+          setEditingId(null)
+        },
+      },
     )
   }
 
@@ -124,7 +138,11 @@ export default function PropertyContacts() {
     <section>
       <h3>{t("Property contacts")}</h3>
 
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
 
       <ContactListView
         contacts={contacts}
@@ -132,24 +150,34 @@ export default function PropertyContacts() {
         pending={pending}
         isAdding={isAdding}
         editingId={editingId}
-        onEdit={id => { setEditingId(id) }}
+        onEdit={id => {
+          setEditingId(id)
+        }}
         onDelete={handleDelete}
-        onStartAdd={() => { setIsAdding(true) }}
+        onStartAdd={() => {
+          setIsAdding(true)
+        }}
         renderEditForm={c => (
           <ContactEditForm
             contact={c}
             pending={pending}
             updatePending={updateMutation.isPending}
             onSubmit={handleSave(c)}
-            onDelete={() => { handleDelete(c) }}
-            onCancel={() => { setEditingId(null) }}
+            onDelete={() => {
+              handleDelete(c)
+            }}
+            onCancel={() => {
+              setEditingId(null)
+            }}
           />
         )}
         addSlot={
           <ContactAddForm
             createPending={createMutation.isPending}
             onSubmit={handleAdd}
-            onCancel={() => { setIsAdding(false) }}
+            onCancel={() => {
+              setIsAdding(false)
+            }}
           />
         }
       />

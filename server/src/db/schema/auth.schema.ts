@@ -1,9 +1,4 @@
-import {
-  integer,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core"
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 import { usersTable } from "./users.schema.ts"
 
 export const sessionsTable = pgTable("sessions", {

@@ -34,7 +34,9 @@ describe("selectExpensesToReview", () => {
       makeExpense({ id: 4, payer_id: 4, status: "draft" }), // not submitted
       makeExpense({ id: 5, payer_id: 4, status: "submitted" }),
     ]
-    const ids = selectExpensesToReview(expenses, members, reviewer).map(e => e.id)
+    const ids = selectExpensesToReview(expenses, members, reviewer).map(
+      e => e.id,
+    )
     expect(ids).toEqual([1, 5])
   })
 

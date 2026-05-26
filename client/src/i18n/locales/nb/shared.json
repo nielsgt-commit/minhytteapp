@@ -1,10 +1,13 @@
 {
-  "{{label}} sections": "{{label}}-seksjoner",
-  "Calendar": "",
-  "Dashboard": "",
-  "Expenses": "",
-  "Maintenance": "",
+  "Calendar": "Kalender",
+  "Dashboard": "Oversikt",
+  "Expenses": "Utlegg",
+  "Home": "Hjem",
+  "Maintenance": "Vedlikehold",
+  "Manage Property": "Administrer eiendom",
+  "Onboarding": "Kom i gang",
   "Primary": "Primær",
   "Sections": "Seksjoner",
-  "Settlement": ""
+  "Settlement": "Oppgjør",
+  "{{label}} sections": "{{label}}-seksjoner"
 }

@@ -142,8 +142,8 @@ async function assertCanEditBookingAdjustments(
     throw new TRPCError({ code: "NOT_FOUND", message: "settlement not found" })
   }
   if (
-    settlement.phase !== "collecting_expenses"
-    && settlement.phase !== "collecting_bookings"
+    settlement.phase !== "collecting_expenses" &&
+    settlement.phase !== "collecting_bookings"
   ) {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -314,9 +314,7 @@ async function computePreviewSplit(
       extra_names: settlementBookingAdjustmentsTable.extra_names,
     })
     .from(settlementBookingAdjustmentsTable)
-    .where(
-      eq(settlementBookingAdjustmentsTable.settlement_id, settlementId),
-    )
+    .where(eq(settlementBookingAdjustmentsTable.settlement_id, settlementId))
   const adjustmentsByBooking = new Map(
     adjustmentRows.map(a => [a.booking_id, a]),
   )
@@ -367,9 +365,7 @@ async function computePreviewSplit(
     const days = daysByGroup.get(g.id) ?? 0
     const paid = paidByGroup.get(g.id) ?? 0
     const share =
-      totalDays > 0
-        ? Math.round((days * totalReimbursed) / totalDays)
-        : 0
+      totalDays > 0 ? Math.round((days * totalReimbursed) / totalDays) : 0
     return {
       group_id: g.id,
       group_name: g.name,
@@ -429,9 +425,7 @@ async function computePreviewSplit(
 const settlementFields = {
   property_id: z.number().int().positive(),
   year: z.number().int(),
-  season: z
-    .enum(["winter", "spring", "summer", "autumn"])
-    .optional(),
+  season: z.enum(["winter", "spring", "summer", "autumn"]).optional(),
   status: z.enum(["open", "closed"]),
   split_policy: z.enum(["shares", "groups_equal", "occupancy_days"]),
   split_policy_id: z.number().int().positive().nullable().optional(),
@@ -755,10 +749,7 @@ export const settlementRouter = router({
           .from(settlementsTable)
           .leftJoin(
             propertySplitPoliciesTable,
-            eq(
-              propertySplitPoliciesTable.id,
-              settlementsTable.split_policy_id,
-            ),
+            eq(propertySplitPoliciesTable.id, settlementsTable.split_policy_id),
           )
           .where(eq(settlementsTable.id, input.id))
           .limit(1)
@@ -843,9 +834,9 @@ export const settlementRouter = router({
         transfers: transfers.map(t => ({
           ...t,
           can_mark_paid:
-            canMarkAnyPaid
-            && t.status === "pending"
-            && myGroupIds.has(t.to_group_id),
+            canMarkAnyPaid &&
+            t.status === "pending" &&
+            myGroupIds.has(t.to_group_id),
         })),
       }
     }),

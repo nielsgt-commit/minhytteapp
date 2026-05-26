@@ -14,10 +14,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
   return (
     <>
       <strong>{t("Add contact")}</strong>
-      <form
-        onSubmit={onSubmit}
-        className={styles.form}
-      >
+      <form onSubmit={onSubmit} className={styles.form}>
         <Fieldset>
           <Fieldset.Legend>{t("New contact")}</Fieldset.Legend>
           <Textfield

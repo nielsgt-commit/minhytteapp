@@ -29,7 +29,9 @@ export function AmountEditor({
         min={1}
         step={1}
         value={amount}
-        onChange={e => { onAmountChange(e.target.value) }}
+        onChange={e => {
+          onAmountChange(e.target.value)
+        }}
         onKeyDown={e => {
           if (e.key === "Enter") {
             e.preventDefault()
@@ -48,11 +50,7 @@ export function AmountEditor({
         >
           {t("Remove")}
         </Button>
-        <Button
-          type="button"
-          variant="tertiary"
-          disabled={pending}
-        >
+        <Button type="button" variant="tertiary" disabled={pending}>
           {t("Upload receipt")}
         </Button>
       </div>

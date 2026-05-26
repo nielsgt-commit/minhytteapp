@@ -49,12 +49,17 @@ export function PriorityWeekRow({
         return (
           <Table.Cell key={o.property_owner_id}>
             <Radio
-              aria-label={t("W{{week}} – {{name}}", { week, name: o.user_name })}
+              aria-label={t("W{{week}} – {{name}}", {
+                week,
+                name: o.user_name,
+              })}
               name={`priority-week-owner-${String(o.property_owner_id)}`}
               value={String(week)}
               checked={checked}
               disabled={!editable}
-              onChange={() => { onAssign(o.property_owner_id, week) }}
+              onChange={() => {
+                onAssign(o.property_owner_id, week)
+              }}
             />
           </Table.Cell>
         )

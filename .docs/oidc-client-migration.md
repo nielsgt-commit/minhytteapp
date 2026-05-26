@@ -43,8 +43,12 @@ const userManager = new UserManager({
 })
 
 let cachedToken: string | null = null
-userManager.events.addUserLoaded(u => { cachedToken = u.access_token })
-userManager.events.addUserUnloaded(() => { cachedToken = null })
+userManager.events.addUserLoaded(u => {
+  cachedToken = u.access_token
+})
+userManager.events.addUserUnloaded(() => {
+  cachedToken = null
+})
 
 export function getToken(): string | null {
   return cachedToken
@@ -61,12 +65,19 @@ export async function loadAuth(): Promise<AuthRouterContext> {
   return { isAuthenticated: true, user }
 }
 
-export function startLogin() { return userManager.signinRedirect() }
-export function completeLogin() { return userManager.signinRedirectCallback() }
-export function logout() { return userManager.signoutRedirect() }
+export function startLogin() {
+  return userManager.signinRedirect()
+}
+export function completeLogin() {
+  return userManager.signinRedirectCallback()
+}
+export function logout() {
+  return userManager.signoutRedirect()
+}
 ```
 
 Notes:
+
 - `getToken()` stays sync (reads `cachedToken`), so `client/src/trpc/client.ts` needs no change.
 - `loadAuth()` becomes async — see step 3.
 - The hand-rolled `STATE_KEY`, `decodeJwtPayload`, etc. all go away — the lib owns this.
@@ -92,8 +103,12 @@ and the manual args:
 ```tsx
 useEffect(() => {
   completeLogin()
-    .then(() => { window.location.replace("/dashboard") })
-    .catch((e: unknown) => { setError(e instanceof Error ? e.message : "Login failed") })
+    .then(() => {
+      window.location.replace("/dashboard")
+    })
+    .catch((e: unknown) => {
+      setError(e instanceof Error ? e.message : "Login failed")
+    })
 }, [])
 ```
 

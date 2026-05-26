@@ -33,10 +33,14 @@ export function ProcedureSection(props: {
   const { items, getProc, setProc, moveProcedureItem, reorderPending } = props
   return (
     <div className={styles.section}>
-      <Heading level={5} data-size="2xs">{t("Procedure")}</Heading>
+      <Heading level={5} data-size="2xs">
+        {t("Procedure")}
+      </Heading>
       {items.length === 0 ? (
         <Paragraph data-size="sm">
-          {t("No pinned items yet. Add ad-hoc findings below and pin any that should recur next time.")}
+          {t(
+            "No pinned items yet. Add ad-hoc findings below and pin any that should recur next time.",
+          )}
         </Paragraph>
       ) : (
         items.map((item, idx) => {
@@ -60,7 +64,9 @@ export function ProcedureSection(props: {
                       data-size="sm"
                       aria-label={t("Move up")}
                       disabled={isFirst || reorderPending}
-                      onClick={() => { moveProcedureItem(item.id, -1) }}
+                      onClick={() => {
+                        moveProcedureItem(item.id, -1)
+                      }}
                     >
                       ↑
                     </Button>
@@ -69,7 +75,9 @@ export function ProcedureSection(props: {
                       data-size="sm"
                       aria-label={t("Move down")}
                       disabled={isLast || reorderPending}
-                      onClick={() => { moveProcedureItem(item.id, 1) }}
+                      onClick={() => {
+                        moveProcedureItem(item.id, 1)
+                      }}
                     >
                       ↓
                     </Button>

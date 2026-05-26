@@ -51,7 +51,7 @@ export const userGroupMembersTable = pgTable(
       .notNull()
       .references(() => usersTable.id),
   },
-  (t) => [primaryKey({ columns: [t.user_group_id, t.user_id] })],
+  t => [primaryKey({ columns: [t.user_group_id, t.user_id] })],
 )
 
 export const allowedEmailsTable = pgTable("allowed_emails", {

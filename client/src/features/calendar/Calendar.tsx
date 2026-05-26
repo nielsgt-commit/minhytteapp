@@ -11,8 +11,14 @@ export function Calendar() {
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <Heading level={2} className={styles.heading}>{t("Calendar")}</Heading>
-        <Paragraph>{t("Add or select a property to plan stays, block dates, and see who's booked in.")}</Paragraph>
+        <Heading level={2} className={styles.heading}>
+          {t("Calendar")}
+        </Heading>
+        <Paragraph>
+          {t(
+            "Add or select a property to plan stays, block dates, and see who's booked in.",
+          )}
+        </Paragraph>
       </section>
     )
   }

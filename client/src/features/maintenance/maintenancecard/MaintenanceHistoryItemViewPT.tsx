@@ -1,9 +1,19 @@
 import { useState } from "react"
-import { Button, Card, Chip, Paragraph, Tag, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Chip,
+  Paragraph,
+  Tag,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import type { PortableTextBlock } from "@portabletext/types"
 import styles from "./MaintenanceHistory.module.css"
-import { SeverityTag, type Severity } from "@/features/maintenance/severity/SeverityTag.tsx"
+import {
+  SeverityTag,
+  type Severity,
+} from "@/features/maintenance/severity/SeverityTag.tsx"
 import { MaintenanceInstructionsPT } from "./MaintenanceInstructionsPT.tsx"
 
 export type MaintenanceHistoryItemViewPTData = {
@@ -67,7 +77,9 @@ export function MaintenanceHistoryItemViewPT(props: {
                 type="button"
                 data-size="sm"
                 aria-expanded={expanded}
-                onClick={() => { setExpanded(v => !v) }}
+                onClick={() => {
+                  setExpanded(v => !v)
+                }}
               >
                 {expanded ? t("Hide execution") : t("Show execution")}
               </Chip.Button>
@@ -113,7 +125,9 @@ export function MaintenanceHistoryItemViewPT(props: {
                 aria-label={t("Type description to confirm deletion")}
                 data-size="sm"
                 value={deletingTyped}
-                onChange={e => { onChangeTyped(e.target.value) }}
+                onChange={e => {
+                  onChangeTyped(e.target.value)
+                }}
               />
               <Button
                 data-color="danger"

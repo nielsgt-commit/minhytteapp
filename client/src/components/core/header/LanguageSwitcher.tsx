@@ -12,7 +12,9 @@ export default function LanguageSwitcher() {
     <Button
       variant="tertiary"
       aria-label={t("Switch language to {{label}}", { label: nextLabel })}
-      onClick={() => { void i18n.changeLanguage(next) }}
+      onClick={() => {
+        void i18n.changeLanguage(next)
+      }}
     >
       <GlobeIcon aria-hidden />
       {current.toUpperCase()}

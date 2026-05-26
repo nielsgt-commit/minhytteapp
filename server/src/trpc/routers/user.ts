@@ -36,10 +36,7 @@ const updateInput = z.object({
 
 export const userRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(usersTable)
-      .orderBy(asc(usersTable.id))
+    return ctx.db.select().from(usersTable).orderBy(asc(usersTable.id))
   }),
 
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
@@ -179,16 +176,18 @@ export const userRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [updated] = await ctx.db
-        .update(usersTable)
-        .set({ name: input.name })
-        .where(
-          and(
-            eq(usersTable.id, input.id),
-            eq(usersTable.parent_user_id, ctx.user.id),
-          ),
-        )
-        .returning()
+      const updated = (
+        await ctx.db
+          .update(usersTable)
+          .set({ name: input.name })
+          .where(
+            and(
+              eq(usersTable.id, input.id),
+              eq(usersTable.parent_user_id, ctx.user.id),
+            ),
+          )
+          .returning()
+      ).at(0)
       if (!updated) {
         throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
       }
@@ -198,32 +197,32 @@ export const userRouter = router({
   removeChild: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(usersTable)
-        .where(
-          and(
-            eq(usersTable.id, input.id),
-            eq(usersTable.parent_user_id, ctx.user.id),
-          ),
-        )
-        .returning()
+      const deleted = (
+        await ctx.db
+          .delete(usersTable)
+          .where(
+            and(
+              eq(usersTable.id, input.id),
+              eq(usersTable.parent_user_id, ctx.user.id),
+            ),
+          )
+          .returning()
+      ).at(0)
       if (!deleted) {
         throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
       }
       return deleted
     }),
 
-  update: adminProcedure
-    .input(updateInput)
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...rest } = input
-      const [updated] = await ctx.db
-        .update(usersTable)
-        .set(rest)
-        .where(eq(usersTable.id, id))
-        .returning()
-      return updated
-    }),
+  update: adminProcedure.input(updateInput).mutation(async ({ ctx, input }) => {
+    const { id, ...rest } = input
+    const [updated] = await ctx.db
+      .update(usersTable)
+      .set(rest)
+      .where(eq(usersTable.id, id))
+      .returning()
+    return updated
+  }),
 
   delete: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))

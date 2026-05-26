@@ -18,7 +18,7 @@ function initials(name: string) {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map(p => p[0]?.toUpperCase() ?? "")
+    .map(p => p[0].toUpperCase())
     .join("")
 }
 
@@ -88,8 +88,12 @@ export default function UserMenu({ showCheckIn = true }: Props) {
       <Dropdown
         placement="bottom-end"
         open={isOpen}
-        onOpen={() => { setIsOpen(true) }}
-        onClose={() => { setIsOpen(false) }}
+        onOpen={() => {
+          setIsOpen(true)
+        }}
+        onClose={() => {
+          setIsOpen(false)
+        }}
       >
         <div
           style={{
@@ -122,12 +126,21 @@ export default function UserMenu({ showCheckIn = true }: Props) {
         <Divider />
         <Dropdown.List>
           <Dropdown.Item>
-            <Dropdown.Button onClick={() => { void navigate({ to: "/usersettings" }) }}>
+            <Dropdown.Button
+              onClick={() => {
+                void navigate({ to: "/usersettings" })
+              }}
+            >
               {t("Settings")}
             </Dropdown.Button>
           </Dropdown.Item>
           <Dropdown.Item>
-            <Dropdown.Button data-color="danger" onClick={() => { void handleLogout() }}>
+            <Dropdown.Button
+              data-color="danger"
+              onClick={() => {
+                void handleLogout()
+              }}
+            >
               {t("Log out")}
             </Dropdown.Button>
           </Dropdown.Item>

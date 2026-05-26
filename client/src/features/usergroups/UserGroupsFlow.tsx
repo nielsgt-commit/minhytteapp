@@ -91,8 +91,8 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     )
   }
 
-  const handleRename = (groupId: number) =>
-    async (input: { name: string; is_main: boolean }) => {
+  const handleRename =
+    (groupId: number) => async (input: { name: string; is_main: boolean }) => {
       await updateGroup.mutateAsync({
         id: groupId,
         ...input,
@@ -102,15 +102,20 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     }
 
   const handleDelete = (groupId: number, groupName: string) => {
-    if (!window.confirm(t("Delete group \"{{groupName}}\"?", { groupName }))) return
+    if (!window.confirm(t('Delete group "{{groupName}}"?', { groupName })))
+      return
     deleteGroup.mutate(
       { id: groupId, property_id: propertyId },
-      { onSuccess: () => { setOpenForm(null) } },
+      {
+        onSuccess: () => {
+          setOpenForm(null)
+        },
+      },
     )
   }
 
-  const handleAddMember = (groupId: number) =>
-    (user_id: number, reset: () => void) => {
+  const handleAddMember =
+    (groupId: number) => (user_id: number, reset: () => void) => {
       addMember.mutate(
         { user_group_id: groupId, user_id, property_id: propertyId },
         {
@@ -122,8 +127,8 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
       )
     }
 
-  const handleCreateAndAddMember = (groupId: number) =>
-    (name: string, reset: () => void) => {
+  const handleCreateAndAddMember =
+    (groupId: number) => (name: string, reset: () => void) => {
       const email = `pending-${String(Date.now())}@example.local`
       createUser.mutate(
         { name, email },
@@ -153,7 +158,10 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     userId: number,
     userName: string,
   ) => {
-    if (!window.confirm(t("Remove {{userName}} from this group?", { userName }))) return
+    if (
+      !window.confirm(t("Remove {{userName}} from this group?", { userName }))
+    )
+      return
     removeMember.mutate({
       user_group_id: groupId,
       user_id: userId,
@@ -162,13 +170,19 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   }
 
   return (
-      <section>
+    <section>
       <Heading level={2}>{t("User groups")}</Heading>
       <p>
-        {t("Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.")}
+        {t(
+          "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.",
+        )}
       </p>
 
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
 
       {canEdit && (
         <div>
@@ -190,7 +204,9 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
         <CreateGroupForm
           pending={createGroup.isPending}
           onSubmit={handleCreate}
-          onCancel={() => { setOpenForm(null) }}
+          onCancel={() => {
+            setOpenForm(null)
+          }}
         />
       )}
 
@@ -217,9 +233,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
                 pending={pending}
                 renamePending={updateGroup.isPending}
                 addMemberPending={addMember.isPending}
-                createUserPending={
-                  createUser.isPending || addMember.isPending
-                }
+                createUserPending={createUser.isPending || addMember.isPending}
                 onStartRename={() => {
                   setOpenForm({ kind: "rename", groupId: g.id })
                 }}
@@ -230,14 +244,24 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
                       : { kind: "addMember", groupId: g.id },
                   )
                 }}
-                onDelete={() => { handleDelete(g.id, g.name) }}
+                onDelete={() => {
+                  handleDelete(g.id, g.name)
+                }}
                 onRenameSubmit={handleRename(g.id)}
                 onAddMember={handleAddMember(g.id)}
                 onCreateAndAddMember={handleCreateAndAddMember(g.id)}
-                onSwitchToCreateUser={() => { setAddingUserForGroup(g.id) }}
-                onBackFromCreateUser={() => { setAddingUserForGroup(null) }}
-                onCancelRename={() => { setOpenForm(null) }}
-                onCancelAddMember={() => { setOpenForm(null) }}
+                onSwitchToCreateUser={() => {
+                  setAddingUserForGroup(g.id)
+                }}
+                onBackFromCreateUser={() => {
+                  setAddingUserForGroup(null)
+                }}
+                onCancelRename={() => {
+                  setOpenForm(null)
+                }}
+                onCancelAddMember={() => {
+                  setOpenForm(null)
+                }}
                 onRemoveMember={(userId, userName) => {
                   handleRemoveMember(g.id, userId, userName)
                 }}
@@ -246,6 +270,6 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
           })}
         </ul>
       )}
-      </section>
+    </section>
   )
 }

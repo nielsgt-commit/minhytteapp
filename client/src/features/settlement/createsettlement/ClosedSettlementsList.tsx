@@ -1,10 +1,5 @@
 import { Suspense } from "react"
-import {
-  Button,
-  Card,
-  Heading,
-  Paragraph,
-} from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./CreateSettlementFlow.module.css"
 import { ClosedSettlementSummary } from "@/features/settlement/ClosedSettlementSummary.tsx"
@@ -43,7 +38,9 @@ export function ClosedSettlementsList({
 }: Props) {
   const { t } = useTranslation("settlement")
   if (settlements.length === 0) {
-    return <Paragraph data-size="sm">{t("No closed settlements yet.")}</Paragraph>
+    return (
+      <Paragraph data-size="sm">{t("No closed settlements yet.")}</Paragraph>
+    )
   }
   return (
     <ul className={styles.list}>
@@ -74,7 +71,9 @@ export function ClosedSettlementsList({
                           type="button"
                           variant="tertiary"
                           data-size="sm"
-                          onClick={() => { onEdit(s) }}
+                          onClick={() => {
+                            onEdit(s)
+                          }}
                           disabled={pending}
                         >
                           {t("Edit")}
@@ -83,7 +82,9 @@ export function ClosedSettlementsList({
                           type="button"
                           variant="tertiary"
                           data-size="sm"
-                          onClick={() => { onDelete(s.id) }}
+                          onClick={() => {
+                            onDelete(s.id)
+                          }}
                           disabled={pending}
                         >
                           {t("Delete")}
@@ -94,7 +95,9 @@ export function ClosedSettlementsList({
                 </Card.Block>
                 {expanded && (
                   <Card.Block data-size="sm">
-                    <Suspense fallback={<p>{t("Loading closed settlement…")}</p>}>
+                    <Suspense
+                      fallback={<p>{t("Loading closed settlement…")}</p>}
+                    >
                       <ClosedSettlementSummary settlementId={s.id} />
                     </Suspense>
                   </Card.Block>

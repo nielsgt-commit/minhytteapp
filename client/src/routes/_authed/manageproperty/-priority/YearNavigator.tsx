@@ -15,7 +15,9 @@ export function YearNavigator({ year, onChange }: YearNavigatorProps) {
         type="button"
         variant="tertiary"
         data-size="sm"
-        onClick={() => { onChange(year - 1) }}
+        onClick={() => {
+          onChange(year - 1)
+        }}
       >
         {t("Prev")}
       </Button>
@@ -24,7 +26,9 @@ export function YearNavigator({ year, onChange }: YearNavigatorProps) {
         type="button"
         variant="tertiary"
         data-size="sm"
-        onClick={() => { onChange(year + 1) }}
+        onClick={() => {
+          onChange(year + 1)
+        }}
       >
         {t("Next")}
       </Button>

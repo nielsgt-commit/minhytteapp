@@ -11,9 +11,15 @@ export type ToggleState = {
 export function useToggleState(initial = false): ToggleState {
   const [value, setValue] = useState(initial)
 
-  const open = useCallback(() => { setValue(true) }, [])
-  const close = useCallback(() => { setValue(false) }, [])
-  const toggle = useCallback(() => { setValue(v => !v) }, [])
+  const open = useCallback(() => {
+    setValue(true)
+  }, [])
+  const close = useCallback(() => {
+    setValue(false)
+  }, [])
+  const toggle = useCallback(() => {
+    setValue(v => !v)
+  }, [])
 
   return { value, open, close, toggle, setValue }
 }

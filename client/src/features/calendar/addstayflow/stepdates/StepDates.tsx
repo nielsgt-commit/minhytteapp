@@ -56,12 +56,20 @@ export function StepDates({
   const overlappingOccupantsText = useMemo(() => {
     const seen = new Map<number, { name: string; queued: boolean }>()
     for (const o of overlappingBookings.flatMap(b => b.occupants)) {
-      if (!seen.has(o.user_id) || (!o.queued && seen.get(o.user_id)!.queued)) {
-        seen.set(o.user_id, { name: o.user_name ?? `#${String(o.user_id)}`, queued: o.queued })
+      const existing = seen.get(o.user_id)
+      if (!existing || (!o.queued && existing.queued)) {
+        seen.set(o.user_id, {
+          name: o.user_name ?? `#${String(o.user_id)}`,
+          queued: o.queued,
+        })
       }
     }
-    const confirmed = Array.from(seen.values()).filter(o => !o.queued).map(o => o.name)
-    const queued = Array.from(seen.values()).filter(o => o.queued).map(o => `${o.name}?`)
+    const confirmed = Array.from(seen.values())
+      .filter(o => !o.queued)
+      .map(o => o.name)
+    const queued = Array.from(seen.values())
+      .filter(o => o.queued)
+      .map(o => `${o.name}?`)
     return queued.length > 0
       ? `${confirmed.join(", ")} (+ ${queued.join(", ")})`
       : confirmed.join(", ")
@@ -69,12 +77,14 @@ export function StepDates({
 
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
-      <div
-        className={`fp-row ${styles.row}`}
-        ref={rowRef}
-      >
+      <div className={`fp-row ${styles.row}`} ref={rowRef}>
         <div className={`fp-container ${styles.container}`}>
-          <input ref={inputRef} type="text" className={styles.hiddenInput} readOnly />
+          <input
+            ref={inputRef}
+            type="text"
+            className={styles.hiddenInput}
+            readOnly
+          />
         </div>
 
         <div className={`fp-right-panel ${styles.rightPanel}`}>
@@ -84,12 +94,14 @@ export function StepDates({
                 {availability !== null ? (
                   <Tag data-color={availability.color}>
                     {
-                      ({
-                        "At capacity": t("At capacity"),
-                        "Almost at capacity": t("Almost at capacity"),
-                        "Limited availability": t("Limited availability"),
-                        "High availability": t("High availability"),
-                      } satisfies Record<AvailabilityLabel, string>)[availability.label]
+                      (
+                        {
+                          "At capacity": t("At capacity"),
+                          "Almost at capacity": t("Almost at capacity"),
+                          "Limited availability": t("Limited availability"),
+                          "High availability": t("High availability"),
+                        } satisfies Record<AvailabilityLabel, string>
+                      )[availability.label]
                     }
                   </Tag>
                 ) : (
@@ -102,7 +114,10 @@ export function StepDates({
                   <div className={styles.priorityTags}>
                     {overlappingPriorityWeeks.map(pw => (
                       <Tag key={pw.iso_week} data-color="neutral">
-                        {t("W{{week}} priority: {{name}}", { week: pw.iso_week, name: pw.owner_name })}
+                        {t("W{{week}} priority: {{name}}", {
+                          week: pw.iso_week,
+                          name: pw.owner_name,
+                        })}
                       </Tag>
                     ))}
                   </div>
@@ -120,11 +135,13 @@ export function StepDates({
                 </div>
               )}
 
-              {hasStartDate && overlappingBookings.length === 0 && occupiedBeds !== null && (
-                <Paragraph data-size="sm" className={styles.subtleText}>
-                  {t("No other bookings in this period.")}
-                </Paragraph>
-              )}
+              {hasStartDate &&
+                overlappingBookings.length === 0 &&
+                occupiedBeds !== null && (
+                  <Paragraph data-size="sm" className={styles.subtleText}>
+                    {t("No other bookings in this period.")}
+                  </Paragraph>
+                )}
             </Card.Block>
           </Card>
         </div>

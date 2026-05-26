@@ -27,11 +27,36 @@ type ExtraVehicle = {
   FillIcon: IconComponent
 }
 
+// typescript-eslint's project service occasionally reports the Aksel icon
+// imports as "error typed"; tsc is happy, but we cast through unknown to
+// keep the lint rule satisfied.
+const asIcon = (c: unknown): IconComponent => c as IconComponent
+
 const EXTRAS: readonly ExtraVehicle[] = [
-  { offset: 0, labelKey: "Motorcycle", Icon: MotorcycleIcon, FillIcon: MotorcycleFillIcon },
-  { offset: 1, labelKey: "Bicycle", Icon: BicycleIcon, FillIcon: BicycleIcon },
-  { offset: 2, labelKey: "Stroller", Icon: StrollerIcon, FillIcon: StrollerFillIcon },
-  { offset: 3, labelKey: "Wheelbarrow", Icon: WheelbarrowIcon, FillIcon: WheelbarrowFillIcon },
+  {
+    offset: 0,
+    labelKey: "Motorcycle",
+    Icon: asIcon(MotorcycleIcon),
+    FillIcon: asIcon(MotorcycleFillIcon),
+  },
+  {
+    offset: 1,
+    labelKey: "Bicycle",
+    Icon: asIcon(BicycleIcon),
+    FillIcon: asIcon(BicycleIcon),
+  },
+  {
+    offset: 2,
+    labelKey: "Stroller",
+    Icon: asIcon(StrollerIcon),
+    FillIcon: asIcon(StrollerFillIcon),
+  },
+  {
+    offset: 3,
+    labelKey: "Wheelbarrow",
+    Icon: asIcon(WheelbarrowIcon),
+    FillIcon: asIcon(WheelbarrowFillIcon),
+  },
 ]
 
 export default function AvailableParking() {
@@ -69,7 +94,10 @@ export default function AvailableParking() {
             const occupant = claimedBySlot.get(slot)
             const occupied = occupant != null
             const title = occupied
-              ? t("Spot {{slot}} — taken by {{userName}}", { slot: slot + 1, userName: occupant.user_name })
+              ? t("Spot {{slot}} — taken by {{userName}}", {
+                  slot: slot + 1,
+                  userName: occupant.user_name,
+                })
               : t("Spot {{slot}} — free", { slot: slot + 1 })
             return (
               <Button
@@ -86,7 +114,11 @@ export default function AvailableParking() {
                   toggle(slot, occupied)
                 }}
               >
-                {occupied ? <CarFillIcon aria-hidden /> : <CarIcon aria-hidden />}
+                {occupied ? (
+                  <CarFillIcon aria-hidden />
+                ) : (
+                  <CarIcon aria-hidden />
+                )}
               </Button>
             )
           })

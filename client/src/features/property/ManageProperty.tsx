@@ -10,54 +10,95 @@ import { GroupTabs } from "@/components/shared/GroupTabs"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 const BANNERS = new Map<string, { title: string; description: string }>([
-  ["/manageproperty/info", {
-    title: "Info",
-    description: "Name, address, link, and basic facts about the property.",
-  }],
-  ["/manageproperty/contacts", {
-    title: "Contacts",
-    description: "People to call for the property — caretakers, neighbours, service providers.",
-  }],
-  ["/manageproperty/ownership", {
-    title: "Ownership",
-    description: "Who owns what share of the property.",
-  }],
-  ["/manageproperty/usergroups", {
-    title: "User groups",
-    description: "Group users together to share access, costs, or bookings.",
-  }],
-  ["/manageproperty/users", {
-    title: "Users",
-    description: "Everyone with access to this property — edit roles or remove people.",
-  }],
-  ["/manageproperty/invites", {
-    title: "Invites",
-    description: "Email addresses allowed to sign in and claim a spot on this property.",
-  }],
-  ["/manageproperty/structures", {
-    title: "Structures",
-    description: "Buildings on the property and the rooms inside them.",
-  }],
-  ["/manageproperty/infrastructure", {
-    title: "Infrastructure",
-    description: "Water, power, heating, network, and other systems serving the property.",
-  }],
-  ["/manageproperty/equipment", {
-    title: "Equipment",
-    description: "Tools, appliances, and gear kept at the property.",
-  }],
-  ["/manageproperty/split-policy", {
-    title: "Split policy",
-    description: "Rules for how shared costs are split across owners and users.",
-  }],
-  ["/manageproperty/priority", {
-    title: "Priority weeks",
-    description: "Each household head claims one peak summer week.",
-  }],
-  ["/manageproperty/settings", {
-    title: "Settings",
-    description: "Per-property preferences and danger zone actions.",
-  }],
+  [
+    "/manageproperty/info",
+    {
+      title: "Info",
+      description: "Name, address, link, and basic facts about the property.",
+    },
+  ],
+  [
+    "/manageproperty/contacts",
+    {
+      title: "Contacts",
+      description:
+        "People to call for the property — caretakers, neighbours, service providers.",
+    },
+  ],
+  [
+    "/manageproperty/ownership",
+    {
+      title: "Ownership",
+      description: "Who owns what share of the property.",
+    },
+  ],
+  [
+    "/manageproperty/usergroups",
+    {
+      title: "User groups",
+      description: "Group users together to share access, costs, or bookings.",
+    },
+  ],
+  [
+    "/manageproperty/users",
+    {
+      title: "Users",
+      description:
+        "Everyone with access to this property — edit roles or remove people.",
+    },
+  ],
+  [
+    "/manageproperty/invites",
+    {
+      title: "Invites",
+      description:
+        "Email addresses allowed to sign in and claim a spot on this property.",
+    },
+  ],
+  [
+    "/manageproperty/structures",
+    {
+      title: "Structures",
+      description: "Buildings on the property and the rooms inside them.",
+    },
+  ],
+  [
+    "/manageproperty/infrastructure",
+    {
+      title: "Infrastructure",
+      description:
+        "Water, power, heating, network, and other systems serving the property.",
+    },
+  ],
+  [
+    "/manageproperty/equipment",
+    {
+      title: "Equipment",
+      description: "Tools, appliances, and gear kept at the property.",
+    },
+  ],
+  [
+    "/manageproperty/split-policy",
+    {
+      title: "Split policy",
+      description:
+        "Rules for how shared costs are split across owners and users.",
+    },
+  ],
+  [
+    "/manageproperty/priority",
+    {
+      title: "Priority weeks",
+      description: "Each household head claims one peak summer week.",
+    },
+  ],
+  [
+    "/manageproperty/settings",
+    {
+      title: "Settings",
+      description: "Per-property preferences and danger zone actions.",
+    },
+  ],
 ])
 
 function RouteBanner({ pathname }: { pathname: string }) {
@@ -76,45 +117,63 @@ function RouteBanner({ pathname }: { pathname: string }) {
 }
 
 const DESKTOP_GROUPS = [
-  { label: "Property", items: [
-    { to: "/manageproperty/info", label: "Info" },
-    { to: "/manageproperty/contacts", label: "Contacts" },
-    { to: "/manageproperty/ownership", label: "Ownership" },
-    { to: "/manageproperty/structures", label: "Structures" },
-    { to: "/manageproperty/infrastructure", label: "Infrastructure" },
-    { to: "/manageproperty/equipment", label: "Equipment" },
-  ]},
-  { label: "People", items: [
-    { to: "/manageproperty/users", label: "Users" },
-    { to: "/manageproperty/usergroups", label: "User groups" },
-    { to: "/manageproperty/invites", label: "Invites" },
-  ]},
-  { label: "Domain model", items: [
-    { to: "/manageproperty/split-policy", label: "Split policy" },
-    { to: "/manageproperty/priority", label: "Priority weeks" },
-    { to: "/manageproperty/settings", label: "Settings" },
-  ]},
+  {
+    label: "Property",
+    items: [
+      { to: "/manageproperty/info", label: "Info" },
+      { to: "/manageproperty/contacts", label: "Contacts" },
+      { to: "/manageproperty/ownership", label: "Ownership" },
+      { to: "/manageproperty/structures", label: "Structures" },
+      { to: "/manageproperty/infrastructure", label: "Infrastructure" },
+      { to: "/manageproperty/equipment", label: "Equipment" },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { to: "/manageproperty/users", label: "Users" },
+      { to: "/manageproperty/usergroups", label: "User groups" },
+      { to: "/manageproperty/invites", label: "Invites" },
+    ],
+  },
+  {
+    label: "Domain model",
+    items: [
+      { to: "/manageproperty/split-policy", label: "Split policy" },
+      { to: "/manageproperty/priority", label: "Priority weeks" },
+      { to: "/manageproperty/settings", label: "Settings" },
+    ],
+  },
 ] as const
 
 const MOBILE_GROUPS = [
-  { label: "Property", items: [
-    { to: "/manageproperty/info", label: "Info" },
-    { to: "/manageproperty/contacts", label: "Contacts" },
-    { to: "/manageproperty/ownership", label: "Ownership" },
-    { to: "/manageproperty/structures", label: "Structures" },
-    { to: "/manageproperty/infrastructure", label: "Infrastructure" },
-    { to: "/manageproperty/equipment", label: "Equipment" },
-  ]},
-  { label: "People", items: [
-    { to: "/manageproperty/users", label: "Users" },
-    { to: "/manageproperty/usergroups", label: "User groups" },
-    { to: "/manageproperty/invites", label: "Invites" },
-  ]},
-  { label: "Domain model", items: [
-    { to: "/manageproperty/split-policy", label: "Split policy" },
-    { to: "/manageproperty/priority", label: "Priority weeks" },
-    { to: "/manageproperty/settings", label: "Settings" },
-  ]},
+  {
+    label: "Property",
+    items: [
+      { to: "/manageproperty/info", label: "Info" },
+      { to: "/manageproperty/contacts", label: "Contacts" },
+      { to: "/manageproperty/ownership", label: "Ownership" },
+      { to: "/manageproperty/structures", label: "Structures" },
+      { to: "/manageproperty/infrastructure", label: "Infrastructure" },
+      { to: "/manageproperty/equipment", label: "Equipment" },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { to: "/manageproperty/users", label: "Users" },
+      { to: "/manageproperty/usergroups", label: "User groups" },
+      { to: "/manageproperty/invites", label: "Invites" },
+    ],
+  },
+  {
+    label: "Domain model",
+    items: [
+      { to: "/manageproperty/split-policy", label: "Split policy" },
+      { to: "/manageproperty/priority", label: "Priority weeks" },
+      { to: "/manageproperty/settings", label: "Settings" },
+    ],
+  },
 ] as const
 
 export function ManageProperty() {
@@ -125,18 +184,26 @@ export function ManageProperty() {
   const { pathname } = useLocation()
   useSuspenseQuery(trpc.property.list.queryOptions())
 
-  const translateGroups = <G extends { label: string; items: readonly { to: string; label: string }[] }>(
-    groups: readonly G[],
-  ) => groups.map(g => ({
-    label: td(g.label),
-    items: g.items.map(i => ({ to: i.to, label: td(i.label) })),
-  }))
+  const translateGroups = (
+    groups: readonly {
+      label: string
+      items: readonly { to: string; label: string }[]
+    }[],
+  ) =>
+    groups.map(g => ({
+      label: td(g.label),
+      items: g.items.map(i => ({ to: i.to, label: td(i.label) })),
+    }))
 
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
         <h1 className={styles.title}>{t("Manage Property")}</h1>
-        <p>{t("Add or select a property to edit its details, structures, owners, and invites.")}</p>
+        <p>
+          {t(
+            "Add or select a property to edit its details, structures, owners, and invites.",
+          )}
+        </p>
       </section>
     )
   }
@@ -147,7 +214,10 @@ export function ManageProperty() {
 
       <div className={styles.layout}>
         <div className={styles.desktopNav}>
-          <SideNav ariaLabel={t("Property sections")} groups={translateGroups(DESKTOP_GROUPS)} />
+          <SideNav
+            ariaLabel={t("Property sections")}
+            groups={translateGroups(DESKTOP_GROUPS)}
+          />
         </div>
         <div className={styles.mobileNav}>
           <GroupTabs groups={translateGroups(MOBILE_GROUPS)} />

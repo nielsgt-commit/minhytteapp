@@ -34,9 +34,16 @@ export function GroupTabs({ groups }: Props) {
   return (
     <Tabs value={activeValue} onChange={handleTabChange}>
       <Tabs.List>
-        <Tabs.Tab value={NONE_VALUE} hidden style={{ display: "none" }} aria-hidden />
+        <Tabs.Tab
+          value={NONE_VALUE}
+          hidden
+          style={{ display: "none" }}
+          aria-hidden
+        />
         {groups.map(g => (
-          <Tabs.Tab key={g.label} value={g.label}>{g.label}</Tabs.Tab>
+          <Tabs.Tab key={g.label} value={g.label}>
+            {g.label}
+          </Tabs.Tab>
         ))}
       </Tabs.List>
       {groups.map(g => {
@@ -58,8 +65,12 @@ export function GroupTabs({ groups }: Props) {
                       name={radioName}
                       value={i.to}
                       checked={active}
-                      onChange={() => { void navigate({ to: i.to }) }}
-                      onFocus={() => { void router.preloadRoute({ to: i.to }) }}
+                      onChange={() => {
+                        void navigate({ to: i.to })
+                      }}
+                      onFocus={() => {
+                        void router.preloadRoute({ to: i.to })
+                      }}
                     >
                       {i.label}
                     </Chip.Radio>

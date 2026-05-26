@@ -37,7 +37,9 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   const canEdit = useCanEdit()
 
   const { data: infrastructure } = useSuspenseQuery(
-    trpc.infrastructure.listForProperty.queryOptions({ property_id: propertyId }),
+    trpc.infrastructure.listForProperty.queryOptions({
+      property_id: propertyId,
+    }),
   )
 
   const infrastructureKeys = [
@@ -60,9 +62,13 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   const adding = useToggleState()
 
   const lastError =
-    createInfrastructure.error ?? updateInfrastructure.error ?? deleteInfrastructure.error
+    createInfrastructure.error ??
+    updateInfrastructure.error ??
+    deleteInfrastructure.error
   const pending =
-    createInfrastructure.isPending || updateInfrastructure.isPending || deleteInfrastructure.isPending
+    createInfrastructure.isPending ||
+    updateInfrastructure.isPending ||
+    deleteInfrastructure.isPending
 
   const handleAdd = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
@@ -71,7 +77,10 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     const since_year = fdYear(fd, "since_year")
     try {
       await createInfrastructure.mutateAsync({
-        name, description, property_id: propertyId, since_year,
+        name,
+        description,
+        property_id: propertyId,
+        since_year,
       })
       adding.close()
     } catch {
@@ -86,7 +95,11 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     if (!name || !description) return
     try {
       await updateInfrastructure.mutateAsync({
-        id: p.id, name, description, property_id: propertyId, since_year,
+        id: p.id,
+        name,
+        description,
+        property_id: propertyId,
+        since_year,
       })
       setEditingId(null)
     } catch {
@@ -95,10 +108,17 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   }
 
   const handleDelete = (p: Infrastructure) => {
-    if (!window.confirm(t("Delete infrastructure \"{{name}}\"?", { name: p.name }))) return
+    if (
+      !window.confirm(t('Delete infrastructure "{{name}}"?', { name: p.name }))
+    )
+      return
     deleteInfrastructure.mutate(
       { id: p.id },
-      { onSuccess: () => { setEditingId(null) } },
+      {
+        onSuccess: () => {
+          setEditingId(null)
+        },
+      },
     )
   }
 
@@ -138,7 +158,9 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
           type="button"
           variant="tertiary"
           disabled={pending}
-          onClick={() => { setEditingId(null) }}
+          onClick={() => {
+            setEditingId(null)
+          }}
         >
           {t("Cancel")}
         </Button>
@@ -150,7 +172,11 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
     <section>
       <h3>{t("Infrastructure at {{name}}", { name: propertyName })}</h3>
 
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
 
       <ul className={styles.list}>
         {infrastructure.map(p => (
@@ -161,8 +187,12 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                   editing={editingId === p.id}
                   canEdit={canEdit}
                   pending={pending}
-                  editLabel={t("Edit infrastructure {{name}}", { name: p.name })}
-                  onStartEdit={() => { setEditingId(p.id) }}
+                  editLabel={t("Edit infrastructure {{name}}", {
+                    name: p.name,
+                  })}
+                  onStartEdit={() => {
+                    setEditingId(p.id)
+                  }}
                   view={
                     <>
                       <span className={styles.rowName}>{p.name}</span>
@@ -180,8 +210,12 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                       data-color="danger"
                       data-size="sm"
                       disabled={pending}
-                      aria-label={t("Delete infrastructure \"{{name}}\"?", { name: p.name })}
-                      onClick={() => { handleDelete(p) }}
+                      aria-label={t('Delete infrastructure "{{name}}"?', {
+                        name: p.name,
+                      })}
+                      onClick={() => {
+                        handleDelete(p)
+                      }}
                     >
                       {t("Delete")}
                     </Button>

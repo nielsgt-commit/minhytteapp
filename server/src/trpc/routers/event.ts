@@ -58,11 +58,13 @@ export const eventRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [existing] = await ctx.db
-        .select({ author_id: eventTable.author_id })
-        .from(eventTable)
-        .where(eq(eventTable.id, input.id))
-        .limit(1)
+      const existing = (
+        await ctx.db
+          .select({ author_id: eventTable.author_id })
+          .from(eventTable)
+          .where(eq(eventTable.id, input.id))
+          .limit(1)
+      ).at(0)
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "event not found" })
       }

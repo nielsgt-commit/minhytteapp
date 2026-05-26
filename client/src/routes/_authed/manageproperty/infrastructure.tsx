@@ -27,5 +27,10 @@ function InfrastructureRoute() {
   const property =
     propertyId != null ? properties.find(p => p.id === propertyId) : undefined
   if (!property) return null
-  return <InfrastructurePanel propertyId={property.id} propertyName={property.name} />
+  return (
+    <InfrastructurePanel
+      propertyId={property.id}
+      propertyName={property.name}
+    />
+  )
 }

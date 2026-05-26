@@ -5,7 +5,6 @@ import packageJson from "../package.json" with { type: "json" }
 import tanstackRouter from "@tanstack/router-plugin/vite"
 import { VitePWA } from "vite-plugin-pwa"
 
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -59,8 +58,8 @@ export default defineConfig({
 
   server: {
     open: true,
-    proxy: { "/api": "http://localhost:3001" }
-},
+    proxy: { "/api": "http://localhost:3001" },
+  },
 
   test: {
     root: import.meta.dirname,

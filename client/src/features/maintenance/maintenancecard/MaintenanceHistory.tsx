@@ -71,7 +71,11 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
 
   type HistoryEntry =
     | { kind: "maintenance"; t: number; item: (typeof doneItems)[number] }
-    | { kind: "inspection"; t: number; item: (typeof scopedInspections)[number] }
+    | {
+        kind: "inspection"
+        t: number
+        item: (typeof scopedInspections)[number]
+      }
 
   const entries: HistoryEntry[] = [
     ...doneItems.map(item => ({
@@ -106,7 +110,8 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     })
   }
 
-  const handleEditSubmit = (item: (typeof doneItems)[number]) =>
+  const handleEditSubmit =
+    (item: (typeof doneItems)[number]) =>
     (values: MaintenanceHistoryEditValues) => {
       updateMutation.mutate(
         {
@@ -124,12 +129,20 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
           recurrence: item.recurrence,
           completed_at: values.completed_at,
         },
-        { onSuccess: () => { setEditing(null) } },
+        {
+          onSuccess: () => {
+            setEditing(null)
+          },
+        },
       )
     }
 
   if (lastError) {
-    return <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>
+    return (
+      <p role="alert">
+        {t("Error: {{message}}", { message: lastError.message })}
+      </p>
+    )
   }
 
   if (entries.length === 0) {
@@ -140,7 +153,12 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     <div className={styles.list}>
       {entries.map(entry => {
         if (entry.kind === "inspection") {
-          return <InspectionCard key={`i-${String(entry.item.id)}`} inspection={entry.item} />
+          return (
+            <InspectionCard
+              key={`i-${String(entry.item.id)}`}
+              inspection={entry.item}
+            />
+          )
         }
         const item = entry.item
         const isEditing = editing?.id === item.id
@@ -153,7 +171,9 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
               item={item}
               pending={pending}
               onSubmit={handleEditSubmit(item)}
-              onCancel={() => { setEditing(null) }}
+              onCancel={() => {
+                setEditing(null)
+              }}
             />
           )
         }
@@ -165,19 +185,31 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
             pending={pending}
             isDeleting={isDeleting}
             deletingTyped={deleting?.typed ?? ""}
-            onStartEdit={() => { setEditing({ id: item.id }) }}
-            onStartDelete={() => { setDeleting({ id: item.id, typed: "" }) }}
+            onStartEdit={() => {
+              setEditing({ id: item.id })
+            }}
+            onStartDelete={() => {
+              setDeleting({ id: item.id, typed: "" })
+            }}
             onChangeTyped={value => {
               setDeleting({ id: item.id, typed: value })
             }}
             onConfirmDelete={() => {
               deleteMutation.mutate(
                 { id: item.id },
-                { onSuccess: () => { setDeleting(null) } },
+                {
+                  onSuccess: () => {
+                    setDeleting(null)
+                  },
+                },
               )
             }}
-            onCancelDelete={() => { setDeleting(null) }}
-            onCycleSeverity={() => { cycleItemSeverity(item) }}
+            onCancelDelete={() => {
+              setDeleting(null)
+            }}
+            onCycleSeverity={() => {
+              cycleItemSeverity(item)
+            }}
           />
         )
       })}

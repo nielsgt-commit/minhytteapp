@@ -6,7 +6,11 @@ import {
   markOccupantQueued,
   removeOccupant,
 } from "@/features/calendar/booking-logic"
-import type { BookingDraft, BookingDraftAction, PreviewConflicts } from "@/features/calendar/booking-logic"
+import type {
+  BookingDraft,
+  BookingDraftAction,
+  PreviewConflicts,
+} from "@/features/calendar/booking-logic"
 import { RoomCapacityMeter } from "../roomcapacitymeter/RoomCapacityMeter.tsx"
 import { UnassignedPanel } from "../unassignedpanel/UnassignedPanel.tsx"
 import type { ExistingOccupant, RoomShape } from "@/features/calendar/types.ts"
@@ -60,23 +64,26 @@ export function StepRooms({
         <div className={styles.headingRow}>
           <Heading level={4}>{t("Rooms")}</Heading>
           {draft.start_date && draft.end_date && (
-            <Tag data-color="info">{draft.start_date} → {draft.end_date}</Tag>
+            <Tag data-color="info">
+              {draft.start_date} → {draft.end_date}
+            </Tag>
           )}
         </div>
         {isFetching && (
-          <Paragraph className={styles.loading}>{t("Checking conflicts…")}</Paragraph>
+          <Paragraph className={styles.loading}>
+            {t("Checking conflicts…")}
+          </Paragraph>
         )}
 
         <ul className={styles.buildingList}>
           {propertyStructures.map(building => {
-            const buildingRooms = propertyRooms.filter(r => r.structure_id === building.id)
+            const buildingRooms = propertyRooms.filter(
+              r => r.structure_id === building.id,
+            )
             if (buildingRooms.length === 0) return null
             return (
               <li key={building.id}>
-                <Label
-                  data-size="sm"
-                  className={styles.buildingLabel}
-                >
+                <Label data-size="sm" className={styles.buildingLabel}>
                   {building.name}
                 </Label>
                 <ul className={styles.roomList}>
@@ -119,7 +126,9 @@ export function StepRooms({
               <UnassignedPanel
                 occupants={unassigned}
                 conflicts={conflicts}
-                onQueue={(uid, q) => { dispatch(markOccupantQueued(uid, q)) }}
+                onQueue={(uid, q) => {
+                  dispatch(markOccupantQueued(uid, q))
+                }}
               />
             </li>
           )}

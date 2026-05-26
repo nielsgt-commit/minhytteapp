@@ -14,7 +14,7 @@ export function toIso(d: Date): string {
 
 export function fromIso(iso: string): Date {
   const parts = iso.split("-").map(Number)
-  return new Date(parts[0]!, parts[1]! - 1, parts[2]!)
+  return new Date(parts[0], parts[1] - 1, parts[2])
 }
 
 export function addDays(d: Date, n: number): Date {
@@ -56,9 +56,9 @@ export function groupConsecutive(isos: string[]): Range[] {
   const sorted = [...new Set(isos)].sort()
   if (sorted.length === 0) return []
   const out: Range[] = []
-  let cur: Range = { start: sorted[0]!, end: sorted[0]!, days: [sorted[0]!] }
+  let cur: Range = { start: sorted[0], end: sorted[0], days: [sorted[0]] }
   for (let i = 1; i < sorted.length; i++) {
-    const iso = sorted[i]!
+    const iso = sorted[i]
     const expected = toIso(addDays(fromIso(cur.end), 1))
     if (iso === expected) {
       cur.end = iso
@@ -89,12 +89,12 @@ type BedCounts = {
  */
 export function bedCapacity(room: BedCounts): number {
   return (
-    room.travel_cot
-    + room.beds_kid
-    + room.beds_sm
-    + room.beds_lg
-    + room.beds_double * 2
-    + room.mattresses
+    room.travel_cot +
+    room.beds_kid +
+    room.beds_sm +
+    room.beds_lg +
+    room.beds_double * 2 +
+    room.mattresses
   )
 }
 
@@ -109,9 +109,7 @@ export function propertyCapacity(
   structures: StructureRow[],
 ): number {
   const habitableBuildingIds = new Set(
-    structures
-      .filter(b => b.category === "habitable")
-      .map(b => b.id),
+    structures.filter(b => b.category === "habitable").map(b => b.id),
   )
   return rooms
     .filter(r => habitableBuildingIds.has(r.structure_id))

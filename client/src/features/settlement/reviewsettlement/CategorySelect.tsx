@@ -19,12 +19,18 @@ export function CategorySelect({
   return (
     <Select
       value={value}
-      onChange={e => { onChange(e.target.value) }}
+      onChange={e => {
+        onChange(e.target.value)
+      }}
     >
       <Select.Option value="">{t("(none)")}</Select.Option>
-      {!known && value !== "" && <Select.Option value={value}>{value}</Select.Option>}
+      {!known && value !== "" && (
+        <Select.Option value={value}>{value}</Select.Option>
+      )}
       {categories.map(c => (
-        <Select.Option key={c.id} value={c.name}>{c.name}</Select.Option>
+        <Select.Option key={c.id} value={c.name}>
+          {c.name}
+        </Select.Option>
       ))}
     </Select>
   )

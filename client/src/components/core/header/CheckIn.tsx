@@ -1,14 +1,10 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 import { useAuthSession } from "@/auth/auth-client"
 
 import { useTranslation } from "react-i18next"
-import { Switch } from '@digdir/designsystemet-react';
+import { Switch } from "@digdir/designsystemet-react"
 
 export default function CheckIn() {
   const trpc = useTRPC()
@@ -24,9 +20,7 @@ export default function CheckIn() {
     ),
   )
 
-
   const { t } = useTranslation("checkin")
-
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: trpc.stay.currentForMe.queryKey() })
@@ -35,10 +29,18 @@ export default function CheckIn() {
   }
 
   const checkIn = useMutation(
-    trpc.stay.checkIn.mutationOptions({ onSuccess: () => { invalidate() } }),
+    trpc.stay.checkIn.mutationOptions({
+      onSuccess: () => {
+        invalidate()
+      },
+    }),
   )
   const checkOut = useMutation(
-    trpc.stay.checkOut.mutationOptions({ onSuccess: () => { invalidate() } }),
+    trpc.stay.checkOut.mutationOptions({
+      onSuccess: () => {
+        invalidate()
+      },
+    }),
   )
 
   if (!enabled) return null
@@ -47,7 +49,6 @@ export default function CheckIn() {
   const pending = checkIn.isPending || checkOut.isPending || isLoading
 
   const handleChange = (next: boolean) => {
-    if (propertyId == null) return
     if (next) checkIn.mutate({ property_id: propertyId })
     else checkOut.mutate({ property_id: propertyId })
   }
@@ -57,7 +58,9 @@ export default function CheckIn() {
       label={checked ? t("At property now") : t("At property?")}
       checked={checked}
       disabled={pending}
-      onChange={e => { handleChange(e.currentTarget.checked) }}
+      onChange={e => {
+        handleChange(e.currentTarget.checked)
+      }}
     />
   )
 }

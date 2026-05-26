@@ -28,7 +28,7 @@ export function MyExpenses() {
     [trpc.expense.pathKey()],
   )
 
-  if (me == null || selectedPropertyId == null) return null
+  if (selectedPropertyId == null) return null
 
   const mine = selectMyExpenses(expenses as ExpenseRow[], me.id)
 
@@ -36,10 +36,14 @@ export function MyExpenses() {
 
   return (
     <Details>
-      <Details.Summary>{t("My expenses ({{count}})", { count: mine.length })}</Details.Summary>
+      <Details.Summary>
+        {t("My expenses ({{count}})", { count: mine.length })}
+      </Details.Summary>
       <Details.Content className={styles.content}>
         {deleteExpense.error && (
-          <p role="alert">{t("Error: {{message}}", { message: deleteExpense.error.message })}</p>
+          <p role="alert">
+            {t("Error: {{message}}", { message: deleteExpense.error.message })}
+          </p>
         )}
         <ul className={styles.list}>
           {mine.map(e => (
@@ -47,7 +51,9 @@ export function MyExpenses() {
               <MyExpenseCard
                 expense={e}
                 propertyId={selectedPropertyId}
-                onSaved={() => { void invalidate() }}
+                onSaved={() => {
+                  void invalidate()
+                }}
                 onDelete={() => {
                   deleteExpense.mutate({ id: e.id })
                 }}

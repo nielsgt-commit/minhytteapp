@@ -10,7 +10,9 @@ export function DangerZone() {
       <section>
         <h3>{t("Danger zone")}</h3>
         <p>
-          {t("Destructive actions below. These are irreversible — proceed with care.")}
+          {t(
+            "Destructive actions below. These are irreversible — proceed with care.",
+          )}
         </p>
         <DeletePropertyFlow />
         <WipeDbFlow />

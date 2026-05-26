@@ -48,6 +48,8 @@ describe("WeatherSymbol", () => {
 
   test("applies the --symbol-size CSS variable from the size prop", () => {
     const { getByRole } = render(<WeatherSymbol code="rain" size={42} />)
-    expect(getByRole("img").getAttribute("style")).toContain("--symbol-size: 42px")
+    expect(getByRole("img").getAttribute("style")).toContain(
+      "--symbol-size: 42px",
+    )
   })
 })

@@ -1,9 +1,4 @@
-import {
-  Field,
-  Label,
-  Select,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Field, Label, Select, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 
@@ -23,14 +18,18 @@ export function MetadataSection(props: {
         label={t("Inspected by")}
         name="inspected_by"
         value={inspectedBy}
-        onChange={e => { setInspectedBy(e.target.value) }}
+        onChange={e => {
+          setInspectedBy(e.target.value)
+        }}
         required
       />
       <Field>
         <Label>{t("Cadence")}</Label>
         <Select
           value={recurrence}
-          onChange={e => { setRecurrence(e.target.value as Recurrence) }}
+          onChange={e => {
+            setRecurrence(e.target.value as Recurrence)
+          }}
         >
           <Select.Option value="yearly">{t("Yearly")}</Select.Option>
           <Select.Option value="5year">{t("Every 5 years")}</Select.Option>

@@ -16,26 +16,38 @@ describe("useToggleState", () => {
   test("open / close / toggle drive the value", () => {
     const { result } = renderHook(() => useToggleState())
 
-    act(() => { result.current.open() })
+    act(() => {
+      result.current.open()
+    })
     expect(result.current.value).toBe(true)
 
-    act(() => { result.current.close() })
+    act(() => {
+      result.current.close()
+    })
     expect(result.current.value).toBe(false)
 
-    act(() => { result.current.toggle() })
+    act(() => {
+      result.current.toggle()
+    })
     expect(result.current.value).toBe(true)
 
-    act(() => { result.current.toggle() })
+    act(() => {
+      result.current.toggle()
+    })
     expect(result.current.value).toBe(false)
   })
 
   test("setValue replaces the value directly", () => {
     const { result } = renderHook(() => useToggleState())
 
-    act(() => { result.current.setValue(true) })
+    act(() => {
+      result.current.setValue(true)
+    })
     expect(result.current.value).toBe(true)
 
-    act(() => { result.current.setValue(false) })
+    act(() => {
+      result.current.setValue(false)
+    })
     expect(result.current.value).toBe(false)
   })
 

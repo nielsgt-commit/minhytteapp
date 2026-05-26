@@ -26,17 +26,13 @@ export function FindingsSection(props: {
   removeAdHoc: (key: string) => void
 }) {
   const { t } = useTranslation("maintenance")
-  const {
-    adHocs,
-    addAdHoc,
-    updateAdHoc,
-    commitAdHoc,
-    editAdHoc,
-    removeAdHoc,
-  } = props
+  const { adHocs, addAdHoc, updateAdHoc, commitAdHoc, editAdHoc, removeAdHoc } =
+    props
   return (
     <div className={styles.section}>
-      <Heading level={5} data-size="2xs">{t("Findings")}</Heading>
+      <Heading level={5} data-size="2xs">
+        {t("Findings")}
+      </Heading>
       {adHocs.map(a =>
         a.committed ? (
           <Card key={a.key} asChild>
@@ -53,7 +49,9 @@ export function FindingsSection(props: {
                   <Button
                     variant="tertiary"
                     data-size="sm"
-                    onClick={() => { editAdHoc(a.key) }}
+                    onClick={() => {
+                      editAdHoc(a.key)
+                    }}
                   >
                     {t("Edit")}
                   </Button>
@@ -61,7 +59,9 @@ export function FindingsSection(props: {
                     variant="tertiary"
                     data-color="danger"
                     data-size="sm"
-                    onClick={() => { removeAdHoc(a.key) }}
+                    onClick={() => {
+                      removeAdHoc(a.key)
+                    }}
                   >
                     {t("Remove")}
                   </Button>
@@ -88,7 +88,9 @@ export function FindingsSection(props: {
                     <Button
                       data-size="sm"
                       disabled={a.description.trim().length === 0}
-                      onClick={() => { commitAdHoc(a.key) }}
+                      onClick={() => {
+                        commitAdHoc(a.key)
+                      }}
                     >
                       {t("Add")}
                     </Button>
@@ -96,7 +98,9 @@ export function FindingsSection(props: {
                       variant="tertiary"
                       data-color="danger"
                       data-size="sm"
-                      onClick={() => { removeAdHoc(a.key) }}
+                      onClick={() => {
+                        removeAdHoc(a.key)
+                      }}
                     >
                       {t("Remove")}
                     </Button>
@@ -114,11 +118,7 @@ export function FindingsSection(props: {
           </Card>
         ),
       )}
-      <Button
-        variant="secondary"
-        data-size="sm"
-        onClick={addAdHoc}
-      >
+      <Button variant="secondary" data-size="sm" onClick={addAdHoc}>
         {t("Add finding")}
       </Button>
     </div>

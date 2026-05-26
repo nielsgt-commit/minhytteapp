@@ -114,6 +114,7 @@ void i18n
     keySeparator: false,
     nsSeparator: false,
     returnNull: false,
+    returnEmptyString: false,
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],
       caches: ["localStorage"],

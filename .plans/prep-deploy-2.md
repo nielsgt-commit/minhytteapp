@@ -20,7 +20,7 @@
 2. **`Dockerfile` is a non-functional stub** (`ubuntu:latest` + `top -b`). Delete it — Render's Node buildpack is what we use.
 3. **CI is minimal.** Needs lint + type-check + build + an integration job that spins up Postgres and runs `connectivity.e2e.test.ts`.
 4. **Drizzle migrations have no production runner.** Use Render's Pre-Deploy Command set to `pnpm db:migrate`. Pre-deploy runs on a separate instance; filesystem changes don't carry over to runtime. Fine for migrations.
-5. **SSL on `pg` Pool**: not needed when using Render's *internal* Postgres URL (private network, same region). Only external connections (CI, local Studio against prod) need it via `?sslmode=require` in the URL.
+5. **SSL on `pg` Pool**: not needed when using Render's _internal_ Postgres URL (private network, same region). Only external connections (CI, local Studio against prod) need it via `?sslmode=require` in the URL.
 6. **Server bind host.** Render requires `0.0.0.0`. `@hono/node-server`'s `serve()` defaults to that, but worth confirming and/or setting `HOST=0.0.0.0` explicitly.
 7. **`pnpm build` currently fails** — pre-existing blockers (i18n typing in `PriorityWeeks.tsx`, Mock typing in new test files, possibly missing `workbox-window`). Must be green before Render can deploy.
 
@@ -88,16 +88,20 @@ One project, **one environment (`production`)**, one Web Service + one Postgres 
 1. **Hono serves the SPA** ✅ done.
 2. **Build + start scripts** ✅ done.
 3. **Fix `pnpm build`** ✅ done (67 → 0 TS errors: i18n `nsSeparator` collision fixed, workbox-window added, Heading `data-size` API, recurrence enum widened, mock test typing, useParking ctx, ES2021 lib bump).
-4. **`render.yaml` Blueprint** ✅ done. Single Web Service + Starter Postgres in Frankfurt, auto-deploy from master, `pnpm db:migrate` as Pre-Deploy, health check at `/health`, env vars wired (`fromDatabase` for DATABASE_URL, `generateValue` for BETTER_AUTH_SECRET, `sync: false` for RESEND_API_KEY).
-5. **Delete `Dockerfile` stub and `.env.staging`** — both unused.
-6. **Env loading**: make `dotenv` a no-op when running on Render.
-7. **Tighten `devRouter.wipe` gating** (`=== "development"`) + rotate the committed dev `BETTER_AUTH_SECRET`.
-8. **Magic-link via Resend** + rate-limit `/api/auth/*`.
-9. **Extend CI workflow** — add lint, type-check, build, and the Postgres integration job.
-10. **Hardening**: `hono/secure-headers`, structured logging, `/ready` endpoint, graceful shutdown.
-11. **Observability** (Sentry or equivalent).
-12. **PWA cache gating** behind `import.meta.env.PROD`.
-13. **Delete dead code**: `server/src/backend.ts` + `server/src/db.ts` if confirmed unused.
+4. **`render.yaml` Blueprint** ✅ done. Single Web Service + Starter Postgres in Frankfurt, auto-deploy from master, `pnpm db:migrate` as Pre-Deploy, health check at `/health`. Shared non-secret env lives in the `minhytteapp` env var group (referenced via `fromGroup`); the service adds `DATABASE_URL` (`fromDatabase`), `BETTER_AUTH_SECRET` (`generateValue: true`), and `RESEND_API_KEY` (`sync: false`, set manually in the dashboard — can't live in a group).
+5. **Delete `Dockerfile` stub and `.env.staging`** ✅ done.
+6. **Env loading** ✅ done. `server/src/env.ts` and `drizzle.config.ts` now skip `dotenv.config()` when `process.env.RENDER` is set, so missing vars on Render fail loudly instead of being masked by the committed `.env.production` template's empty values.
+7. **`devRouter.wipe` gating + rotate dev secret** ✅ done. `isDev` in `server/src/trpc/routers/dev.ts` is now `=== "development"`. Rotated `BETTER_AUTH_SECRET` in `.env.development` and added a comment marking it as a local-only placeholder.
+8. **Magic-link via Resend** + rate-limit `/api/auth/*` ✅ done. `sendMagicLink` calls Resend with `from = MAGIC_LINK_FROM`; throws if either env var is missing. better-auth `rateLimit` enabled with `/sign-in/magic-link` capped at 5 requests/minute. `RESEND_API_KEY` + `MAGIC_LINK_FROM` declared in `.env.example` and `.env.production`.
+9. **Extend CI workflow** ✅ done (partial). `.github/workflows/test.yml` now has two jobs: `checks` (format:check, type-check, test, build) and `e2e` (Postgres service container → db:migrate → start API → wait for /health → `pnpm test:e2e`). Also ran `pnpm format` across the repo (rewrote ~984 files cosmetically), fixed the broken `paths-ignore` pattern (was `../../.plans/**`), and added a `.prettierignore` covering `client/src/routeTree.gen.ts` + lockfile + build output. **Lint deferred** — 462 accumulated ESLint errors (mostly `@typescript-eslint/no-unnecessary-condition`); TODO comment in the workflow marks where to re-enable. See follow-up #14 below.
+10. **Hardening** ✅ done (partial). `hono/secure-headers` mounted first (defaults: X-Frame-Options, Referrer-Policy, X-Content-Type-Options, HSTS, COOP, CORP, etc. — CSP intentionally not configured, deferred). Added `/ready` endpoint that runs `SELECT 1` via the `pg` Pool and returns 503 on failure; `render.yaml` now points `healthCheckPath: /ready`. Graceful shutdown wired: SIGTERM and SIGINT both stop accepting new connections, drain the pool, and exit, with a 10s hard-exit safety net. **Structured logging deferred** — see follow-up #15 below.
+11. **Observability** (Sentry or equivalent) — deferred. Revisit once real traffic exists and we feel pain.
+12. **PWA cache gating** ✅ done. `registerSW({ immediate: true })` in `client/src/main.tsx` is now wrapped in `if (import.meta.env.PROD)`, so dev never installs a service worker.
+13. **Delete dead code** ✅ done. `server/src/backend.ts` (in-memory CRUD wrapper) and `server/src/db.ts` (hardcoded mock data) confirmed unimported and deleted. The real DB lives at `server/src/db/client.ts`.
+14. **Lint debt cleanup** ✅ done. 462 → 0 errors via: (a) ignoring `.claude/worktrees/` in `eslint.config.js` (109 worktree double-counts), (b) `pnpm lint --fix` (106 auto-fixable), (c) a `tests-relaxed` override block in `eslint.config.js` that disables noisy strict rules for `*.test.{ts,tsx}` (143 stub-callback / loose-mock false positives), (d) mechanical fixes across ~30 source files (drizzle destructure `[x]` → `.at(0)`, aksel-icon `asIcon` cast helper, removing redundant `me?.id` after `useSuspenseQuery`, type-predicate on `isDraftSubmittable`, explicit `TRPCError` throws in `inspection.ts` where non-null assertions previously hid bugs). Also fixed a real `react-hooks/rules-of-hooks` bug in `MaintenanceTodos.tsx` (useState was called after an early return). `pnpm lint` re-enabled in the CI workflow. Three `react-hooks/exhaustive-deps` _warnings_ remain (don't fail CI). One inline `eslint-disable-next-line` in `MaintenanceInstructionsPTEditor.tsx` for a `no-deprecated` whose `@deprecated` JSDoc was on union members we don't use.
+15. **Structured logging** (deferred). Add `pino` (or small `console.*` JSON wrapper) + `hono/logger`. Skipped for now — `console.error` is good enough for a small user base; revisit if/when we want to grep Render's log drain at scale.
+16. **CSP** (deferred). Recommended approach: ship report-only mode first with `script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:`. Refactoring app-code inline styles to CSS modules was considered and decided against — the win is bounded by designsystemet/dynamic-width cases that need `'unsafe-inline'` anyway. Real protection comes from strict `script-src 'self'`, which Vite supports out of the box.
+17. **Trust proxy / x-forwarded-for** ✅ done. better-auth already defaults to reading `x-forwarded-for` (verified by reading `node_modules/.../utils/get-request-ip.mjs`). Added explicit `advanced.ipAddress.ipAddressHeaders: ["x-forwarded-for"]` in `server/src/auth/auth.ts` to document the choice and pin the behavior against any future default change. This feeds `sessionsTable.ip_address` and the built-in rate limiter; both now see the real client IP behind Render's LB instead of the internal LB address.
 
 ## Open questions to confirm in Render UI
 
@@ -112,3 +116,82 @@ One project, **one environment (`production`)**, one Web Service + one Postgres 
 - Have `RESEND_API_KEY` ready to paste into the Render dashboard after first apply (Blueprint marks it `sync: false`).
 - Plan to add DNS records at the domain registrar once Render gives you the targets (after Blueprint applies).
 - The auth code still `throw`s in production for magic links — order item #8 (Resend wiring) must land before any real user can log in.
+
+## First deploy checklist
+
+Step by step. Each step assumes the previous one succeeded.
+
+### 1. Apply the Blueprint
+
+- Render Dashboard → Blueprints → New Blueprint Instance → point at the GitHub repo.
+- Render reads `render.yaml`, creates the `minhytteapp` Web Service, the `minhytteapp-db` Postgres database, and the `minhytteapp` env var group.
+- **`BETTER_AUTH_SECRET` is auto-generated** by Render (`generateValue: true`) and persisted on the service.
+- **`DATABASE_URL` is auto-wired** to the Postgres internal connection string (`fromDatabase`).
+- The Web Service will fail its first build/deploy because `RESEND_API_KEY` is unset (`sync: false`, declared but not supplied). That's expected — keep going.
+
+### 2. Set `RESEND_API_KEY` in the dashboard
+
+- Render Dashboard → `minhytteapp` Web Service → Environment → add `RESEND_API_KEY` with the real value.
+- The change triggers an auto-deploy.
+
+### 3. Validate migrations against the empty Postgres (optional but recommended)
+
+The Blueprint's Pre-Deploy Command will run `pnpm db:migrate` on every deploy. Worth running it once manually against the external URL first so you find out about any breakage with the DB still empty:
+
+- Render Dashboard → `minhytteapp-db` → Connect → copy the **External Database URL** (with `?sslmode=require`).
+- Locally:
+  ```pwsh
+  $env:DATABASE_URL = "<external-url>"
+  $env:NODE_ENV = "production"
+  pnpm db:migrate
+  ```
+- Expect: all 55 migrations apply in order, `__drizzle_migrations` table gets populated.
+- If anything fails: fix forward (the DB is empty — no risk in tearing it down and starting again from the dashboard).
+
+### 4. Confirm the deploy
+
+- Render Dashboard → `minhytteapp` Web Service → Logs.
+- The Pre-Deploy Command should run `pnpm db:migrate` (idempotent — if you did step 3, it's a no-op).
+- After Pre-Deploy succeeds the Web Service boots; look for `API listening on http://localhost:10000` (Render maps the public port for you).
+- Render's health check hits `/ready` every interval. First success → service goes Live.
+
+### 5. Add the custom domain
+
+- Render Dashboard → `minhytteapp` Web Service → Settings → Custom Domains → `minhytte.app` is already declared in the Blueprint.
+- Render shows you the DNS records to add at your registrar (typically an `ANAME`/`ALIAS` or `A` record).
+- Wait for TLS provisioning (a minute or two).
+
+### 6. First end-to-end test
+
+- Visit `https://minhytte.app`.
+- Sign in via magic link → email lands from `auth@epost.minhytte.app` via Resend → click link → land back signed in.
+- Check `sessionsTable.ip_address` in Drizzle Studio (or via `query_render_postgres` MCP tool); should be your real client IP, not `10.x.x.x` Render LB internal.
+- Check `/health` and `/ready` from a browser: both return 200, `/ready` confirms DB is reachable.
+
+### 7. (Optional) Seed or import data
+
+- **Empty start**: do nothing. Data accumulates as users sign in.
+- **Run a seed script**: against the external URL.
+  ```pwsh
+  $env:DATABASE_URL = "<external-url>"
+  pnpm db:seed       # or pnpm db:seed:minimal
+  ```
+- **Import from local Docker Postgres**:
+  ```pwsh
+  # Dump local data only (schema is already on Render)
+  pg_dump -h localhost -U postgres -d postgres --data-only --exclude-table=__drizzle_migrations > dump.sql
+  # Restore
+  psql "<external-url>" -f dump.sql
+  ```
+
+### 8. Validate graceful shutdown (passive)
+
+- Push any trivial commit to `master` to trigger a redeploy.
+- In the previous instance's logs, look for `[shutdown] received SIGTERM, draining` → `pool drained, exiting`.
+- Confirms the SIGTERM handler in `server/src/index.ts` is wired up correctly.
+
+### Rollback if it goes wrong
+
+- Render keeps previous successful deploys for one-click rollback (Dashboard → Deploys → Rollback).
+- If a bad migration shipped: write a new migration that reverses or fixes the damage, commit, push. Migrations are forward-only — there are no auto-generated down migrations.
+- If the DB itself is corrupted and Postgres point-in-time recovery is enabled (recommended at setup), use it from the dashboard.

@@ -56,7 +56,9 @@ export function ContactListView({
                   canEdit={canEdit}
                   pending={pending}
                   editLabel={t("Edit contact {{name}}", { name: c.name })}
-                  onStartEdit={() => { onEdit(c.id) }}
+                  onStartEdit={() => {
+                    onEdit(c.id)
+                  }}
                   view={
                     <button
                       type="button"
@@ -69,13 +71,21 @@ export function ContactListView({
                     >
                       <span className={styles.rowName}>{c.name}</span>
                       {c.phone && (
-                        <Tag data-color="info" data-size="sm" className={styles.tag}>
+                        <Tag
+                          data-color="info"
+                          data-size="sm"
+                          className={styles.tag}
+                        >
                           <PhoneIcon aria-hidden />
                           {t("Phone")}
                         </Tag>
                       )}
                       {c.email && (
-                        <Tag data-color="info" data-size="sm" className={styles.tag}>
+                        <Tag
+                          data-color="info"
+                          data-size="sm"
+                          className={styles.tag}
+                        >
                           <EnvelopeClosedIcon aria-hidden />
                           {t("Email")}
                         </Tag>
@@ -89,8 +99,12 @@ export function ContactListView({
                       data-color="danger"
                       data-size="sm"
                       disabled={pending}
-                      aria-label={t("Remove contact {{name}}", { name: c.name })}
-                      onClick={() => { onDelete(c) }}
+                      aria-label={t("Remove contact {{name}}", {
+                        name: c.name,
+                      })}
+                      onClick={() => {
+                        onDelete(c)
+                      }}
                     >
                       {t("Delete")}
                     </Button>

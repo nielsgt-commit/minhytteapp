@@ -37,7 +37,7 @@ export const bookingTable = pgTable(
     cancelled_at: timestamp("cancelled_at"),
     cancelled_by_id: integer("cancelled_by_id").references(() => usersTable.id),
   },
-  (t) => [
+  t => [
     check("booking_date_order", sql`${t.start_date} <= ${t.end_date}`),
     check(
       "booking_cancelled_has_timestamp",
@@ -62,7 +62,7 @@ export const bookingRoomsTable = pgTable(
     mattresses: integer("mattresses").notNull().default(0),
     travel_cot: integer("travel_cot").notNull().default(0),
   },
-  (t) => [primaryKey({ columns: [t.booking_id, t.room_id] })],
+  t => [primaryKey({ columns: [t.booking_id, t.room_id] })],
 )
 
 export const bookingOccupantsTable = pgTable(
@@ -77,5 +77,5 @@ export const bookingOccupantsTable = pgTable(
     room_id: integer("room_id").references(() => roomTable.id),
     queued: boolean("queued").notNull().default(false),
   },
-  (t) => [primaryKey({ columns: [t.booking_id, t.user_id] })],
+  t => [primaryKey({ columns: [t.booking_id, t.user_id] })],
 )

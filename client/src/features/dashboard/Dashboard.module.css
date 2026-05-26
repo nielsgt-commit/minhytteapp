@@ -4,7 +4,9 @@
   gap: var(--ds-size-4);
 }
 
-.title { margin: 0; }
+.title {
+  margin: 0;
+}
 
 .mobileTabs {
   --dsc-tabs-content-padding: var(--ds-size-4) var(--ds-size-0) var(--ds-size-0);

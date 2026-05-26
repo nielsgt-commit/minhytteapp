@@ -11,8 +11,6 @@ import {
 } from "drizzle-orm/pg-core"
 import { userGroupsTable, usersTable } from "./users.schema.ts"
 
-
-
 export const propertyTable = pgTable(
   "properties",
   {
@@ -30,7 +28,7 @@ export const propertyTable = pgTable(
     latitude: numeric("latitude", { precision: 7, scale: 4 }),
     longitude: numeric("longitude", { precision: 7, scale: 4 }),
   },
-  (t) => [check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`)],
+  t => [check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`)],
 )
 
 export const parkingClaimsTable = pgTable(
@@ -45,7 +43,7 @@ export const parkingClaimsTable = pgTable(
       .references(() => usersTable.id),
     claimed_at: timestamp("claimed_at").notNull().defaultNow(),
   },
-  (t) => [
+  t => [
     primaryKey({ columns: [t.property_id, t.slot_index] }),
     check("parking_slot_nonneg", sql`${t.slot_index} >= 0`),
   ],
@@ -67,7 +65,7 @@ export const structuresTable = pgTable(
       .default("habitable"),
     built_year: integer("built_year"),
   },
-  (t) => [
+  t => [
     check(
       "structures_built_year_range",
       sql`${t.built_year} IS NULL OR (${t.built_year} BETWEEN 1500 AND 2100)`,
@@ -98,10 +96,15 @@ export const propertyOwnersTable = pgTable(
       .notNull()
       .references(() => propertyTable.id),
     user_id: integer("user_id").references(() => usersTable.id),
-    user_group_id: integer("user_group_id").references(() => userGroupsTable.id),
-    ownership_pct: numeric("ownership_pct", { precision: 5, scale: 2 }).notNull(),
+    user_group_id: integer("user_group_id").references(
+      () => userGroupsTable.id,
+    ),
+    ownership_pct: numeric("ownership_pct", {
+      precision: 5,
+      scale: 2,
+    }).notNull(),
   },
-  (t) => [
+  t => [
     check(
       "property_owners_exactly_one_ref",
       sql`(${t.user_id} IS NULL) <> (${t.user_group_id} IS NULL)`,
@@ -124,7 +127,7 @@ export const infrastructureTable = pgTable(
     property_id: integer("property_id").references(() => propertyTable.id),
     since_year: integer("since_year"),
   },
-  (t) => [
+  t => [
     check(
       "infrastructure_since_year_range",
       sql`${t.since_year} IS NULL OR (${t.since_year} BETWEEN 1500 AND 2100)`,
@@ -147,12 +150,9 @@ export const propertyPriorityWeeksTable = pgTable(
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [
+  t => [
     check("priority_week_peak_only", sql`${t.iso_week} IN (28, 29, 30)`),
-    uniqueIndex("priority_week_uq_owner_year").on(
-      t.property_owner_id,
-      t.year,
-    ),
+    uniqueIndex("priority_week_uq_owner_year").on(t.property_owner_id, t.year),
   ],
 )
 
@@ -168,4 +168,3 @@ export const propertyContactsTable = pgTable("property_contacts", {
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 })
-

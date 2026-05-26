@@ -1,5 +1,6 @@
 const COMPACT_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
-const DEFAULT_USER_AGENT = "minhytteapp/1.0 github.com/nielsgt-commit/minhytteapp"
+const DEFAULT_USER_AGENT =
+  "minhytteapp/1.0 github.com/nielsgt-commit/minhytteapp"
 
 export type YrTimeseries = {
   time: string

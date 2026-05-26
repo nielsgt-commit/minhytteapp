@@ -17,7 +17,9 @@ export function useCategoryAdminMutations() {
 
   const create = useMutationWithInvalidation(
     trpc.expenseCategory.create.mutationOptions({
-      onSuccess: () => { setNewName("") },
+      onSuccess: () => {
+        setNewName("")
+      },
     }),
     categoryKey,
   )

@@ -24,7 +24,9 @@ export function useExpenseDrafts() {
     setDrafts(prev => prev.filter(d => d.id !== id))
   }
 
-  const reset = () => { setDrafts([]) }
+  const reset = () => {
+    setDrafts([])
+  }
 
   const total = drafts.reduce((sum, d) => sum + d.amount, 0)
 

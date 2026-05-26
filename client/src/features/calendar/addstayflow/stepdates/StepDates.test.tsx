@@ -24,7 +24,9 @@ function baseProps() {
 describe("StepDates availability", () => {
   test("shows prompt when no dates selected yet", () => {
     render(<StepDates {...baseProps()} />)
-    expect(screen.getByText(/pick dates to see availability/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/pick dates to see availability/i),
+    ).toBeInTheDocument()
   })
 
   test("renders 'High availability' tag when most beds are free", () => {
@@ -77,13 +79,9 @@ describe("StepDates overlapping data", () => {
   })
 
   test("shows 'no other bookings' message when range is empty and no overlap", () => {
-    render(
-      <StepDates
-        {...baseProps()}
-        occupiedBeds={0}
-        hasStartDate
-      />,
-    )
-    expect(screen.getByText(/no other bookings in this period/i)).toBeInTheDocument()
+    render(<StepDates {...baseProps()} occupiedBeds={0} hasStartDate />)
+    expect(
+      screen.getByText(/no other bookings in this period/i),
+    ).toBeInTheDocument()
   })
 })

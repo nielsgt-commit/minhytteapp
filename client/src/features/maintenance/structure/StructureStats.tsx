@@ -5,10 +5,8 @@ import { Chip, Tabs } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./StructureStats.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
-import {
-  MaintenanceCard,
-  MaintenanceScope,
-} from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
+import { MaintenanceCard } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { Equipment } from "@/features/maintenance/equipment/Equipment.tsx"
 
 type TabValue = "structures" | "infrastructure" | "equipment"
@@ -31,7 +29,9 @@ export function StructureStats() {
 
   const [activeTab, setActiveTab] = useState<TabValue>("structures")
   const [structureFilter, setStructureFilter] = useState<Set<number>>(new Set())
-  const [infrastructureFilter, setInfrastructureFilter] = useState<Set<number>>(new Set())
+  const [infrastructureFilter, setInfrastructureFilter] = useState<Set<number>>(
+    new Set(),
+  )
 
   const toggle = (set: Set<number>, id: number): Set<number> => {
     const next = new Set(set)
@@ -45,7 +45,9 @@ export function StructureStats() {
       ? structures
       : structures.filter(b => structureFilter.has(b.id))
   const visibleInfrastructure =
-    infrastructureFilter.size === 0 ? infrastructure : infrastructure.filter(p => infrastructureFilter.has(p.id))
+    infrastructureFilter.size === 0
+      ? infrastructure
+      : infrastructure.filter(p => infrastructureFilter.has(p.id))
 
   return (
     <Tabs

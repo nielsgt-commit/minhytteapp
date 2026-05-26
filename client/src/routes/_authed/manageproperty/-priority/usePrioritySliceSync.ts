@@ -4,10 +4,7 @@ import {
   type PriorityWeekHolder,
   setPriorityYearAssignments,
 } from "./prioritySlice"
-import type {
-  EligibleOwner,
-  PriorityAssignment,
-} from "./priorityUtils"
+import type { EligibleOwner, PriorityAssignment } from "./priorityUtils"
 
 type PriorityListData = {
   eligibleOwners: readonly EligibleOwner[]

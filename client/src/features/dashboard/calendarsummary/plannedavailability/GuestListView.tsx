@@ -12,7 +12,9 @@ export default function GuestListView({ names }: Props) {
     <div className={styles.guestList}>
       {names.length > 0 ? (
         names.map(n => (
-          <Tag key={n} data-color="info">{n}</Tag>
+          <Tag key={n} data-color="info">
+            {n}
+          </Tag>
         ))
       ) : (
         <Paragraph>{t("No guests")}</Paragraph>

@@ -32,7 +32,7 @@ describe("renderWithProviders", () => {
 
   test("seed callback can prime the React Query cache", () => {
     const { getByTestId } = renderWithProviders(<CacheProbe />, {
-      seed: (qc) => {
+      seed: qc => {
         qc.setQueryData(["probe"], "from-cache")
       },
     })
@@ -41,12 +41,12 @@ describe("renderWithProviders", () => {
 
   test("each render gets an isolated QueryClient", () => {
     const first = renderWithProviders(<CacheProbe />, {
-      seed: (qc) => {
+      seed: qc => {
         qc.setQueryData(["probe"], "a")
       },
     })
     const second = renderWithProviders(<CacheProbe />, {
-      seed: (qc) => {
+      seed: qc => {
         qc.setQueryData(["probe"], "b")
       },
     })

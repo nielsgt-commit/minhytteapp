@@ -13,8 +13,9 @@ describe("HomeLayout", () => {
         <p>child</p>
       </HomeLayout>,
     )
-    expect(screen.getByRole("heading", { name: "Home", level: 1 }))
-      .toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Home", level: 1 }),
+    ).toBeInTheDocument()
   })
 
   test("renders its children inside the content slot", () => {

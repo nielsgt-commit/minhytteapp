@@ -119,10 +119,15 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
   }
 
   const handleDelete = (item: Equipment) => {
-    if (!window.confirm(t("Delete equipment \"{{name}}\"?", { name: item.name }))) return
+    if (!window.confirm(t('Delete equipment "{{name}}"?', { name: item.name })))
+      return
     deleteEquipment.mutate(
       { id: item.id },
-      { onSuccess: () => { setEditingId(null) } },
+      {
+        onSuccess: () => {
+          setEditingId(null)
+        },
+      },
     )
   }
 
@@ -186,7 +191,9 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
             type="button"
             variant="tertiary"
             disabled={pending}
-            onClick={() => { setEditingId(null) }}
+            onClick={() => {
+              setEditingId(null)
+            }}
           >
             {t("Cancel")}
           </Button>
@@ -199,7 +206,11 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
     <section>
       <h3>{t("Equipment at {{name}}", { name: propertyName })}</h3>
 
-      {lastError && <p role="alert">{t("Error: {{message}}", { message: lastError.message })}</p>}
+      {lastError && (
+        <p role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </p>
+      )}
 
       <ul className={styles.list}>
         {equipment.map(item => (
@@ -211,7 +222,9 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                   canEdit={canEdit}
                   pending={pending}
                   editLabel={t("Edit equipment {{name}}", { name: item.name })}
-                  onStartEdit={() => { setEditingId(item.id) }}
+                  onStartEdit={() => {
+                    setEditingId(item.id)
+                  }}
                   view={
                     <>
                       <span className={styles.rowName}>{item.name}</span>
@@ -229,8 +242,12 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                       data-color="danger"
                       data-size="sm"
                       disabled={pending}
-                      aria-label={t("Delete equipment \"{{name}}\"?", { name: item.name })}
-                      onClick={() => { handleDelete(item) }}
+                      aria-label={t('Delete equipment "{{name}}"?', {
+                        name: item.name,
+                      })}
+                      onClick={() => {
+                        handleDelete(item)
+                      }}
                     >
                       {t("Delete")}
                     </Button>
@@ -297,7 +314,9 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                             type="button"
                             variant="tertiary"
                             disabled={createEquipment.isPending}
-                            onClick={() => { adding.close() }}
+                            onClick={() => {
+                              adding.close()
+                            }}
                           >
                             {t("Cancel")}
                           </Button>

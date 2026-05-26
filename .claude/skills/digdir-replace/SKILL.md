@@ -17,11 +17,13 @@ description: Use this skill when replacing native HTML elements (select, input,
 
 1. **Verify CSS is loaded.** Grep the app entry (typically
    `client/src/main.tsx`) for `@digdir/designsystemet-css`. If missing, add
-   *both* lines once at the entry, before app code:
+   _both_ lines once at the entry, before app code:
+
    ```ts
    import "@digdir/designsystemet-css/theme"
    import "@digdir/designsystemet-css"
    ```
+
    Without these the components render as bare native inputs and look
    identical to what they're replacing — the user will (correctly) think the
    swap didn't take effect.
@@ -52,12 +54,12 @@ description: Use this skill when replacing native HTML elements (select, input,
 
 ## Per-component cheatsheet (extend as you learn)
 
-| Native | digdir | Notes |
-|---|---|---|
-| `<select>` + `<option>` | `Select` + `Select.Option` | `value`/`onChange` similar to native; use sibling `Label` with `htmlFor`/`id`. |
-| `<input type="checkbox" role="switch">` + `<label>` | `Switch` | Has a `label` prop — don't add a separate `Label`. `onChange` gives a `ChangeEvent`; read `e.target.checked`. |
-| `<label>` | `Label` | Pair with a component `id` via `htmlFor`. |
-| Custom dropdown trigger | `Dropdown.Trigger` (renders a `Button` itself) | Pass Button props (`variant`, `data-color`, `aria-*`) directly on `Dropdown.Trigger` — do **not** nest a `<Button>` inside it. |
+| Native                                              | digdir                                         | Notes                                                                                                                          |
+| --------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `<select>` + `<option>`                             | `Select` + `Select.Option`                     | `value`/`onChange` similar to native; use sibling `Label` with `htmlFor`/`id`.                                                 |
+| `<input type="checkbox" role="switch">` + `<label>` | `Switch`                                       | Has a `label` prop — don't add a separate `Label`. `onChange` gives a `ChangeEvent`; read `e.target.checked`.                  |
+| `<label>`                                           | `Label`                                        | Pair with a component `id` via `htmlFor`.                                                                                      |
+| Custom dropdown trigger                             | `Dropdown.Trigger` (renders a `Button` itself) | Pass Button props (`variant`, `data-color`, `aria-*`) directly on `Dropdown.Trigger` — do **not** nest a `<Button>` inside it. |
 
 ## Anti-patterns (seen in this codebase)
 

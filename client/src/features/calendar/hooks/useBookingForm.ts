@@ -27,12 +27,19 @@ export type BookingFormMode =
   | { kind: "create" }
   | { kind: "edit"; bookingId: number; initialRecord: BookingDraftRecord }
 
-function isDraftSubmittable(d: BookingDraft): boolean {
+type SubmittableDraft = BookingDraft & {
+  property_id: NonNullable<BookingDraft["property_id"]>
+  booker_id: NonNullable<BookingDraft["booker_id"]>
+  start_date: NonNullable<BookingDraft["start_date"]>
+  end_date: NonNullable<BookingDraft["end_date"]>
+}
+
+function isDraftSubmittable(d: BookingDraft): d is SubmittableDraft {
   return (
-    d.property_id != null
-    && d.booker_id != null
-    && d.start_date != null
-    && d.end_date != null
+    d.property_id != null &&
+    d.booker_id != null &&
+    d.start_date != null &&
+    d.end_date != null
   )
 }
 
@@ -63,24 +70,26 @@ export function useBookingForm(
   const qc = useQueryClient()
   const [draft, dispatch] = useReducer(
     bookingDraftReducer,
-    mode.kind === "edit" ? recordToDraft(mode.initialRecord) : initialBookingDraft,
+    mode.kind === "edit"
+      ? recordToDraft(mode.initialRecord)
+      : initialBookingDraft,
   )
 
   if (
-    mode.kind === "create"
-    && selectedUserId != null
-    && draft.booker_id !== selectedUserId
+    mode.kind === "create" &&
+    selectedUserId != null &&
+    draft.booker_id !== selectedUserId
   ) {
     dispatch(setBooker(selectedUserId, propertyId))
   }
 
-  const excludeBookingId =
-    mode.kind === "edit" ? mode.bookingId : undefined
+  const excludeBookingId = mode.kind === "edit" ? mode.bookingId : undefined
 
-  const { data: conflicts, isFetching, hasWarnings } = usePreviewConflicts(
-    draft,
-    excludeBookingId,
-  )
+  const {
+    data: conflicts,
+    isFetching,
+    hasWarnings,
+  } = usePreviewConflicts(draft, excludeBookingId)
 
   const createMutation = useMutation(trpc.booking.create.mutationOptions())
   const updateMutation = useMutation(trpc.booking.update.mutationOptions())
@@ -89,10 +98,10 @@ export function useBookingForm(
     if (!isDraftSubmittable(d)) return INITIAL_SUBMIT_STATE
     try {
       const payload = {
-        property_id: d.property_id!,
-        booker_id: d.booker_id!,
-        start_date: d.start_date!,
-        end_date: d.end_date!,
+        property_id: d.property_id,
+        booker_id: d.booker_id,
+        start_date: d.start_date,
+        end_date: d.end_date,
         status: d.status,
         notes: d.notes.trim() !== "" ? d.notes : null,
         occupants: d.occupants.map(o => ({
@@ -118,27 +127,27 @@ export function useBookingForm(
     }
   }
 
-  const [submitState, submit, isPending] = useActionState<SubmitState, SubmitAction>(
-    async (_prev, action) => {
-      if (action.kind === "cancel") return INITIAL_SUBMIT_STATE
-      if (action.kind === "cancel-stay") {
-        if (mode.kind !== "edit") return INITIAL_SUBMIT_STATE
-        return runMutation({ ...draft, status: "cancelled" })
-      }
-      if (action.kind === "submit") {
-        if (hasWarnings) return { error: null, confirming: true }
-        return runMutation(draft)
-      }
-      return runMutation(action.draft)
-    },
-    INITIAL_SUBMIT_STATE,
-  )
+  const [submitState, submit, isPending] = useActionState<
+    SubmitState,
+    SubmitAction
+  >(async (_prev, action) => {
+    if (action.kind === "cancel") return INITIAL_SUBMIT_STATE
+    if (action.kind === "cancel-stay") {
+      if (mode.kind !== "edit") return INITIAL_SUBMIT_STATE
+      return runMutation({ ...draft, status: "cancelled" })
+    }
+    if (action.kind === "submit") {
+      if (hasWarnings) return { error: null, confirming: true }
+      return runMutation(draft)
+    }
+    return runMutation(action.draft)
+  }, INITIAL_SUBMIT_STATE)
 
   const canSubmit =
-    selectedUserId != null
-    && draft.start_date != null
-    && draft.end_date != null
-    && !isPending
+    selectedUserId != null &&
+    draft.start_date != null &&
+    draft.end_date != null &&
+    !isPending
 
   return {
     draft,

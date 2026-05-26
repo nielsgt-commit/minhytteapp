@@ -53,10 +53,14 @@ export function ExpensesTestForm() {
         categories={categories}
         pending={createMutation.isPending}
         onSubmit={submitDrafts}
-        onCancel={() => { createMutation.reset() }}
+        onCancel={() => {
+          createMutation.reset()
+        }}
       />
       {createMutation.error && (
-        <p role="alert">{t("Error: {{message}}", { message: createMutation.error.message })}</p>
+        <p role="alert">
+          {t("Error: {{message}}", { message: createMutation.error.message })}
+        </p>
       )}
     </section>
   )

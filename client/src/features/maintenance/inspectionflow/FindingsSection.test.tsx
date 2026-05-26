@@ -75,8 +75,8 @@ describe("FindingsSection", () => {
       makeAdHoc({ key: "b", description: "y", committed: true }),
     ])
     const removeButtons = screen.getAllByRole("button", { name: "Remove" })
-    await user.click(removeButtons[0]!)
-    await user.click(removeButtons[1]!)
+    await user.click(removeButtons[0])
+    await user.click(removeButtons[1])
     expect(removeMockCalls(removeAdHoc)).toEqual(["a", "b"])
   })
 })

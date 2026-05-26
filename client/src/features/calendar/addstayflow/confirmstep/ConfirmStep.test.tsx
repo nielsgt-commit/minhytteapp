@@ -46,9 +46,7 @@ describe("ConfirmStep", () => {
         roomOverCapacityDays={new Map()}
       />,
     )
-    expect(
-      screen.getByText(/property over capacity by 1/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/property over capacity by 1/i)).toBeInTheDocument()
   })
 
   test("Cancel triggers onCancel", async () => {
@@ -88,7 +86,9 @@ describe("ConfirmStep", () => {
         roomOverCapacityDays={new Map()}
       />,
     )
-    await userEvent.click(screen.getByRole("button", { name: /request anyway/i }))
+    await userEvent.click(
+      screen.getByRole("button", { name: /request anyway/i }),
+    )
     expect(onConfirm).toHaveBeenCalledTimes(1)
     const submitted: BookingDraft = onConfirm.mock.calls[0][0]
     // Last unassigned wins → user 3 queued, user 2 unchanged
@@ -108,7 +108,9 @@ describe("ConfirmStep", () => {
         roomOverCapacityDays={new Map()}
       />,
     )
-    expect(screen.getByRole("button", { name: /request anyway/i })).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: /request anyway/i }),
+    ).toBeDisabled()
     expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled()
   })
 })

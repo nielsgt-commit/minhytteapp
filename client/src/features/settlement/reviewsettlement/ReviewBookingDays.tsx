@@ -71,12 +71,10 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
     }),
   )
 
-  const adjustmentsByBooking = new Map(
-    adjustments.map(a => [a.booking_id, a]),
-  )
+  const adjustmentsByBooking = new Map(adjustments.map(a => [a.booking_id, a]))
 
   const allowedBookerIds = new Set<number>(
-    me?.is_head
+    me.is_head
       ? groups
           .filter(g => g.members.some(m => m.user_id === me.id))
           .flatMap(g => g.members.map(m => m.user_id))
@@ -104,14 +102,18 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">{t("Review bookings")}</Heading>
+        <Heading level={4} data-size="sm">
+          {t("Review bookings")}
+        </Heading>
         <Switch
           label={t("Accept new bookings")}
           position="end"
           data-size="sm"
           checked={stillAccepting}
           disabled={advancePhase.isPending || next == null}
-          onChange={e => { setStillAccepting(e.target.checked) }}
+          onChange={e => {
+            setStillAccepting(e.target.checked)
+          }}
         />
       </div>
       {!stillAccepting && (
@@ -144,7 +146,9 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
       )}
       <div className={styles.footer}>
         <Paragraph data-size="sm">
-          <strong>{t("Total booking days: {{count}}", { count: total })}</strong>
+          <strong>
+            {t("Total booking days: {{count}}", { count: total })}
+          </strong>
         </Paragraph>
         {phase === "collecting_bookings" && (
           <div className={styles.footerActions}>
@@ -183,10 +187,14 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
           </div>
         )}
         {advancePhase.error && (
-          <p role="alert">{t("Error: {{message}}", { message: advancePhase.error.message })}</p>
+          <p role="alert">
+            {t("Error: {{message}}", { message: advancePhase.error.message })}
+          </p>
         )}
         {regressPhase.error && (
-          <p role="alert">{t("Error: {{message}}", { message: regressPhase.error.message })}</p>
+          <p role="alert">
+            {t("Error: {{message}}", { message: regressPhase.error.message })}
+          </p>
         )}
       </div>
     </>

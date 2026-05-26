@@ -1,27 +1,28 @@
-name: test
+name: ci
 
 on:
   push:
     branches: [master]
     paths-ignore:
-      - '**/*.md'
-      - '../../.plans/**'
+      - "**/*.md"
+      - ".plans/**"
   pull_request:
     paths-ignore:
-      - '**/*.md'
-      - '../../.plans/**'
+      - "**/*.md"
+      - ".plans/**"
 
 permissions:
   contents: read
 
 concurrency:
-  group: test-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  checks:
+    name: lint · format · type-check · test · build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -34,4 +35,77 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm lint
+
+      - run: pnpm format:check
+
+      - run: pnpm type-check
+
       - run: pnpm test
+
+      - run: pnpm build
+
+  e2e:
+    name: connectivity (postgres + server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: mypassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: development
+      DATABASE_URL: postgres://postgres:mypassword@localhost:5432/postgres
+      # Placeholder — server requires it to boot; not actually used by the
+      # connectivity tests, which don't authenticate.
+      BETTER_AUTH_SECRET: ci-placeholder-secret-do-not-reuse
+      BETTER_AUTH_URL: http://localhost:5173
+      CORS_ORIGIN: http://localhost:5173
+      MET_USER_AGENT: minhytteapp-ci/1.0 ci@example.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm db:migrate
+
+      - name: Start API server in background
+        run: nohup pnpm start > server.log 2>&1 &
+
+      - name: Wait for /health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3001/health >/dev/null; then
+              echo "server is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server did not start within 30s — dumping log"
+          cat server.log || true
+          exit 1
+
+      - run: pnpm test:e2e
+
+      - name: Upload server log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log
+          if-no-files-found: ignore

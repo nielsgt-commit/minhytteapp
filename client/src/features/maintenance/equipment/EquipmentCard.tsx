@@ -1,11 +1,8 @@
 import { Button, Card, Divider, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
-import type {
-  EquipmentHistoryEntryData} from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx";
-import {
-  EquipmentHistoryEntry
-} from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
+import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
+import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/MaintenanceTodos.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
@@ -33,26 +30,24 @@ export function EquipmentCard(props: {
 }) {
   const { t } = useTranslation("maintenance")
   const isMobile = useIsMobile()
-  const {
-    item,
-    historyEntries,
-    modalState,
-    setModalState,
-  } = props
+  const { item, historyEntries, modalState, setModalState } = props
 
   const isInspecting =
     modalState.kind === "inspecting" && modalState.id === item.id
   const isHistoryOpen =
     modalState.kind === "history" && modalState.id === item.id
-  const isTodosOpen =
-    modalState.kind === "todos" && modalState.id === item.id
+  const isTodosOpen = modalState.kind === "todos" && modalState.id === item.id
 
   const todosLabel = isMobile
     ? t("Todos")
-    : isTodosOpen ? t("Hide todos") : t("Show todos")
+    : isTodosOpen
+      ? t("Hide todos")
+      : t("Show todos")
   const historyLabel = isMobile
     ? t("History")
-    : isHistoryOpen ? t("Hide history") : t("Show history")
+    : isHistoryOpen
+      ? t("Hide history")
+      : t("Show history")
 
   return (
     <Card asChild>
@@ -88,9 +83,7 @@ export function EquipmentCard(props: {
               {t("Start inspection")}
             </Button>
           )}
-          {!isInspecting && (
-            <Divider className={styles.divider} />
-          )}
+          {!isInspecting && <Divider className={styles.divider} />}
           <div className={styles.actions}>
             {!isInspecting && (
               <Button
@@ -134,9 +127,7 @@ export function EquipmentCard(props: {
         {isHistoryOpen && !isInspecting && (
           <Card.Block>
             {historyEntries.length === 0 ? (
-              <Paragraph data-size="sm">
-                {t("No history yet.")}
-              </Paragraph>
+              <Paragraph data-size="sm">{t("No history yet.")}</Paragraph>
             ) : (
               <div className={styles.list}>
                 {historyEntries.map(entry => {
@@ -159,7 +150,9 @@ export function EquipmentCard(props: {
                 name: item.name,
               }}
               open={isInspecting}
-              onClose={() => { setModalState({ kind: "none" }) }}
+              onClose={() => {
+                setModalState({ kind: "none" })
+              }}
             />
           </Card.Block>
         )}
