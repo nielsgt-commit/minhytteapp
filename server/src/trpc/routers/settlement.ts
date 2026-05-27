@@ -22,7 +22,13 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  propertyAdminProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
 
 type Db = typeof dbClient
 
@@ -88,6 +94,56 @@ type PreviewResult = {
   transfers: Transfer[]
   heads: HeadStatus[]
   closed: boolean
+}
+
+async function resolveSettlementPropertyId(
+  db: Db,
+  settlementId: number,
+): Promise<number> {
+  const row = (
+    await db
+      .select({ property_id: settlementsTable.property_id })
+      .from(settlementsTable)
+      .where(eq(settlementsTable.id, settlementId))
+      .limit(1)
+  ).at(0)
+  if (!row) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "settlement not found" })
+  }
+  if (row.property_id == null) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "settlement is not linked to a property",
+    })
+  }
+  return row.property_id
+}
+
+async function resolveTransferPropertyId(
+  db: Db,
+  transferId: number,
+): Promise<number> {
+  const row = (
+    await db
+      .select({ property_id: settlementsTable.property_id })
+      .from(settlementTransfersTable)
+      .innerJoin(
+        settlementsTable,
+        eq(settlementsTable.id, settlementTransfersTable.settlement_id),
+      )
+      .where(eq(settlementTransfersTable.id, transferId))
+      .limit(1)
+  ).at(0)
+  if (!row) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "transfer not found" })
+  }
+  if (row.property_id == null) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "settlement is not linked to a property",
+    })
+  }
+  return row.property_id
 }
 
 async function listSettlementHeads(db: Db, propertyId: number) {
@@ -470,7 +526,7 @@ export const settlementRouter = router({
         .orderBy(asc(settlementsTable.year))
     }),
 
-  create: protectedProcedure
+  create: propertyAdminProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
@@ -484,9 +540,19 @@ export const settlementRouter = router({
       return created
     }),
 
-  update: protectedProcedure
+  update: propertyAdminProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolveSettlementPropertyId(
+        ctx.db,
+        input.id,
+      )
+      if (existingPropertyId !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "cannot reassign settlement to another property",
+        })
+      }
       const { id, ...rest } = input
       const [updated] = await ctx.db
         .update(settlementsTable)
@@ -502,6 +568,8 @@ export const settlementRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [deleted] = await ctx.db
         .delete(settlementsTable)
         .where(eq(settlementsTable.id, input.id))
@@ -512,6 +580,8 @@ export const settlementRouter = router({
   previewSplit: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       return computePreviewSplit(ctx.db, input.id)
     }),
 
@@ -551,6 +621,7 @@ export const settlementRouter = router({
         })
       }
       const propertyId = settlement.property_id
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
 
       const heads = await listSettlementHeads(ctx.db, propertyId)
       if (!heads.some(h => h.user_id === ctx.user.id)) {
@@ -644,6 +715,11 @@ export const settlementRouter = router({
   getBookingAdjustments: protectedProcedure
     .input(z.object({ settlementId: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(
+        ctx.db,
+        input.settlementId,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       return ctx.db
         .select({
           booking_id: settlementBookingAdjustmentsTable.booking_id,
@@ -668,6 +744,11 @@ export const settlementRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(
+        ctx.db,
+        input.settlementId,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       await assertCanEditBookingAdjustments(
         ctx.db,
         input.settlementId,
@@ -704,6 +785,11 @@ export const settlementRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(
+        ctx.db,
+        input.settlementId,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       await assertCanEditBookingAdjustments(
         ctx.db,
         input.settlementId,
@@ -734,6 +820,8 @@ export const settlementRouter = router({
   getClosedSummary: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const settlement = (
         await ctx.db
           .select({
@@ -844,6 +932,11 @@ export const settlementRouter = router({
   markTransferPaid: protectedProcedure
     .input(z.object({ transferId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolveTransferPropertyId(
+        ctx.db,
+        input.transferId,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const transfer = (
         await ctx.db
           .select({
@@ -914,6 +1007,8 @@ export const settlementRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       if (!ctx.user.is_head) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -957,6 +1052,8 @@ export const settlementRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       if (!ctx.user.is_head) {
         throw new TRPCError({
           code: "FORBIDDEN",

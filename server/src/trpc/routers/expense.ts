@@ -7,7 +7,13 @@ import {
   settlementsTable,
 } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  propertyAdminProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
 
 type Db = typeof dbClient
 
@@ -105,7 +111,7 @@ export const expenseRouter = router({
         .orderBy(asc(expensesTable.date))
     }),
 
-  create: protectedProcedure
+  create: propertyAdminProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       if (input.status === "submitted") {
@@ -118,13 +124,29 @@ export const expenseRouter = router({
       return created
     }),
 
-  update: protectedProcedure
+  update: propertyAdminProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
       if (input.status === "submitted") {
         await assertExpensesUnlocked(ctx.db, input.property_id)
       }
-      const { id, ...rest } = input
+      const existing = (
+        await ctx.db
+          .select({ property_id: expensesTable.property_id })
+          .from(expensesTable)
+          .where(eq(expensesTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "expense not found" })
+      }
+      if (existing.property_id !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "cannot reassign expense to another property",
+        })
+      }
+      const { id, property_id: _propertyId, ...rest } = input
       const [updated] = await ctx.db
         .update(expensesTable)
         .set(rest)
@@ -146,7 +168,13 @@ export const expenseRouter = router({
           .where(eq(expensesTable.id, input.id))
           .limit(1)
       ).at(0)
-      if (existing?.status === "submitted" && existing.property_id != null) {
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "expense not found" })
+      }
+      if (existing.property_id != null) {
+        await assertPropertyMember(ctx.db, ctx.user, existing.property_id)
+      }
+      if (existing.status === "submitted" && existing.property_id != null) {
         await assertExpensesUnlocked(ctx.db, existing.property_id)
       }
       const deleted = (

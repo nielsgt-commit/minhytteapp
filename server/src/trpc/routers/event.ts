@@ -3,7 +3,12 @@ import { and, desc, eq, isNull, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { eventTable } from "../../db/schema/event.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  propertyAdminProcedure,
+  protectedProcedure,
+  router,
+} from "../init.ts"
 
 const propertyInput = z.object({ property_id: z.number().int().positive() })
 
@@ -35,9 +40,9 @@ export const eventRouter = router({
         .orderBy(desc(eventTable.created_at))
     }),
 
-  create: protectedProcedure
+  create: propertyAdminProcedure
     .input(
-      propertyInput.extend({
+      z.object({
         body: z.string().trim().min(1).max(280),
         expires_on: z.iso.date().nullable().optional(),
       }),
@@ -60,7 +65,10 @@ export const eventRouter = router({
     .mutation(async ({ ctx, input }) => {
       const existing = (
         await ctx.db
-          .select({ author_id: eventTable.author_id })
+          .select({
+            author_id: eventTable.author_id,
+            property_id: eventTable.property_id,
+          })
           .from(eventTable)
           .where(eq(eventTable.id, input.id))
           .limit(1)
@@ -68,6 +76,7 @@ export const eventRouter = router({
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "event not found" })
       }
+      await assertPropertyMember(ctx.db, ctx.user, existing.property_id)
       if (existing.author_id !== ctx.user.id && !ctx.user.is_admin) {
         throw new TRPCError({
           code: "FORBIDDEN",

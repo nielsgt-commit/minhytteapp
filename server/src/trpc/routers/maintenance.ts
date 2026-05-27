@@ -10,14 +10,22 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
+import {
+  resolvePropertyIdFromMaintenance,
+  resolvePropertyIdFromMaintenanceParent,
+} from "../util/propertyAccess.ts"
 
 const maintenanceFields = {
   description: z.string().min(1),
   instructions_pt: z
     .custom<PortableTextBlock[]>(v => v == null || Array.isArray(v))
     .nullish(),
-  added_by: z.number().int().positive(),
   assigned_to_id: z.number().int().positive().optional(),
   structure_id: z.number().int().positive().optional(),
   infrastructure_id: z.number().int().positive().optional(),
@@ -94,10 +102,16 @@ export const maintenanceRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromMaintenanceParent(
+        ctx.db,
+        input,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [created] = await ctx.db
         .insert(maintenanceTable)
         .values({
           ...input,
+          added_by: ctx.user.id,
           completed_at:
             input.status === "done" ? (input.completed_at ?? new Date()) : null,
         })
@@ -109,6 +123,8 @@ export const maintenanceRouter = router({
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
+      const propertyId = await resolvePropertyIdFromMaintenance(ctx.db, id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const existing = (
         await ctx.db
           .select({ completed_at: maintenanceTable.completed_at })
@@ -137,6 +153,11 @@ export const maintenanceRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromMaintenance(
+        ctx.db,
+        input.id,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [deleted] = await ctx.db
         .delete(maintenanceTable)
         .where(eq(maintenanceTable.id, input.id))
@@ -152,6 +173,11 @@ export const maintenanceRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromMaintenance(
+        ctx.db,
+        input.id,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [updated] = await ctx.db
         .update(maintenanceTable)
         .set({ is_pinned: input.is_pinned })
@@ -163,6 +189,18 @@ export const maintenanceRouter = router({
   setProcedureOrder: protectedProcedure
     .input(z.object({ ids: z.array(z.number().int().positive()) }))
     .mutation(async ({ ctx, input }) => {
+      if (input.ids.length === 0) return { ok: true as const }
+      const propertyIds = await Promise.all(
+        input.ids.map(id => resolvePropertyIdFromMaintenance(ctx.db, id)),
+      )
+      const first = propertyIds[0]
+      if (propertyIds.some(p => p !== first)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "all maintenance ids must belong to the same property",
+        })
+      }
+      await assertPropertyMember(ctx.db, ctx.user, first)
       await ctx.db.transaction(async tx => {
         for (let i = 0; i < input.ids.length; i++) {
           await tx

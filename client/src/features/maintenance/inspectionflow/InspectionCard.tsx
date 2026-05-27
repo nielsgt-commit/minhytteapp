@@ -73,7 +73,6 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
       id: f.id,
       description: f.description,
       instructions_pt: f.instructions_pt,
-      added_by: f.added_by,
       assigned_to_id: f.assigned_to_id ?? undefined,
       structure_id: f.structure_id ?? undefined,
       infrastructure_id: f.infrastructure_id ?? undefined,

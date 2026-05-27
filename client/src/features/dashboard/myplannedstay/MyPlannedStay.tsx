@@ -189,7 +189,6 @@ export function MyPlannedStay() {
                             removeMeMutation.mutate({
                               id: b.id,
                               property_id: b.property_id,
-                              booker_id: b.booker_id,
                               start_date: b.start_date,
                               end_date: b.end_date,
                               status: b.status,

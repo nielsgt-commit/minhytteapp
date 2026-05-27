@@ -99,7 +99,6 @@ export function useBookingForm(
     try {
       const payload = {
         property_id: d.property_id,
-        booker_id: d.booker_id,
         start_date: d.start_date,
         end_date: d.end_date,
         status: d.status,

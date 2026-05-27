@@ -1,15 +1,11 @@
-import { and, asc, eq, or } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import type { db as dbClient } from "../../db/client.ts"
-import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
 import { propertySplitPoliciesTable } from "../../db/schema/settlement.schema.ts"
-import {
-  userGroupMembersTable,
-  usersTable,
-} from "../../db/schema/users.schema.ts"
+import { usersTable } from "../../db/schema/users.schema.ts"
 import type { AuthUser } from "../context.ts"
-import { protectedProcedure, router } from "../init.ts"
+import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 
 type Db = typeof dbClient
 
@@ -78,40 +74,6 @@ const configSchema = z.object({
 })
 
 const nameSchema = z.string().trim().min(1).max(80)
-
-async function assertPropertyMember(
-  db: Db,
-  user: AuthUser,
-  propertyId: number,
-) {
-  if (user.is_admin) return
-  const hit = await db
-    .select({ id: propertyOwnersTable.id })
-    .from(propertyOwnersTable)
-    .leftJoin(
-      userGroupMembersTable,
-      eq(
-        userGroupMembersTable.user_group_id,
-        propertyOwnersTable.user_group_id,
-      ),
-    )
-    .where(
-      and(
-        eq(propertyOwnersTable.property_id, propertyId),
-        or(
-          eq(propertyOwnersTable.user_id, user.id),
-          eq(userGroupMembersTable.user_id, user.id),
-        ),
-      ),
-    )
-    .limit(1)
-  if (hit.length === 0) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "must be a registered user on this property",
-    })
-  }
-}
 
 async function assertAuthorOf(
   db: Db,

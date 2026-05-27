@@ -172,7 +172,6 @@ export function ReviewBookingDaysRow({
       {
         id: booking.id,
         property_id: booking.property_id,
-        booker_id: booking.booker_id,
         start_date: draftStart,
         end_date: draftEnd,
         status: booking.status,
