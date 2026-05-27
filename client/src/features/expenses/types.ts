@@ -2,13 +2,7 @@ import type { Status } from "./expenseStatus.ts"
 
 export type { Status } from "./expenseStatus.ts"
 
-export type ExpenseType =
-  | "food"
-  | "gas"
-  | "maintenance"
-  | "capex"
-  | "opex"
-  | "fixed"
+export type ExpenseType = "food" | "gas" | "maintenance"
 
 export type ExpenseRow = {
   id: number

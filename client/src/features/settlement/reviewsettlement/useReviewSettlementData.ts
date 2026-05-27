@@ -3,13 +3,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 
 export type Status = "draft" | "submitted" | "reimbursed" | "rejected"
-export type ExpenseType =
-  | "food"
-  | "gas"
-  | "maintenance"
-  | "capex"
-  | "opex"
-  | "fixed"
+export type ExpenseType = "food" | "gas" | "maintenance"
 export type Progress = "in_progress" | "all_done"
 
 export type ExpenseRow = {

@@ -24,12 +24,7 @@ import {
 } from "@/features/settlement/phase"
 
 function sortExpenses(expenses: ExpenseRow[]) {
-  return expenses.slice().sort((a, b) => {
-    const aFixed = a.expense_types.includes("fixed") ? 0 : 1
-    const bFixed = b.expense_types.includes("fixed") ? 0 : 1
-    if (aFixed !== bFixed) return aFixed - bFixed
-    return a.date.localeCompare(b.date)
-  })
+  return expenses.slice().sort((a, b) => a.date.localeCompare(b.date))
 }
 
 type Props = {

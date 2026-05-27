@@ -393,6 +393,13 @@
       "when": 1779613945550,
       "tag": "0055_graceful_kulan_gath",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1779911578389,
+      "tag": "0056_remove_fixed_opex_capex_categories",
+      "breakpoints": true
     }
   ]
 }
