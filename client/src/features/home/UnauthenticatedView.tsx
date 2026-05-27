@@ -45,11 +45,12 @@ export function UnauthenticatedView() {
 
   return (
     <>
-      <h1>{t("Welcome to the new settlement system")}</h1>
+      <h1>{t("minhytteapp")}</h1>
       <Paragraph>
         {" "}
-        {t("This is a MVP in beta. Only test users have access.")}
+        {t("Only test users have access.")}
       </Paragraph>
+
       <h2>{t("Sign in")}</h2>
       <p>{t("Enter your email and we'll send you a sign-in link.")}</p>
       <form

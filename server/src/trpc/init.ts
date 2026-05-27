@@ -64,10 +64,7 @@ export async function assertPropertyMember(
     )
     .limit(1)
   if (hit.length === 0) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "must be a registered user on this property",
-    })
+    throw new TRPCError({ code: "FORBIDDEN" })
   }
 }
 
