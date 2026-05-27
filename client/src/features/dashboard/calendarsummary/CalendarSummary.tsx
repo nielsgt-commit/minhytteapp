@@ -14,7 +14,7 @@ export default function CalendarSummary() {
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
 
   const propertyName =

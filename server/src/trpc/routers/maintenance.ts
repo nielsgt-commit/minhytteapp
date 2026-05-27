@@ -13,7 +13,6 @@ import {
 import {
   assertPropertyMember,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 import {
@@ -63,13 +62,6 @@ const updateInput = z
   })
 
 export const maintenanceRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(maintenanceTable)
-      .orderBy(asc(maintenanceTable.created_at), asc(maintenanceTable.id))
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

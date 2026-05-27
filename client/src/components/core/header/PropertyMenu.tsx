@@ -1,5 +1,4 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useSelectedUserId } from "@/features/user/userSlice"
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -16,12 +15,10 @@ export default function PropertyMenu() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const auth = useAuthSession()
-  const selectedUserId = useSelectedUserId()
   const { data: properties, isLoading } = useQuery(
-    trpc.property.listForUser.queryOptions(
-      { user_id: selectedUserId ?? 0 },
-      { enabled: auth.isAuthenticated && selectedUserId != null },
-    ),
+    trpc.property.mine.queryOptions(undefined, {
+      enabled: auth.isAuthenticated,
+    }),
   )
   const selectedId = useSelectedPropertyId()
   const dispatch = useAppDispatch()
@@ -42,10 +39,7 @@ export default function PropertyMenu() {
   const createProperty = useMutation(
     trpc.property.create.mutationOptions({
       onSuccess: created => {
-        void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
-        void qc.invalidateQueries({
-          queryKey: trpc.property.listForUser.queryKey(),
-        })
+        void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
         dispatch(setSelectedPropertyId(created.id))
         setIsAddOpen(false)
       },

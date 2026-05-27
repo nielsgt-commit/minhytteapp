@@ -13,7 +13,7 @@ export default function NowWeather() {
   const propertyId = useSelectedPropertyId()
   const weekStart = toIso(startOfSunday(new Date()))
 
-  const { data: properties } = useQuery(trpc.property.list.queryOptions())
+  const { data: properties } = useQuery(trpc.property.mine.queryOptions())
   const property = properties?.find(p => p.id === propertyId)
   const hasCoords = property?.latitude != null && property.longitude != null
 

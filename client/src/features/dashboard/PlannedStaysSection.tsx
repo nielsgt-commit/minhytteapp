@@ -13,7 +13,7 @@ export default function PlannedStaysSection({
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
   const propertyName =
     properties.find(p => p.id === propertyId)?.name ?? "property"

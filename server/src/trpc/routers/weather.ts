@@ -5,7 +5,7 @@ import {
   getCompactForecast,
   type YrTimeseries,
 } from "../../services/yrCache.ts"
-import { publicProcedure, router } from "../init.ts"
+import { propertyAdminProcedure, router } from "../init.ts"
 
 const OSLO_TZ = "Europe/Oslo"
 
@@ -122,10 +122,9 @@ function buildNow(series: YrTimeseries[]): NowWeather | null {
 }
 
 export const weatherRouter = router({
-  forProperty: publicProcedure
+  forProperty: propertyAdminProcedure
     .input(
       z.object({
-        property_id: z.number().int().positive(),
         week_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       }),
     )

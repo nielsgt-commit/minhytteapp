@@ -14,13 +14,13 @@ export function OnboardingFlow() {
 
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
   const onboardingKeys = [
     trpc.user.list.queryKey(),
-    trpc.property.list.queryKey(),
+    trpc.property.mine.queryKey(),
   ]
   const createUser = useMutationWithInvalidation(
     trpc.user.create.mutationOptions(),

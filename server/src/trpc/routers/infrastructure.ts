@@ -6,7 +6,6 @@ import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 import { resolvePropertyIdFromInfrastructure } from "../util/propertyAccess.ts"
@@ -26,15 +25,13 @@ const updateInput = z.object({
 })
 
 export const infrastructureRouter = router({
-  listForProperty: publicProcedure
-    .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select()
-        .from(infrastructureTable)
-        .where(eq(infrastructureTable.property_id, input.property_id))
-        .orderBy(asc(infrastructureTable.id))
-    }),
+  listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
+    return ctx.db
+      .select()
+      .from(infrastructureTable)
+      .where(eq(infrastructureTable.property_id, input.property_id))
+      .orderBy(asc(infrastructureTable.id))
+  }),
 
   create: propertyAdminProcedure
     .input(createInput)

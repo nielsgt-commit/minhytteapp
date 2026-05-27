@@ -182,7 +182,7 @@ export function ManageProperty() {
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { pathname } = useLocation()
-  useSuspenseQuery(trpc.property.list.queryOptions())
+  useSuspenseQuery(trpc.property.mine.queryOptions())
 
   const translateGroups = (
     groups: readonly {

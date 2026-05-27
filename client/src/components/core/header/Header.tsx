@@ -5,20 +5,17 @@ import UserMenu from "./UserMenu"
 import styles from "./Header.module.css"
 import CheckIn from "@/components/core/header/CheckIn.tsx"
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useSelectedUserId } from "@/features/user/userSlice"
 import { useAuthSession } from "@/auth/auth-client"
 import { useTRPC } from "@/trpc/trpc"
 
 export default function Header() {
   const trpc = useTRPC()
   const auth = useAuthSession()
-  const selectedUserId = useSelectedUserId()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: properties } = useQuery(
-    trpc.property.listForUser.queryOptions(
-      { user_id: selectedUserId ?? 0 },
-      { enabled: auth.isAuthenticated && selectedUserId != null },
-    ),
+    trpc.property.mine.queryOptions(undefined, {
+      enabled: auth.isAuthenticated,
+    }),
   )
   const current = properties?.find(p => p.id === selectedPropertyId)
 

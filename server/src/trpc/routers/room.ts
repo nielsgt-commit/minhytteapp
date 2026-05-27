@@ -5,7 +5,6 @@ import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import {
   assertPropertyMember,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 import {
@@ -32,26 +31,6 @@ const updateInput = z.object({
 })
 
 export const roomRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.db
-      .select({
-        id: roomTable.id,
-        name: roomTable.name,
-        structure_id: roomTable.structure_id,
-        structure_name: structuresTable.name,
-        beds_sm: roomTable.beds_sm,
-        beds_lg: roomTable.beds_lg,
-        beds_double: roomTable.beds_double,
-        beds_kid: roomTable.beds_kid,
-        mattresses: roomTable.mattresses,
-        travel_cot: roomTable.travel_cot,
-      })
-      .from(roomTable)
-      .leftJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
-      .orderBy(asc(roomTable.id))
-    return rows
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

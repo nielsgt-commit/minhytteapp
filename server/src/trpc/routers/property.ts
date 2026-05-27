@@ -9,7 +9,6 @@ import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import {
   assertPropertyMember,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 
@@ -51,49 +50,43 @@ const updateInput = z.object({
 })
 
 export const propertyRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db.select().from(propertyTable).orderBy(asc(propertyTable.id))
+  mine: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.db
+      .selectDistinct({
+        id: propertyTable.id,
+        name: propertyTable.name,
+        address: propertyTable.address,
+        link: propertyTable.link,
+        parking_spots: propertyTable.parking_spots,
+        adressekode: propertyTable.adressekode,
+        kommunenummer: propertyTable.kommunenummer,
+        gardsnummer: propertyTable.gardsnummer,
+        bruksnummer: propertyTable.bruksnummer,
+        festenummer: propertyTable.festenummer,
+        undernummer: propertyTable.undernummer,
+        latitude: propertyTable.latitude,
+        longitude: propertyTable.longitude,
+      })
+      .from(propertyTable)
+      .innerJoin(
+        propertyOwnersTable,
+        eq(propertyOwnersTable.property_id, propertyTable.id),
+      )
+      .leftJoin(
+        userGroupMembersTable,
+        eq(
+          userGroupMembersTable.user_group_id,
+          propertyOwnersTable.user_group_id,
+        ),
+      )
+      .where(
+        or(
+          eq(propertyOwnersTable.user_id, ctx.user.id),
+          eq(userGroupMembersTable.user_id, ctx.user.id),
+        ),
+      )
+      .orderBy(asc(propertyTable.id))
   }),
-
-  listForUser: protectedProcedure
-    .input(z.object({ user_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db
-        .selectDistinct({
-          id: propertyTable.id,
-          name: propertyTable.name,
-          address: propertyTable.address,
-          link: propertyTable.link,
-          parking_spots: propertyTable.parking_spots,
-          adressekode: propertyTable.adressekode,
-          kommunenummer: propertyTable.kommunenummer,
-          gardsnummer: propertyTable.gardsnummer,
-          bruksnummer: propertyTable.bruksnummer,
-          festenummer: propertyTable.festenummer,
-          undernummer: propertyTable.undernummer,
-          latitude: propertyTable.latitude,
-          longitude: propertyTable.longitude,
-        })
-        .from(propertyTable)
-        .innerJoin(
-          propertyOwnersTable,
-          eq(propertyOwnersTable.property_id, propertyTable.id),
-        )
-        .leftJoin(
-          userGroupMembersTable,
-          eq(
-            userGroupMembersTable.user_group_id,
-            propertyOwnersTable.user_group_id,
-          ),
-        )
-        .where(
-          or(
-            eq(propertyOwnersTable.user_id, input.user_id),
-            eq(userGroupMembersTable.user_id, input.user_id),
-          ),
-        )
-        .orderBy(asc(propertyTable.id))
-    }),
 
   create: protectedProcedure
     .input(createInput)

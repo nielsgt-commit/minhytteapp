@@ -2,34 +2,32 @@ import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
 import { userGroupsTable, usersTable } from "../../db/schema/users.schema.ts"
-import { propertyAdminProcedure, publicProcedure, router } from "../init.ts"
+import { propertyAdminProcedure, router } from "../init.ts"
 
 const pctField = z.number().min(0).max(100).multipleOf(0.01)
 
 export const propertyOwnerRouter = router({
-  list: publicProcedure
-    .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      const rows = await ctx.db
-        .select({
-          id: propertyOwnersTable.id,
-          property_id: propertyOwnersTable.property_id,
-          user_id: propertyOwnersTable.user_id,
-          user_group_id: propertyOwnersTable.user_group_id,
-          ownership_pct: propertyOwnersTable.ownership_pct,
-          user_name: usersTable.name,
-          user_group_name: userGroupsTable.name,
-        })
-        .from(propertyOwnersTable)
-        .leftJoin(usersTable, eq(usersTable.id, propertyOwnersTable.user_id))
-        .leftJoin(
-          userGroupsTable,
-          eq(userGroupsTable.id, propertyOwnersTable.user_group_id),
-        )
-        .where(eq(propertyOwnersTable.property_id, input.property_id))
-        .orderBy(asc(propertyOwnersTable.id))
-      return rows
-    }),
+  list: propertyAdminProcedure.query(async ({ ctx, input }) => {
+    const rows = await ctx.db
+      .select({
+        id: propertyOwnersTable.id,
+        property_id: propertyOwnersTable.property_id,
+        user_id: propertyOwnersTable.user_id,
+        user_group_id: propertyOwnersTable.user_group_id,
+        ownership_pct: propertyOwnersTable.ownership_pct,
+        user_name: usersTable.name,
+        user_group_name: userGroupsTable.name,
+      })
+      .from(propertyOwnersTable)
+      .leftJoin(usersTable, eq(usersTable.id, propertyOwnersTable.user_id))
+      .leftJoin(
+        userGroupsTable,
+        eq(userGroupsTable.id, propertyOwnersTable.user_group_id),
+      )
+      .where(eq(propertyOwnersTable.property_id, input.property_id))
+      .orderBy(asc(propertyOwnersTable.id))
+    return rows
+  }),
 
   addUser: propertyAdminProcedure
     .input(

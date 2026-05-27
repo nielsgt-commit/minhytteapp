@@ -24,11 +24,13 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
   const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
 
   const invalidateStructures = () => {
-    void qc.invalidateQueries({ queryKey: trpc.structure.list.queryKey() })
+    void qc.invalidateQueries({
+      queryKey: trpc.structure.listForProperty.queryKey(),
+    })
   }
 
   const createStructure = useMutation(

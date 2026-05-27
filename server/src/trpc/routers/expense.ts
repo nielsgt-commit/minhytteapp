@@ -11,7 +11,6 @@ import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 
@@ -92,14 +91,6 @@ const expenseColumns = {
 }
 
 export const expenseRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select(expenseColumns)
-      .from(expensesTable)
-      .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
-      .orderBy(asc(expensesTable.date))
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

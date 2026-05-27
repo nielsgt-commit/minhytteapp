@@ -9,7 +9,13 @@ export const Route = createFileRoute("/_authed/manageproperty/equipment")({
   loader: ({ context }) => {
     const { selectedPropertyId } = context
     return Promise.all([
-      context.queryClient.ensureQueryData(trpc.structure.list.queryOptions()),
+      selectedPropertyId == null
+        ? undefined
+        : context.queryClient.ensureQueryData(
+            trpc.structure.listForProperty.queryOptions({
+              property_id: selectedPropertyId,
+            }),
+          ),
       selectedPropertyId == null
         ? undefined
         : context.queryClient.ensureQueryData(
@@ -26,7 +32,7 @@ function EquipmentRoute() {
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
   const property =
     propertyId != null ? properties.find(p => p.id === propertyId) : undefined

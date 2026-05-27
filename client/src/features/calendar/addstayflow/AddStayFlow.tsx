@@ -34,9 +34,11 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
   const selectedUserId = useAppSelector(selectSelectedUserId)
 
   const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
-  const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
+  )
   const { data: structures } = useSuspenseQuery(
-    trpc.structure.list.queryOptions(),
+    trpc.structure.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),

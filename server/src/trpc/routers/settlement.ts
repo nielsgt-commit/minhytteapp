@@ -26,7 +26,6 @@ import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 
@@ -495,13 +494,6 @@ const updateInput = z.object({
 })
 
 export const settlementRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(settlementsTable)
-      .orderBy(asc(settlementsTable.year))
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

@@ -22,7 +22,7 @@ function InfrastructureRoute() {
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
   const property =
     propertyId != null ? properties.find(p => p.id === propertyId) : undefined

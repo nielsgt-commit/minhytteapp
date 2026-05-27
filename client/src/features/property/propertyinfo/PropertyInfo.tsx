@@ -57,13 +57,13 @@ export default function PropertyInfo() {
   const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
 
   const updateProperty = useMutation(
     trpc.property.update.mutationOptions({
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
+        void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
       },
     }),
   )

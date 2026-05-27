@@ -14,7 +14,6 @@ import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
-  publicProcedure,
   router,
 } from "../init.ts"
 
@@ -427,8 +426,6 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
 }
 
 export const bookingRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => loadBookings(ctx.db)),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) =>
