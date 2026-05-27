@@ -2,12 +2,22 @@
   overflow-x: auto;
 }
 
+.list > [role="tab"]:first-child {
+  padding-inline-start: 0;
+}
+
 .noActive {
   border-bottom-color: transparent;
 }
 
 .noActive > [role="tab"]::after {
   display: none;
+}
+
+/* Main provides the inline gutter on desktop, so the panel content aligns
+   with the header's PropertyMenu rather than being indented an extra step. */
+:global(.ds-tabs) .panel {
+  padding-inline: 0;
 }
 
 @media (max-width: 640px) {

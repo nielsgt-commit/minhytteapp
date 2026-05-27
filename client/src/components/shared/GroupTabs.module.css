@@ -3,16 +3,3 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-
-@media (max-width: 640px) {
-  .filter {
-    position: sticky;
-    top: calc(
-      var(--app-mobile-header-h) + var(--app-mobile-title-h) +
-        var(--app-mobile-tabs-h)
-    );
-    z-index: 3;
-    background: var(--ds-color-background-default);
-    padding-block: 0.5rem;
-  }
-}
