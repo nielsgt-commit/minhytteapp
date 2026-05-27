@@ -71,4 +71,7 @@
   .hideOnMobileBlock {
     display: none;
   }
+  .adress {
+    display: none;
+  }
 }
