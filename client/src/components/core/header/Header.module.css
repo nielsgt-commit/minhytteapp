@@ -2,7 +2,7 @@
   background: var(--ds-color-background-default);
   border-block: solid 1px var(--ds-color-border-subtle);
   padding: var(--ds-size--sm) 0;
-  margin-block-end: var(--ds-size-8);
+  margin-block-end: var(--ds-size-1);
 }
 
 .inner {
@@ -60,7 +60,7 @@
   }
   .inner {
     justify-content: space-between;
-    padding-inline: 0.5rem 0;
+    padding-inline: 0.5rem;
   }
   .hideOnMobile {
     display: none;
@@ -69,6 +69,9 @@
     display: contents;
   }
   .hideOnMobileBlock {
+    display: none;
+  }
+  .adress {
     display: none;
   }
 }

@@ -2,7 +2,6 @@ import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useAppDispatch } from "@/app/hooks"
 import { setSelectedPropertyId } from "@/features/property/propertySlice"
@@ -11,11 +10,10 @@ import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
 
 export default function PropertyMenu() {
-  const { t } = useTranslation("core")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const auth = useAuthSession()
-  const { data: properties, isLoading } = useQuery(
+  const { data: properties } = useQuery(
     trpc.property.mine.queryOptions(undefined, {
       enabled: auth.isAuthenticated,
     }),
@@ -46,24 +44,12 @@ export default function PropertyMenu() {
     }),
   )
 
-  const current = list.find(p => p.id === selectedId)
-
   if (!auth.isAuthenticated) {
     return <div className={styles.menu} />
   }
 
-  let label: string
-  if (isLoading) {
-    label = t("Loading…")
-  } else if (current) {
-    label = ""
-  } else {
-    label = t("No property")
-  }
-
   return (
     <div className={styles.menu}>
-      <span>{label}</span>
       <PropertySwitcher
         properties={list}
         value={selectedId}

@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { Heading } from "@digdir/designsystemet-react"
 import styles from "./Calendar.module.css"
 import { AddStayFlow } from "@/features/calendar/addstayflow/AddStayFlow.tsx"
 
@@ -11,23 +11,21 @@ export function Calendar() {
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <Heading level={2} className={styles.heading}>
+        <Heading level={2} className={styles.title}>
           {t("Calendar")}
         </Heading>
-        <Paragraph>
+        <p>
           {t(
             "Add or select a property to plan stays, block dates, and see who's booked in.",
           )}
-        </Paragraph>
+        </p>
       </section>
     )
   }
 
   return (
     <section className={styles.page}>
-      <Heading level={2} className={styles.title}>
-        {t("Calendar")}
-      </Heading>
+      <h2 className={styles.title}>{t("Calendar")}</h2>
       <div className={styles.main}>
         <AddStayFlow propertyId={selectedPropertyId} />
       </div>

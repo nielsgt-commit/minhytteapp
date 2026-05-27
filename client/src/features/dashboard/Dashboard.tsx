@@ -18,7 +18,9 @@ export function Dashboard() {
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <h2 className={styles.title}>{t("Dashboard")}</h2>
+        <Heading level={2} className={styles.title}>
+          {t("Dashboard")}
+        </Heading>
         <p>
           {t(
             "No property selected. You don't own any properties yet, or none is picked from the header.",

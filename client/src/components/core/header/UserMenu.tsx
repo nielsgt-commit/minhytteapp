@@ -77,7 +77,9 @@ export default function UserMenu({ showCheckIn = true }: Props) {
         variant="tertiary"
         data-color="neutral"
         aria-label={t("User menu")}
-        style={isOpen ? undefined : { border: "none" }}
+        style={
+          isOpen ? undefined : { border: "none", background: "transparent" }
+        }
       >
         {name}
         {isOpen && <ChevronDownIcon aria-hidden />}
