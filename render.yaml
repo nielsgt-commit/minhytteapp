@@ -29,8 +29,10 @@ services:
     branch: master
     autoDeployTrigger: commit
     buildCommand: pnpm install --frozen-lockfile && pnpm build
-    preDeployCommand: pnpm db:migrate
-    startCommand: pnpm start
+    # Free tier doesn't support preDeployCommand, so migrations run on boot.
+    # drizzle-kit migrate is idempotent (tracked via __drizzle_migrations),
+    # so re-running on every cold start is a no-op when up-to-date.
+    startCommand: pnpm db:migrate && pnpm start
     # /ready runs SELECT 1 against Postgres so DB outages pull the service
     # out of rotation. /health stays as the cheap liveness probe.
     healthCheckPath: /ready
