@@ -20,6 +20,9 @@ importers:
       '@hono/trpc-server':
         specifier: ^0.4.2
         version: 0.4.2(@trpc/server@11.16.0(typescript@5.9.3))(hono@4.12.21)
+      '@navikt/aksel-icons':
+        specifier: ^8.11.0
+        version: 8.11.0
       '@portabletext/editor':
         specifier: ^7.0.0
         version: 7.0.0(@types/react@19.2.14)(react@19.2.5)
@@ -1574,8 +1577,8 @@ packages:
       markdown-it:
         optional: true
 
-  '@navikt/aksel-icons@8.10.4':
-    resolution: {integrity: sha512-LBfZN6plrHcodbK48SU7jwU9i51WQhLLOWgVa96fJsSHDEz/1nntlRsCuw5Jekubo8/TMrT9WgnJuWgtK5OS1w==}
+  '@navikt/aksel-icons@8.11.0':
+    resolution: {integrity: sha512-enprSpDl7j4yDEAtVtp/BPby2McZKtgXIgarTVDeZ0pmiqnYbXFyCTgzl/ZMg2/EV+hd2DXpLsKzU73PDljpmw==}
 
   '@noble/ciphers@2.2.0':
     resolution: {integrity: sha512-Z6pjIZ/8IJcCGzb2S/0Px5J81yij85xASuk1teLNeg75bfT07MV3a/O2Mtn1I2se43k3lkVEcFaR10N4cgQcZA==}
@@ -5502,7 +5505,7 @@ snapshots:
       '@digdir/designsystemet-web': 1.13.3
       '@floating-ui/dom': 1.7.6
       '@floating-ui/react': 0.26.23(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@navikt/aksel-icons': 8.10.4
+      '@navikt/aksel-icons': 8.11.0
       '@radix-ui/react-slot': 1.2.4(@types/react@19.2.14)(react@19.2.5)
       '@tanstack/react-virtual': 3.13.24(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       clsx: 2.1.1
@@ -6002,7 +6005,7 @@ snapshots:
     optionalDependencies:
       markdown-it: 14.1.1
 
-  '@navikt/aksel-icons@8.10.4': {}
+  '@navikt/aksel-icons@8.11.0': {}
 
   '@noble/ciphers@2.2.0': {}
 
