@@ -1,4 +1,4 @@
-import { Button, Card, Checkbox, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Checkbox, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { SubmitButton } from "@/components/shared/SubmitButton"
@@ -126,10 +126,10 @@ export function GroupCard({
             onStartEdit={onStartRename}
             view={
               <>
-                <h4>
+                <Heading level={4}>
                   {group.name}
                   {group.is_main && <small> {t("(main)")}</small>}
-                </h4>
+                </Heading>
                 <p>{t("{{count}} member", { count: group.members.length })}</p>
               </>
             }

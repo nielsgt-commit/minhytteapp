@@ -1,6 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
+import { Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { UserCreationForm } from "./UserCreationForm"
@@ -42,7 +43,7 @@ export function OnboardingFlow() {
 
   return (
     <section>
-      <h2>{t("Welcome")}</h2>
+      <Heading level={2}>{t("Welcome")}</Heading>
       <p>{t("Let's set up the basics. You can add more later.")}</p>
 
       <ol>

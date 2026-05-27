@@ -172,7 +172,7 @@ export function ListUsers({ canEdit }: ListUsersProps) {
                         }}
                         view={
                           <>
-                            <h4>{u.name}</h4>
+                            <Heading level={4}>{u.name}</Heading>
                             <p>{u.email}</p>
                             <p>
                               <small>{roles}</small>

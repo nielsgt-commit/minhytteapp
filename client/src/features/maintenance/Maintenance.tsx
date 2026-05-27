@@ -24,7 +24,9 @@ export function Maintenance() {
 
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>{t("Maintenance")}</h2>
+      <Heading level={2} className={styles.title}>
+        {t("Maintenance")}
+      </Heading>
       <StructureStats />
     </section>
   )

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Button, Paragraph } from "@digdir/designsystemet-react"
+import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { signIn } from "@/auth/auth-client"
 
@@ -30,7 +30,7 @@ export function UnauthenticatedView() {
   if (status === "sent") {
     return (
       <>
-        <h2>{t("Check your email")}</h2>
+        <Heading level={2}>{t("Check your email")}</Heading>
         <p>
           <Trans
             i18nKey="We sent a sign-in link to <1>{{email}}</1>. Click it to continue. (In dev, the link is printed to the API server console.)"
@@ -45,13 +45,13 @@ export function UnauthenticatedView() {
 
   return (
     <>
-      <h1>{t("minhytteapp")}</h1>
+      <Heading level={1}>{t("minhytteapp")}</Heading>
       <Paragraph>
         {" "}
         {t("Only test users have access.")}
       </Paragraph>
 
-      <h2>{t("Sign in")}</h2>
+      <Heading level={2}>{t("Sign in")}</Heading>
       <p>{t("Enter your email and we'll send you a sign-in link.")}</p>
       <form
         onSubmit={e => {

@@ -43,7 +43,9 @@ export function Dashboard() {
 
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>{t("Dashboard")}</h2>
+      <Heading level={2} className={styles.title}>
+        {t("Dashboard")}
+      </Heading>
       <CapacitySummary />
       <Suspense fallback={<p>{t("Loading…")}</p>}>
         <CalendarSummary />

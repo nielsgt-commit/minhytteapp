@@ -26,7 +26,9 @@ export function Settlement() {
 
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>{t("Settlement")}</h2>
+      <Heading level={2} className={styles.title}>
+        {t("Settlement")}
+      </Heading>
       <Suspense fallback={<p>{t("Loading…")}</p>}>
         <SettlementFlow propertyId={selectedPropertyId} />
       </Suspense>

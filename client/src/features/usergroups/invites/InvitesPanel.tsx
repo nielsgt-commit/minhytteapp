@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Select, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Select, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
@@ -82,7 +82,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     <Card asChild>
       <section>
         <Card.Block>
-          <h3>{t("Invites")}</h3>
+          <Heading level={3}>{t("Invites")}</Heading>
           <p>
             {t(
               "People with these emails can request a sign-in link, even if they don't have an invite yet.",

@@ -25,7 +25,9 @@ export function Calendar() {
 
   return (
     <section className={styles.page}>
-      <h2 className={styles.title}>{t("Calendar")}</h2>
+      <Heading level={2} className={styles.title}>
+        {t("Calendar")}
+      </Heading>
       <div className={styles.main}>
         <AddStayFlow propertyId={selectedPropertyId} />
       </div>

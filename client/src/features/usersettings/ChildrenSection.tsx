@@ -1,6 +1,6 @@
 import { type SyntheticEvent, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { Button, Fieldset, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
@@ -72,7 +72,7 @@ export function ChildrenSection() {
 
   return (
     <section>
-      <h2>{t("My children (under 13)")}</h2>
+      <Heading level={2}>{t("My children (under 13)")}</Heading>
       {children && children.length > 0 ? (
         <ul>
           {children.map(c => (
