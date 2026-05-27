@@ -25,17 +25,14 @@ export function DeletePropertyFlow() {
   const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
 
   const deleteProperty = useMutation(
     trpc.property.delete.mutationOptions({
       onSuccess: () => {
         dispatch(setSelectedPropertyId(null))
-        void qc.invalidateQueries({ queryKey: trpc.property.list.queryKey() })
-        void qc.invalidateQueries({
-          queryKey: trpc.property.listForUser.queryKey(),
-        })
+        void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
       },
     }),
   )

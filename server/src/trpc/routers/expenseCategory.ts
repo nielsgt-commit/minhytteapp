@@ -5,7 +5,7 @@ import {
   expenseCategoriesTable,
   expensesTable,
 } from "../../db/schema/settlement.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 const headProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (!ctx.user.is_head) {
@@ -18,7 +18,7 @@ const headProcedure = protectedProcedure.use(({ ctx, next }) => {
 })
 
 export const expenseCategoryRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select({
         id: expenseCategoriesTable.id,
@@ -29,7 +29,7 @@ export const expenseCategoryRouter = router({
       .orderBy(asc(expenseCategoriesTable.name))
   }),
 
-  listAllForDisplay: publicProcedure.query(async ({ ctx }) => {
+  listAllForDisplay: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select({
         id: expenseCategoriesTable.id,

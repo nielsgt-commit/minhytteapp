@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
@@ -39,18 +40,30 @@ export function ListPropertyStructures() {
   const selectedPropertyId = useSelectedPropertyId()
 
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
-  const { data: structures } = useSuspenseQuery(
-    trpc.structure.list.queryOptions(),
+  const { data: structures = [] } = useQuery(
+    trpc.structure.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
   )
-  const { data: rooms } = useSuspenseQuery(trpc.room.list.queryOptions())
+  const { data: rooms = [] } = useQuery(
+    trpc.room.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
 
   const invalidateStructures = () => {
-    void qc.invalidateQueries({ queryKey: trpc.structure.list.queryKey() })
+    void qc.invalidateQueries({
+      queryKey: trpc.structure.listForProperty.queryKey(),
+    })
   }
   const invalidateRooms = () => {
-    void qc.invalidateQueries({ queryKey: trpc.room.list.queryKey() })
+    void qc.invalidateQueries({
+      queryKey: trpc.room.listForProperty.queryKey(),
+    })
   }
 
   const updateStructure = useMutation(

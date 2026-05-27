@@ -1,7 +1,11 @@
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { infrastructureTable } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  propertyAdminProcedure,
+  protectedProcedure,
+  router,
+} from "../init.ts"
 
 const infrastructureFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -18,15 +22,13 @@ const updateInput = z.object({
 })
 
 export const infrastructureRouter = router({
-  listForProperty: publicProcedure
-    .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select()
-        .from(infrastructureTable)
-        .where(eq(infrastructureTable.property_id, input.property_id))
-        .orderBy(asc(infrastructureTable.id))
-    }),
+  listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
+    return ctx.db
+      .select()
+      .from(infrastructureTable)
+      .where(eq(infrastructureTable.property_id, input.property_id))
+      .orderBy(asc(infrastructureTable.id))
+  }),
 
   create: protectedProcedure
     .input(createInput)

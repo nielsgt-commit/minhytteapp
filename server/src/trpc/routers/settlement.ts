@@ -22,7 +22,7 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 type Db = typeof dbClient
 
@@ -439,13 +439,6 @@ const updateInput = z.object({
 })
 
 export const settlementRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(settlementsTable)
-      .orderBy(asc(settlementsTable.year))
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

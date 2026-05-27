@@ -10,7 +10,7 @@ import {
 import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
   error: "expected YYYY-MM-DD",
@@ -422,8 +422,6 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
 }
 
 export const bookingRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => loadBookings(ctx.db)),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) =>

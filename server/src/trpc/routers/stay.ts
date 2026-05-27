@@ -7,66 +7,68 @@ import {
 } from "../../db/schema/booking.schema.ts"
 import { stayTable } from "../../db/schema/stay.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  propertyAdminProcedure,
+  protectedProcedure,
+  router,
+} from "../init.ts"
 
 const propertyInput = z.object({ property_id: z.number().int().positive() })
 
 export const stayRouter = router({
-  atProperty: publicProcedure
-    .input(propertyInput)
-    .query(async ({ ctx, input }) => {
-      const today = sql<string>`CURRENT_DATE`
+  atProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
+    const today = sql<string>`CURRENT_DATE`
 
-      const bookingOccupants = await ctx.db
-        .selectDistinct({
-          user_id: usersTable.id,
-          name: usersTable.name,
-        })
-        .from(bookingTable)
-        .innerJoin(
-          bookingOccupantsTable,
-          eq(bookingOccupantsTable.booking_id, bookingTable.id),
-        )
-        .innerJoin(usersTable, eq(usersTable.id, bookingOccupantsTable.user_id))
-        .where(
-          and(
-            eq(bookingTable.property_id, input.property_id),
-            eq(bookingTable.status, "confirmed"),
-            sql`${bookingTable.start_date} <= ${today}`,
-            sql`${bookingTable.end_date} >= ${today}`,
-          ),
-        )
+    const bookingOccupants = await ctx.db
+      .selectDistinct({
+        user_id: usersTable.id,
+        name: usersTable.name,
+      })
+      .from(bookingTable)
+      .innerJoin(
+        bookingOccupantsTable,
+        eq(bookingOccupantsTable.booking_id, bookingTable.id),
+      )
+      .innerJoin(usersTable, eq(usersTable.id, bookingOccupantsTable.user_id))
+      .where(
+        and(
+          eq(bookingTable.property_id, input.property_id),
+          eq(bookingTable.status, "confirmed"),
+          sql`${bookingTable.start_date} <= ${today}`,
+          sql`${bookingTable.end_date} >= ${today}`,
+        ),
+      )
 
-      const stayOccupants = await ctx.db
-        .select({
-          user_id: usersTable.id,
-          name: usersTable.name,
-        })
-        .from(stayTable)
-        .innerJoin(usersTable, eq(usersTable.id, stayTable.user_id))
-        .where(
-          and(
-            eq(stayTable.property_id, input.property_id),
-            isNull(stayTable.end_date),
-          ),
-        )
+    const stayOccupants = await ctx.db
+      .select({
+        user_id: usersTable.id,
+        name: usersTable.name,
+      })
+      .from(stayTable)
+      .innerJoin(usersTable, eq(usersTable.id, stayTable.user_id))
+      .where(
+        and(
+          eq(stayTable.property_id, input.property_id),
+          isNull(stayTable.end_date),
+        ),
+      )
 
-      const byId = new Map<
-        number,
-        { user_id: number; name: string; via: "booking" | "stay" | "both" }
-      >()
-      for (const u of bookingOccupants) {
-        byId.set(u.user_id, { ...u, via: "booking" })
-      }
-      for (const u of stayOccupants) {
-        const existing = byId.get(u.user_id)
-        byId.set(u.user_id, {
-          ...u,
-          via: existing ? "both" : "stay",
-        })
-      }
-      return Array.from(byId.values())
-    }),
+    const byId = new Map<
+      number,
+      { user_id: number; name: string; via: "booking" | "stay" | "both" }
+    >()
+    for (const u of bookingOccupants) {
+      byId.set(u.user_id, { ...u, via: "booking" })
+    }
+    for (const u of stayOccupants) {
+      const existing = byId.get(u.user_id)
+      byId.set(u.user_id, {
+        ...u,
+        via: existing ? "both" : "stay",
+      })
+    }
+    return Array.from(byId.values())
+  }),
 
   currentForMe: protectedProcedure
     .input(propertyInput)

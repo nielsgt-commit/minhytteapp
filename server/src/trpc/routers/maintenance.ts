@@ -10,7 +10,7 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 const maintenanceFields = {
   description: z.string().min(1),
@@ -55,13 +55,6 @@ const updateInput = z
   })
 
 export const maintenanceRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(maintenanceTable)
-      .orderBy(asc(maintenanceTable.created_at), asc(maintenanceTable.id))
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

@@ -66,7 +66,7 @@ export default function AvailableParking() {
 
   const { data: me } = useQuery(trpc.user.me.queryOptions())
   const { data: properties } = useQuery(
-    trpc.property.list.queryOptions(undefined, { enabled: propertyId != null }),
+    trpc.property.mine.queryOptions(undefined, { enabled: propertyId != null }),
   )
   const { data: claims } = useQuery(
     trpc.parking.listForProperty.queryOptions(

@@ -4,7 +4,7 @@ import {
   propertyTable,
   structuresTable,
 } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 const structureFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -21,25 +21,6 @@ const updateInput = z.object({
 })
 
 export const structureRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.db
-      .select({
-        id: structuresTable.id,
-        name: structuresTable.name,
-        property_id: structuresTable.property_id,
-        property_name: propertyTable.name,
-        category: structuresTable.category,
-        built_year: structuresTable.built_year,
-      })
-      .from(structuresTable)
-      .leftJoin(
-        propertyTable,
-        eq(propertyTable.id, structuresTable.property_id),
-      )
-      .orderBy(asc(structuresTable.id))
-    return rows
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

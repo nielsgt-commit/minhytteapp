@@ -7,7 +7,7 @@ import {
   settlementsTable,
 } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 type Db = typeof dbClient
 
@@ -86,14 +86,6 @@ const expenseColumns = {
 }
 
 export const expenseRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select(expenseColumns)
-      .from(expensesTable)
-      .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
-      .orderBy(asc(expensesTable.date))
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {

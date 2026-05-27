@@ -62,7 +62,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
     trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: properties } = useSuspenseQuery(
-    trpc.property.list.queryOptions(),
+    trpc.property.mine.queryOptions(),
   )
   const propertyName =
     properties.find(p => p.id === propertyId)?.name ?? "property"

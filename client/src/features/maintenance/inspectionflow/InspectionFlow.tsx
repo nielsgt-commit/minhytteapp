@@ -1,4 +1,5 @@
 import { useSelectedUserId } from "@/features/user/userSlice"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -43,9 +44,13 @@ export function InspectionFlow(props: {
   const { scope, open, onClose } = props
   const trpc = useTRPC()
   const selectedUserId = useSelectedUserId()
+  const selectedPropertyId = useSelectedPropertyId()
 
   const { data: maintenanceItems } = useQuery(
-    trpc.maintenance.list.queryOptions(undefined, { enabled: open }),
+    trpc.maintenance.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: open && selectedPropertyId != null },
+    ),
   )
   const { data: users } = useQuery(
     trpc.user.list.queryOptions(undefined, { enabled: open }),

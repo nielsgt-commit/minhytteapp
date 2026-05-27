@@ -1,7 +1,7 @@
 import { asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import { protectedProcedure, router } from "../init.ts"
 
 const roomFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -22,26 +22,6 @@ const updateInput = z.object({
 })
 
 export const roomRouter = router({
-  list: publicProcedure.query(async ({ ctx }) => {
-    const rows = await ctx.db
-      .select({
-        id: roomTable.id,
-        name: roomTable.name,
-        structure_id: roomTable.structure_id,
-        structure_name: structuresTable.name,
-        beds_sm: roomTable.beds_sm,
-        beds_lg: roomTable.beds_lg,
-        beds_double: roomTable.beds_double,
-        beds_kid: roomTable.beds_kid,
-        mattresses: roomTable.mattresses,
-        travel_cot: roomTable.travel_cot,
-      })
-      .from(roomTable)
-      .leftJoin(structuresTable, eq(structuresTable.id, roomTable.structure_id))
-      .orderBy(asc(roomTable.id))
-    return rows
-  }),
-
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
