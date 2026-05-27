@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
+import { safeHref } from "@/utils/safeHref.ts"
 import {
   AddressLookup,
   type GeonorgeAddress,
@@ -250,13 +251,18 @@ export default function PropertyInfo() {
         )}
         <p>
           {t("Link:")}{" "}
-          {selectedProperty.link != null && selectedProperty.link !== "" ? (
-            <a href={selectedProperty.link} target="_blank" rel="noreferrer">
-              {selectedProperty.link}
-            </a>
-          ) : (
-            <em>{t("none")}</em>
-          )}
+          {(() => {
+            const raw = selectedProperty.link
+            if (raw == null || raw === "") return <em>{t("none")}</em>
+            const safe = safeHref(raw)
+            return safe ? (
+              <a href={safe} target="_blank" rel="noopener noreferrer">
+                {raw}
+              </a>
+            ) : (
+              <span>{raw}</span>
+            )
+          })()}
         </p>
         <p> {t("Property description")} </p>
         <p>

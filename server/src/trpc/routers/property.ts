@@ -8,10 +8,27 @@ import { userGroupMembersTable } from "../../db/schema/users.schema.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import { protectedProcedure, publicProcedure, router } from "../init.ts"
 
+const linkAllowedProtocols = new Set(["http:", "https:", "mailto:", "tel:"])
+function isAllowedLink(s: string): boolean {
+  if (s === "") return true
+  try {
+    return linkAllowedProtocols.has(new URL(s).protocol)
+  } catch {
+    return false
+  }
+}
+
 const propertyFields = {
   name: z.string().min(1, { error: "name is required" }),
   address: z.string().min(1, { error: "address is required" }),
-  link: z.string().max(255).nullable().optional(),
+  link: z
+    .string()
+    .max(255)
+    .refine(isAllowedLink, {
+      error: "must be http/https/mailto/tel URL or empty",
+    })
+    .nullable()
+    .optional(),
   parking_spots: z.number().int().min(0).max(99).optional(),
   adressekode: z.number().int().nullable().optional(),
   kommunenummer: z.string().length(4).nullable().optional(),

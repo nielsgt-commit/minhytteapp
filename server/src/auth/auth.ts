@@ -123,7 +123,9 @@ export const auth = betterAuth({
     window: 60,
     max: 100,
     customRules: {
-      "/sign-in/magic-link": { window: 60, max: 5 },
+      // Per-IP via x-forwarded-for. Per-email throttling deferred to edge
+      // (Cloudflare/Render) once that's in place.
+      "/sign-in/magic-link": { window: 60, max: 3 },
     },
   },
   user: {

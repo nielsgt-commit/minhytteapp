@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useSelectedUserId } from "@/features/user/userSlice"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
@@ -27,7 +27,7 @@ export default function PropertyMenu() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
-  const list = properties ?? []
+  const list = useMemo(() => properties ?? [], [properties])
 
   useEffect(() => {
     if (list.length === 0) return

@@ -1,5 +1,5 @@
 import { useSelectedUserId } from "@/features/user/userSlice"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Avatar, Divider, Dropdown, Tag } from "@digdir/designsystemet-react"
@@ -41,7 +41,10 @@ export default function UserMenu({ showCheckIn = true }: Props) {
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
 
-  const list = me ? [{ ...me, name: me.name || me.email }] : []
+  const list = useMemo(
+    () => (me ? [{ ...me, name: me.name || me.email }] : []),
+    [me],
+  )
 
   useEffect(() => {
     if (list.length === 0) return

@@ -4,6 +4,7 @@ import {
 } from "@portabletext/react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
+import { safeHref } from "../../../utils/safeHref.ts"
 import styles from "./MaintenanceInstructionsPT.module.css"
 
 type PhotoValue = {
@@ -25,12 +26,15 @@ const components: Partial<PortableTextReactComponents> = {
   marks: {
     link: ({ children, value }) => {
       const href = (value as { href?: string } | undefined)?.href ?? "#"
-      const external = !href.startsWith("/") && !href.startsWith("#")
+      const isInternal = href.startsWith("/") || href.startsWith("#")
+      const safe = isInternal ? href : safeHref(href)
+      if (!safe) return <span>{children}</span>
+      const external = !isInternal
       return (
         <a
-          href={href}
+          href={safe}
           target={external ? "_blank" : undefined}
-          rel={external ? "noreferrer noopener" : undefined}
+          rel={external ? "noopener noreferrer" : undefined}
         >
           {children}
         </a>

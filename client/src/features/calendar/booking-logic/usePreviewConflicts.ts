@@ -64,6 +64,9 @@ export function usePreviewConflicts(
 
   const input = useMemo(
     () => extractInput(draft, excludeBookingId),
+    // extractInput reads exactly these four draft fields; listing them
+    // (not `draft`) keeps the memo stable across unrelated draft changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       draft.property_id,
       draft.start_date,

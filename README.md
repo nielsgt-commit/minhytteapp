@@ -54,19 +54,15 @@ The database runs in Docker. From the repo root:
 docker compose up -d
 ```
 
-This starts `postgres:17-alpine` on `localhost:5432` with password `mypassword` and a persistent `pgdata` volume.
+This starts `postgres:18-alpine` on `localhost:5432` with password `mypassword` and a persistent `pgdata` volume.
 
 Stop it later with `docker compose down` (keeps data) or `docker compose down -v` (wipes data).
 
 ### 3. Configure environment
 
-A `.env` already exists at the repo root with:
+A `.env.development` is committed with placeholder values (`DATABASE_URL`, `BETTER_AUTH_SECRET`, etc.) suitable for the local Docker Postgres. Personal overrides go in `.env.development.local` (gitignored).
 
-```
-DATABASE_URL=postgres://postgres:mypassword@localhost:5432/postgres
-```
-
-This file is read by both the server (`dotenv/config` in `server/src/index.ts`) and `drizzle.config.ts`.
+Loaded at boot by `server/src/env.ts` (and by `drizzle.config.ts` for migrations). Skipped when `RENDER=true` — Render injects env vars directly.
 
 ### 4. Run migrations
 
