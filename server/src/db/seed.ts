@@ -1,5 +1,6 @@
 import "../env.ts"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
+import { normalizeEmail } from "../auth/email.ts"
 import { db, pool } from "./client.ts"
 import {
   bookingOccupantsTable,
@@ -138,8 +139,10 @@ function mondayOfIsoWeekUTC(year: number, week: number) {
 }
 
 async function upsertUser(seed: SeedUser) {
-  const email = `${seed.name.toLowerCase()}@oauth.local`
-  const legacyPendingEmail = `pending-${seed.name.toLowerCase()}@example.local`
+  const email = normalizeEmail(`${seed.name}@oauth.local`)
+  const legacyPendingEmail = normalizeEmail(
+    `pending-${seed.name}@example.local`,
+  )
   const is_admin = seed.is_admin ?? false
   const is_head = seed.is_head ?? false
   const existing = (

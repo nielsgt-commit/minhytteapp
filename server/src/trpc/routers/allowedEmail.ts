@@ -1,12 +1,9 @@
 import { TRPCError } from "@trpc/server"
 import { and, desc, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
+import { normalizeEmail } from "../../auth/email.ts"
 import { allowedEmailsTable, usersTable } from "../../db/schema/users.schema.ts"
 import { headOrAdminProcedure, router } from "../init.ts"
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase()
-}
 
 export const allowedEmailRouter = router({
   list: headOrAdminProcedure
