@@ -1,10 +1,11 @@
 import "../env.ts"
 import { eq } from "drizzle-orm"
+import { normalizeEmail } from "../auth/email.ts"
 import { db, pool } from "./client.ts"
 import { allowedEmailsTable, usersTable } from "./schema/users.schema.ts"
 
 const ADMIN_NAME = "Admin"
-const ADMIN_EMAIL = "admin@oauth.local"
+const ADMIN_EMAIL = normalizeEmail("admin@oauth.local")
 
 async function main() {
   const existing = await db

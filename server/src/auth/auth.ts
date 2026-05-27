@@ -15,9 +15,10 @@ import {
   userGroupMembersTable,
   usersTable,
 } from "../db/schema/users.schema.ts"
+import { isSyntheticEmail, normalizeEmail } from "./email.ts"
 
 async function applyInvitesForNewUser(new_user_id: number, email: string) {
-  const lower = email.trim().toLowerCase()
+  const lower = normalizeEmail(email)
   const invites = await db
     .select({
       id: allowedEmailsTable.id,
@@ -73,7 +74,8 @@ async function applyInvitesForNewUser(new_user_id: number, email: string) {
 }
 
 async function isEmailAllowed(email: string): Promise<boolean> {
-  const lower = email.trim().toLowerCase()
+  const lower = normalizeEmail(email)
+  if (isSyntheticEmail(lower)) return false
   const userHit = await db
     .select({ id: usersTable.id })
     .from(usersTable)
@@ -203,6 +205,13 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // Lowercase the email before insert so the DB never accumulates
+        // mixed-case rows. The eventual unique(lower(email)) index (deploy-2)
+        // assumes this invariant.
+        before: user =>
+          Promise.resolve({
+            data: { ...user, email: normalizeEmail(user.email) },
+          }),
         after: async user => {
           await applyInvitesForNewUser(Number(user.id), user.email)
         },
@@ -212,15 +221,16 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        const allowed = await isEmailAllowed(email)
+        const lower = normalizeEmail(email)
+        const allowed = await isEmailAllowed(lower)
         if (!allowed) {
           if (process.env.NODE_ENV !== "production") {
-            console.log(`[magic-link] blocked (not on allowlist) -> ${email}`)
+            console.log(`[magic-link] blocked (not on allowlist) -> ${lower}`)
           }
           return
         }
         if (process.env.NODE_ENV !== "production") {
-          console.log(`[magic-link] ${email} -> ${url}`)
+          console.log(`[magic-link] ${lower} -> ${url}`)
           return
         }
         const apiKey = process.env.RESEND_API_KEY
@@ -230,7 +240,7 @@ export const auth = betterAuth({
         const resend = new Resend(apiKey)
         const { error } = await resend.emails.send({
           from,
-          to: email,
+          to: lower,
           subject: "Sign in to minhytte.app",
           html: `<p>Click the link below to sign in:</p>
 <p><a href="${url}">Sign in to minhytte.app</a></p>
