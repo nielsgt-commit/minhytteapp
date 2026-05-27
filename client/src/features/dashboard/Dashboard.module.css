@@ -17,3 +17,19 @@
   flex-direction: column;
   gap: var(--ds-size-4);
 }
+
+@media (max-width: 640px) {
+  .title {
+    position: sticky;
+    top: var(--app-mobile-header-h);
+    z-index: 5;
+    background: var(--ds-color-background-default);
+  }
+
+  .mobileTabs :global([role="tablist"]) {
+    position: sticky;
+    top: calc(var(--app-mobile-header-h) + var(--app-mobile-title-h));
+    z-index: 4;
+    background: var(--ds-color-background-default);
+  }
+}

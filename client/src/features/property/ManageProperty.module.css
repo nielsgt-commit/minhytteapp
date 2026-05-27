@@ -52,4 +52,18 @@
   .mobileNav {
     display: block;
   }
+
+  .title {
+    position: sticky;
+    top: var(--app-mobile-header-h);
+    z-index: 5;
+    background: var(--ds-color-background-default);
+  }
+
+  .mobileNav :global([role="tablist"]) {
+    position: sticky;
+    top: calc(var(--app-mobile-header-h) + var(--app-mobile-title-h));
+    z-index: 4;
+    background: var(--ds-color-background-default);
+  }
 }

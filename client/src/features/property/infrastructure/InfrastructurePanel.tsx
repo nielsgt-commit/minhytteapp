@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Textfield } from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
@@ -170,7 +170,9 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
 
   return (
     <section>
-      <h3>{t("Infrastructure at {{name}}", { name: propertyName })}</h3>
+      <Heading level={3}>
+        {t("Infrastructure at {{name}}", { name: propertyName })}
+      </Heading>
 
       {lastError && (
         <p role="alert">

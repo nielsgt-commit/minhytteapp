@@ -4,6 +4,7 @@ import {
   Button,
   Checkbox,
   Fieldset,
+  Heading,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
@@ -49,7 +50,7 @@ export function WipeDbFlow() {
   if (!isArmed) {
     return (
       <div>
-        <h4>{t("Wipe database")}</h4>
+        <Heading level={4}>{t("Wipe database")}</Heading>
         <p>
           {t(
             "Truncate every data table and (optionally) reseed with the default Owner / Member / Hytta state. For dev use only.",
@@ -69,7 +70,7 @@ export function WipeDbFlow() {
 
   return (
     <div>
-      <h4>{t("Wipe database")}</h4>
+      <Heading level={4}>{t("Wipe database")}</Heading>
 
       <p role="alert">
         <Trans

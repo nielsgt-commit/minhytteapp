@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   Fieldset,
+  Heading,
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
@@ -78,7 +79,7 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          <h1>{t("Property Info")}</h1>
+          <Heading level={2}>{t("Property Info")}</Heading>
           <p>{t("No property selected. Pick one from the header.")}</p>
         </Card.Block>
       </Card>
@@ -130,7 +131,7 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          <h1>{t("Property Info")}</h1>
+          <Heading level={2}>{t("Property Info")}</Heading>
           {updateProperty.error && (
             <p role="alert">
               {t("Error: {{message}}", {
@@ -216,7 +217,7 @@ export default function PropertyInfo() {
   return (
     <Card>
       <Card.Block>
-        <h1>{t("Property Info")}</h1>
+        <Heading level={2}>{t("Property Info")}</Heading>
         <p>{selectedProperty.name}</p>
         <p>
           {selectedProperty.address}{" "}

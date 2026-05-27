@@ -9,6 +9,7 @@ import {
   Button,
   Checkbox,
   Fieldset,
+  Heading,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
@@ -65,7 +66,7 @@ export function DeletePropertyFlow() {
   if (!isArmed) {
     return (
       <div>
-        <h4>{t("Delete property")}</h4>
+        <Heading level={4}>{t("Delete property")}</Heading>
         <p>
           <Trans
             t={t}
@@ -88,7 +89,7 @@ export function DeletePropertyFlow() {
 
   return (
     <div>
-      <h4>{t("Delete property")}</h4>
+      <Heading level={4}>{t("Delete property")}</Heading>
 
       <p role="alert">
         <Trans

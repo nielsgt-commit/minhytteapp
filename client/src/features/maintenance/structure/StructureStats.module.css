@@ -36,4 +36,22 @@
   :global(.ds-tabs) .panel {
     padding: 1rem 0 0;
   }
+
+  :global([role="tablist"]) {
+    position: sticky;
+    top: calc(var(--app-mobile-header-h) + var(--app-mobile-title-h));
+    z-index: 4;
+    background: var(--ds-color-background-default);
+  }
+
+  .filter {
+    position: sticky;
+    top: calc(
+      var(--app-mobile-header-h) + var(--app-mobile-title-h) +
+        var(--app-mobile-tabs-h)
+    );
+    z-index: 3;
+    background: var(--ds-color-background-default);
+    padding-block: 0.5rem;
+  }
 }

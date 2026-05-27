@@ -23,7 +23,7 @@ export function Dashboard() {
         </Heading>
         <p>
           {t(
-            "No property selected. You don't own any properties yet, or none is picked from the header.",
+            "No property selected. Add or pick one from the header.",
           )}
         </p>
       </section>

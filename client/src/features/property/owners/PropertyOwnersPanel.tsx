@@ -1,6 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Heading } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
@@ -81,7 +82,7 @@ export function PropertyOwnersPanel() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <h3>{t("Property Owners")}</h3>
+        <Heading level={3}>{t("Property Owners")}</Heading>
         <p>{t("No property selected. Pick one from the header.")}</p>
       </section>
     )
@@ -149,7 +150,7 @@ export function PropertyOwnersPanel() {
 
   return (
     <section>
-      <h3>{t("Property Owners")}</h3>
+      <Heading level={3}>{t("Property Owners")}</Heading>
 
       <p>
         <Trans

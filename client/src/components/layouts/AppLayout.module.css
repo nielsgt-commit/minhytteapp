@@ -1,4 +1,8 @@
 .shell {
+  --app-mobile-header-h: 56px;
+  --app-mobile-title-h: 40px;
+  --app-mobile-tabs-h: 44px;
+
   min-height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr;

@@ -1,6 +1,12 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Fieldset,
+  Heading,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
@@ -204,7 +210,9 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
 
   return (
     <section>
-      <h3>{t("Equipment at {{name}}", { name: propertyName })}</h3>
+      <Heading level={3}>
+        {t("Equipment at {{name}}", { name: propertyName })}
+      </Heading>
 
       {lastError && (
         <p role="alert">

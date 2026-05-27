@@ -7,3 +7,12 @@
 .title {
   margin: 0;
 }
+
+@media (max-width: 640px) {
+  .title {
+    position: sticky;
+    top: var(--app-mobile-header-h);
+    z-index: 5;
+    background: var(--ds-color-background-default);
+  }
+}

@@ -6,7 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Divider } from "@digdir/designsystemet-react"
+import { Button, Card, Divider, Heading } from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -239,7 +239,7 @@ export function ListPropertyStructures() {
   if (!selectedProperty) {
     return (
       <section>
-        <h3>{t("Structures")}</h3>
+        <Heading level={3}>{t("Structures")}</Heading>
         <p>{t("No property selected. Pick one from the header.")}</p>
       </section>
     )
@@ -247,7 +247,9 @@ export function ListPropertyStructures() {
 
   return (
     <section>
-      <h3>{t("Structures for {{name}}", { name: selectedProperty.name })}</h3>
+      <Heading level={3}>
+        {t("Structures for {{name}}", { name: selectedProperty.name })}
+      </Heading>
 
       {lastError && (
         <p role="alert">

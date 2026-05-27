@@ -1,6 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { fdString } from "@/utils/formData"
@@ -136,7 +137,7 @@ export default function PropertyContacts() {
 
   return (
     <section>
-      <h3>{t("Property contacts")}</h3>
+      <Heading level={3}>{t("Property contacts")}</Heading>
 
       {lastError && (
         <p role="alert">
