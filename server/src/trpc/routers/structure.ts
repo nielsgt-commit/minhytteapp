@@ -1,10 +1,18 @@
 import { asc, eq } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import {
   propertyTable,
   structuresTable,
 } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  propertyAdminProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
+import { resolvePropertyIdFromStructure } from "../util/propertyAccess.ts"
 
 const structureFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -61,7 +69,7 @@ export const structureRouter = router({
         .orderBy(asc(structuresTable.id))
     }),
 
-  create: protectedProcedure
+  create: propertyAdminProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
@@ -71,9 +79,19 @@ export const structureRouter = router({
       return created
     }),
 
-  update: protectedProcedure
+  update: propertyAdminProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolvePropertyIdFromStructure(
+        ctx.db,
+        input.id,
+      )
+      if (existingPropertyId !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "cannot reassign structure to another property",
+        })
+      }
       const { id, ...rest } = input
       const [updated] = await ctx.db
         .update(structuresTable)
@@ -86,6 +104,8 @@ export const structureRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromStructure(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [deleted] = await ctx.db
         .delete(structuresTable)
         .where(eq(structuresTable.id, input.id))

@@ -10,7 +10,13 @@ import {
 import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  propertyAdminProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
   error: "expected YYYY-MM-DD",
@@ -26,7 +32,6 @@ const bookingOccupantInput = z.object({
 
 const bookingFields = {
   property_id: z.number().int().positive(),
-  booker_id: z.number().int().positive(),
   start_date: dateString,
   end_date: dateString,
   status: statusEnum.default("confirmed"),
@@ -745,10 +750,11 @@ export const bookingRouter = router({
       }
     }),
 
-  create: protectedProcedure
+  create: propertyAdminProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
-      ensureBookerIsOccupant(input.booker_id, input.occupants)
+      const bookerId = ctx.user.id
+      ensureBookerIsOccupant(bookerId, input.occupants)
       const occupants = dedupeOccupants(input.occupants)
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
@@ -781,14 +787,13 @@ export const bookingRouter = router({
           .insert(bookingTable)
           .values({
             property_id: input.property_id,
-            booker_id: input.booker_id,
+            booker_id: bookerId,
             start_date: input.start_date,
             end_date: input.end_date,
             status: input.status,
             notes: input.notes ?? null,
             cancelled_at: input.status === "cancelled" ? new Date() : null,
-            cancelled_by_id:
-              input.status === "cancelled" ? input.booker_id : null,
+            cancelled_by_id: input.status === "cancelled" ? bookerId : null,
           })
           .returning()
 
@@ -810,10 +815,35 @@ export const bookingRouter = router({
       })
     }),
 
-  update: protectedProcedure
+  update: propertyAdminProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
-      ensureBookerIsOccupant(input.booker_id, input.occupants)
+      const existing = (
+        await ctx.db
+          .select({
+            status: bookingTable.status,
+            start_date: bookingTable.start_date,
+            end_date: bookingTable.end_date,
+            property_id: bookingTable.property_id,
+            booker_id: bookingTable.booker_id,
+            notes: bookingTable.notes,
+          })
+          .from(bookingTable)
+          .where(eq(bookingTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND" })
+      }
+      if (existing.property_id !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "cannot reassign booking to another property",
+        })
+      }
+
+      const bookerId = existing.booker_id
+      ensureBookerIsOccupant(bookerId, input.occupants)
       const occupants = dedupeOccupants(input.occupants)
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
@@ -835,26 +865,8 @@ export const bookingRouter = router({
         occupantQueued.set(o.user_id, clientQueued || roomOverflow)
       }
 
-      const existing = (
-        await ctx.db
-          .select({
-            status: bookingTable.status,
-            start_date: bookingTable.start_date,
-            end_date: bookingTable.end_date,
-            property_id: bookingTable.property_id,
-            booker_id: bookingTable.booker_id,
-            notes: bookingTable.notes,
-          })
-          .from(bookingTable)
-          .where(eq(bookingTable.id, input.id))
-          .limit(1)
-      ).at(0)
-      if (!existing) {
-        throw new TRPCError({ code: "NOT_FOUND" })
-      }
-
       const callerId = ctx.user.id
-      if (callerId !== existing.booker_id) {
+      if (callerId !== bookerId) {
         const existingOccupants = await ctx.db
           .select({
             user_id: bookingOccupantsTable.user_id,
@@ -872,8 +884,6 @@ export const bookingRouter = router({
           forbid("only the booker can edit this booking")
         }
         if (
-          input.property_id !== existing.property_id ||
-          input.booker_id !== existing.booker_id ||
           input.start_date !== existing.start_date ||
           input.end_date !== existing.end_date ||
           input.status !== existing.status ||
@@ -914,8 +924,6 @@ export const bookingRouter = router({
         const [updated] = await tx
           .update(bookingTable)
           .set({
-            property_id: input.property_id,
-            booker_id: input.booker_id,
             start_date: input.start_date,
             end_date: input.end_date,
             status: input.status,
@@ -929,7 +937,7 @@ export const bookingRouter = router({
             cancelled_by_id: nowCancelled
               ? wasCancelled
                 ? undefined
-                : input.booker_id
+                : bookerId
               : null,
           })
           .where(eq(bookingTable.id, input.id))
@@ -975,6 +983,7 @@ export const bookingRouter = router({
           .limit(1)
       ).at(0)
       if (existing?.property_id != null) {
+        await assertPropertyMember(ctx.db, ctx.user, existing.property_id)
         await assertBookingsUnlocked(ctx.db, existing.property_id, [
           { start_date: existing.start_date, end_date: existing.end_date },
         ])

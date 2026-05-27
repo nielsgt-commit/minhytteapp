@@ -11,7 +11,11 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, router } from "../init.ts"
+import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
+import {
+  resolvePropertyIdFromInspection,
+  resolvePropertyIdFromMaintenanceParent,
+} from "../util/propertyAccess.ts"
 
 const targetXor = {
   check: (v: {
@@ -36,7 +40,6 @@ const startInput = z
     structure_id: z.number().int().positive().optional(),
     infrastructure_id: z.number().int().positive().optional(),
     equipment_id: z.number().int().positive().optional(),
-    started_by_user_id: z.number().int().positive(),
     inspected_by: z.string().min(1).max(255),
     recurrence: recurrenceEnum,
   })
@@ -54,7 +57,6 @@ const completeInput = z.object({
   inspected_by: z.string().min(1).max(255),
   recurrence: recurrenceEnum,
   notes_pt: notesPtSchema,
-  added_by: z.number().int().positive(),
   findings: z.array(findingSchema),
 })
 
@@ -63,11 +65,9 @@ const recordInput = z
     structure_id: z.number().int().positive().optional(),
     infrastructure_id: z.number().int().positive().optional(),
     equipment_id: z.number().int().positive().optional(),
-    started_by_user_id: z.number().int().positive(),
     inspected_by: z.string().min(1).max(255),
     recurrence: recurrenceEnum,
     notes_pt: notesPtSchema,
-    added_by: z.number().int().positive(),
     findings: z.array(findingSchema),
   })
   .refine(targetXor.check, { error: targetXor.error })
@@ -115,13 +115,18 @@ export const inspectionRouter = router({
   start: protectedProcedure
     .input(startInput)
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromMaintenanceParent(
+        ctx.db,
+        input,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [created] = await ctx.db
         .insert(inspectionsTable)
         .values({
           structure_id: input.structure_id,
           infrastructure_id: input.infrastructure_id,
           equipment_id: input.equipment_id,
-          started_by_user_id: input.started_by_user_id,
+          started_by_user_id: ctx.user.id,
           inspected_by: input.inspected_by,
           recurrence: input.recurrence,
         })
@@ -132,6 +137,8 @@ export const inspectionRouter = router({
   complete: protectedProcedure
     .input(completeInput)
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromInspection(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       return ctx.db.transaction(async tx => {
         const existing = (
           await tx
@@ -184,7 +191,7 @@ export const inspectionRouter = router({
           const recurrence = willBePinned ? input.recurrence : "once"
           await tx.insert(maintenanceTable).values({
             description: f.description,
-            added_by: input.added_by,
+            added_by: ctx.user.id,
             ...findingLocation(),
             category: "maintenance",
             severity: "patch",
@@ -214,6 +221,8 @@ export const inspectionRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromInspection(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       return ctx.db.transaction(async tx => {
         await tx
           .update(maintenanceTable)
@@ -230,6 +239,11 @@ export const inspectionRouter = router({
   record: protectedProcedure
     .input(recordInput)
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromMaintenanceParent(
+        ctx.db,
+        input,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       return ctx.db.transaction(async tx => {
         if (input.equipment_id != null) {
           const found = (
@@ -254,7 +268,7 @@ export const inspectionRouter = router({
             structure_id: input.structure_id,
             infrastructure_id: input.infrastructure_id,
             equipment_id: input.equipment_id,
-            started_by_user_id: input.started_by_user_id,
+            started_by_user_id: ctx.user.id,
             inspected_by: input.inspected_by,
             recurrence: input.recurrence,
             notes_pt: input.notes_pt,
@@ -289,7 +303,7 @@ export const inspectionRouter = router({
           const recurrence = willBePinned ? input.recurrence : "once"
           await tx.insert(maintenanceTable).values({
             description: f.description,
-            added_by: input.added_by,
+            added_by: ctx.user.id,
             ...findingLocation(),
             category: "maintenance",
             severity: "patch",

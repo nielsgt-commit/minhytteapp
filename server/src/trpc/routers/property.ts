@@ -6,7 +6,12 @@ import {
 } from "../../db/schema/property.schema.ts"
 import { userGroupMembersTable } from "../../db/schema/users.schema.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
 
 const propertyFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -94,6 +99,7 @@ export const propertyRouter = router({
   update: protectedProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.id)
       const { id, ...rest } = input
       const coords = await geocodeNorwayAddress(rest.address)
       const [updated] = await ctx.db
@@ -107,6 +113,7 @@ export const propertyRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.id)
       const [deleted] = await ctx.db
         .delete(propertyTable)
         .where(eq(propertyTable.id, input.id))

@@ -62,7 +62,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     createMutation.mutate(
       {
         description,
-        added_by: selectedUserId,
         ...(scope.kind === "structure"
           ? { structure_id: scope.id }
           : scope.kind === "infrastructure"
@@ -105,7 +104,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       id: item.id,
       description: item.description,
       instructions_pt: item.instructions_pt,
-      added_by: item.added_by,
       assigned_to_id: item.assigned_to_id ?? undefined,
       structure_id: item.structure_id ?? undefined,
       infrastructure_id: item.infrastructure_id ?? undefined,
@@ -122,7 +120,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       id: item.id,
       description: item.description,
       instructions_pt: item.instructions_pt,
-      added_by: item.added_by,
       assigned_to_id: item.assigned_to_id ?? undefined,
       structure_id: item.structure_id ?? undefined,
       infrastructure_id: item.infrastructure_id ?? undefined,

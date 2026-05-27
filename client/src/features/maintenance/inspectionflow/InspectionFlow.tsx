@@ -198,8 +198,6 @@ export function InspectionFlow(props: {
         ? { infrastructure_id: scope.id }
         : {}),
       ...(scope.kind === "equipment" ? { equipment_id: scope.id } : {}),
-      started_by_user_id: selectedUserId,
-      added_by: selectedUserId,
       inspected_by: inspectedBy.trim(),
       recurrence,
       notes_pt: notes.length > 0 ? notes : undefined,

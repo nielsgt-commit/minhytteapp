@@ -1,7 +1,17 @@
 import { asc, eq } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
-import { protectedProcedure, publicProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "../init.ts"
+import {
+  resolvePropertyIdFromRoom,
+  resolvePropertyIdFromStructure,
+} from "../util/propertyAccess.ts"
 
 const roomFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -70,6 +80,11 @@ export const roomRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromStructure(
+        ctx.db,
+        input.structure_id,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [created] = await ctx.db.insert(roomTable).values(input).returning()
       return created
     }),
@@ -77,6 +92,21 @@ export const roomRouter = router({
   update: protectedProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolvePropertyIdFromRoom(
+        ctx.db,
+        input.id,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, existingPropertyId)
+      const targetPropertyId = await resolvePropertyIdFromStructure(
+        ctx.db,
+        input.structure_id,
+      )
+      if (targetPropertyId !== existingPropertyId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "cannot move room to a structure in another property",
+        })
+      }
       const { id, ...rest } = input
       const [updated] = await ctx.db
         .update(roomTable)
@@ -89,6 +119,8 @@ export const roomRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromRoom(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const [deleted] = await ctx.db
         .delete(roomTable)
         .where(eq(roomTable.id, input.id))
