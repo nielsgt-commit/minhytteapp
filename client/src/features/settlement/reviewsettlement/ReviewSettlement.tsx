@@ -84,11 +84,14 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
       ? heads
       : heads.filter(h => h.id === editableHeadId || visibleIds.has(h.id))
   const displayedHeadIds = new Set(displayedHeads.map(h => h.id))
+  const headIds = new Set(heads.map(h => h.id))
+  const effectiveHeadId = (e: ExpenseRow): number | null =>
+    e.reimbursed_by_id ?? (headIds.has(e.payer_id) ? e.payer_id : null)
   const expensesToShow = sortExpenses(
-    reimbursed.filter(
-      e =>
-        e.reimbursed_by_id != null && displayedHeadIds.has(e.reimbursed_by_id),
-    ),
+    reimbursed.filter(e => {
+      const headId = effectiveHeadId(e)
+      return headId != null && displayedHeadIds.has(headId)
+    }),
   )
 
   const pendingOthers = otherHeads.filter(
@@ -145,7 +148,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
             <li key={e.id}>
               <SettlementExpenseRow
                 expense={e}
-                editable={e.reimbursed_by_id === editableHeadId}
+                editable={effectiveHeadId(e) === editableHeadId}
                 openSettlementId={settlementId}
                 onSaved={invalidate}
               />

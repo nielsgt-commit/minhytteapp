@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm"
+import { and, asc, eq, inArray, or } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
@@ -329,16 +329,28 @@ async function computePreviewSplit(
     userToGroup.set(m.user_id, m.user_group_id)
   }
 
+  const headsRows = await listSettlementHeads(db, propertyId)
+  const headIds = headsRows.map(h => h.user_id)
+
   const reimbursedRows = await db
     .select({
       amount: expensesTable.amount,
       reimbursed_by_id: expensesTable.reimbursed_by_id,
+      payer_id: expensesTable.payer_id,
     })
     .from(expensesTable)
     .where(
       and(
         eq(expensesTable.settlement_id, settlementId),
-        eq(expensesTable.status, "reimbursed"),
+        or(
+          eq(expensesTable.status, "reimbursed"),
+          headIds.length > 0
+            ? and(
+                eq(expensesTable.status, "submitted"),
+                inArray(expensesTable.payer_id, headIds),
+              )
+            : undefined,
+        ),
       ),
     )
 
@@ -346,8 +358,8 @@ async function computePreviewSplit(
   let totalReimbursed = 0
   for (const e of reimbursedRows) {
     totalReimbursed += e.amount
-    if (e.reimbursed_by_id == null) continue
-    const groupId = userToGroup.get(e.reimbursed_by_id)
+    const effectivePayer = e.reimbursed_by_id ?? e.payer_id
+    const groupId = userToGroup.get(effectivePayer)
     if (groupId == null) continue
     paidByGroup.set(groupId, (paidByGroup.get(groupId) ?? 0) + e.amount)
   }
@@ -442,7 +454,6 @@ async function computePreviewSplit(
     largest.net = largest.total_paid - largest.total_share
   }
 
-  const headsRows = await listSettlementHeads(db, propertyId)
   const acceptanceRows = await db
     .select({
       head_user_id: settlementAcceptancesTable.head_user_id,

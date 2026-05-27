@@ -71,9 +71,12 @@ export function useReviewSettlementData(settlementId: number) {
   )
 
   const heads = users.filter(u => u.is_head)
-  const reimbursed = expenses.filter(
-    e => e.status === "reimbursed" && e.reimbursed_by_id != null,
-  ) as ExpenseRow[]
+  const headIds = new Set(heads.map(h => h.id))
+  const reimbursed = expenses.filter(e => {
+    if (e.status === "reimbursed" && e.reimbursed_by_id != null) return true
+    if (e.status === "submitted" && headIds.has(e.payer_id)) return true
+    return false
+  }) as ExpenseRow[]
   const editableHeadId = me.is_head ? me.id : null
 
   const mainGroupForHead = (headId: number) =>
