@@ -1,7 +1,6 @@
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { DeletePropertyFlow } from "./DeletePropertyFlow.tsx"
-import { WipeDbFlow } from "./WipeDbFlow.tsx"
 
 export function DangerZone() {
   const { t } = useTranslation("property")
@@ -15,7 +14,6 @@ export function DangerZone() {
           )}
         </p>
         <DeletePropertyFlow />
-        <WipeDbFlow />
       </section>
     </Card>
   )

@@ -1,10 +1,36 @@
-import { asc, eq, or } from "drizzle-orm"
+import { asc, eq, inArray, or } from "drizzle-orm"
 import { z } from "zod"
 import {
+  bookingOccupantsTable,
+  bookingRoomsTable,
+  bookingTable,
+} from "../../db/schema/booking.schema.ts"
+import { eventTable } from "../../db/schema/event.schema.ts"
+import {
+  equipmentTable,
+  inspectionsTable,
+  maintenanceTable,
+} from "../../db/schema/maintenance.schema.ts"
+import {
+  infrastructureTable,
+  parkingClaimsTable,
+  propertyContactsTable,
   propertyOwnersTable,
+  propertyPriorityWeeksTable,
   propertyTable,
+  roomTable,
+  structuresTable,
 } from "../../db/schema/property.schema.ts"
-import { userGroupMembersTable } from "../../db/schema/users.schema.ts"
+import {
+  expenseSharesTable,
+  expensesTable,
+  settlementsTable,
+} from "../../db/schema/settlement.schema.ts"
+import { stayTable } from "../../db/schema/stay.schema.ts"
+import {
+  allowedEmailsTable,
+  userGroupMembersTable,
+} from "../../db/schema/users.schema.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import {
   assertPropertyMember,
@@ -121,13 +147,152 @@ export const propertyRouter = router({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.number().int().positive() }))
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        cascade: z.boolean().default(false),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.id)
-      const [deleted] = await ctx.db
-        .delete(propertyTable)
-        .where(eq(propertyTable.id, input.id))
-        .returning()
-      return deleted
+      const { id, cascade } = input
+
+      if (!cascade) {
+        const [deleted] = await ctx.db
+          .delete(propertyTable)
+          .where(eq(propertyTable.id, id))
+          .returning()
+        return deleted
+      }
+
+      return ctx.db.transaction(async tx => {
+        const pickIds = async <T extends { id: number }>(
+          rows: Promise<T[]>,
+        ): Promise<number[]> => (await rows).map(r => r.id)
+
+        const [bookingIds, expenseIds, structureIds, infraIds, equipmentIds] =
+          await Promise.all([
+            pickIds(
+              tx
+                .select({ id: bookingTable.id })
+                .from(bookingTable)
+                .where(eq(bookingTable.property_id, id)),
+            ),
+            pickIds(
+              tx
+                .select({ id: expensesTable.id })
+                .from(expensesTable)
+                .where(eq(expensesTable.property_id, id)),
+            ),
+            pickIds(
+              tx
+                .select({ id: structuresTable.id })
+                .from(structuresTable)
+                .where(eq(structuresTable.property_id, id)),
+            ),
+            pickIds(
+              tx
+                .select({ id: infrastructureTable.id })
+                .from(infrastructureTable)
+                .where(eq(infrastructureTable.property_id, id)),
+            ),
+            pickIds(
+              tx
+                .select({ id: equipmentTable.id })
+                .from(equipmentTable)
+                .where(eq(equipmentTable.property_id, id)),
+            ),
+          ])
+
+        if (expenseIds.length > 0) {
+          await tx
+            .delete(expenseSharesTable)
+            .where(inArray(expenseSharesTable.expense_id, expenseIds))
+        }
+        if (bookingIds.length > 0) {
+          await tx
+            .delete(bookingOccupantsTable)
+            .where(inArray(bookingOccupantsTable.booking_id, bookingIds))
+          await tx
+            .delete(bookingRoomsTable)
+            .where(inArray(bookingRoomsTable.booking_id, bookingIds))
+        }
+        await tx.delete(expensesTable).where(eq(expensesTable.property_id, id))
+        if (
+          structureIds.length > 0 ||
+          infraIds.length > 0 ||
+          equipmentIds.length > 0
+        ) {
+          await tx
+            .delete(maintenanceTable)
+            .where(
+              or(
+                structureIds.length > 0
+                  ? inArray(maintenanceTable.structure_id, structureIds)
+                  : undefined,
+                infraIds.length > 0
+                  ? inArray(maintenanceTable.infrastructure_id, infraIds)
+                  : undefined,
+                equipmentIds.length > 0
+                  ? inArray(maintenanceTable.equipment_id, equipmentIds)
+                  : undefined,
+              ),
+            )
+          await tx
+            .delete(inspectionsTable)
+            .where(
+              or(
+                structureIds.length > 0
+                  ? inArray(inspectionsTable.structure_id, structureIds)
+                  : undefined,
+                infraIds.length > 0
+                  ? inArray(inspectionsTable.infrastructure_id, infraIds)
+                  : undefined,
+                equipmentIds.length > 0
+                  ? inArray(inspectionsTable.equipment_id, equipmentIds)
+                  : undefined,
+              ),
+            )
+        }
+        await tx.delete(bookingTable).where(eq(bookingTable.property_id, id))
+        await tx
+          .delete(settlementsTable)
+          .where(eq(settlementsTable.property_id, id))
+        await tx.delete(equipmentTable).where(eq(equipmentTable.property_id, id))
+        if (structureIds.length > 0) {
+          await tx
+            .delete(roomTable)
+            .where(inArray(roomTable.structure_id, structureIds))
+        }
+        await tx
+          .delete(structuresTable)
+          .where(eq(structuresTable.property_id, id))
+        await tx
+          .delete(infrastructureTable)
+          .where(eq(infrastructureTable.property_id, id))
+        await tx
+          .delete(propertyPriorityWeeksTable)
+          .where(eq(propertyPriorityWeeksTable.property_id, id))
+        await tx
+          .delete(propertyOwnersTable)
+          .where(eq(propertyOwnersTable.property_id, id))
+        await tx
+          .delete(propertyContactsTable)
+          .where(eq(propertyContactsTable.property_id, id))
+        await tx
+          .delete(parkingClaimsTable)
+          .where(eq(parkingClaimsTable.property_id, id))
+        await tx.delete(stayTable).where(eq(stayTable.property_id, id))
+        await tx.delete(eventTable).where(eq(eventTable.property_id, id))
+        await tx
+          .delete(allowedEmailsTable)
+          .where(eq(allowedEmailsTable.property_id, id))
+
+        const [deleted] = await tx
+          .delete(propertyTable)
+          .where(eq(propertyTable.id, id))
+          .returning()
+        return deleted
+      })
     }),
 })

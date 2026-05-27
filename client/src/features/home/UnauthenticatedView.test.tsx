@@ -34,9 +34,7 @@ describe("UnauthenticatedView", () => {
   test("renders the welcome heading and sign-in form", () => {
     render(<UnauthenticatedView />)
     expect(
-      screen.getByRole("heading", {
-        name: "Welcome to the new settlement system",
-      }),
+      screen.getByRole("heading", { name: "minhytteapp" }),
     ).toBeInTheDocument()
     expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument()
     expect(

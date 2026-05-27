@@ -10,6 +10,7 @@ import {
   Checkbox,
   Fieldset,
   Heading,
+  Switch,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
@@ -41,6 +42,7 @@ export function DeletePropertyFlow() {
   const [isArmed, setIsArmed] = useState(false)
   const [typedName, setTypedName] = useState("")
   const [acknowledged, setAcknowledged] = useState(false)
+  const [cascade, setCascade] = useState(false)
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
@@ -55,12 +57,16 @@ export function DeletePropertyFlow() {
     setIsArmed(false)
     setTypedName("")
     setAcknowledged(false)
+    setCascade(false)
   }
 
   const handleDelete = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!canDelete) return
-    deleteProperty.mutate({ id: selectedProperty.id }, { onSuccess: reset })
+    deleteProperty.mutate(
+      { id: selectedProperty.id, cascade },
+      { onSuccess: reset },
+    )
   }
 
   if (!isArmed) {
@@ -122,6 +128,18 @@ export function DeletePropertyFlow() {
               autoComplete="off"
               autoFocus
               required
+            />
+          </div>
+
+          <div>
+            <Switch
+              label={t(
+                "Cascade delete — also remove every structure, room, booking, expense, settlement and related record under this property",
+              )}
+              checked={cascade}
+              onChange={e => {
+                setCascade(e.target.checked)
+              }}
             />
           </div>
 

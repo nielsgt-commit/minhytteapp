@@ -18,9 +18,7 @@ describe("Home", () => {
       screen.getByRole("heading", { name: "Home", level: 1 }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("heading", {
-        name: "Welcome to the new settlement system",
-      }),
+      screen.getByRole("heading", { name: "minhytteapp" }),
     ).toBeInTheDocument()
   })
 

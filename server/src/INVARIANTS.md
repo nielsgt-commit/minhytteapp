@@ -8,7 +8,7 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 - Partial unique indexes prevent the same user or the same group from owning a property twice.
 - `ownership_pct` is numeric(5,2). App code should ensure the sum per `property_id` equals 100.00 before treating a property's ownership as complete — the DB does not enforce this.
 - A user may be a direct owner of a property **and** be a member of a group that also owns the property — the two rows coexist and should not double-count in settlement (use `effective_payer` and family attribution per the settlement rules).
-- Deleting a user / user_group / property while `property_owners` rows reference it will fail with an FK violation. This is intentional — cascade via the router if the UI ever offers a "wipe" action.
+- Deleting a user / user_group / property while `property_owners` rows reference it will fail with an FK violation. This is intentional — the `property.delete` mutation cascades via the router only when explicitly opted-in (`cascade: true`).
 
 ## User group membership (`user_group_members`)
 
@@ -76,5 +76,4 @@ Rules the DB schema can't (or can't cleanly) enforce. Enforce in handlers/servic
 
 - No `ON DELETE CASCADE` on `structures.property_id` or `rooms.structure_id`. Deleting a parent while children exist fails with a Postgres FK violation — this is intentional: it prevents a misclick from wiping bookings, maintenance, and expenses transitively.
 - `propertyTable` is also referenced by `infrastructure`, `bookings`, and (via `structures` → `maintenance`) maintenance. `structuresTable` is referenced by `maintenance`. `roomTable` is referenced by `booking_rooms`. A successful delete needs _all_ of those cleared.
-- If the UI ever needs a "delete this property and everything under it" action, implement it as a **transactional cascade in the tRPC router** (`ctx.db.transaction(...)`) deleting children before the parent — do **not** add DB-level `onDelete: "cascade"` on these FKs. Router-level cascade keeps the blast radius explicit (we pick which children to wipe); DB-level cascade would silently also take bookings/maintenance/expenses with it.
-- Minimum chain for a property cascade: rooms → structures → property. Bookings/owners/infrastructure still block — that's the desired safety net; surface the FK error to the user rather than expanding the cascade.
+- The `property.delete` mutation takes a `cascade: boolean`. When `false` (the default) it issues a single `DELETE FROM properties` and surfaces any FK violation. When `true` it runs a **transactional router-level cascade** (`ctx.db.transaction(...)`) that deletes every row scoped to the property in child-to-parent order: shares → booking_occupants/booking_rooms → expenses → maintenance/inspections → bookings → settlements → equipment → rooms → structures → infrastructure → priority_weeks → owners → contacts → parking_claims → stays → events → allowed_emails → property. DB-level `onDelete: "cascade"` is **not** added on these FKs — router-level cascade keeps the blast radius explicit and behind an opt-in flag.
