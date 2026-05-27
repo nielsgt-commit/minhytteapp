@@ -34,6 +34,6 @@
 
 @media (max-width: 640px) {
   .main {
-    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+    padding-bottom: calc(56px + 1rem + env(safe-area-inset-bottom));
   }
 }
