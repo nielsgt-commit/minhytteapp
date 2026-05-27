@@ -17,7 +17,7 @@ export function Settlement() {
         </Heading>
         <p>
           {t(
-            "Add or select a property to balance expenses between owners and settle up.",
+            "Add or select a property to balance expenses and settle up.",
           )}
         </p>
       </section>
