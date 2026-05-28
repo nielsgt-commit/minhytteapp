@@ -26,19 +26,33 @@ export default function CalendarSummary() {
   }
 
   return (
-    <Card asChild className={styles.summaryCard}>
-      <section>
-        <Card.Block>
-          <Heading onClick={resetWeek} className={styles.heading}>
-            {t("This week at {{propertyName}}", { propertyName })}
-          </Heading>
-          <PlannedAvailabilitySummary
-            weekStart={weekStart}
-            onWeekStartChange={setWeekStart}
-          />
-          <PlannedMaintenanceSummary mode="this-week" weekStart={weekStart} />
-        </Card.Block>
-      </section>
-    </Card>
+    <section className={styles.summarySection}>
+      <Heading onClick={resetWeek} className={styles.heading}>
+        {t("This week at {{propertyName}}", { propertyName })}
+      </Heading>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <Heading level={2} data-size="xs">
+              {t("Availability")}
+            </Heading>
+            <PlannedAvailabilitySummary
+              weekStart={weekStart}
+              onWeekStartChange={setWeekStart}
+            />
+          </Card.Block>
+        </section>
+      </Card>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <Heading level={2} data-size="xs">
+              {t("Planned maintenance")}
+            </Heading>
+            <PlannedMaintenanceSummary mode="this-week" weekStart={weekStart} />
+          </Card.Block>
+        </section>
+      </Card>
+    </section>
   )
 }

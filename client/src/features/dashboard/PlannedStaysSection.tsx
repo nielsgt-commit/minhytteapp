@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
 import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
+import styles from "./PlannedStaysSection.module.css"
 
 export default function PlannedStaysSection({
   propertyId,
@@ -19,18 +20,30 @@ export default function PlannedStaysSection({
     properties.find(p => p.id === propertyId)?.name ?? "property"
 
   return (
-    <Card asChild>
-      <section>
-        <Card.Block>
-          <Heading>
-            {t("This year at {{propertyName}}", { propertyName })}
-          </Heading>
-          <Heading data-size="xs"> {t("My planned stays")}</Heading>
-
-          <MyPlannedStay />
-          <PlannedMaintenanceSummary mode="rest" />
-        </Card.Block>
-      </section>
-    </Card>
+    <section className={styles.section}>
+      <Heading>
+        {t("This year at {{propertyName}}", { propertyName })}
+      </Heading>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <Heading level={2} data-size="xs">
+              {t("My planned stays")}
+            </Heading>
+            <MyPlannedStay />
+          </Card.Block>
+        </section>
+      </Card>
+      <Card asChild>
+        <section>
+          <Card.Block>
+            <Heading level={2} data-size="xs">
+              {t("Planned maintenance")}
+            </Heading>
+            <PlannedMaintenanceSummary mode="rest" />
+          </Card.Block>
+        </section>
+      </Card>
+    </section>
   )
 }

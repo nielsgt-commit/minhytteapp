@@ -1,8 +1,4 @@
-.heading {
-  cursor: pointer;
-}
-
-.summarySection {
+.section {
   display: flex;
   flex-direction: column;
   gap: var(--ds-size-4);

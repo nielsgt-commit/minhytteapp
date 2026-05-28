@@ -122,6 +122,38 @@ export const userRouter = router({
       return updated
     }),
 
+  setOnboardingStep: protectedProcedure
+    .input(
+      z.object({
+        step: z.enum([
+          "user",
+          "basics",
+          "buildings",
+          "rooms",
+          "infrastructure",
+          "equipment",
+          "done",
+        ]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(usersTable)
+        .set({ onboarding_step: input.step })
+        .where(eq(usersTable.id, ctx.user.id))
+        .returning()
+      return updated
+    }),
+
+  dismissOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+    const [updated] = await ctx.db
+      .update(usersTable)
+      .set({ onboarding_dismissed_at: new Date() })
+      .where(eq(usersTable.id, ctx.user.id))
+      .returning()
+    return updated
+  }),
+
   updateMySettlementProgress: protectedProcedure
     .input(
       z.object({

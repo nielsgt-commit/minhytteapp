@@ -1,4 +1,4 @@
-import { asc, eq, inArray, or } from "drizzle-orm"
+import { and, asc, eq, inArray, isNotNull, or } from "drizzle-orm"
 import { z } from "zod"
 import {
   bookingOccupantsTable,
@@ -30,6 +30,7 @@ import { stayTable } from "../../db/schema/stay.schema.ts"
 import {
   allowedEmailsTable,
   userGroupMembersTable,
+  userGroupsTable,
 } from "../../db/schema/users.schema.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import {
@@ -60,8 +61,48 @@ const updateInput = z.object({
 
 export const propertyRouter = router({
   mine: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id
+
+    const viaOwners = await ctx.db
+      .selectDistinct({ id: propertyOwnersTable.property_id })
+      .from(propertyOwnersTable)
+      .leftJoin(
+        userGroupMembersTable,
+        eq(
+          userGroupMembersTable.user_group_id,
+          propertyOwnersTable.user_group_id,
+        ),
+      )
+      .where(
+        or(
+          eq(propertyOwnersTable.user_id, userId),
+          eq(userGroupMembersTable.user_id, userId),
+        ),
+      )
+
+    const viaGroupLink = await ctx.db
+      .selectDistinct({ id: userGroupsTable.property_id })
+      .from(userGroupsTable)
+      .innerJoin(
+        userGroupMembersTable,
+        eq(userGroupMembersTable.user_group_id, userGroupsTable.id),
+      )
+      .where(
+        and(
+          eq(userGroupMembersTable.user_id, userId),
+          isNotNull(userGroupsTable.property_id),
+        ),
+      )
+
+    const ids = new Set<number>()
+    for (const r of viaOwners) ids.add(r.id)
+    for (const r of viaGroupLink) {
+      if (r.id != null) ids.add(r.id)
+    }
+    if (ids.size === 0) return []
+
     return ctx.db
-      .selectDistinct({
+      .select({
         id: propertyTable.id,
         name: propertyTable.name,
         address: propertyTable.address,
@@ -77,23 +118,7 @@ export const propertyRouter = router({
         longitude: propertyTable.longitude,
       })
       .from(propertyTable)
-      .innerJoin(
-        propertyOwnersTable,
-        eq(propertyOwnersTable.property_id, propertyTable.id),
-      )
-      .leftJoin(
-        userGroupMembersTable,
-        eq(
-          userGroupMembersTable.user_group_id,
-          propertyOwnersTable.user_group_id,
-        ),
-      )
-      .where(
-        or(
-          eq(propertyOwnersTable.user_id, ctx.user.id),
-          eq(userGroupMembersTable.user_id, ctx.user.id),
-        ),
-      )
+      .where(inArray(propertyTable.id, Array.from(ids)))
       .orderBy(asc(propertyTable.id))
   }),
 

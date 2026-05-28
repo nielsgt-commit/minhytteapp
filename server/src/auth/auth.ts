@@ -71,6 +71,13 @@ async function applyInvitesForNewUser(new_user_id: number, email: string) {
       .set({ used_at: now, used_by_user_id: new_user_id })
       .where(eq(allowedEmailsTable.id, inv.id))
   }
+
+  // The invitee is joining an existing property — they have nothing to set
+  // up, so skip the onboarding wizard.
+  await db
+    .update(usersTable)
+    .set({ onboarding_step: "done" })
+    .where(eq(usersTable.id, new_user_id))
 }
 
 async function isEmailAllowed(email: string): Promise<boolean> {
@@ -168,6 +175,16 @@ export const auth = betterAuth({
       birthday: {
         type: "string",
         required: false,
+      },
+      onboarding_step: {
+        type: "string",
+        required: false,
+        input: false,
+      },
+      onboarding_dismissed_at: {
+        type: "date",
+        required: false,
+        input: false,
       },
     },
   },

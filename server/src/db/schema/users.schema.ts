@@ -31,6 +31,19 @@ export const usersTable = pgTable("users", {
     .notNull()
     .default("in_progress"),
   birthday: date("birthday", { mode: "string" }),
+  onboarding_step: varchar("onboarding_step", {
+    length: 16,
+    enum: [
+      "user",
+      "basics",
+      "buildings",
+      "rooms",
+      "infrastructure",
+      "equipment",
+      "done",
+    ],
+  }),
+  onboarding_dismissed_at: timestamp("onboarding_dismissed_at"),
   created_at: timestamp("created_at").notNull().defaultNow(),
   updated_at: timestamp("updated_at").notNull().defaultNow(),
 })
@@ -39,6 +52,9 @@ export const userGroupsTable = pgTable("user_groups", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   is_main: boolean("is_main").notNull().default(false),
+  property_id: integer("property_id").references(
+    (): AnyPgColumn => propertyTable.id,
+  ),
 })
 
 export const userGroupMembersTable = pgTable(

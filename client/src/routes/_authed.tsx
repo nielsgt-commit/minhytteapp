@@ -3,6 +3,7 @@ import { store } from "@/app/store"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { selectSelectedUserId } from "@/features/user/userSlice"
 import { getSession } from "@/auth/auth-client"
+import { trpc } from "@/trpc/client"
 import styles from "./_authed.module.css"
 
 export const Route = createFileRoute("/_authed")({
@@ -14,6 +15,17 @@ export const Route = createFileRoute("/_authed")({
     if (!session) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: "/" })
+    }
+    const me = await context.queryClient
+      .ensureQueryData(trpc.user.me.queryOptions())
+      .catch(() => null)
+    if (
+      me &&
+      me.onboarding_step !== "done" &&
+      me.onboarding_dismissed_at == null
+    ) {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw redirect({ to: "/onboarding" })
     }
     const state = store.getState()
     return {

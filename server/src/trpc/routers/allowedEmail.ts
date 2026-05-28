@@ -9,6 +9,7 @@ import {
 import {
   allowedEmailsTable,
   userGroupMembersTable,
+  userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
 import { assertPropertyMember, headOrAdminProcedure, router } from "../init.ts"
@@ -88,25 +89,36 @@ export const allowedEmailRouter = router({
         ownership_pct == null ? null : ownership_pct.toFixed(2)
 
       return ctx.db.transaction(async tx => {
-        const ensureGroupOwnsProperty = async (pid: number, gid: number) => {
-          const exists = (
+        const ensureGroupLinkedToProperty = async (
+          pid: number,
+          gid: number,
+        ) => {
+          const group = (
             await tx
-              .select({ id: propertyOwnersTable.id })
-              .from(propertyOwnersTable)
-              .where(
-                and(
-                  eq(propertyOwnersTable.property_id, pid),
-                  eq(propertyOwnersTable.user_group_id, gid),
-                ),
-              )
+              .select({ property_id: userGroupsTable.property_id })
+              .from(userGroupsTable)
+              .where(eq(userGroupsTable.id, gid))
               .limit(1)
           ).at(0)
-          if (exists) return
-          await tx.insert(propertyOwnersTable).values({
-            property_id: pid,
-            user_group_id: gid,
-            ownership_pct: "0.00",
-          })
+          if (!group) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "user group not found",
+            })
+          }
+          if (group.property_id == null) {
+            await tx
+              .update(userGroupsTable)
+              .set({ property_id: pid })
+              .where(eq(userGroupsTable.id, gid))
+            return
+          }
+          if (group.property_id !== pid) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "selected group is linked to a different property",
+            })
+          }
         }
 
         const pending = await tx
@@ -228,7 +240,7 @@ export const allowedEmailRouter = router({
             }
 
             if (user_group_id != null) {
-              await ensureGroupOwnsProperty(property_id, user_group_id)
+              await ensureGroupLinkedToProperty(property_id, user_group_id)
             }
 
             const [updated] = await tx
@@ -285,7 +297,7 @@ export const allowedEmailRouter = router({
                 .insert(userGroupMembersTable)
                 .values({ user_group_id, user_id: userId })
                 .onConflictDoNothing()
-              await ensureGroupOwnsProperty(property_id, user_group_id)
+              await ensureGroupLinkedToProperty(property_id, user_group_id)
             }
 
             const [created] = await tx
@@ -305,7 +317,7 @@ export const allowedEmailRouter = router({
         }
 
         if (property_id != null && user_group_id != null) {
-          await ensureGroupOwnsProperty(property_id, user_group_id)
+          await ensureGroupLinkedToProperty(property_id, user_group_id)
         }
 
         const [created] = await tx

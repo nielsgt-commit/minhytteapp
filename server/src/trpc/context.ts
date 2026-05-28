@@ -14,6 +14,16 @@ export type AuthUser = {
   parent_user_id: number | null
   settlement_progress: "in_progress" | "all_done"
   birthday: string | null
+  onboarding_step:
+    | "user"
+    | "basics"
+    | "buildings"
+    | "rooms"
+    | "infrastructure"
+    | "equipment"
+    | "done"
+    | null
+  onboarding_dismissed_at: Date | null
   createdAt: Date
   updatedAt: Date
 }
