@@ -1,7 +1,8 @@
+import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
-import { Heading } from "@digdir/designsystemet-react"
+import { Button, Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { UserCreationForm } from "./UserCreationForm"
@@ -21,6 +22,16 @@ type Step =
   | "equipment"
   | "done"
 
+const STEPS: readonly Step[] = [
+  "user",
+  "basics",
+  "buildings",
+  "rooms",
+  "infrastructure",
+  "equipment",
+  "done",
+] as const
+
 const NEXT: Record<Step, Step> = {
   user: "basics",
   basics: "buildings",
@@ -31,7 +42,14 @@ const NEXT: Record<Step, Step> = {
   done: "done",
 }
 
-export function OnboardingFlow() {
+type Props = {
+  /** In preview mode the wizard ignores persisted onboarding_step and skips
+   *  writes to it — so devs can iterate on the UI without corrupting their
+   *  own user row. */
+  preview?: boolean
+}
+
+export function OnboardingFlow({ preview = false }: Props) {
   const { t } = useTranslation("onboarding")
   const trpc = useTRPC()
   const navigate = useNavigate()
@@ -68,30 +86,41 @@ export function OnboardingFlow() {
   const firstProperty = properties.at(0) ?? null
   const adminUser = users.find(u => u.is_admin) ?? users.at(0) ?? null
 
-  const currentStep: Step = (() => {
-    const persisted = me?.onboarding_step
-    if (persisted) return persisted
+  const dataDerivedStep: Step = (() => {
     if (!adminUser) return "user"
     if (!firstProperty) return "basics"
     return "buildings"
   })()
 
-  const advance = async (from: Step) => {
-    await setStep.mutateAsync({ step: NEXT[from] })
+  // In preview mode we keep step in local state so the dev can step through
+  // freely without persisting. Otherwise we read from the user row.
+  const [previewStep, setPreviewStep] = useState<Step>(dataDerivedStep)
+  const currentStep: Step = preview
+    ? previewStep
+    : (me?.onboarding_step ?? dataDerivedStep)
+
+  const persistStep = async (step: Step) => {
+    if (preview) {
+      setPreviewStep(step)
+      return
+    }
+    await setStep.mutateAsync({ step })
   }
 
+  const advance = (from: Step) => persistStep(NEXT[from])
+
   const finishLater = async () => {
-    await setStep.mutateAsync({ step: currentStep })
+    if (!preview) await setStep.mutateAsync({ step: currentStep })
     await navigate({ to: "/dashboard" })
   }
 
   const dismissForever = async () => {
-    await dismiss.mutateAsync()
+    if (!preview) await dismiss.mutateAsync()
     await navigate({ to: "/dashboard" })
   }
 
   const goToDashboard = async () => {
-    await setStep.mutateAsync({ step: "done" })
+    if (!preview) await setStep.mutateAsync({ step: "done" })
     await navigate({ to: "/dashboard" })
   }
 
@@ -112,6 +141,38 @@ export function OnboardingFlow() {
         )}
       </p>
 
+      {preview && (
+        <div
+          role="navigation"
+          aria-label="dev step picker"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.5rem",
+            padding: "0.5rem",
+            margin: "0.5rem 0",
+            border: "1px dashed var(--ds-color-warning-border-default)",
+            borderRadius: "4px",
+            background: "var(--ds-color-warning-surface-default)",
+          }}
+        >
+          <strong style={{ marginRight: "0.5rem" }}>🛠 preview:</strong>
+          {STEPS.map(s => (
+            <Button
+              key={s}
+              type="button"
+              variant={s === currentStep ? "primary" : "tertiary"}
+              data-size="sm"
+              onClick={() => {
+                setPreviewStep(s)
+              }}
+            >
+              {s}
+            </Button>
+          ))}
+        </div>
+      )}
+
       {lastError && (
         <p role="alert">
           {t("Error: {{message}}", { message: lastError.message })}
@@ -121,8 +182,10 @@ export function OnboardingFlow() {
       {currentStep === "user" && (
         <UserCreationForm
           onSubmit={async input => {
-            await createUser.mutateAsync({ ...input, is_admin: true })
-            await setStep.mutateAsync({ step: "basics" })
+            if (!preview) {
+              await createUser.mutateAsync({ ...input, is_admin: true })
+            }
+            await persistStep("basics")
           }}
         />
       )}
@@ -139,10 +202,10 @@ export function OnboardingFlow() {
               : undefined
           }
           onSubmit={async input => {
-            if (!firstProperty) {
+            if (!preview && !firstProperty) {
               await createProperty.mutateAsync(input)
             }
-            await setStep.mutateAsync({ step: "buildings" })
+            await persistStep("buildings")
           }}
         />
       )}
@@ -186,14 +249,14 @@ export function OnboardingFlow() {
       {currentStep === "done" && (
         <div>
           <p>{t("All set. You can manage everything from the dashboard.")}</p>
-          <button
+          <Button
             type="button"
             onClick={() => {
               void goToDashboard()
             }}
           >
             {t("Go to dashboard")}
-          </button>
+          </Button>
         </div>
       )}
 

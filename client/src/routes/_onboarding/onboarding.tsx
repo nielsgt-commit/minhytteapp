@@ -29,5 +29,10 @@ export const Route = createFileRoute("/_onboarding/onboarding")({
       context.queryClient.ensureQueryData(trpc.property.mine.queryOptions()),
     ])
   },
-  component: OnboardingFlow,
+  component: OnboardingRoute,
 })
+
+function OnboardingRoute() {
+  const { preview } = Route.useSearch()
+  return <OnboardingFlow preview={preview ?? false} />
+}
