@@ -400,6 +400,20 @@
       "when": 1779911578389,
       "tag": "0056_remove_fixed_opex_capex_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1779960897926,
+      "tag": "0057_drop_property_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1779960940460,
+      "tag": "0058_add_property_in_family_since",
+      "breakpoints": true
     }
   ]
 }

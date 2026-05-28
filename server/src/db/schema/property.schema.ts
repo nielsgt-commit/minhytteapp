@@ -17,7 +17,7 @@ export const propertyTable = pgTable(
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     name: varchar("name", { length: 255 }).notNull(),
     address: varchar("address", { length: 255 }).notNull(),
-    link: varchar("link", { length: 255 }),
+    in_family_since: integer("in_family_since"),
     parking_spots: integer("parking_spots").notNull().default(0),
     adressekode: integer("adressekode"),
     kommunenummer: varchar("kommunenummer", { length: 4 }),
@@ -28,7 +28,13 @@ export const propertyTable = pgTable(
     latitude: numeric("latitude", { precision: 7, scale: 4 }),
     longitude: numeric("longitude", { precision: 7, scale: 4 }),
   },
-  t => [check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`)],
+  t => [
+    check("parking_spots_nonneg", sql`${t.parking_spots} >= 0`),
+    check(
+      "properties_in_family_since_range",
+      sql`${t.in_family_since} IS NULL OR (${t.in_family_since} BETWEEN 1500 AND 2100)`,
+    ),
+  ],
 )
 
 export const parkingClaimsTable = pgTable(

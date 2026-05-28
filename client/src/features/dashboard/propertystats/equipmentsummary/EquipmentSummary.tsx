@@ -55,7 +55,7 @@ export default function EquipmentSummary() {
       }
       footer={
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty">{t("Manage equipment")}</Link>
+          <Link to="/manageproperty/equipment">{t("Manage equipment")}</Link>
         </Button>
       }
     />

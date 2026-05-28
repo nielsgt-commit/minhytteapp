@@ -38,27 +38,10 @@ import {
   router,
 } from "../init.ts"
 
-const linkAllowedProtocols = new Set(["http:", "https:", "mailto:", "tel:"])
-function isAllowedLink(s: string): boolean {
-  if (s === "") return true
-  try {
-    return linkAllowedProtocols.has(new URL(s).protocol)
-  } catch {
-    return false
-  }
-}
-
 const propertyFields = {
   name: z.string().min(1, { error: "name is required" }),
   address: z.string().min(1, { error: "address is required" }),
-  link: z
-    .string()
-    .max(255)
-    .refine(isAllowedLink, {
-      error: "must be http/https/mailto/tel URL or empty",
-    })
-    .nullable()
-    .optional(),
+  in_family_since: z.number().int().min(1500).max(2100).nullable().optional(),
   parking_spots: z.number().int().min(0).max(99).optional(),
   adressekode: z.number().int().nullable().optional(),
   kommunenummer: z.string().length(4).nullable().optional(),
@@ -82,7 +65,7 @@ export const propertyRouter = router({
         id: propertyTable.id,
         name: propertyTable.name,
         address: propertyTable.address,
-        link: propertyTable.link,
+        in_family_since: propertyTable.in_family_since,
         parking_spots: propertyTable.parking_spots,
         adressekode: propertyTable.adressekode,
         kommunenummer: propertyTable.kommunenummer,

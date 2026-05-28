@@ -49,7 +49,7 @@ export default function StructureSummary() {
       }
       footer={
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty">{t("Manage Structures")}</Link>
+          <Link to="/manageproperty/structures">{t("Manage Structures")}</Link>
         </Button>
       }
     />

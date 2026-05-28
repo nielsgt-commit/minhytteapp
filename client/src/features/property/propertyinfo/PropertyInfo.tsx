@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { type SyntheticEvent, useState } from "react"
+import { Suspense, type SyntheticEvent, useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -16,11 +16,11 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
-import { safeHref } from "@/utils/safeHref.ts"
 import {
   AddressLookup,
   type GeonorgeAddress,
 } from "@/features/property/register/AddressLookup"
+import PropertyEvents from "@/features/dashboard/propertyevents/PropertyEvents.tsx"
 
 type MatrikkelDraft = {
   address: string
@@ -71,6 +71,7 @@ export default function PropertyInfo() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [showRegister, setShowRegister] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [draft, setDraft] = useState<MatrikkelDraft | null>(null)
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
@@ -94,7 +95,8 @@ export default function PropertyInfo() {
     if (!name) return
     const address = (draft?.address ?? selectedProperty.address).trim()
     if (!address) return
-    const linkRaw = fdString(fd, "link").trim()
+    const familySinceRaw = fdString(fd, "in_family_since").trim()
+    const familySinceNum = familySinceRaw === "" ? null : Number(familySinceRaw)
     const parkingRaw = fdString(fd, "parking_spots").trim()
     const parkingNum = parkingRaw === "" ? 0 : Number(parkingRaw)
     updateProperty.mutate(
@@ -102,7 +104,10 @@ export default function PropertyInfo() {
         id: selectedProperty.id,
         name,
         address,
-        link: linkRaw === "" ? null : linkRaw,
+        in_family_since:
+          familySinceNum != null && Number.isFinite(familySinceNum)
+            ? familySinceNum
+            : null,
         parking_spots: Number.isFinite(parkingNum) ? parkingNum : 0,
         adressekode: draft?.adressekode ?? selectedProperty.adressekode,
         kommunenummer: draft?.kommunenummer ?? selectedProperty.kommunenummer,
@@ -175,10 +180,12 @@ export default function PropertyInfo() {
               </div>
               <div>
                 <Textfield
-                  label={t("Link")}
-                  type="text"
-                  name="link"
-                  defaultValue={selectedProperty.link ?? ""}
+                  label={t("This property has been in the family since:")}
+                  type="number"
+                  name="in_family_since"
+                  min={1500}
+                  max={2100}
+                  defaultValue={selectedProperty.in_family_since ?? ""}
                 />
               </div>
               <div>
@@ -251,21 +258,9 @@ export default function PropertyInfo() {
           </dl>
         )}
         <p>
-          {t("Link:")}{" "}
-          {(() => {
-            const raw = selectedProperty.link
-            if (raw == null || raw === "") return <em>{t("none")}</em>
-            const safe = safeHref(raw)
-            return safe ? (
-              <a href={safe} target="_blank" rel="noopener noreferrer">
-                {raw}
-              </a>
-            ) : (
-              <span>{raw}</span>
-            )
-          })()}
+          {t("This property has been in the family since:")}{" "}
+          {selectedProperty.in_family_since ?? <em>{t("not set")}</em>}
         </p>
-        <p> {t("Property description")} </p>
         <p>
           {t("Parking spots: {{count}}", {
             count: selectedProperty.parking_spots,
@@ -280,6 +275,20 @@ export default function PropertyInfo() {
         >
           {t("Edit property details")}
         </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            setShowHistory(v => !v)
+          }}
+        >
+          {showHistory ? t("Hide history") : t("Show history")}
+        </Button>
+        {showHistory && (
+          <Suspense fallback={<p>{t("Loading…")}</p>}>
+            <PropertyEvents />
+          </Suspense>
+        )}
       </Card.Block>
     </Card>
   )

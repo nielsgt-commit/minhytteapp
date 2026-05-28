@@ -1,0 +1,2 @@
+ALTER TABLE "properties" ADD COLUMN "in_family_since" integer;--> statement-breakpoint
+ALTER TABLE "properties" ADD CONSTRAINT "properties_in_family_since_range" CHECK ("properties"."in_family_since" IS NULL OR ("properties"."in_family_since" BETWEEN 1500 AND 2100));

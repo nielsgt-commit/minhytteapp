@@ -73,7 +73,7 @@ export default function RoomsSummary() {
       }
       footer={
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty">{t("Manage rooms")}</Link>
+          <Link to="/manageproperty/structures">{t("Manage rooms")}</Link>
         </Button>
       }
     />
