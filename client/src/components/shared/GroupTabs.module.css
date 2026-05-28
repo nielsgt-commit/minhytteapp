@@ -1,5 +1,10 @@
 .filter {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.filter > * {
+  flex-shrink: 0;
 }

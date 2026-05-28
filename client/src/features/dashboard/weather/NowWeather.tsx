@@ -1,3 +1,4 @@
+import { Paragraph } from "@digdir/designsystemet-react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
@@ -30,9 +31,11 @@ export default function NowWeather() {
 
   if (propertyId != null && property != null && !hasCoords) {
     return (
-      <Link to="/manageproperty/info" className={styles.hint}>
-        {t("Add address to see local weather")}
-      </Link>
+      <Paragraph>
+        <Link to="/manageproperty/info" className={styles.hint}>
+          {t("Add address to see local weather")}
+        </Link>
+      </Paragraph>
     )
   }
 
