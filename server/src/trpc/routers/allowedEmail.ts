@@ -88,6 +88,27 @@ export const allowedEmailRouter = router({
         ownership_pct == null ? null : ownership_pct.toFixed(2)
 
       return ctx.db.transaction(async tx => {
+        const ensureGroupOwnsProperty = async (pid: number, gid: number) => {
+          const exists = (
+            await tx
+              .select({ id: propertyOwnersTable.id })
+              .from(propertyOwnersTable)
+              .where(
+                and(
+                  eq(propertyOwnersTable.property_id, pid),
+                  eq(propertyOwnersTable.user_group_id, gid),
+                ),
+              )
+              .limit(1)
+          ).at(0)
+          if (exists) return
+          await tx.insert(propertyOwnersTable).values({
+            property_id: pid,
+            user_group_id: gid,
+            ownership_pct: "0.00",
+          })
+        }
+
         const pending = await tx
           .select({ id: allowedEmailsTable.id })
           .from(allowedEmailsTable)
@@ -206,6 +227,10 @@ export const allowedEmailRouter = router({
               }
             }
 
+            if (user_group_id != null) {
+              await ensureGroupOwnsProperty(property_id, user_group_id)
+            }
+
             const [updated] = await tx
               .update(allowedEmailsTable)
               .set({
@@ -216,6 +241,71 @@ export const allowedEmailRouter = router({
               .returning()
             return updated
           }
+
+          const existingUser = (
+            await tx
+              .select({ id: usersTable.id })
+              .from(usersTable)
+              .where(eq(usersTable.email, email))
+              .limit(1)
+          ).at(0)
+
+          if (existingUser) {
+            const userId = existingUser.id
+
+            if (ownership_pct_str != null) {
+              const ownerRow = (
+                await tx
+                  .select({ id: propertyOwnersTable.id })
+                  .from(propertyOwnersTable)
+                  .where(
+                    and(
+                      eq(propertyOwnersTable.property_id, property_id),
+                      eq(propertyOwnersTable.user_id, userId),
+                    ),
+                  )
+                  .limit(1)
+              ).at(0)
+              if (ownerRow) {
+                await tx
+                  .update(propertyOwnersTable)
+                  .set({ ownership_pct: ownership_pct_str })
+                  .where(eq(propertyOwnersTable.id, ownerRow.id))
+              } else {
+                await tx.insert(propertyOwnersTable).values({
+                  property_id,
+                  user_id: userId,
+                  ownership_pct: ownership_pct_str,
+                })
+              }
+            }
+
+            if (user_group_id != null) {
+              await tx
+                .insert(userGroupMembersTable)
+                .values({ user_group_id, user_id: userId })
+                .onConflictDoNothing()
+              await ensureGroupOwnsProperty(property_id, user_group_id)
+            }
+
+            const [created] = await tx
+              .insert(allowedEmailsTable)
+              .values({
+                email,
+                property_id,
+                user_group_id,
+                ownership_pct: ownership_pct_str,
+                added_by_user_id: ctx.user.id,
+                used_at: new Date(),
+                used_by_user_id: userId,
+              })
+              .returning()
+            return created
+          }
+        }
+
+        if (property_id != null && user_group_id != null) {
+          await ensureGroupOwnsProperty(property_id, user_group_id)
         }
 
         const [created] = await tx
