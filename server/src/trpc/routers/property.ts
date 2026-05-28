@@ -296,6 +296,21 @@ export const propertyRouter = router({
           .delete(allowedEmailsTable)
           .where(eq(allowedEmailsTable.property_id, id))
 
+        const groupIds = await pickIds(
+          tx
+            .select({ id: userGroupsTable.id })
+            .from(userGroupsTable)
+            .where(eq(userGroupsTable.property_id, id)),
+        )
+        if (groupIds.length > 0) {
+          await tx
+            .delete(userGroupMembersTable)
+            .where(inArray(userGroupMembersTable.user_group_id, groupIds))
+          await tx
+            .delete(userGroupsTable)
+            .where(eq(userGroupsTable.property_id, id))
+        }
+
         const [deleted] = await tx
           .delete(propertyTable)
           .where(eq(propertyTable.id, id))

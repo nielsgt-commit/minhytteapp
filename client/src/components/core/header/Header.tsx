@@ -1,5 +1,6 @@
 import { Paragraph } from "@digdir/designsystemet-react"
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import PropertyMenu from "./PropertyMenu.tsx"
 import UserMenu from "./UserMenu"
 import styles from "./Header.module.css"
@@ -27,6 +28,18 @@ export default function Header() {
           {current ? `${current.address} ` : " "}
         </Paragraph>
         <div className={styles.end}>
+          {/* DEV-ONLY: jump into the onboarding wizard regardless of state.
+              Delete this block (and the `?preview=1` branch in
+              routes/_onboarding/onboarding.tsx) when the wizard ships. */}
+          {import.meta.env.DEV && auth.isAuthenticated && (
+            <Link
+              to="/onboarding"
+              search={{ preview: true }}
+              className={styles.devOnboardingLink}
+            >
+              🛠 Onboarding
+            </Link>
+          )}
           <div className={styles.hideOnMobileBlock}>
             <CheckIn />
           </div>

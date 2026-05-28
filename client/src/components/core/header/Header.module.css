@@ -33,6 +33,19 @@
   gap: 1rem;
 }
 
+/* DEV-ONLY pill linking to the onboarding wizard with ?preview=1.
+   Delete alongside the Link in Header.tsx when the wizard ships. */
+.devOnboardingLink {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px dashed var(--ds-color-warning-border-default);
+  border-radius: var(--ds-border-radius-default);
+  color: var(--ds-color-warning-text-default);
+  background: var(--ds-color-warning-surface-default);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 .menu {
   display: flex;
   align-items: center;
