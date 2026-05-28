@@ -27,6 +27,16 @@ export async function relevantGroupIdsForProperty(
     .map(r => r.id)
     .filter((id): id is number => id != null)
 
+  const linkedGroupRows = await ctx.db
+    .select({ id: userGroupsTable.id })
+    .from(userGroupsTable)
+    .where(eq(userGroupsTable.property_id, property_id))
+  const linkedGroupIds = linkedGroupRows.map(r => r.id)
+
+  const propertyGroupIds = Array.from(
+    new Set<number>([...owningGroupIds, ...linkedGroupIds]),
+  )
+
   const directOwnerRows = await ctx.db
     .select({ user_id: propertyOwnersTable.user_id })
     .from(propertyOwnersTable)
@@ -41,15 +51,15 @@ export async function relevantGroupIdsForProperty(
   for (const r of directOwnerRows) {
     if (r.user_id != null) peopleSet.add(r.user_id)
   }
-  if (owningGroupIds.length > 0) {
+  if (propertyGroupIds.length > 0) {
     const owningMembers = await ctx.db
       .select({ user_id: userGroupMembersTable.user_id })
       .from(userGroupMembersTable)
-      .where(inArray(userGroupMembersTable.user_group_id, owningGroupIds))
+      .where(inArray(userGroupMembersTable.user_group_id, propertyGroupIds))
     for (const r of owningMembers) peopleSet.add(r.user_id)
   }
 
-  const relevantIds = new Set<number>(owningGroupIds)
+  const relevantIds = new Set<number>(propertyGroupIds)
   if (peopleSet.size > 0) {
     const groupsByMember = await ctx.db
       .selectDistinct({ id: userGroupMembersTable.user_group_id })

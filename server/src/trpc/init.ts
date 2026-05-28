@@ -3,7 +3,10 @@ import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"
 import type { db as dbClient } from "../db/client.ts"
 import { propertyOwnersTable } from "../db/schema/property.schema.ts"
-import { userGroupMembersTable } from "../db/schema/users.schema.ts"
+import {
+  userGroupMembersTable,
+  userGroupsTable,
+} from "../db/schema/users.schema.ts"
 import type { AuthUser, Context } from "./context.ts"
 
 type Db = typeof dbClient
@@ -43,7 +46,7 @@ export async function assertPropertyMember(
   propertyId: number,
 ) {
   if (user.is_admin) return
-  const hit = await db
+  const viaOwners = await db
     .select({ id: propertyOwnersTable.id })
     .from(propertyOwnersTable)
     .leftJoin(
@@ -63,9 +66,25 @@ export async function assertPropertyMember(
       ),
     )
     .limit(1)
-  if (hit.length === 0) {
-    throw new TRPCError({ code: "FORBIDDEN" })
-  }
+  if (viaOwners.length > 0) return
+
+  const viaGroupLink = await db
+    .select({ id: userGroupsTable.id })
+    .from(userGroupsTable)
+    .innerJoin(
+      userGroupMembersTable,
+      eq(userGroupMembersTable.user_group_id, userGroupsTable.id),
+    )
+    .where(
+      and(
+        eq(userGroupsTable.property_id, propertyId),
+        eq(userGroupMembersTable.user_id, user.id),
+      ),
+    )
+    .limit(1)
+  if (viaGroupLink.length > 0) return
+
+  throw new TRPCError({ code: "FORBIDDEN" })
 }
 
 export const propertyAdminProcedure = protectedProcedure

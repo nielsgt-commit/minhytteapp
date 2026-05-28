@@ -39,6 +39,9 @@ export const userGroupsTable = pgTable("user_groups", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   is_main: boolean("is_main").notNull().default(false),
+  property_id: integer("property_id").references(
+    (): AnyPgColumn => propertyTable.id,
+  ),
 })
 
 export const userGroupMembersTable = pgTable(

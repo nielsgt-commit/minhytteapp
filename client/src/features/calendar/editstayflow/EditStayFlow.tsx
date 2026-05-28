@@ -41,7 +41,9 @@ export function EditStayFlow({
   const { t } = useTranslation("calendar")
   const trpc = useTRPC()
 
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
+  )
   const { data: rooms } = useSuspenseQuery(
     trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
   )
