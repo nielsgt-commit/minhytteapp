@@ -4,6 +4,7 @@ body {
   font-feature-settings: "cv05" 1; /* Enable lowercase l with tail */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--ds-color-background-default);
 }
 
 code {
@@ -16,8 +17,17 @@ code {
   min-width: 0;
 }
 
+/* Color hierarchy: body → background-default, l1 card → background-tinted, l2 → surface-default, l3 → surface-tinted */
 .ds-card {
   background-color: var(--ds-color-background-tinted);
+}
+
+.ds-card .ds-card {
+  background-color: var(--ds-color-surface-default);
+}
+
+.ds-card .ds-card .ds-card {
+  background-color: var(--ds-color-surface-tinted);
 }
 
 ds-tabs,
