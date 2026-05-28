@@ -32,6 +32,7 @@
   "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.": "Rediger brukerdetaljer eller fjern en bruker. Sletting blokkeres så lenge brukeren er knyttet til en gruppe, et eierskap, en booking eller en utgift.",
   "Email": "E-post",
   "Error: {{message}}": "Feil: {{message}}",
+  "Give access to this property": "Gi tilgang til denne eiendommen",
   "Group": "Gruppe",
   "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.": "Grupper samler brukere slik at du kan tildele gruppeeierskap til en eiendom og slå sammen oppgjør. Sletting av en gruppe blokkeres mens den er i bruk.",
   "Invites": "Invitasjoner",

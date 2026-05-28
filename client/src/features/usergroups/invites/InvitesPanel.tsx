@@ -1,6 +1,14 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Heading, Select, Textfield } from "@digdir/designsystemet-react"
+import { useSuspenseQuery, useQuery } from "@tanstack/react-query"
+import {
+  Button,
+  Card,
+  Checkbox,
+  Heading,
+  Select,
+  Textfield,
+} from "@digdir/designsystemet-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
@@ -29,6 +37,9 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
       property_id: propertyId,
     }),
   )
+  const meQuery = useQuery(trpc.user.me.queryOptions())
+  const isAdmin = meQuery.data?.is_admin ?? false
+  const [attachToProperty, setAttachToProperty] = useState(true)
 
   const allowedKeys = [trpc.allowedEmail.list.queryKey()]
   const add = useMutationWithInvalidation(
@@ -49,6 +60,11 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
   const groupName = (id: number | null) =>
     id == null ? null : (groupsQuery.data.find(g => g.id === id)?.name ?? null)
 
+  const closeForm = () => {
+    setAttachToProperty(true)
+    form.close()
+  }
+
   const handleAdd = async (fd: FormData) => {
     const email = fdString(fd, "email").trim()
     if (!email) return
@@ -61,11 +77,11 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     try {
       await add.mutateAsync({
         email,
-        property_id: propertyId,
-        user_group_id,
-        ownership_pct,
+        property_id: attachToProperty ? propertyId : null,
+        user_group_id: attachToProperty ? user_group_id : null,
+        ownership_pct: attachToProperty ? ownership_pct : null,
       })
-      form.close()
+      closeForm()
     } catch {
       /* surfaced via add.error / useMutationsStatus */
     }
@@ -145,7 +161,11 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
 
           {canEdit && (
             <div>
-              <Button type="button" disabled={pending} onClick={form.toggle}>
+              <Button
+                type="button"
+                disabled={pending}
+                onClick={form.value ? closeForm : form.open}
+              >
                 {form.value ? t("Cancel") : t("Add email")}
               </Button>
             </div>
@@ -164,37 +184,52 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                     autoFocus
                   />
                 </div>
-                <div>
-                  <label>
-                    {t("Group")}
-                    <Select name="user_group_id" defaultValue={GROUP_NONE}>
-                      <Select.Option value={GROUP_NONE}>
-                        {t("(none)")}
-                      </Select.Option>
-                      {mainGroups.map(g => (
-                        <Select.Option key={g.id} value={g.id}>
-                          {g.name}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </label>
-                </div>
-                <div>
-                  <Textfield
-                    label={t("Ownership %")}
-                    type="number"
-                    name="ownership_pct"
-                    min={0}
-                    max={100}
-                    step={0.01}
-                  />
-                </div>
+                {isAdmin && (
+                  <div>
+                    <Checkbox
+                      label={t("Give access to this property")}
+                      checked={attachToProperty}
+                      onChange={e => {
+                        setAttachToProperty(e.target.checked)
+                      }}
+                    />
+                  </div>
+                )}
+                {attachToProperty && (
+                  <>
+                    <div>
+                      <label>
+                        {t("Group")}
+                        <Select name="user_group_id" defaultValue={GROUP_NONE}>
+                          <Select.Option value={GROUP_NONE}>
+                            {t("(none)")}
+                          </Select.Option>
+                          {mainGroups.map(g => (
+                            <Select.Option key={g.id} value={g.id}>
+                              {g.name}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </label>
+                    </div>
+                    <div>
+                      <Textfield
+                        label={t("Ownership %")}
+                        type="number"
+                        name="ownership_pct"
+                        min={0}
+                        max={100}
+                        step={0.01}
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
                   <SubmitButton>{t("Add")}</SubmitButton>
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={form.close}
+                    onClick={closeForm}
                     disabled={add.isPending}
                   >
                     {t("Cancel")}

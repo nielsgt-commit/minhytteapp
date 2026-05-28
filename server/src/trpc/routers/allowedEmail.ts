@@ -57,8 +57,24 @@ export const allowedEmailRouter = router({
     .mutation(async ({ ctx, input }) => {
       const email = normalizeEmail(input.email)
       const property_id = input.property_id ?? null
-      if (property_id != null) {
+      const user_group_id = input.user_group_id ?? null
+      const ownership_pct = input.ownership_pct ?? null
+      if (property_id == null) {
+        if (!ctx.user.is_admin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "only admins can create invites without a property",
+          })
+        }
+      } else {
         await assertPropertyMember(ctx.db, ctx.user, property_id)
+        if (user_group_id == null && ownership_pct == null) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "property invites must set a group or an ownership percentage",
+          })
+        }
       }
       const existing = await ctx.db
         .select({ id: allowedEmailsTable.id })
@@ -85,9 +101,8 @@ export const allowedEmailRouter = router({
         .values({
           email,
           property_id,
-          user_group_id: input.user_group_id ?? null,
-          ownership_pct:
-            input.ownership_pct == null ? null : input.ownership_pct.toFixed(2),
+          user_group_id,
+          ownership_pct: ownership_pct == null ? null : ownership_pct.toFixed(2),
           added_by_user_id: ctx.user.id,
         })
         .returning()

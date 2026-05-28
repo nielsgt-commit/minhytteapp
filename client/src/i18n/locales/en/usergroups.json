@@ -29,6 +29,7 @@
   "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.": "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.",
   "Email": "Email",
   "Error: {{message}}": "Error: {{message}}",
+  "Give access to this property": "Give access to this property",
   "Group": "Group",
   "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.": "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.",
   "Invites": "Invites",
