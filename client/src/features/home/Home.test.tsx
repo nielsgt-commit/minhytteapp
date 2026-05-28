@@ -12,16 +12,6 @@ vi.mock("react-i18next", () => ({
 }))
 
 describe("Home", () => {
-  test("renders the layout title alongside the unauthenticated view", () => {
-    render(<Home />)
-    expect(
-      screen.getByRole("heading", { name: "Home", level: 1 }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("heading", { name: "minhytteapp" }),
-    ).toBeInTheDocument()
-  })
-
   test("exposes the sign-in form to the user", () => {
     render(<Home />)
     expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument()

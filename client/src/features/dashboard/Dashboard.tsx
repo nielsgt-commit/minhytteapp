@@ -20,11 +20,7 @@ export function Dashboard() {
         <Heading level={2} className={styles.title}>
           {t("Dashboard")}
         </Heading>
-        <p>
-          {t(
-            "No property selected. Add or pick one from the header.",
-          )}
-        </p>
+        <p>{t("No property selected. Add or pick one from the header.")}</p>
       </section>
     )
   }

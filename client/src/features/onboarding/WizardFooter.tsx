@@ -85,7 +85,7 @@ export function WizardFooter({
         type={primary.type ?? "button"}
         form={primary.form}
         onClick={primary.onClick}
-        disabled={pending || primary.disabled}
+        disabled={Boolean(pending) || Boolean(primary.disabled)}
       >
         {primary.label}
       </Button>

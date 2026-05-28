@@ -10,11 +10,7 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
-import {
-  assertPropertyMember,
-  protectedProcedure,
-  router,
-} from "../init.ts"
+import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromMaintenance,
   resolvePropertyIdFromMaintenanceParent,

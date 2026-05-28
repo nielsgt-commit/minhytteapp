@@ -52,8 +52,7 @@ export function InfrastructureStep({ propertyId }: Props) {
     keys,
   )
 
-  const lastError =
-    createInfra.error ?? updateInfra.error ?? deleteInfra.error
+  const lastError = createInfra.error ?? updateInfra.error ?? deleteInfra.error
   const pending =
     createInfra.isPending || updateInfra.isPending || deleteInfra.isPending
 
@@ -184,7 +183,9 @@ export function InfrastructureStep({ propertyId }: Props) {
                   editing={editingId === i.id}
                   canEdit={canEdit}
                   pending={pending}
-                  editLabel={t("Edit infrastructure {{name}}", { name: i.name })}
+                  editLabel={t("Edit infrastructure {{name}}", {
+                    name: i.name,
+                  })}
                   onStartEdit={() => {
                     setEditingId(i.id)
                   }}

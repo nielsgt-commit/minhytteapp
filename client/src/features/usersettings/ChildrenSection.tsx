@@ -1,6 +1,11 @@
 import { type SyntheticEvent, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Button, Fieldset, Heading, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Fieldset,
+  Heading,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"

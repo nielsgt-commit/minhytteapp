@@ -3,12 +3,13 @@
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
+  background-color: var(--ds-color-neutral-background-default);
 }
 
 .card {
   width: 100%;
   max-width: 360px;
-  background-color: var(--ds-color-neutral-surface-tinted);
+  background-color: var(--ds-color-neutral-background-tinted);
 }
 
 .form {

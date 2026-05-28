@@ -80,7 +80,10 @@ export function OnboardingFlow({ preview = false }: Props) {
     [meKey],
   )
 
-  const onboardingKeys = [trpc.user.me.queryKey(), trpc.property.mine.queryKey()]
+  const onboardingKeys = [
+    trpc.user.me.queryKey(),
+    trpc.property.mine.queryKey(),
+  ]
   const createUser = useMutationWithInvalidation(
     trpc.user.create.mutationOptions(),
     onboardingKeys,
@@ -131,10 +134,7 @@ export function OnboardingFlow({ preview = false }: Props) {
   }
 
   const lastError =
-    createUser.error ??
-    createProperty.error ??
-    setStep.error ??
-    dismiss.error
+    createUser.error ?? createProperty.error ?? setStep.error ?? dismiss.error
 
   const footerPending = setStep.isPending || dismiss.isPending
 
@@ -153,175 +153,175 @@ export function OnboardingFlow({ preview = false }: Props) {
         <Card.Block className={styles.body}>
           <div className={styles.content}>
             {preview && (
-        <div
-          role="navigation"
-          aria-label="dev step picker"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "0.5rem",
-            padding: "0.5rem",
-            margin: "0.5rem 0",
-            border: "1px dashed var(--ds-color-warning-border-default)",
-            borderRadius: "4px",
-            background: "var(--ds-color-warning-surface-default)",
-          }}
-        >
-          <strong style={{ marginRight: "0.5rem" }}>🛠 preview:</strong>
-          {STEPS.map(s => (
-            <Button
-              key={s}
-              type="button"
-              variant={s === currentStep ? "primary" : "tertiary"}
-              data-size="sm"
-              onClick={() => {
-                setPreviewStep(s)
-              }}
-            >
-              {s}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
-
-      {currentStep === "user" && (
-        <UserCreationForm
-          onSubmit={async input => {
-            if (!preview) {
-              await createUser.mutateAsync({ ...input, is_admin: true })
-            }
-            await persistStep("basics")
-          }}
-        />
-      )}
-
-      {currentStep === "basics" && (
-        <PropertyBasicsStep
-          initial={
-            firstProperty
-              ? {
-                  address: firstProperty.address,
-                  name: firstProperty.name,
-                  parking_spots: firstProperty.parking_spots,
-                }
-              : undefined
-          }
-          onSubmit={async input => {
-            if (!preview && !firstProperty) {
-              await createProperty.mutateAsync(input)
-            }
-            await persistStep("buildings")
-          }}
-        />
-      )}
-
-      {currentStep === "buildings" && firstProperty && (
-        <BuildingsStep propertyId={firstProperty.id} />
-      )}
-
-      {currentStep === "rooms" && firstProperty && (
-        <BedroomsStep propertyId={firstProperty.id} />
-      )}
-
-      {currentStep === "infrastructure" && firstProperty && (
-        <InfrastructureStep propertyId={firstProperty.id} />
-      )}
-
-      {currentStep === "equipment" && firstProperty && (
-        <EquipmentStep propertyId={firstProperty.id} />
-      )}
-
-      {currentStep === "done" && (
-        <div>
-          <p>
-            {t(
-              "All set. To add more details later, open the property dropdown in the top header and pick \"Manage property\".",
+              <div
+                role="navigation"
+                aria-label="dev step picker"
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.5rem",
+                  padding: "0.5rem",
+                  margin: "0.5rem 0",
+                  border: "1px dashed var(--ds-color-warning-border-default)",
+                  borderRadius: "4px",
+                  background: "var(--ds-color-warning-surface-default)",
+                }}
+              >
+                <strong style={{ marginRight: "0.5rem" }}>🛠 preview:</strong>
+                {STEPS.map(s => (
+                  <Button
+                    key={s}
+                    type="button"
+                    variant={s === currentStep ? "primary" : "tertiary"}
+                    data-size="sm"
+                    onClick={() => {
+                      setPreviewStep(s)
+                    }}
+                  >
+                    {s}
+                  </Button>
+                ))}
+              </div>
             )}
-          </p>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "0.5rem",
-              flexWrap: "wrap",
-              marginTop: "1rem",
-            }}
-          >
-            <Button
-              type="button"
-              variant="tertiary"
-              data-size="sm"
-              disabled={footerPending}
-              onClick={() => {
-                void persistStep("equipment")
-              }}
-            >
-              {t("Back")}
-            </Button>
-            <Button
-              type="button"
-              disabled={footerPending}
-              onClick={() => {
-                void goToDashboard()
-              }}
-            >
-              {t("Go to dashboard")}
-            </Button>
-          </div>
-        </div>
-      )}
+
+            {lastError && (
+              <p role="alert">
+                {t("Error: {{message}}", { message: lastError.message })}
+              </p>
+            )}
+
+            {currentStep === "user" && (
+              <UserCreationForm
+                onSubmit={async input => {
+                  if (!preview) {
+                    await createUser.mutateAsync({ ...input, is_admin: true })
+                  }
+                  await persistStep("basics")
+                }}
+              />
+            )}
+
+            {currentStep === "basics" && (
+              <PropertyBasicsStep
+                initial={
+                  firstProperty
+                    ? {
+                        address: firstProperty.address,
+                        name: firstProperty.name,
+                        parking_spots: firstProperty.parking_spots,
+                      }
+                    : undefined
+                }
+                onSubmit={async input => {
+                  if (!preview && !firstProperty) {
+                    await createProperty.mutateAsync(input)
+                  }
+                  await persistStep("buildings")
+                }}
+              />
+            )}
+
+            {currentStep === "buildings" && firstProperty && (
+              <BuildingsStep propertyId={firstProperty.id} />
+            )}
+
+            {currentStep === "rooms" && firstProperty && (
+              <BedroomsStep propertyId={firstProperty.id} />
+            )}
+
+            {currentStep === "infrastructure" && firstProperty && (
+              <InfrastructureStep propertyId={firstProperty.id} />
+            )}
+
+            {currentStep === "equipment" && firstProperty && (
+              <EquipmentStep propertyId={firstProperty.id} />
+            )}
+
+            {currentStep === "done" && (
+              <div>
+                <p>
+                  {t(
+                    'All set. To add more details later, open the property dropdown in the top header and pick "Manage property".',
+                  )}
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    flexWrap: "wrap",
+                    marginTop: "1rem",
+                  }}
+                >
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    data-size="sm"
+                    disabled={footerPending}
+                    onClick={() => {
+                      void persistStep("equipment")
+                    }}
+                  >
+                    {t("Back")}
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={footerPending}
+                    onClick={() => {
+                      void goToDashboard()
+                    }}
+                  >
+                    {t("Go to dashboard")}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
-      {currentStep !== "done" && currentStep !== "user" && (
-        <div className={styles.footer}>
-        <WizardFooter
-          primary={
-            currentStep === "basics"
-              ? {
-                  label: t("Continue"),
-                  type: "submit",
-                  form: PROPERTY_BASICS_FORM_ID,
+          {currentStep !== "done" && currentStep !== "user" && (
+            <div className={styles.footer}>
+              <WizardFooter
+                primary={
+                  currentStep === "basics"
+                    ? {
+                        label: t("Continue"),
+                        type: "submit",
+                        form: PROPERTY_BASICS_FORM_ID,
+                      }
+                    : {
+                        label: t("Continue"),
+                        onClick: () => {
+                          void advance(currentStep)
+                        },
+                      }
                 }
-              : {
-                  label: t("Continue"),
-                  onClick: () => {
-                    void advance(currentStep)
-                  },
+                onBack={
+                  PREV[currentStep]
+                    ? () => {
+                        const prev = PREV[currentStep]
+                        if (prev) void persistStep(prev)
+                      }
+                    : undefined
                 }
-          }
-          onBack={
-            PREV[currentStep]
-              ? () => {
-                  const prev = PREV[currentStep]
-                  if (prev) void persistStep(prev)
+                onSkip={
+                  currentStep === "basics"
+                    ? undefined
+                    : () => {
+                        void advance(currentStep)
+                      }
                 }
-              : undefined
-          }
-          onSkip={
-            currentStep === "basics"
-              ? undefined
-              : () => {
-                  void advance(currentStep)
-                }
-          }
-          onFinishLater={() => {
-            void finishLater()
-          }}
-          onDismiss={() => {
-            void dismissForever()
-          }}
-          pending={footerPending}
-        />
-        </div>
-      )}
+                onFinishLater={() => {
+                  void finishLater()
+                }}
+                onDismiss={() => {
+                  void dismissForever()
+                }}
+                pending={footerPending}
+              />
+            </div>
+          )}
         </Card.Block>
       </Card>
     </div>

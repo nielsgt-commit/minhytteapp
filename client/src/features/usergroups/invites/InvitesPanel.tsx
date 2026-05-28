@@ -87,11 +87,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     }
   }
 
-  const handleRemove = (
-    id: number,
-    email: string,
-    accepted: boolean,
-  ) => {
+  const handleRemove = (id: number, email: string, accepted: boolean) => {
     const prompt = accepted
       ? t("Revoke {{email}}'s access to this property?", { email })
       : t("Remove {{email}} from the allowlist?", { email })

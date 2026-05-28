@@ -6,7 +6,10 @@ import { useTRPC } from "@/trpc/trpc"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
-import { AddBedsFlow, type RoomData } from "@/features/property/testform/AddBedsFlow"
+import {
+  AddBedsFlow,
+  type RoomData,
+} from "@/features/property/testform/AddBedsFlow"
 import listStyles from "./StepList.module.css"
 
 type Props = {
@@ -216,7 +219,6 @@ export function BedroomsStep({ propertyId }: Props) {
                       }}
                     />
                   )}
-
                 </Card.Block>
               </li>
             </Card>

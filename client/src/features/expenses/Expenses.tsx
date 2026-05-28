@@ -14,8 +14,8 @@ export function Expenses() {
     return (
       <section className={styles.page}>
         <Heading level={2} className={styles.title}>
-        {t("Expenses")}
-      </Heading>
+          {t("Expenses")}
+        </Heading>
         <p>
           {t(
             "Add or select a property to track shared costs and keep receipts in one place.",

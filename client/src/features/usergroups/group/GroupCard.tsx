@@ -1,4 +1,10 @@
-import { Button, Card, Checkbox, Heading, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Checkbox,
+  Heading,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { SubmitButton } from "@/components/shared/SubmitButton"

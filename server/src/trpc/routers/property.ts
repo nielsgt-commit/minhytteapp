@@ -33,11 +33,7 @@ import {
   userGroupsTable,
 } from "../../db/schema/users.schema.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
-import {
-  assertPropertyMember,
-  protectedProcedure,
-  router,
-} from "../init.ts"
+import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 
 const propertyFields = {
   name: z.string().min(1, { error: "name is required" }),
@@ -266,7 +262,9 @@ export const propertyRouter = router({
         await tx
           .delete(settlementsTable)
           .where(eq(settlementsTable.property_id, id))
-        await tx.delete(equipmentTable).where(eq(equipmentTable.property_id, id))
+        await tx
+          .delete(equipmentTable)
+          .where(eq(equipmentTable.property_id, id))
         if (structureIds.length > 0) {
           await tx
             .delete(roomTable)

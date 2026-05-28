@@ -7,11 +7,7 @@ import {
 } from "../../db/schema/booking.schema.ts"
 import { stayTable } from "../../db/schema/stay.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import {
-  propertyAdminProcedure,
-  protectedProcedure,
-  router,
-} from "../init.ts"
+import { propertyAdminProcedure, protectedProcedure, router } from "../init.ts"
 
 const propertyInput = z.object({ property_id: z.number().int().positive() })
 

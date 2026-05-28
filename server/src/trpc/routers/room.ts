@@ -2,11 +2,7 @@ import { asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
-import {
-  assertPropertyMember,
-  protectedProcedure,
-  router,
-} from "../init.ts"
+import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromRoom,
   resolvePropertyIdFromStructure,

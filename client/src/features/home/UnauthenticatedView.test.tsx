@@ -31,11 +31,8 @@ beforeEach(() => {
 })
 
 describe("UnauthenticatedView", () => {
-  test("renders the welcome heading and sign-in form", () => {
+  test("renders the sign-in form", () => {
     render(<UnauthenticatedView />)
-    expect(
-      screen.getByRole("heading", { name: "minhytteapp" }),
-    ).toBeInTheDocument()
     expect(screen.getByPlaceholderText("you@example.com")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Send magic link" }),

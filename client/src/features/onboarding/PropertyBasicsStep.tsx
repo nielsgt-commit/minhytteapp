@@ -115,14 +115,14 @@ export function PropertyBasicsStep({ initial, onSubmit }: Props) {
         {effectiveAddress && (
           <Card>
             <Paragraph data-size="md">
-            {draft
-              ? t("Selected: {{address}} ({{postnummer}} {{poststed}})", {
-                  address: draft.address,
-                  postnummer: draft.postnummer ?? "",
-                  poststed: draft.poststed ?? "",
-                })
-              : t("Current: {{address}}", { address: effectiveAddress })}
-          </Paragraph>
+              {draft
+                ? t("Selected: {{address}} ({{postnummer}} {{poststed}})", {
+                    address: draft.address,
+                    postnummer: draft.postnummer ?? "",
+                    poststed: draft.poststed ?? "",
+                  })
+                : t("Current: {{address}}", { address: effectiveAddress })}
+            </Paragraph>
           </Card>
         )}
 

@@ -21,9 +21,7 @@ export default function PlannedStaysSection({
 
   return (
     <section className={styles.section}>
-      <Heading>
-        {t("This year at {{propertyName}}", { propertyName })}
-      </Heading>
+      <Heading>{t("This year at {{propertyName}}", { propertyName })}</Heading>
       <Card asChild>
         <section>
           <Card.Block>

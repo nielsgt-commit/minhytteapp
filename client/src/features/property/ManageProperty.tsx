@@ -199,8 +199,8 @@ export function ManageProperty() {
     return (
       <section className={styles.page}>
         <Heading level={2} className={styles.title}>
-        {t("Manage Property")}
-      </Heading>
+          {t("Manage Property")}
+        </Heading>
         <p>
           {t(
             "Add or select a property to edit its details, structures, owners, and invites.",

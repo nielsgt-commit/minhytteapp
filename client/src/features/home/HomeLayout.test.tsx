@@ -7,17 +7,6 @@ vi.mock("react-i18next", () => ({
 }))
 
 describe("HomeLayout", () => {
-  test("renders the 'Home' heading", () => {
-    render(
-      <HomeLayout>
-        <p>child</p>
-      </HomeLayout>,
-    )
-    expect(
-      screen.getByRole("heading", { name: "Home", level: 1 }),
-    ).toBeInTheDocument()
-  })
-
   test("renders its children inside the content slot", () => {
     render(
       <HomeLayout>

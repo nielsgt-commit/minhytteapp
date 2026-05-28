@@ -105,13 +105,9 @@
         "accounts_user_id_users_id_fk": {
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -193,13 +189,9 @@
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -208,9 +200,7 @@
       "uniqueConstraints": {
         "sessions_token_unique": {
           "name": "sessions_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "nullsNotDistinct": false
         }
       },
@@ -315,39 +305,27 @@
         "booking_occupants_booking_id_bookings_id_fk": {
           "name": "booking_occupants_booking_id_bookings_id_fk",
           "tableFrom": "booking_occupants",
-          "columnsFrom": [
-            "booking_id"
-          ],
+          "columnsFrom": ["booking_id"],
           "tableTo": "bookings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "booking_occupants_user_id_users_id_fk": {
           "name": "booking_occupants_user_id_users_id_fk",
           "tableFrom": "booking_occupants",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "booking_occupants_room_id_rooms_id_fk": {
           "name": "booking_occupants_room_id_rooms_id_fk",
           "tableFrom": "booking_occupants",
-          "columnsFrom": [
-            "room_id"
-          ],
+          "columnsFrom": ["room_id"],
           "tableTo": "rooms",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -355,10 +333,7 @@
       "compositePrimaryKeys": {
         "booking_occupants_booking_id_user_id_pk": {
           "name": "booking_occupants_booking_id_user_id_pk",
-          "columns": [
-            "booking_id",
-            "user_id"
-          ]
+          "columns": ["booking_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -430,26 +405,18 @@
         "booking_rooms_booking_id_bookings_id_fk": {
           "name": "booking_rooms_booking_id_bookings_id_fk",
           "tableFrom": "booking_rooms",
-          "columnsFrom": [
-            "booking_id"
-          ],
+          "columnsFrom": ["booking_id"],
           "tableTo": "bookings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "booking_rooms_room_id_rooms_id_fk": {
           "name": "booking_rooms_room_id_rooms_id_fk",
           "tableFrom": "booking_rooms",
-          "columnsFrom": [
-            "room_id"
-          ],
+          "columnsFrom": ["room_id"],
           "tableTo": "rooms",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -457,10 +424,7 @@
       "compositePrimaryKeys": {
         "booking_rooms_booking_id_room_id_pk": {
           "name": "booking_rooms_booking_id_room_id_pk",
-          "columns": [
-            "booking_id",
-            "room_id"
-          ]
+          "columns": ["booking_id", "room_id"]
         }
       },
       "uniqueConstraints": {},
@@ -547,39 +511,27 @@
         "bookings_property_id_properties_id_fk": {
           "name": "bookings_property_id_properties_id_fk",
           "tableFrom": "bookings",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "bookings_booker_id_users_id_fk": {
           "name": "bookings_booker_id_users_id_fk",
           "tableFrom": "bookings",
-          "columnsFrom": [
-            "booker_id"
-          ],
+          "columnsFrom": ["booker_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "bookings_cancelled_by_id_users_id_fk": {
           "name": "bookings_cancelled_by_id_users_id_fk",
           "tableFrom": "bookings",
-          "columnsFrom": [
-            "cancelled_by_id"
-          ],
+          "columnsFrom": ["cancelled_by_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -646,26 +598,18 @@
         "events_property_id_properties_id_fk": {
           "name": "events_property_id_properties_id_fk",
           "tableFrom": "events",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "events_author_id_users_id_fk": {
           "name": "events_author_id_users_id_fk",
           "tableFrom": "events",
-          "columnsFrom": [
-            "author_id"
-          ],
+          "columnsFrom": ["author_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -752,13 +696,9 @@
         "equipment_property_id_properties_id_fk": {
           "name": "equipment_property_id_properties_id_fk",
           "tableFrom": "equipment",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -845,52 +785,36 @@
         "inspections_structure_id_structures_id_fk": {
           "name": "inspections_structure_id_structures_id_fk",
           "tableFrom": "inspections",
-          "columnsFrom": [
-            "structure_id"
-          ],
+          "columnsFrom": ["structure_id"],
           "tableTo": "structures",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "inspections_infrastructure_id_infrastructure_id_fk": {
           "name": "inspections_infrastructure_id_infrastructure_id_fk",
           "tableFrom": "inspections",
-          "columnsFrom": [
-            "infrastructure_id"
-          ],
+          "columnsFrom": ["infrastructure_id"],
           "tableTo": "infrastructure",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "inspections_equipment_id_equipment_id_fk": {
           "name": "inspections_equipment_id_equipment_id_fk",
           "tableFrom": "inspections",
-          "columnsFrom": [
-            "equipment_id"
-          ],
+          "columnsFrom": ["equipment_id"],
           "tableTo": "equipment",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "inspections_started_by_user_id_users_id_fk": {
           "name": "inspections_started_by_user_id_users_id_fk",
           "tableFrom": "inspections",
-          "columnsFrom": [
-            "started_by_user_id"
-          ],
+          "columnsFrom": ["started_by_user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1032,91 +956,63 @@
         "maintenance_added_by_users_id_fk": {
           "name": "maintenance_added_by_users_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "added_by"
-          ],
+          "columnsFrom": ["added_by"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "maintenance_assigned_to_id_users_id_fk": {
           "name": "maintenance_assigned_to_id_users_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "assigned_to_id"
-          ],
+          "columnsFrom": ["assigned_to_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "maintenance_structure_id_structures_id_fk": {
           "name": "maintenance_structure_id_structures_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "structure_id"
-          ],
+          "columnsFrom": ["structure_id"],
           "tableTo": "structures",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "maintenance_infrastructure_id_infrastructure_id_fk": {
           "name": "maintenance_infrastructure_id_infrastructure_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "infrastructure_id"
-          ],
+          "columnsFrom": ["infrastructure_id"],
           "tableTo": "infrastructure",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "maintenance_equipment_id_equipment_id_fk": {
           "name": "maintenance_equipment_id_equipment_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "equipment_id"
-          ],
+          "columnsFrom": ["equipment_id"],
           "tableTo": "equipment",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "maintenance_parent_maintenance_id_maintenance_id_fk": {
           "name": "maintenance_parent_maintenance_id_maintenance_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "parent_maintenance_id"
-          ],
+          "columnsFrom": ["parent_maintenance_id"],
           "tableTo": "maintenance",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "maintenance_inspection_id_inspections_id_fk": {
           "name": "maintenance_inspection_id_inspections_id_fk",
           "tableFrom": "maintenance",
-          "columnsFrom": [
-            "inspection_id"
-          ],
+          "columnsFrom": ["inspection_id"],
           "tableTo": "inspections",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1187,13 +1083,9 @@
         "infrastructure_property_id_properties_id_fk": {
           "name": "infrastructure_property_id_properties_id_fk",
           "tableFrom": "infrastructure",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1244,26 +1136,18 @@
         "parking_claims_property_id_properties_id_fk": {
           "name": "parking_claims_property_id_properties_id_fk",
           "tableFrom": "parking_claims",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "parking_claims_user_id_users_id_fk": {
           "name": "parking_claims_user_id_users_id_fk",
           "tableFrom": "parking_claims",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1271,10 +1155,7 @@
       "compositePrimaryKeys": {
         "parking_claims_property_id_slot_index_pk": {
           "name": "parking_claims_property_id_slot_index_pk",
-          "columns": [
-            "property_id",
-            "slot_index"
-          ]
+          "columns": ["property_id", "slot_index"]
         }
       },
       "uniqueConstraints": {},
@@ -1358,13 +1239,9 @@
         "property_contacts_property_id_properties_id_fk": {
           "name": "property_contacts_property_id_properties_id_fk",
           "tableFrom": "property_contacts",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1471,39 +1348,27 @@
         "property_owners_property_id_properties_id_fk": {
           "name": "property_owners_property_id_properties_id_fk",
           "tableFrom": "property_owners",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "property_owners_user_id_users_id_fk": {
           "name": "property_owners_user_id_users_id_fk",
           "tableFrom": "property_owners",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "property_owners_user_group_id_user_groups_id_fk": {
           "name": "property_owners_user_group_id_user_groups_id_fk",
           "tableFrom": "property_owners",
-          "columnsFrom": [
-            "user_group_id"
-          ],
+          "columnsFrom": ["user_group_id"],
           "tableTo": "user_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1606,26 +1471,18 @@
         "property_priority_weeks_property_id_properties_id_fk": {
           "name": "property_priority_weeks_property_id_properties_id_fk",
           "tableFrom": "property_priority_weeks",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "property_priority_weeks_property_owner_id_property_owners_id_fk": {
           "name": "property_priority_weeks_property_owner_id_property_owners_id_fk",
           "tableFrom": "property_priority_weeks",
-          "columnsFrom": [
-            "property_owner_id"
-          ],
+          "columnsFrom": ["property_owner_id"],
           "tableTo": "property_owners",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1830,13 +1687,9 @@
         "rooms_structure_id_structures_id_fk": {
           "name": "rooms_structure_id_structures_id_fk",
           "tableFrom": "rooms",
-          "columnsFrom": [
-            "structure_id"
-          ],
+          "columnsFrom": ["structure_id"],
           "tableTo": "structures",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1899,13 +1752,9 @@
         "structures_property_id_properties_id_fk": {
           "name": "structures_property_id_properties_id_fk",
           "tableFrom": "structures",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -1997,26 +1846,18 @@
         "shares_expense_id_expenses_id_fk": {
           "name": "shares_expense_id_expenses_id_fk",
           "tableFrom": "shares",
-          "columnsFrom": [
-            "expense_id"
-          ],
+          "columnsFrom": ["expense_id"],
           "tableTo": "expenses",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "shares_user_id_users_id_fk": {
           "name": "shares_user_id_users_id_fk",
           "tableFrom": "shares",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2024,10 +1865,7 @@
       "compositePrimaryKeys": {
         "shares_expense_id_user_id_pk": {
           "name": "shares_expense_id_user_id_pk",
-          "columns": [
-            "expense_id",
-            "user_id"
-          ]
+          "columns": ["expense_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2124,78 +1962,54 @@
         "expenses_property_id_properties_id_fk": {
           "name": "expenses_property_id_properties_id_fk",
           "tableFrom": "expenses",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "expenses_payer_id_users_id_fk": {
           "name": "expenses_payer_id_users_id_fk",
           "tableFrom": "expenses",
-          "columnsFrom": [
-            "payer_id"
-          ],
+          "columnsFrom": ["payer_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "expenses_reimbursed_by_id_users_id_fk": {
           "name": "expenses_reimbursed_by_id_users_id_fk",
           "tableFrom": "expenses",
-          "columnsFrom": [
-            "reimbursed_by_id"
-          ],
+          "columnsFrom": ["reimbursed_by_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "expenses_booking_id_bookings_id_fk": {
           "name": "expenses_booking_id_bookings_id_fk",
           "tableFrom": "expenses",
-          "columnsFrom": [
-            "booking_id"
-          ],
+          "columnsFrom": ["booking_id"],
           "tableTo": "bookings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "expenses_maintenance_id_maintenance_id_fk": {
           "name": "expenses_maintenance_id_maintenance_id_fk",
           "tableFrom": "expenses",
-          "columnsFrom": [
-            "maintenance_id"
-          ],
+          "columnsFrom": ["maintenance_id"],
           "tableTo": "maintenance",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "expenses_settlement_id_settlements_id_fk": {
           "name": "expenses_settlement_id_settlements_id_fk",
           "tableFrom": "expenses",
-          "columnsFrom": [
-            "settlement_id"
-          ],
+          "columnsFrom": ["settlement_id"],
           "tableTo": "settlements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2269,26 +2083,18 @@
         "property_split_policies_property_id_properties_id_fk": {
           "name": "property_split_policies_property_id_properties_id_fk",
           "tableFrom": "property_split_policies",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "property_split_policies_created_by_id_users_id_fk": {
           "name": "property_split_policies_created_by_id_users_id_fk",
           "tableFrom": "property_split_policies",
-          "columnsFrom": [
-            "created_by_id"
-          ],
+          "columnsFrom": ["created_by_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2297,10 +2103,7 @@
       "uniqueConstraints": {
         "property_split_policies_property_id_name_unique": {
           "name": "property_split_policies_property_id_name_unique",
-          "columns": [
-            "property_id",
-            "name"
-          ],
+          "columns": ["property_id", "name"],
           "nullsNotDistinct": false
         }
       },
@@ -2337,26 +2140,18 @@
         "settlement_acceptances_settlement_id_settlements_id_fk": {
           "name": "settlement_acceptances_settlement_id_settlements_id_fk",
           "tableFrom": "settlement_acceptances",
-          "columnsFrom": [
-            "settlement_id"
-          ],
+          "columnsFrom": ["settlement_id"],
           "tableTo": "settlements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "settlement_acceptances_head_user_id_users_id_fk": {
           "name": "settlement_acceptances_head_user_id_users_id_fk",
           "tableFrom": "settlement_acceptances",
-          "columnsFrom": [
-            "head_user_id"
-          ],
+          "columnsFrom": ["head_user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2364,10 +2159,7 @@
       "compositePrimaryKeys": {
         "settlement_acceptances_settlement_id_head_user_id_pk": {
           "name": "settlement_acceptances_settlement_id_head_user_id_pk",
-          "columns": [
-            "settlement_id",
-            "head_user_id"
-          ]
+          "columns": ["settlement_id", "head_user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2411,26 +2203,18 @@
         "settlement_booking_adjustments_settlement_id_settlements_id_fk": {
           "name": "settlement_booking_adjustments_settlement_id_settlements_id_fk",
           "tableFrom": "settlement_booking_adjustments",
-          "columnsFrom": [
-            "settlement_id"
-          ],
+          "columnsFrom": ["settlement_id"],
           "tableTo": "settlements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "settlement_booking_adjustments_booking_id_bookings_id_fk": {
           "name": "settlement_booking_adjustments_booking_id_bookings_id_fk",
           "tableFrom": "settlement_booking_adjustments",
-          "columnsFrom": [
-            "booking_id"
-          ],
+          "columnsFrom": ["booking_id"],
           "tableTo": "bookings",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         }
@@ -2438,10 +2222,7 @@
       "compositePrimaryKeys": {
         "settlement_booking_adjustments_settlement_id_booking_id_pk": {
           "name": "settlement_booking_adjustments_settlement_id_booking_id_pk",
-          "columns": [
-            "settlement_id",
-            "booking_id"
-          ]
+          "columns": ["settlement_id", "booking_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2501,39 +2282,27 @@
         "settlement_transfers_settlement_id_settlements_id_fk": {
           "name": "settlement_transfers_settlement_id_settlements_id_fk",
           "tableFrom": "settlement_transfers",
-          "columnsFrom": [
-            "settlement_id"
-          ],
+          "columnsFrom": ["settlement_id"],
           "tableTo": "settlements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "settlement_transfers_from_user_group_id_user_groups_id_fk": {
           "name": "settlement_transfers_from_user_group_id_user_groups_id_fk",
           "tableFrom": "settlement_transfers",
-          "columnsFrom": [
-            "from_user_group_id"
-          ],
+          "columnsFrom": ["from_user_group_id"],
           "tableTo": "user_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "settlement_transfers_to_user_group_id_user_groups_id_fk": {
           "name": "settlement_transfers_to_user_group_id_user_groups_id_fk",
           "tableFrom": "settlement_transfers",
-          "columnsFrom": [
-            "to_user_group_id"
-          ],
+          "columnsFrom": ["to_user_group_id"],
           "tableTo": "user_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2597,26 +2366,18 @@
         "settlement_user_group_totals_settlement_id_settlements_id_fk": {
           "name": "settlement_user_group_totals_settlement_id_settlements_id_fk",
           "tableFrom": "settlement_user_group_totals",
-          "columnsFrom": [
-            "settlement_id"
-          ],
+          "columnsFrom": ["settlement_id"],
           "tableTo": "settlements",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "cascade"
         },
         "settlement_user_group_totals_user_group_id_user_groups_id_fk": {
           "name": "settlement_user_group_totals_user_group_id_user_groups_id_fk",
           "tableFrom": "settlement_user_group_totals",
-          "columnsFrom": [
-            "user_group_id"
-          ],
+          "columnsFrom": ["user_group_id"],
           "tableTo": "user_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2624,10 +2385,7 @@
       "compositePrimaryKeys": {
         "settlement_user_group_totals_settlement_id_user_group_id_pk": {
           "name": "settlement_user_group_totals_settlement_id_user_group_id_pk",
-          "columns": [
-            "settlement_id",
-            "user_group_id"
-          ]
+          "columns": ["settlement_id", "user_group_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2730,39 +2488,27 @@
         "settlements_property_id_properties_id_fk": {
           "name": "settlements_property_id_properties_id_fk",
           "tableFrom": "settlements",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "settlements_split_policy_id_property_split_policies_id_fk": {
           "name": "settlements_split_policy_id_property_split_policies_id_fk",
           "tableFrom": "settlements",
-          "columnsFrom": [
-            "split_policy_id"
-          ],
+          "columnsFrom": ["split_policy_id"],
           "tableTo": "property_split_policies",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         },
         "settlements_created_by_id_users_id_fk": {
           "name": "settlements_created_by_id_users_id_fk",
           "tableFrom": "settlements",
-          "columnsFrom": [
-            "created_by_id"
-          ],
+          "columnsFrom": ["created_by_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "set null"
         }
@@ -2771,11 +2517,7 @@
       "uniqueConstraints": {
         "settlements_property_id_year_season_unique": {
           "name": "settlements_property_id_year_season_unique",
-          "columns": [
-            "property_id",
-            "year",
-            "season"
-          ],
+          "columns": ["property_id", "year", "season"],
           "nullsNotDistinct": false
         }
       },
@@ -2858,26 +2600,18 @@
         "stays_property_id_properties_id_fk": {
           "name": "stays_property_id_properties_id_fk",
           "tableFrom": "stays",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "stays_user_id_users_id_fk": {
           "name": "stays_user_id_users_id_fk",
           "tableFrom": "stays",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -2969,52 +2703,36 @@
         "allowed_emails_property_id_properties_id_fk": {
           "name": "allowed_emails_property_id_properties_id_fk",
           "tableFrom": "allowed_emails",
-          "columnsFrom": [
-            "property_id"
-          ],
+          "columnsFrom": ["property_id"],
           "tableTo": "properties",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "allowed_emails_user_group_id_user_groups_id_fk": {
           "name": "allowed_emails_user_group_id_user_groups_id_fk",
           "tableFrom": "allowed_emails",
-          "columnsFrom": [
-            "user_group_id"
-          ],
+          "columnsFrom": ["user_group_id"],
           "tableTo": "user_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "allowed_emails_added_by_user_id_users_id_fk": {
           "name": "allowed_emails_added_by_user_id_users_id_fk",
           "tableFrom": "allowed_emails",
-          "columnsFrom": [
-            "added_by_user_id"
-          ],
+          "columnsFrom": ["added_by_user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "allowed_emails_used_by_user_id_users_id_fk": {
           "name": "allowed_emails_used_by_user_id_users_id_fk",
           "tableFrom": "allowed_emails",
-          "columnsFrom": [
-            "used_by_user_id"
-          ],
+          "columnsFrom": ["used_by_user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3047,26 +2765,18 @@
         "user_group_members_user_group_id_user_groups_id_fk": {
           "name": "user_group_members_user_group_id_user_groups_id_fk",
           "tableFrom": "user_group_members",
-          "columnsFrom": [
-            "user_group_id"
-          ],
+          "columnsFrom": ["user_group_id"],
           "tableTo": "user_groups",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         },
         "user_group_members_user_id_users_id_fk": {
           "name": "user_group_members_user_id_users_id_fk",
           "tableFrom": "user_group_members",
-          "columnsFrom": [
-            "user_id"
-          ],
+          "columnsFrom": ["user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3074,10 +2784,7 @@
       "compositePrimaryKeys": {
         "user_group_members_user_group_id_user_id_pk": {
           "name": "user_group_members_user_group_id_user_id_pk",
-          "columns": [
-            "user_group_id",
-            "user_id"
-          ]
+          "columns": ["user_group_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -3233,13 +2940,9 @@
         "users_parent_user_id_users_id_fk": {
           "name": "users_parent_user_id_users_id_fk",
           "tableFrom": "users",
-          "columnsFrom": [
-            "parent_user_id"
-          ],
+          "columnsFrom": ["parent_user_id"],
           "tableTo": "users",
-          "columnsTo": [
-            "id"
-          ],
+          "columnsTo": ["id"],
           "onUpdate": "no action",
           "onDelete": "no action"
         }
@@ -3248,9 +2951,7 @@
       "uniqueConstraints": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "nullsNotDistinct": false
         }
       },
