@@ -86,7 +86,7 @@ void i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: "en",
+    fallbackLng: "nb",
     supportedLngs: ["en", "nb"],
     defaultNS,
     ns: [
@@ -116,7 +116,7 @@ void i18n
     returnNull: false,
     returnEmptyString: false,
     detection: {
-      order: ["localStorage", "navigator", "htmlTag"],
+      order: ["localStorage"],
       caches: ["localStorage"],
     },
   })

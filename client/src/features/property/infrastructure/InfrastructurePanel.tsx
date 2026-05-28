@@ -19,7 +19,7 @@ type Props = {
 type Infrastructure = {
   id: number
   name: string
-  description: string
+  description: string | null
   property_id: number | null
   since_year: number | null
 }
@@ -72,8 +72,8 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
 
   const handleAdd = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
-    const description = fdString(fd, "description").trim()
-    if (!name || !description) return
+    if (!name) return
+    const description = fdString(fd, "description").trim() || null
     const since_year = fdYear(fd, "since_year")
     try {
       await createInfrastructure.mutateAsync({
@@ -90,9 +90,9 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
 
   const handleSave = (p: Infrastructure) => async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
-    const description = fdString(fd, "description").trim()
+    if (!name) return
+    const description = fdString(fd, "description").trim() || null
     const since_year = fdYear(fd, "since_year")
-    if (!name || !description) return
     try {
       await updateInfrastructure.mutateAsync({
         id: p.id,
@@ -137,10 +137,9 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
         disabled={updateInfrastructure.isPending}
       />
       <Textfield
-        label={t("Description")}
+        label={t("Description (optional)")}
         name="description"
-        required
-        defaultValue={p.description}
+        defaultValue={p.description ?? ""}
         disabled={updateInfrastructure.isPending}
       />
       <Textfield
@@ -244,9 +243,8 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                         disabled={createInfrastructure.isPending}
                       />
                       <Textfield
-                        label={t("Description")}
+                        label={t("Description (optional)")}
                         name="description"
-                        required
                         disabled={createInfrastructure.isPending}
                       />
                       <Textfield

@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { signIn } from "@/auth/auth-client"
+import styles from "./Home.module.css"
 
 export function UnauthenticatedView() {
   const { t } = useTranslation("home")
@@ -29,31 +30,24 @@ export function UnauthenticatedView() {
 
   if (status === "sent") {
     return (
-      <>
+      <Card color="neutral" className={styles.card}>
         <Heading level={2}>{t("Check your email")}</Heading>
-        <p>
+        <Paragraph>
           <Trans
             i18nKey="We sent a sign-in link to <1>{{email}}</1>. Click it to continue. (In dev, the link is printed to the API server console.)"
             ns="home"
             values={{ email }}
             components={{ 1: <strong /> }}
           />
-        </p>
-      </>
+        </Paragraph>
+      </Card>
     )
   }
 
   return (
-    <>
-      <Heading level={1}>{t("minhytteapp")}</Heading>
-      <Paragraph>
-        {" "}
-        {t("Only test users have access.")}
-      </Paragraph>
-
-      <Heading level={2}>{t("Sign in")}</Heading>
-      <p>{t("Enter your email and we'll send you a sign-in link.")}</p>
+    <Card color="neutral" className={styles.card}>
       <form
+        className={styles.form}
         onSubmit={e => {
           void handleSubmit(e)
         }}
@@ -73,6 +67,6 @@ export function UnauthenticatedView() {
         </Button>
       </form>
       {errorMsg ? <p role="alert">{errorMsg}</p> : null}
-    </>
+    </Card>
   )
 }

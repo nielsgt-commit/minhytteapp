@@ -26,6 +26,14 @@
   box-sizing: border-box;
 }
 
+.shell > main.bareMain {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+  padding: 0;
+  background-color: var(--ds-color-background-default);
+}
+
 @media (min-width: 641px) {
   .shell > main {
     padding-inline: 1.5rem;

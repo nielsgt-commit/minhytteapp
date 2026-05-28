@@ -1,34 +1,173 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Fieldset,
-  Heading,
-  Textfield,
-} from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { fdNumber, fdString } from "@/utils/formData"
+import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
+import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import listStyles from "./StepList.module.css"
 
 type Props = {
   propertyId: number
-  onContinue: () => void
 }
 
-export function EquipmentStep({ propertyId, onContinue }: Props) {
+type Equipment = {
+  id: number
+  name: string
+  property_id: number | null
+  brand: string | null
+  category: string | null
+  acquired_year: number | null
+}
+
+export function EquipmentStep({ propertyId }: Props) {
   const { t } = useTranslation("onboarding")
   const trpc = useTRPC()
-  const [adding, setAdding] = useState(false)
+  const canEdit = useCanEdit()
+  const adding = useToggleState()
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   const { data: items } = useSuspenseQuery(
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
+  const keys = [
+    trpc.equipment.listForProperty.queryKey({ property_id: propertyId }),
+  ]
   const createEquipment = useMutationWithInvalidation(
     trpc.equipment.create.mutationOptions(),
-    [trpc.equipment.listForProperty.queryKey({ property_id: propertyId })],
+    keys,
+  )
+  const updateEquipment = useMutationWithInvalidation(
+    trpc.equipment.update.mutationOptions(),
+    keys,
+  )
+  const deleteEquipment = useMutationWithInvalidation(
+    trpc.equipment.delete.mutationOptions(),
+    keys,
+  )
+
+  const lastError =
+    createEquipment.error ?? updateEquipment.error ?? deleteEquipment.error
+  const pending =
+    createEquipment.isPending ||
+    updateEquipment.isPending ||
+    deleteEquipment.isPending
+
+  const handleAdd = async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    if (!name) return
+    const brand = fdString(fd, "brand").trim()
+    const category = fdString(fd, "category").trim()
+    const yearRaw = fdNumber(fd, "acquired_year")
+    const acquired_year = Number.isFinite(yearRaw) ? yearRaw : null
+    try {
+      await createEquipment.mutateAsync({
+        name,
+        property_id: propertyId,
+        brand: brand || undefined,
+        category: category || undefined,
+        acquired_year,
+      })
+      adding.close()
+    } catch {
+      /* surfaced via lastError */
+    }
+  }
+
+  const handleSave = (e: Equipment) => async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    if (!name) return
+    const brand = fdString(fd, "brand").trim()
+    const category = fdString(fd, "category").trim()
+    const yearRaw = fdNumber(fd, "acquired_year")
+    const acquired_year = Number.isFinite(yearRaw) ? yearRaw : null
+    try {
+      await updateEquipment.mutateAsync({
+        id: e.id,
+        name,
+        property_id: propertyId,
+        brand: brand || undefined,
+        category: category || undefined,
+        acquired_year,
+      })
+      setEditingId(null)
+    } catch {
+      /* surfaced via lastError */
+    }
+  }
+
+  const handleDelete = (e: Equipment) => {
+    if (!window.confirm(t('Delete equipment "{{name}}"?', { name: e.name })))
+      return
+    deleteEquipment.mutate(
+      { id: e.id },
+      {
+        onSuccess: () => {
+          setEditingId(null)
+        },
+      },
+    )
+  }
+
+  const renderEditForm = (e: Equipment) => (
+    <form
+      action={handleSave(e)}
+      key={`edit-${String(e.id)}`}
+      className={listStyles.addForm}
+    >
+      <Textfield
+        label={t("Name")}
+        name="name"
+        type="text"
+        required
+        autoFocus
+        defaultValue={e.name}
+        disabled={updateEquipment.isPending}
+      />
+      <Textfield
+        label={t("Brand (optional)")}
+        name="brand"
+        type="text"
+        defaultValue={e.brand ?? ""}
+        disabled={updateEquipment.isPending}
+      />
+      <Textfield
+        label={t("Category (optional)")}
+        name="category"
+        type="text"
+        defaultValue={e.category ?? ""}
+        disabled={updateEquipment.isPending}
+      />
+      <Textfield
+        label={t("Acquired year (optional)")}
+        name="acquired_year"
+        type="number"
+        min={1500}
+        max={2100}
+        step={1}
+        inputMode="numeric"
+        defaultValue={e.acquired_year ?? ""}
+        disabled={updateEquipment.isPending}
+      />
+      <div className={listStyles.actions}>
+        <SubmitButton>{t("Save")}</SubmitButton>
+        <Button
+          type="button"
+          variant="tertiary"
+          disabled={pending}
+          onClick={() => {
+            setEditingId(null)
+          }}
+        >
+          {t("Cancel")}
+        </Button>
+      </div>
+    </form>
   )
 
   return (
@@ -40,114 +179,123 @@ export function EquipmentStep({ propertyId, onContinue }: Props) {
         )}
       </p>
 
-      {items.length > 0 && (
-        <ul>
-          {items.map(i => (
-            <li key={i.id}>
-              <strong>{i.name}</strong>
-              {i.brand && <span> – {i.brand}</span>}
-              {i.acquired_year != null && <span> ({i.acquired_year})</span>}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {createEquipment.error && (
+      {lastError && (
         <p role="alert">
-          {t("Error: {{message}}", { message: createEquipment.error.message })}
+          {t("Error: {{message}}", { message: lastError.message })}
         </p>
       )}
 
-      {adding ? (
-        <form
-          action={async fd => {
-            const name = fdString(fd, "name").trim()
-            if (!name) return
-            const brand = fdString(fd, "brand").trim()
-            const category = fdString(fd, "category").trim()
-            const yearRaw = fdNumber(fd, "acquired_year")
-            const acquired_year = Number.isFinite(yearRaw) ? yearRaw : null
-            try {
-              await createEquipment.mutateAsync({
-                name,
-                property_id: propertyId,
-                brand: brand || undefined,
-                category: category || undefined,
-                acquired_year,
-              })
-              setAdding(false)
-            } catch {
-              /* surfaced via createEquipment.error */
-            }
-          }}
-        >
-          <Fieldset>
-            <Fieldset.Legend>{t("Add equipment")}</Fieldset.Legend>
-            <div>
-              <Textfield
-                label={t("Name")}
-                name="name"
-                type="text"
-                required
-                autoFocus
-              />
-            </div>
-            <div>
-              <Textfield
-                label={t("Brand (optional)")}
-                name="brand"
-                type="text"
-              />
-            </div>
-            <div>
-              <Textfield
-                label={t("Category (optional)")}
-                name="category"
-                type="text"
-              />
-            </div>
-            <div>
-              <Textfield
-                label={t("Acquired year (optional)")}
-                name="acquired_year"
-                type="number"
-                min={1500}
-                max={2100}
-                step={1}
-                inputMode="numeric"
-              />
-            </div>
-            <div>
-              <SubmitButton>{t("Add equipment")}</SubmitButton>
-              <Button
-                type="button"
-                variant="tertiary"
-                onClick={() => {
-                  setAdding(false)
-                }}
-              >
-                {t("Cancel")}
-              </Button>
-            </div>
-          </Fieldset>
-        </form>
-      ) : (
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => {
-            setAdding(true)
-          }}
-        >
-          {items.length === 0 ? t("Yes, add one") : t("Add another")}
-        </Button>
-      )}
+      <ul className={listStyles.list}>
+        {items.map(i => (
+          <Card asChild key={i.id}>
+            <li>
+              <Card.Block className={listStyles.row}>
+                <InlineEditRow
+                  editing={editingId === i.id}
+                  canEdit={canEdit}
+                  pending={pending}
+                  editLabel={t("Edit equipment {{name}}", { name: i.name })}
+                  onStartEdit={() => {
+                    setEditingId(i.id)
+                  }}
+                  view={
+                    <span className={listStyles.rowName}>
+                      <strong>{i.name}</strong>
+                      {i.brand && <span> – {i.brand}</span>}
+                      {i.acquired_year != null && (
+                        <small> ({i.acquired_year})</small>
+                      )}
+                    </span>
+                  }
+                  form={renderEditForm(i)}
+                  actions={
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      aria-label={t('Delete equipment "{{name}}"?', {
+                        name: i.name,
+                      })}
+                      onClick={() => {
+                        handleDelete(i)
+                      }}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  }
+                />
+              </Card.Block>
+            </li>
+          </Card>
+        ))}
 
-      <div>
-        <Button type="button" onClick={onContinue}>
-          {items.length === 0 ? t("No, skip ahead") : t("Continue")}
-        </Button>
-      </div>
+        {canEdit && (
+          <Card asChild key="__add">
+            <li>
+              <Card.Block className={listStyles.addBlock}>
+                {adding.value ? (
+                  <>
+                    <strong>{t("Add equipment")}</strong>
+                    <form action={handleAdd} className={listStyles.addForm}>
+                      <Textfield
+                        label={t("Name")}
+                        name="name"
+                        type="text"
+                        required
+                        autoFocus
+                        disabled={createEquipment.isPending}
+                      />
+                      <Textfield
+                        label={t("Brand (optional)")}
+                        name="brand"
+                        type="text"
+                        disabled={createEquipment.isPending}
+                      />
+                      <Textfield
+                        label={t("Category (optional)")}
+                        name="category"
+                        type="text"
+                        disabled={createEquipment.isPending}
+                      />
+                      <Textfield
+                        label={t("Acquired year (optional)")}
+                        name="acquired_year"
+                        type="number"
+                        min={1500}
+                        max={2100}
+                        step={1}
+                        inputMode="numeric"
+                        disabled={createEquipment.isPending}
+                      />
+                      <div className={listStyles.actions}>
+                        <SubmitButton>{t("Add equipment")}</SubmitButton>
+                        <Button
+                          type="button"
+                          variant="tertiary"
+                          disabled={createEquipment.isPending}
+                          onClick={adding.close}
+                        >
+                          {t("Cancel")}
+                        </Button>
+                      </div>
+                    </form>
+                  </>
+                ) : (
+                  <Button
+                    variant="tertiary"
+                    className={listStyles.addButton}
+                    disabled={pending}
+                    onClick={adding.open}
+                  >
+                    {t("+ Add equipment")}
+                  </Button>
+                )}
+              </Card.Block>
+            </li>
+          </Card>
+        )}
+      </ul>
     </section>
   )
 }

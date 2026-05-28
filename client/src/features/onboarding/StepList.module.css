@@ -1,0 +1,71 @@
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+}
+
+.addBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.addButton {
+  flex: 1;
+  min-height: 4rem;
+  align-self: stretch;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.subList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actionsRight {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

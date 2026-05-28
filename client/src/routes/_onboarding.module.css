@@ -1,5 +1,11 @@
 .shell {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   width: 100%;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  background-color: var(--ds-color-background-default);
 }

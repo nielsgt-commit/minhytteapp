@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="nb">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -20,10 +20,10 @@
       ;(function () {
         try {
           var s = localStorage.getItem("color-scheme")
-          if (s !== "light" && s !== "dark") s = "light"
+          if (s !== "light" && s !== "dark") s = "dark"
           document.documentElement.dataset.colorScheme = s
         } catch (_) {
-          document.documentElement.dataset.colorScheme = "light"
+          document.documentElement.dataset.colorScheme = "dark"
         }
       })()
     </script>

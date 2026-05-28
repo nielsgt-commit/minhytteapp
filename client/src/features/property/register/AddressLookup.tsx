@@ -93,6 +93,7 @@ export function AddressLookup({ label, placeholder, onSelect }: Props) {
               key={`${String(a.adressekode)}-${a.adressetekst}-${a.postnummer}`}
               type="button"
               variant="tertiary"
+              className={styles.resultButton}
               onClick={() => {
                 onSelect(a)
                 setQuery("")

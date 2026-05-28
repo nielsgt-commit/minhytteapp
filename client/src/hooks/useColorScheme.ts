@@ -7,7 +7,7 @@ const STORAGE_KEY = "color-scheme"
 function readInitial(): ColorScheme {
   const fromDom = document.documentElement.dataset.colorScheme
   if (fromDom === "light" || fromDom === "dark") return fromDom
-  return "light"
+  return "dark"
 }
 
 function apply(scheme: ColorScheme) {

@@ -129,7 +129,7 @@ export const infrastructureTable = pgTable(
   {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     name: varchar("name", { length: 255 }).notNull(),
-    description: varchar("description", { length: 255 }).notNull(),
+    description: varchar("description", { length: 255 }),
     property_id: integer("property_id").references(() => propertyTable.id),
     since_year: integer("since_year"),
   },

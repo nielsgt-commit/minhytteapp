@@ -2,16 +2,20 @@ import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
-import { Button, Heading } from "@digdir/designsystemet-react"
+import { Button, Card, Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { UserCreationForm } from "./UserCreationForm"
-import { PropertyBasicsStep } from "./PropertyBasicsStep"
+import {
+  PROPERTY_BASICS_FORM_ID,
+  PropertyBasicsStep,
+} from "./PropertyBasicsStep"
 import { BuildingsStep } from "./BuildingsStep"
 import { BedroomsStep } from "./BedroomsStep"
 import { InfrastructureStep } from "./InfrastructureStep"
 import { EquipmentStep } from "./EquipmentStep"
 import { WizardFooter } from "./WizardFooter"
+import styles from "./OnboardingFlow.module.css"
 
 type Step =
   | "user"
@@ -40,6 +44,13 @@ const NEXT: Record<Step, Step> = {
   infrastructure: "equipment",
   equipment: "done",
   done: "done",
+}
+
+const PREV: Partial<Record<Step, Step>> = {
+  buildings: "basics",
+  rooms: "buildings",
+  infrastructure: "rooms",
+  equipment: "infrastructure",
 }
 
 type Props = {
@@ -128,15 +139,20 @@ export function OnboardingFlow({ preview = false }: Props) {
   const footerPending = setStep.isPending || dismiss.isPending
 
   return (
-    <section>
-      <Heading level={2}>{t("Welcome")}</Heading>
-      <p>
-        {t(
-          "A few quick questions so we know what's on the property. Skip anything you don't have the answer to.",
-        )}
-      </p>
+    <div className={styles.root}>
+      <header className={styles.intro}>
+        <Heading level={2}>{t("Welcome")}</Heading>
+        <p>
+          {t(
+            "A few quick questions so we know what's on the property. Skip anything you don't have the answer to.",
+          )}
+        </p>
+      </header>
 
-      {preview && (
+      <Card className={styles.outerCard}>
+        <Card.Block className={styles.body}>
+          <div className={styles.content}>
+            {preview && (
         <div
           role="navigation"
           aria-label="dev step picker"
@@ -206,57 +222,89 @@ export function OnboardingFlow({ preview = false }: Props) {
       )}
 
       {currentStep === "buildings" && firstProperty && (
-        <BuildingsStep
-          propertyId={firstProperty.id}
-          onContinue={() => {
-            void advance("buildings")
-          }}
-        />
+        <BuildingsStep propertyId={firstProperty.id} />
       )}
 
       {currentStep === "rooms" && firstProperty && (
-        <BedroomsStep
-          propertyId={firstProperty.id}
-          onContinue={() => {
-            void advance("rooms")
-          }}
-        />
+        <BedroomsStep propertyId={firstProperty.id} />
       )}
 
       {currentStep === "infrastructure" && firstProperty && (
-        <InfrastructureStep
-          propertyId={firstProperty.id}
-          onContinue={() => {
-            void advance("infrastructure")
-          }}
-        />
+        <InfrastructureStep propertyId={firstProperty.id} />
       )}
 
       {currentStep === "equipment" && firstProperty && (
-        <EquipmentStep
-          propertyId={firstProperty.id}
-          onContinue={() => {
-            void advance("equipment")
-          }}
-        />
+        <EquipmentStep propertyId={firstProperty.id} />
       )}
 
       {currentStep === "done" && (
         <div>
-          <p>{t("All set. You can manage everything from the dashboard.")}</p>
-          <Button
-            type="button"
-            onClick={() => {
-              void goToDashboard()
+          <p>
+            {t(
+              "All set. To add more details later, open the property dropdown in the top header and pick \"Manage property\".",
+            )}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "0.5rem",
+              flexWrap: "wrap",
+              marginTop: "1rem",
             }}
           >
-            {t("Go to dashboard")}
-          </Button>
+            <Button
+              type="button"
+              variant="tertiary"
+              data-size="sm"
+              disabled={footerPending}
+              onClick={() => {
+                void persistStep("equipment")
+              }}
+            >
+              {t("Back")}
+            </Button>
+            <Button
+              type="button"
+              disabled={footerPending}
+              onClick={() => {
+                void goToDashboard()
+              }}
+            >
+              {t("Go to dashboard")}
+            </Button>
+          </div>
         </div>
       )}
+          </div>
 
       {currentStep !== "done" && currentStep !== "user" && (
+        <div className={styles.footer}>
         <WizardFooter
+          primary={
+            currentStep === "basics"
+              ? {
+                  label: t("Continue"),
+                  type: "submit",
+                  form: PROPERTY_BASICS_FORM_ID,
+                }
+              : {
+                  label: t("Continue"),
+                  onClick: () => {
+                    void advance(currentStep)
+                  },
+                }
+          }
+          onBack={
+            PREV[currentStep]
+              ? () => {
+                  const prev = PREV[currentStep]
+                  if (prev) void persistStep(prev)
+                }
+              : undefined
+          }
           onSkip={
             currentStep === "basics"
               ? undefined
@@ -272,7 +320,10 @@ export function OnboardingFlow({ preview = false }: Props) {
           }}
           pending={footerPending}
         />
+        </div>
       )}
-    </section>
+        </Card.Block>
+      </Card>
+    </div>
   )
 }

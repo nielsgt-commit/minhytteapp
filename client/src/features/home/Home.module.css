@@ -1,15 +1,18 @@
 .page {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-areas:
-    "title   title   title   title   title   title"
-    "content content content content content content";
-  gap: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
 }
 
-.title {
-  grid-area: title;
+.card {
+  width: 100%;
+  max-width: 360px;
+  background-color: var(--ds-color-neutral-surface-tinted);
 }
-.content {
-  grid-area: content;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-spacing-3);
 }

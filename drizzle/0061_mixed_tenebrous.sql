@@ -1,0 +1,1 @@
+ALTER TABLE "infrastructure" ALTER COLUMN "description" DROP NOT NULL;

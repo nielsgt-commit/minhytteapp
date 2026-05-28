@@ -10,14 +10,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
   const { isAuthenticated } = useAuthSession()
   const isUnauthenticatedHome = pathname === "/" && !isAuthenticated
+  const isOnboarding = pathname.startsWith("/onboarding")
+  const bare = isUnauthenticatedHome || isOnboarding
 
   return (
     <div className={styles.shell}>
-      {isUnauthenticatedHome ? null : <Header />}
-      <main className={styles.main}>
-        {isUnauthenticatedHome ? children : <NavTabs>{children}</NavTabs>}
+      {bare ? null : <Header />}
+      <main className={`${styles.main}${bare ? ` ${styles.bareMain}` : ""}`}>
+        {bare ? children : <NavTabs>{children}</NavTabs>}
       </main>
-      {isUnauthenticatedHome ? null : <BottomNavBar />}
+      {bare ? null : <BottomNavBar />}
     </div>
   )
 }
