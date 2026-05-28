@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { and, desc, eq, isNull } from "drizzle-orm"
+import { and, desc, eq, isNotNull, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { normalizeEmail } from "../../auth/email.ts"
 import {
@@ -84,37 +84,152 @@ export const allowedEmailRouter = router({
           })
         }
       }
-      const existing = await ctx.db
-        .select({ id: allowedEmailsTable.id })
-        .from(allowedEmailsTable)
-        .where(
-          and(
-            eq(allowedEmailsTable.email, email),
-            isNull(allowedEmailsTable.used_at),
-            property_id == null
-              ? isNull(allowedEmailsTable.property_id)
-              : eq(allowedEmailsTable.property_id, property_id),
-          ),
-        )
-        .limit(1)
-      if (existing.length > 0) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message:
-            "an unaccepted invite for this email and property already exists",
-        })
-      }
-      const [created] = await ctx.db
-        .insert(allowedEmailsTable)
-        .values({
-          email,
-          property_id,
-          user_group_id,
-          ownership_pct: ownership_pct == null ? null : ownership_pct.toFixed(2),
-          added_by_user_id: ctx.user.id,
-        })
-        .returning()
-      return created
+      const ownership_pct_str =
+        ownership_pct == null ? null : ownership_pct.toFixed(2)
+
+      return ctx.db.transaction(async tx => {
+        const pending = await tx
+          .select({ id: allowedEmailsTable.id })
+          .from(allowedEmailsTable)
+          .where(
+            and(
+              eq(allowedEmailsTable.email, email),
+              isNull(allowedEmailsTable.used_at),
+              property_id == null
+                ? isNull(allowedEmailsTable.property_id)
+                : eq(allowedEmailsTable.property_id, property_id),
+            ),
+          )
+          .limit(1)
+        if (pending.length > 0) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message:
+              "an unaccepted invite for this email and property already exists",
+          })
+        }
+
+        if (property_id != null) {
+          const accepted = (
+            await tx
+              .select()
+              .from(allowedEmailsTable)
+              .where(
+                and(
+                  eq(allowedEmailsTable.email, email),
+                  eq(allowedEmailsTable.property_id, property_id),
+                  isNotNull(allowedEmailsTable.used_at),
+                ),
+              )
+              .limit(1)
+          ).at(0)
+
+          if (accepted) {
+            const userId = accepted.used_by_user_id
+            if (userId == null) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "accepted invite is missing used_by_user_id",
+              })
+            }
+
+            const ownerRow = (
+              await tx
+                .select({
+                  id: propertyOwnersTable.id,
+                  ownership_pct: propertyOwnersTable.ownership_pct,
+                })
+                .from(propertyOwnersTable)
+                .where(
+                  and(
+                    eq(propertyOwnersTable.property_id, property_id),
+                    eq(propertyOwnersTable.user_id, userId),
+                  ),
+                )
+                .limit(1)
+            ).at(0)
+
+            if (ownership_pct_str == null && ownerRow) {
+              const blockers = await tx
+                .select({ id: propertyPriorityWeeksTable.id })
+                .from(propertyPriorityWeeksTable)
+                .where(
+                  eq(propertyPriorityWeeksTable.property_owner_id, ownerRow.id),
+                )
+                .limit(1)
+              if (blockers.length > 0) {
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message:
+                    "user has priority week claims; remove them before clearing ownership",
+                })
+              }
+              await tx
+                .delete(propertyOwnersTable)
+                .where(eq(propertyOwnersTable.id, ownerRow.id))
+            } else if (ownership_pct_str != null && !ownerRow) {
+              await tx.insert(propertyOwnersTable).values({
+                property_id,
+                user_id: userId,
+                ownership_pct: ownership_pct_str,
+              })
+            } else if (
+              ownership_pct_str != null &&
+              ownerRow &&
+              ownerRow.ownership_pct !== ownership_pct_str
+            ) {
+              await tx
+                .update(propertyOwnersTable)
+                .set({ ownership_pct: ownership_pct_str })
+                .where(eq(propertyOwnersTable.id, ownerRow.id))
+            }
+
+            if (accepted.user_group_id !== user_group_id) {
+              if (accepted.user_group_id != null) {
+                await tx
+                  .delete(userGroupMembersTable)
+                  .where(
+                    and(
+                      eq(
+                        userGroupMembersTable.user_group_id,
+                        accepted.user_group_id,
+                      ),
+                      eq(userGroupMembersTable.user_id, userId),
+                    ),
+                  )
+              }
+              if (user_group_id != null) {
+                await tx
+                  .insert(userGroupMembersTable)
+                  .values({ user_group_id, user_id: userId })
+                  .onConflictDoNothing()
+              }
+            }
+
+            const [updated] = await tx
+              .update(allowedEmailsTable)
+              .set({
+                user_group_id,
+                ownership_pct: ownership_pct_str,
+              })
+              .where(eq(allowedEmailsTable.id, accepted.id))
+              .returning()
+            return updated
+          }
+        }
+
+        const [created] = await tx
+          .insert(allowedEmailsTable)
+          .values({
+            email,
+            property_id,
+            user_group_id,
+            ownership_pct: ownership_pct_str,
+            added_by_user_id: ctx.user.id,
+          })
+          .returning()
+        return created
+      })
     }),
 
   remove: headOrAdminProcedure
