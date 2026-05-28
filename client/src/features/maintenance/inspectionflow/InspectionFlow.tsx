@@ -53,7 +53,10 @@ export function InspectionFlow(props: {
     ),
   )
   const { data: users } = useQuery(
-    trpc.user.list.queryOptions(undefined, { enabled: open }),
+    trpc.user.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: open && selectedPropertyId != null },
+    ),
   )
 
   const currentUser = users?.find(u => u.id === selectedUserId)

@@ -54,7 +54,6 @@ export function OnboardingFlow({ preview = false }: Props) {
   const trpc = useTRPC()
   const navigate = useNavigate()
 
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
   const { data: properties } = useSuspenseQuery(
     trpc.property.mine.queryOptions(),
   )
@@ -70,10 +69,7 @@ export function OnboardingFlow({ preview = false }: Props) {
     [meKey],
   )
 
-  const onboardingKeys = [
-    trpc.user.list.queryKey(),
-    trpc.property.mine.queryKey(),
-  ]
+  const onboardingKeys = [trpc.user.me.queryKey(), trpc.property.mine.queryKey()]
   const createUser = useMutationWithInvalidation(
     trpc.user.create.mutationOptions(),
     onboardingKeys,
@@ -84,10 +80,9 @@ export function OnboardingFlow({ preview = false }: Props) {
   )
 
   const firstProperty = properties.at(0) ?? null
-  const adminUser = users.find(u => u.is_admin) ?? users.at(0) ?? null
 
   const dataDerivedStep: Step = (() => {
-    if (!adminUser) return "user"
+    if (!me) return "user"
     if (!firstProperty) return "basics"
     return "buildings"
   })()

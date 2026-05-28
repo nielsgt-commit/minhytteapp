@@ -3,12 +3,19 @@ import { PropertyOwnersPanel } from "@/features/property/owners/PropertyOwnersPa
 import { trpc } from "@/trpc/client"
 
 export const Route = createFileRoute("/_authed/manageproperty/ownership")({
-  loader: ({ context }) =>
-    Promise.all([
-      context.queryClient.ensureQueryData(trpc.user.list.queryOptions()),
+  loader: ({ context }) => {
+    const groupsQuery = context.queryClient.ensureQueryData(
+      trpc.userGroup.listWithMembers.queryOptions(),
+    )
+    if (context.selectedPropertyId == null) return groupsQuery
+    return Promise.all([
+      groupsQuery,
       context.queryClient.ensureQueryData(
-        trpc.userGroup.listWithMembers.queryOptions(),
+        trpc.user.listForProperty.queryOptions({
+          property_id: context.selectedPropertyId,
+        }),
       ),
-    ]),
+    ])
+  },
   component: PropertyOwnersPanel,
 })

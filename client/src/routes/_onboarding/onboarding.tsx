@@ -24,10 +24,7 @@ export const Route = createFileRoute("/_onboarding/onboarding")({
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: "/dashboard" })
     }
-    await Promise.all([
-      context.queryClient.ensureQueryData(trpc.user.list.queryOptions()),
-      context.queryClient.ensureQueryData(trpc.property.mine.queryOptions()),
-    ])
+    await context.queryClient.ensureQueryData(trpc.property.mine.queryOptions())
   },
   component: OnboardingRoute,
 })

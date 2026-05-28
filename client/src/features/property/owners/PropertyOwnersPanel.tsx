@@ -35,7 +35,11 @@ export function PropertyOwnersPanel() {
 
   const selectedPropertyId = useSelectedPropertyId()
 
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+  )
   const { data: groups } = useSuspenseQuery(
     trpc.userGroup.listWithMembers.queryOptions(),
   )

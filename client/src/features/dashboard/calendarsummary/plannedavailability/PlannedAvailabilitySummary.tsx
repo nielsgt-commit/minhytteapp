@@ -36,7 +36,9 @@ export default function PlannedAvailabilitySummary({
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
-  const { data: users } = useSuspenseQuery(trpc.user.list.queryOptions())
+  const { data: users } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
+  )
   const { data: atProperty } = useSuspenseQuery(
     trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
   )

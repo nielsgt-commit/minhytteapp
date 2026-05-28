@@ -10,7 +10,11 @@ export const Route = createFileRoute("/_authed/dashboard")({
     if (context.selectedPropertyId == null) return propertyList
     return Promise.all([
       propertyList,
-      context.queryClient.ensureQueryData(trpc.user.list.queryOptions()),
+      context.queryClient.ensureQueryData(
+        trpc.user.listForProperty.queryOptions({
+          property_id: context.selectedPropertyId,
+        }),
+      ),
     ])
   },
   component: Dashboard,

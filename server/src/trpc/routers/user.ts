@@ -35,10 +35,6 @@ const updateInput = z.object({
 })
 
 export const userRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.select().from(usersTable).orderBy(asc(usersTable.id))
-  }),
-
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     const { relevantGroupIds, peopleSet } = await relevantGroupIdsForProperty(
       ctx,
