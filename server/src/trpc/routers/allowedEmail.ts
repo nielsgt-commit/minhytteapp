@@ -2,7 +2,15 @@ import { TRPCError } from "@trpc/server"
 import { and, desc, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { normalizeEmail } from "../../auth/email.ts"
-import { allowedEmailsTable, usersTable } from "../../db/schema/users.schema.ts"
+import {
+  propertyOwnersTable,
+  propertyPriorityWeeksTable,
+} from "../../db/schema/property.schema.ts"
+import {
+  allowedEmailsTable,
+  userGroupMembersTable,
+  usersTable,
+} from "../../db/schema/users.schema.ts"
 import { assertPropertyMember, headOrAdminProcedure, router } from "../init.ts"
 
 export const allowedEmailRouter = router({
@@ -112,15 +120,99 @@ export const allowedEmailRouter = router({
   remove: headOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const deleted = (
+      const invite = (
         await ctx.db
-          .delete(allowedEmailsTable)
+          .select()
+          .from(allowedEmailsTable)
           .where(eq(allowedEmailsTable.id, input.id))
-          .returning()
+          .limit(1)
       ).at(0)
-      if (!deleted) {
+      if (!invite) {
         throw new TRPCError({ code: "NOT_FOUND", message: "entry not found" })
       }
-      return deleted
+
+      if (invite.property_id != null) {
+        await assertPropertyMember(ctx.db, ctx.user, invite.property_id)
+      } else if (!ctx.user.is_admin) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "only admins can manage global invites",
+        })
+      }
+
+      if (invite.used_at == null || invite.property_id == null) {
+        const [deleted] = await ctx.db
+          .delete(allowedEmailsTable)
+          .where(eq(allowedEmailsTable.id, invite.id))
+          .returning()
+        return deleted
+      }
+
+      const userId = invite.used_by_user_id
+      if (userId == null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "accepted invite is missing used_by_user_id",
+        })
+      }
+      const propertyId = invite.property_id
+
+      return ctx.db.transaction(async tx => {
+        if (invite.ownership_pct != null) {
+          const ownerRow = (
+            await tx
+              .select({ id: propertyOwnersTable.id })
+              .from(propertyOwnersTable)
+              .where(
+                and(
+                  eq(propertyOwnersTable.property_id, propertyId),
+                  eq(propertyOwnersTable.user_id, userId),
+                ),
+              )
+              .limit(1)
+          ).at(0)
+          if (ownerRow) {
+            const blockers = await tx
+              .select({ id: propertyPriorityWeeksTable.id })
+              .from(propertyPriorityWeeksTable)
+              .where(
+                eq(propertyPriorityWeeksTable.property_owner_id, ownerRow.id),
+              )
+              .limit(1)
+            if (blockers.length > 0) {
+              throw new TRPCError({
+                code: "CONFLICT",
+                message:
+                  "user has priority week claims; remove them before revoking access",
+              })
+            }
+            await tx
+              .delete(propertyOwnersTable)
+              .where(eq(propertyOwnersTable.id, ownerRow.id))
+          }
+        }
+
+        if (invite.user_group_id != null) {
+          await tx
+            .delete(userGroupMembersTable)
+            .where(
+              and(
+                eq(userGroupMembersTable.user_group_id, invite.user_group_id),
+                eq(userGroupMembersTable.user_id, userId),
+              ),
+            )
+        }
+
+        const [updated] = await tx
+          .update(allowedEmailsTable)
+          .set({
+            property_id: null,
+            user_group_id: null,
+            ownership_pct: null,
+          })
+          .where(eq(allowedEmailsTable.id, invite.id))
+          .returning()
+        return updated
+      })
     }),
 })

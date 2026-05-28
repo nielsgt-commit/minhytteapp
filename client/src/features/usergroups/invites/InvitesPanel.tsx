@@ -87,8 +87,15 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     }
   }
 
-  const handleRemove = (id: number, email: string) => {
-    if (!window.confirm(t("Remove {{email}} from the allowlist?", { email }))) {
+  const handleRemove = (
+    id: number,
+    email: string,
+    accepted: boolean,
+  ) => {
+    const prompt = accepted
+      ? t("Revoke {{email}}'s access to this property?", { email })
+      : t("Remove {{email}} from the allowlist?", { email })
+    if (!window.confirm(prompt)) {
       return
     }
     remove.mutate({ id })
@@ -117,7 +124,12 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
             <ul>
               {entries.map(entry => {
                 const group = groupName(entry.user_group_id)
-                const status = entry.used_at ? t("Accepted") : t("Pending")
+                const accepted = entry.used_at != null
+                const status = accepted ? t("Accepted") : t("Pending")
+                const actionLabel = accepted ? t("Revoke") : t("Remove")
+                const ariaLabel = accepted
+                  ? t("Revoke access for {{email}}", { email: entry.email })
+                  : t("Remove invite {{email}}", { email: entry.email })
                 return (
                   <li key={entry.id}>
                     <strong>{entry.email}</strong>
@@ -136,20 +148,18 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                         {t("added by {{name}}", { name: entry.added_by_name })}
                       </span>
                     ) : null}
-                    {!entry.used_at && canEdit && (
+                    {canEdit && (
                       <div>
                         <Button
                           type="button"
                           variant="secondary"
                           disabled={pending}
-                          aria-label={t("Remove invite {{email}}", {
-                            email: entry.email,
-                          })}
+                          aria-label={ariaLabel}
                           onClick={() => {
-                            handleRemove(entry.id, entry.email)
+                            handleRemove(entry.id, entry.email, accepted)
                           }}
                         >
-                          {t("Remove")}
+                          {actionLabel}
                         </Button>
                       </div>
                     )}
