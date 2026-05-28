@@ -3,7 +3,7 @@ import { and, desc, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { normalizeEmail } from "../../auth/email.ts"
 import { allowedEmailsTable, usersTable } from "../../db/schema/users.schema.ts"
-import { headOrAdminProcedure, router } from "../init.ts"
+import { assertPropertyMember, headOrAdminProcedure, router } from "../init.ts"
 
 export const allowedEmailRouter = router({
   list: headOrAdminProcedure
@@ -57,6 +57,9 @@ export const allowedEmailRouter = router({
     .mutation(async ({ ctx, input }) => {
       const email = normalizeEmail(input.email)
       const property_id = input.property_id ?? null
+      if (property_id != null) {
+        await assertPropertyMember(ctx.db, ctx.user, property_id)
+      }
       const existing = await ctx.db
         .select({ id: allowedEmailsTable.id })
         .from(allowedEmailsTable)
