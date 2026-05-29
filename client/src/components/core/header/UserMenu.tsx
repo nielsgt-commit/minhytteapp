@@ -133,7 +133,7 @@ export default function UserMenu({ showCheckIn = true }: Props) {
           <Dropdown.Item>
             <Dropdown.Button
               onClick={() => {
-                void navigate({ to: "/usersettings" })
+                void navigate({ to: "/innstillinger" })
               }}
             >
               {t("Settings")}

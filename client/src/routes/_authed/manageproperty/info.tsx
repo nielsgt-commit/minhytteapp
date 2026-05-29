@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import PropertyInfo from "@/features/property/propertyinfo/PropertyInfo"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_authed/manageproperty/info")({
-  component: PropertyInfo,
+  beforeLoad: () => { throw redirect({ to: "/administrer/info" }) },
 })

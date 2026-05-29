@@ -14,14 +14,22 @@ import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
 import { Route as OnboardingOnboardingRouteImport } from './routes/_onboarding/onboarding'
+import { Route as AuthedVedlikeholdRouteImport } from './routes/_authed/vedlikehold'
+import { Route as AuthedUtleggRouteImport } from './routes/_authed/utlegg'
 import { Route as AuthedUsersettingsRouteImport } from './routes/_authed/usersettings'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
+import { Route as AuthedOversiktRouteImport } from './routes/_authed/oversikt'
+import { Route as AuthedOppgjorRouteImport } from './routes/_authed/oppgjor'
 import { Route as AuthedManagepropertyRouteImport } from './routes/_authed/manageproperty'
 import { Route as AuthedMaintenanceRouteImport } from './routes/_authed/maintenance'
+import { Route as AuthedKalenderRouteImport } from './routes/_authed/kalender'
+import { Route as AuthedInnstillingerRouteImport } from './routes/_authed/innstillinger'
 import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
+import { Route as AuthedAdministrerRouteImport } from './routes/_authed/administrer'
 import { Route as AuthedManagepropertyIndexRouteImport } from './routes/_authed/manageproperty/index'
+import { Route as AuthedAdministrerIndexRouteImport } from './routes/_authed/administrer/index'
 import { Route as AuthedManagepropertyUsersRouteImport } from './routes/_authed/manageproperty/users'
 import { Route as AuthedManagepropertyUsergroupsRouteImport } from './routes/_authed/manageproperty/usergroups'
 import { Route as AuthedManagepropertyStructuresRouteImport } from './routes/_authed/manageproperty/structures'
@@ -34,6 +42,18 @@ import { Route as AuthedManagepropertyInfrastructureRouteImport } from './routes
 import { Route as AuthedManagepropertyInfoRouteImport } from './routes/_authed/manageproperty/info'
 import { Route as AuthedManagepropertyEquipmentRouteImport } from './routes/_authed/manageproperty/equipment'
 import { Route as AuthedManagepropertyContactsRouteImport } from './routes/_authed/manageproperty/contacts'
+import { Route as AuthedAdministrerUtstyrRouteImport } from './routes/_authed/administrer/utstyr'
+import { Route as AuthedAdministrerPrioritetRouteImport } from './routes/_authed/administrer/prioritet'
+import { Route as AuthedAdministrerKontakterRouteImport } from './routes/_authed/administrer/kontakter'
+import { Route as AuthedAdministrerInvitasjonerRouteImport } from './routes/_authed/administrer/invitasjoner'
+import { Route as AuthedAdministrerInnstillingerRouteImport } from './routes/_authed/administrer/innstillinger'
+import { Route as AuthedAdministrerInfrastrukturRouteImport } from './routes/_authed/administrer/infrastruktur'
+import { Route as AuthedAdministrerInfoRouteImport } from './routes/_authed/administrer/info'
+import { Route as AuthedAdministrerFordelingspolicyRouteImport } from './routes/_authed/administrer/fordelingspolicy'
+import { Route as AuthedAdministrerEierskapRouteImport } from './routes/_authed/administrer/eierskap'
+import { Route as AuthedAdministrerBygningerRouteImport } from './routes/_authed/administrer/bygninger'
+import { Route as AuthedAdministrerBrukergrupperRouteImport } from './routes/_authed/administrer/brukergrupper'
+import { Route as AuthedAdministrerBrukereRouteImport } from './routes/_authed/administrer/brukere'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/_onboarding',
@@ -57,6 +77,16 @@ const OnboardingOnboardingRoute = OnboardingOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const AuthedVedlikeholdRoute = AuthedVedlikeholdRouteImport.update({
+  id: '/vedlikehold',
+  path: '/vedlikehold',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedUtleggRoute = AuthedUtleggRouteImport.update({
+  id: '/utlegg',
+  path: '/utlegg',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedUsersettingsRoute = AuthedUsersettingsRouteImport.update({
   id: '/usersettings',
   path: '/usersettings',
@@ -67,6 +97,16 @@ const AuthedSettlementRoute = AuthedSettlementRouteImport.update({
   path: '/settlement',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedOversiktRoute = AuthedOversiktRouteImport.update({
+  id: '/oversikt',
+  path: '/oversikt',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedOppgjorRoute = AuthedOppgjorRouteImport.update({
+  id: '/oppgjor',
+  path: '/oppgjor',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedManagepropertyRoute = AuthedManagepropertyRouteImport.update({
   id: '/manageproperty',
   path: '/manageproperty',
@@ -75,6 +115,16 @@ const AuthedManagepropertyRoute = AuthedManagepropertyRouteImport.update({
 const AuthedMaintenanceRoute = AuthedMaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedKalenderRoute = AuthedKalenderRouteImport.update({
+  id: '/kalender',
+  path: '/kalender',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedInnstillingerRoute = AuthedInnstillingerRouteImport.update({
+  id: '/innstillinger',
+  path: '/innstillinger',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedExpensesRoute = AuthedExpensesRouteImport.update({
@@ -92,12 +142,22 @@ const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedAdministrerRoute = AuthedAdministrerRouteImport.update({
+  id: '/administrer',
+  path: '/administrer',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedManagepropertyIndexRoute =
   AuthedManagepropertyIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
+const AuthedAdministrerIndexRoute = AuthedAdministrerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdministrerRoute,
+} as any)
 const AuthedManagepropertyUsersRoute =
   AuthedManagepropertyUsersRouteImport.update({
     id: '/users',
@@ -170,17 +230,106 @@ const AuthedManagepropertyContactsRoute =
     path: '/contacts',
     getParentRoute: () => AuthedManagepropertyRoute,
   } as any)
+const AuthedAdministrerUtstyrRoute = AuthedAdministrerUtstyrRouteImport.update({
+  id: '/utstyr',
+  path: '/utstyr',
+  getParentRoute: () => AuthedAdministrerRoute,
+} as any)
+const AuthedAdministrerPrioritetRoute =
+  AuthedAdministrerPrioritetRouteImport.update({
+    id: '/prioritet',
+    path: '/prioritet',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerKontakterRoute =
+  AuthedAdministrerKontakterRouteImport.update({
+    id: '/kontakter',
+    path: '/kontakter',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerInvitasjonerRoute =
+  AuthedAdministrerInvitasjonerRouteImport.update({
+    id: '/invitasjoner',
+    path: '/invitasjoner',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerInnstillingerRoute =
+  AuthedAdministrerInnstillingerRouteImport.update({
+    id: '/innstillinger',
+    path: '/innstillinger',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerInfrastrukturRoute =
+  AuthedAdministrerInfrastrukturRouteImport.update({
+    id: '/infrastruktur',
+    path: '/infrastruktur',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerInfoRoute = AuthedAdministrerInfoRouteImport.update({
+  id: '/info',
+  path: '/info',
+  getParentRoute: () => AuthedAdministrerRoute,
+} as any)
+const AuthedAdministrerFordelingspolicyRoute =
+  AuthedAdministrerFordelingspolicyRouteImport.update({
+    id: '/fordelingspolicy',
+    path: '/fordelingspolicy',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerEierskapRoute =
+  AuthedAdministrerEierskapRouteImport.update({
+    id: '/eierskap',
+    path: '/eierskap',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerBygningerRoute =
+  AuthedAdministrerBygningerRouteImport.update({
+    id: '/bygninger',
+    path: '/bygninger',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerBrukergrupperRoute =
+  AuthedAdministrerBrukergrupperRouteImport.update({
+    id: '/brukergrupper',
+    path: '/brukergrupper',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
+const AuthedAdministrerBrukereRoute =
+  AuthedAdministrerBrukereRouteImport.update({
+    id: '/brukere',
+    path: '/brukere',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
+  '/administrer': typeof AuthedAdministrerRouteWithChildren
   '/calendar': typeof AuthedCalendarRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
+  '/innstillinger': typeof AuthedInnstillingerRoute
+  '/kalender': typeof AuthedKalenderRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/manageproperty': typeof AuthedManagepropertyRouteWithChildren
+  '/oppgjor': typeof AuthedOppgjorRoute
+  '/oversikt': typeof AuthedOversiktRoute
   '/settlement': typeof AuthedSettlementRoute
   '/usersettings': typeof AuthedUsersettingsRoute
+  '/utlegg': typeof AuthedUtleggRoute
+  '/vedlikehold': typeof AuthedVedlikeholdRoute
   '/onboarding': typeof OnboardingOnboardingRoute
+  '/administrer/brukere': typeof AuthedAdministrerBrukereRoute
+  '/administrer/brukergrupper': typeof AuthedAdministrerBrukergrupperRoute
+  '/administrer/bygninger': typeof AuthedAdministrerBygningerRoute
+  '/administrer/eierskap': typeof AuthedAdministrerEierskapRoute
+  '/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRoute
+  '/administrer/info': typeof AuthedAdministrerInfoRoute
+  '/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
+  '/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
+  '/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
+  '/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
+  '/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
+  '/administrer/utstyr': typeof AuthedAdministrerUtstyrRoute
   '/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
   '/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/manageproperty/info': typeof AuthedManagepropertyInfoRoute
@@ -193,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/manageproperty/users': typeof AuthedManagepropertyUsersRoute
+  '/administrer/': typeof AuthedAdministrerIndexRoute
   '/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRoutesByTo {
@@ -200,10 +350,28 @@ export interface FileRoutesByTo {
   '/calendar': typeof AuthedCalendarRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
+  '/innstillinger': typeof AuthedInnstillingerRoute
+  '/kalender': typeof AuthedKalenderRoute
   '/maintenance': typeof AuthedMaintenanceRoute
+  '/oppgjor': typeof AuthedOppgjorRoute
+  '/oversikt': typeof AuthedOversiktRoute
   '/settlement': typeof AuthedSettlementRoute
   '/usersettings': typeof AuthedUsersettingsRoute
+  '/utlegg': typeof AuthedUtleggRoute
+  '/vedlikehold': typeof AuthedVedlikeholdRoute
   '/onboarding': typeof OnboardingOnboardingRoute
+  '/administrer/brukere': typeof AuthedAdministrerBrukereRoute
+  '/administrer/brukergrupper': typeof AuthedAdministrerBrukergrupperRoute
+  '/administrer/bygninger': typeof AuthedAdministrerBygningerRoute
+  '/administrer/eierskap': typeof AuthedAdministrerEierskapRoute
+  '/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRoute
+  '/administrer/info': typeof AuthedAdministrerInfoRoute
+  '/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
+  '/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
+  '/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
+  '/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
+  '/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
+  '/administrer/utstyr': typeof AuthedAdministrerUtstyrRoute
   '/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
   '/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/manageproperty/info': typeof AuthedManagepropertyInfoRoute
@@ -216,6 +384,7 @@ export interface FileRoutesByTo {
   '/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/manageproperty/users': typeof AuthedManagepropertyUsersRoute
+  '/administrer': typeof AuthedAdministrerIndexRoute
   '/manageproperty': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRoutesById {
@@ -223,15 +392,34 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/_marketing': typeof MarketingRouteWithChildren
   '/_onboarding': typeof OnboardingRouteWithChildren
+  '/_authed/administrer': typeof AuthedAdministrerRouteWithChildren
   '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/expenses': typeof AuthedExpensesRoute
+  '/_authed/innstillinger': typeof AuthedInnstillingerRoute
+  '/_authed/kalender': typeof AuthedKalenderRoute
   '/_authed/maintenance': typeof AuthedMaintenanceRoute
   '/_authed/manageproperty': typeof AuthedManagepropertyRouteWithChildren
+  '/_authed/oppgjor': typeof AuthedOppgjorRoute
+  '/_authed/oversikt': typeof AuthedOversiktRoute
   '/_authed/settlement': typeof AuthedSettlementRoute
   '/_authed/usersettings': typeof AuthedUsersettingsRoute
+  '/_authed/utlegg': typeof AuthedUtleggRoute
+  '/_authed/vedlikehold': typeof AuthedVedlikeholdRoute
   '/_onboarding/onboarding': typeof OnboardingOnboardingRoute
   '/_marketing/': typeof MarketingIndexRoute
+  '/_authed/administrer/brukere': typeof AuthedAdministrerBrukereRoute
+  '/_authed/administrer/brukergrupper': typeof AuthedAdministrerBrukergrupperRoute
+  '/_authed/administrer/bygninger': typeof AuthedAdministrerBygningerRoute
+  '/_authed/administrer/eierskap': typeof AuthedAdministrerEierskapRoute
+  '/_authed/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRoute
+  '/_authed/administrer/info': typeof AuthedAdministrerInfoRoute
+  '/_authed/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
+  '/_authed/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
+  '/_authed/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
+  '/_authed/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
+  '/_authed/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
+  '/_authed/administrer/utstyr': typeof AuthedAdministrerUtstyrRoute
   '/_authed/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
   '/_authed/manageproperty/equipment': typeof AuthedManagepropertyEquipmentRoute
   '/_authed/manageproperty/info': typeof AuthedManagepropertyInfoRoute
@@ -244,20 +432,40 @@ export interface FileRoutesById {
   '/_authed/manageproperty/structures': typeof AuthedManagepropertyStructuresRoute
   '/_authed/manageproperty/usergroups': typeof AuthedManagepropertyUsergroupsRoute
   '/_authed/manageproperty/users': typeof AuthedManagepropertyUsersRoute
+  '/_authed/administrer/': typeof AuthedAdministrerIndexRoute
   '/_authed/manageproperty/': typeof AuthedManagepropertyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/administrer'
     | '/calendar'
     | '/dashboard'
     | '/expenses'
+    | '/innstillinger'
+    | '/kalender'
     | '/maintenance'
     | '/manageproperty'
+    | '/oppgjor'
+    | '/oversikt'
     | '/settlement'
     | '/usersettings'
+    | '/utlegg'
+    | '/vedlikehold'
     | '/onboarding'
+    | '/administrer/brukere'
+    | '/administrer/brukergrupper'
+    | '/administrer/bygninger'
+    | '/administrer/eierskap'
+    | '/administrer/fordelingspolicy'
+    | '/administrer/info'
+    | '/administrer/infrastruktur'
+    | '/administrer/innstillinger'
+    | '/administrer/invitasjoner'
+    | '/administrer/kontakter'
+    | '/administrer/prioritet'
+    | '/administrer/utstyr'
     | '/manageproperty/contacts'
     | '/manageproperty/equipment'
     | '/manageproperty/info'
@@ -270,6 +478,7 @@ export interface FileRouteTypes {
     | '/manageproperty/structures'
     | '/manageproperty/usergroups'
     | '/manageproperty/users'
+    | '/administrer/'
     | '/manageproperty/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -277,10 +486,28 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/dashboard'
     | '/expenses'
+    | '/innstillinger'
+    | '/kalender'
     | '/maintenance'
+    | '/oppgjor'
+    | '/oversikt'
     | '/settlement'
     | '/usersettings'
+    | '/utlegg'
+    | '/vedlikehold'
     | '/onboarding'
+    | '/administrer/brukere'
+    | '/administrer/brukergrupper'
+    | '/administrer/bygninger'
+    | '/administrer/eierskap'
+    | '/administrer/fordelingspolicy'
+    | '/administrer/info'
+    | '/administrer/infrastruktur'
+    | '/administrer/innstillinger'
+    | '/administrer/invitasjoner'
+    | '/administrer/kontakter'
+    | '/administrer/prioritet'
+    | '/administrer/utstyr'
     | '/manageproperty/contacts'
     | '/manageproperty/equipment'
     | '/manageproperty/info'
@@ -293,21 +520,41 @@ export interface FileRouteTypes {
     | '/manageproperty/structures'
     | '/manageproperty/usergroups'
     | '/manageproperty/users'
+    | '/administrer'
     | '/manageproperty'
   id:
     | '__root__'
     | '/_authed'
     | '/_marketing'
     | '/_onboarding'
+    | '/_authed/administrer'
     | '/_authed/calendar'
     | '/_authed/dashboard'
     | '/_authed/expenses'
+    | '/_authed/innstillinger'
+    | '/_authed/kalender'
     | '/_authed/maintenance'
     | '/_authed/manageproperty'
+    | '/_authed/oppgjor'
+    | '/_authed/oversikt'
     | '/_authed/settlement'
     | '/_authed/usersettings'
+    | '/_authed/utlegg'
+    | '/_authed/vedlikehold'
     | '/_onboarding/onboarding'
     | '/_marketing/'
+    | '/_authed/administrer/brukere'
+    | '/_authed/administrer/brukergrupper'
+    | '/_authed/administrer/bygninger'
+    | '/_authed/administrer/eierskap'
+    | '/_authed/administrer/fordelingspolicy'
+    | '/_authed/administrer/info'
+    | '/_authed/administrer/infrastruktur'
+    | '/_authed/administrer/innstillinger'
+    | '/_authed/administrer/invitasjoner'
+    | '/_authed/administrer/kontakter'
+    | '/_authed/administrer/prioritet'
+    | '/_authed/administrer/utstyr'
     | '/_authed/manageproperty/contacts'
     | '/_authed/manageproperty/equipment'
     | '/_authed/manageproperty/info'
@@ -320,6 +567,7 @@ export interface FileRouteTypes {
     | '/_authed/manageproperty/structures'
     | '/_authed/manageproperty/usergroups'
     | '/_authed/manageproperty/users'
+    | '/_authed/administrer/'
     | '/_authed/manageproperty/'
   fileRoutesById: FileRoutesById
 }
@@ -366,6 +614,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingOnboardingRouteImport
       parentRoute: typeof OnboardingRoute
     }
+    '/_authed/vedlikehold': {
+      id: '/_authed/vedlikehold'
+      path: '/vedlikehold'
+      fullPath: '/vedlikehold'
+      preLoaderRoute: typeof AuthedVedlikeholdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/utlegg': {
+      id: '/_authed/utlegg'
+      path: '/utlegg'
+      fullPath: '/utlegg'
+      preLoaderRoute: typeof AuthedUtleggRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/usersettings': {
       id: '/_authed/usersettings'
       path: '/usersettings'
@@ -380,6 +642,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettlementRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/oversikt': {
+      id: '/_authed/oversikt'
+      path: '/oversikt'
+      fullPath: '/oversikt'
+      preLoaderRoute: typeof AuthedOversiktRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/oppgjor': {
+      id: '/_authed/oppgjor'
+      path: '/oppgjor'
+      fullPath: '/oppgjor'
+      preLoaderRoute: typeof AuthedOppgjorRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/manageproperty': {
       id: '/_authed/manageproperty'
       path: '/manageproperty'
@@ -392,6 +668,20 @@ declare module '@tanstack/react-router' {
       path: '/maintenance'
       fullPath: '/maintenance'
       preLoaderRoute: typeof AuthedMaintenanceRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/kalender': {
+      id: '/_authed/kalender'
+      path: '/kalender'
+      fullPath: '/kalender'
+      preLoaderRoute: typeof AuthedKalenderRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/innstillinger': {
+      id: '/_authed/innstillinger'
+      path: '/innstillinger'
+      fullPath: '/innstillinger'
+      preLoaderRoute: typeof AuthedInnstillingerRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/expenses': {
@@ -415,12 +705,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCalendarRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/administrer': {
+      id: '/_authed/administrer'
+      path: '/administrer'
+      fullPath: '/administrer'
+      preLoaderRoute: typeof AuthedAdministrerRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/manageproperty/': {
       id: '/_authed/manageproperty/'
       path: '/'
       fullPath: '/manageproperty/'
       preLoaderRoute: typeof AuthedManagepropertyIndexRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
+    }
+    '/_authed/administrer/': {
+      id: '/_authed/administrer/'
+      path: '/'
+      fullPath: '/administrer/'
+      preLoaderRoute: typeof AuthedAdministrerIndexRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
     }
     '/_authed/manageproperty/users': {
       id: '/_authed/manageproperty/users'
@@ -506,8 +810,128 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedManagepropertyContactsRouteImport
       parentRoute: typeof AuthedManagepropertyRoute
     }
+    '/_authed/administrer/utstyr': {
+      id: '/_authed/administrer/utstyr'
+      path: '/utstyr'
+      fullPath: '/administrer/utstyr'
+      preLoaderRoute: typeof AuthedAdministrerUtstyrRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/prioritet': {
+      id: '/_authed/administrer/prioritet'
+      path: '/prioritet'
+      fullPath: '/administrer/prioritet'
+      preLoaderRoute: typeof AuthedAdministrerPrioritetRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/kontakter': {
+      id: '/_authed/administrer/kontakter'
+      path: '/kontakter'
+      fullPath: '/administrer/kontakter'
+      preLoaderRoute: typeof AuthedAdministrerKontakterRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/invitasjoner': {
+      id: '/_authed/administrer/invitasjoner'
+      path: '/invitasjoner'
+      fullPath: '/administrer/invitasjoner'
+      preLoaderRoute: typeof AuthedAdministrerInvitasjonerRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/innstillinger': {
+      id: '/_authed/administrer/innstillinger'
+      path: '/innstillinger'
+      fullPath: '/administrer/innstillinger'
+      preLoaderRoute: typeof AuthedAdministrerInnstillingerRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/infrastruktur': {
+      id: '/_authed/administrer/infrastruktur'
+      path: '/infrastruktur'
+      fullPath: '/administrer/infrastruktur'
+      preLoaderRoute: typeof AuthedAdministrerInfrastrukturRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/info': {
+      id: '/_authed/administrer/info'
+      path: '/info'
+      fullPath: '/administrer/info'
+      preLoaderRoute: typeof AuthedAdministrerInfoRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/fordelingspolicy': {
+      id: '/_authed/administrer/fordelingspolicy'
+      path: '/fordelingspolicy'
+      fullPath: '/administrer/fordelingspolicy'
+      preLoaderRoute: typeof AuthedAdministrerFordelingspolicyRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/eierskap': {
+      id: '/_authed/administrer/eierskap'
+      path: '/eierskap'
+      fullPath: '/administrer/eierskap'
+      preLoaderRoute: typeof AuthedAdministrerEierskapRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/bygninger': {
+      id: '/_authed/administrer/bygninger'
+      path: '/bygninger'
+      fullPath: '/administrer/bygninger'
+      preLoaderRoute: typeof AuthedAdministrerBygningerRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/brukergrupper': {
+      id: '/_authed/administrer/brukergrupper'
+      path: '/brukergrupper'
+      fullPath: '/administrer/brukergrupper'
+      preLoaderRoute: typeof AuthedAdministrerBrukergrupperRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
+    '/_authed/administrer/brukere': {
+      id: '/_authed/administrer/brukere'
+      path: '/brukere'
+      fullPath: '/administrer/brukere'
+      preLoaderRoute: typeof AuthedAdministrerBrukereRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
   }
 }
+
+interface AuthedAdministrerRouteChildren {
+  AuthedAdministrerBrukereRoute: typeof AuthedAdministrerBrukereRoute
+  AuthedAdministrerBrukergrupperRoute: typeof AuthedAdministrerBrukergrupperRoute
+  AuthedAdministrerBygningerRoute: typeof AuthedAdministrerBygningerRoute
+  AuthedAdministrerEierskapRoute: typeof AuthedAdministrerEierskapRoute
+  AuthedAdministrerFordelingspolicyRoute: typeof AuthedAdministrerFordelingspolicyRoute
+  AuthedAdministrerInfoRoute: typeof AuthedAdministrerInfoRoute
+  AuthedAdministrerInfrastrukturRoute: typeof AuthedAdministrerInfrastrukturRoute
+  AuthedAdministrerInnstillingerRoute: typeof AuthedAdministrerInnstillingerRoute
+  AuthedAdministrerInvitasjonerRoute: typeof AuthedAdministrerInvitasjonerRoute
+  AuthedAdministrerKontakterRoute: typeof AuthedAdministrerKontakterRoute
+  AuthedAdministrerPrioritetRoute: typeof AuthedAdministrerPrioritetRoute
+  AuthedAdministrerUtstyrRoute: typeof AuthedAdministrerUtstyrRoute
+  AuthedAdministrerIndexRoute: typeof AuthedAdministrerIndexRoute
+}
+
+const AuthedAdministrerRouteChildren: AuthedAdministrerRouteChildren = {
+  AuthedAdministrerBrukereRoute: AuthedAdministrerBrukereRoute,
+  AuthedAdministrerBrukergrupperRoute: AuthedAdministrerBrukergrupperRoute,
+  AuthedAdministrerBygningerRoute: AuthedAdministrerBygningerRoute,
+  AuthedAdministrerEierskapRoute: AuthedAdministrerEierskapRoute,
+  AuthedAdministrerFordelingspolicyRoute:
+    AuthedAdministrerFordelingspolicyRoute,
+  AuthedAdministrerInfoRoute: AuthedAdministrerInfoRoute,
+  AuthedAdministrerInfrastrukturRoute: AuthedAdministrerInfrastrukturRoute,
+  AuthedAdministrerInnstillingerRoute: AuthedAdministrerInnstillingerRoute,
+  AuthedAdministrerInvitasjonerRoute: AuthedAdministrerInvitasjonerRoute,
+  AuthedAdministrerKontakterRoute: AuthedAdministrerKontakterRoute,
+  AuthedAdministrerPrioritetRoute: AuthedAdministrerPrioritetRoute,
+  AuthedAdministrerUtstyrRoute: AuthedAdministrerUtstyrRoute,
+  AuthedAdministrerIndexRoute: AuthedAdministrerIndexRoute,
+}
+
+const AuthedAdministrerRouteWithChildren =
+  AuthedAdministrerRoute._addFileChildren(AuthedAdministrerRouteChildren)
 
 interface AuthedManagepropertyRouteChildren {
   AuthedManagepropertyContactsRoute: typeof AuthedManagepropertyContactsRoute
@@ -546,23 +970,37 @@ const AuthedManagepropertyRouteWithChildren =
   AuthedManagepropertyRoute._addFileChildren(AuthedManagepropertyRouteChildren)
 
 interface AuthedRouteChildren {
+  AuthedAdministrerRoute: typeof AuthedAdministrerRouteWithChildren
   AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedExpensesRoute: typeof AuthedExpensesRoute
+  AuthedInnstillingerRoute: typeof AuthedInnstillingerRoute
+  AuthedKalenderRoute: typeof AuthedKalenderRoute
   AuthedMaintenanceRoute: typeof AuthedMaintenanceRoute
   AuthedManagepropertyRoute: typeof AuthedManagepropertyRouteWithChildren
+  AuthedOppgjorRoute: typeof AuthedOppgjorRoute
+  AuthedOversiktRoute: typeof AuthedOversiktRoute
   AuthedSettlementRoute: typeof AuthedSettlementRoute
   AuthedUsersettingsRoute: typeof AuthedUsersettingsRoute
+  AuthedUtleggRoute: typeof AuthedUtleggRoute
+  AuthedVedlikeholdRoute: typeof AuthedVedlikeholdRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAdministrerRoute: AuthedAdministrerRouteWithChildren,
   AuthedCalendarRoute: AuthedCalendarRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedExpensesRoute: AuthedExpensesRoute,
+  AuthedInnstillingerRoute: AuthedInnstillingerRoute,
+  AuthedKalenderRoute: AuthedKalenderRoute,
   AuthedMaintenanceRoute: AuthedMaintenanceRoute,
   AuthedManagepropertyRoute: AuthedManagepropertyRouteWithChildren,
+  AuthedOppgjorRoute: AuthedOppgjorRoute,
+  AuthedOversiktRoute: AuthedOversiktRoute,
   AuthedSettlementRoute: AuthedSettlementRoute,
   AuthedUsersettingsRoute: AuthedUsersettingsRoute,
+  AuthedUtleggRoute: AuthedUtleggRoute,
+  AuthedVedlikeholdRoute: AuthedVedlikeholdRoute,
 }
 
 const AuthedRouteWithChildren =

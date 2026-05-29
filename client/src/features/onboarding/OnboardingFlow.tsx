@@ -120,17 +120,17 @@ export function OnboardingFlow({ preview = false }: Props) {
 
   const finishLater = async () => {
     if (!preview) await setStep.mutateAsync({ step: currentStep })
-    await navigate({ to: "/dashboard" })
+    await navigate({ to: "/oversikt" })
   }
 
   const dismissForever = async () => {
     if (!preview) await dismiss.mutateAsync()
-    await navigate({ to: "/dashboard" })
+    await navigate({ to: "/oversikt" })
   }
 
   const goToDashboard = async () => {
     if (!preview) await setStep.mutateAsync({ step: "done" })
-    await navigate({ to: "/dashboard" })
+    await navigate({ to: "/oversikt" })
   }
 
   const lastError =

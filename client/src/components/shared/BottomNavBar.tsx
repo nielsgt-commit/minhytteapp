@@ -37,31 +37,31 @@ const navItems: {
   IconActive: IconComp
 }[] = [
   {
-    to: "/dashboard",
+    to: "/oversikt",
     label: "Dashboard",
     Icon: asIcon(HouseIcon),
     IconActive: asIcon(HouseFillIcon),
   },
   {
-    to: "/calendar",
+    to: "/kalender",
     label: "Calendar",
     Icon: asIcon(CalendarIcon),
     IconActive: asIcon(CalendarFillIcon),
   },
   {
-    to: "/expenses",
+    to: "/utlegg",
     label: "Expenses",
     Icon: asIcon(WalletIcon),
     IconActive: asIcon(WalletFillIcon),
   },
   {
-    to: "/maintenance",
+    to: "/vedlikehold",
     label: "Maintenance",
     Icon: asIcon(WrenchIcon),
     IconActive: asIcon(WrenchFillIcon),
   },
   {
-    to: "/settlement",
+    to: "/oppgjor",
     label: "Settlement",
     Icon: asIcon(FileTextIcon),
     IconActive: asIcon(FileTextFillIcon),

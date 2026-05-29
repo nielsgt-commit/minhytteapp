@@ -1,23 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { ListPropertyStructures } from "@/features/property/testform/ListPropertyStructures"
-import { trpc } from "@/trpc/client"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_authed/manageproperty/structures")({
-  loader: ({ context }) => {
-    const { selectedPropertyId } = context
-    if (selectedPropertyId == null) return
-    return Promise.all([
-      context.queryClient.ensureQueryData(
-        trpc.structure.listForProperty.queryOptions({
-          property_id: selectedPropertyId,
-        }),
-      ),
-      context.queryClient.ensureQueryData(
-        trpc.room.listForProperty.queryOptions({
-          property_id: selectedPropertyId,
-        }),
-      ),
-    ])
-  },
-  component: ListPropertyStructures,
+  beforeLoad: () => { throw redirect({ to: "/administrer/bygninger" }) },
 })

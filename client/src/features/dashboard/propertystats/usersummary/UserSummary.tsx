@@ -39,7 +39,7 @@ export default function UserSummary() {
       }
       footer={
         <Button asChild variant="secondary" className={styles.footerButton}>
-          <Link to="/manageproperty/usergroups">{t("Manage user groups")}</Link>
+          <Link to="/administrer/brukergrupper">{t("Manage user groups")}</Link>
         </Button>
       }
     />

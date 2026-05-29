@@ -32,7 +32,7 @@ export default function NowWeather() {
   if (propertyId != null && property != null && !hasCoords) {
     return (
       <Paragraph>
-        <Link to="/manageproperty/info" className={styles.hint}>
+        <Link to="/administrer/info" className={styles.hint}>
           {t("Add address to see local weather")}
         </Link>
       </Paragraph>

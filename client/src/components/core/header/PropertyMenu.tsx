@@ -62,7 +62,7 @@ export default function PropertyMenu() {
           createProperty.mutate({ name, address: "—" })
         }}
         onManageProperty={() => {
-          void navigate({ to: "/manageproperty" })
+          void navigate({ to: "/administrer" })
         }}
         isAddPending={createProperty.isPending}
         addError={createProperty.error?.message ?? null}

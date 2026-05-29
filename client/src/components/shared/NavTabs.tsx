@@ -5,11 +5,11 @@ import { useTranslation } from "react-i18next"
 import styles from "./NavTabs.module.css"
 
 const navLinks = linkOptions([
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/calendar", label: "Calendar" },
-  { to: "/maintenance", label: "Maintenance" },
-  { to: "/expenses", label: "Expenses" },
-  { to: "/settlement", label: "Settlement" },
+  { to: "/oversikt", label: "Dashboard" },
+  { to: "/kalender", label: "Calendar" },
+  { to: "/vedlikehold", label: "Maintenance" },
+  { to: "/utlegg", label: "Expenses" },
+  { to: "/oppgjor", label: "Settlement" },
 ])
 
 export default function NavTabs({ children }: { children: ReactNode }) {

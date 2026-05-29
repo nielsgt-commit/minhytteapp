@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_marketing/")({
     })
     if (session) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw redirect({ to: "/dashboard" })
+      throw redirect({ to: "/oversikt" })
     }
   },
   component: RouteComponent,

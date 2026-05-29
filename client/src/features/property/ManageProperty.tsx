@@ -11,14 +11,14 @@ import { useTRPC } from "@/trpc/trpc.ts"
 
 const BANNERS = new Map<string, { title: string; description: string }>([
   [
-    "/manageproperty/info",
+    "/administrer/info",
     {
       title: "Info",
       description: "Name, address, link, and basic facts about the property.",
     },
   ],
   [
-    "/manageproperty/contacts",
+    "/administrer/kontakter",
     {
       title: "Contacts",
       description:
@@ -26,21 +26,21 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
-    "/manageproperty/ownership",
+    "/administrer/eierskap",
     {
       title: "Ownership",
       description: "Who owns what share of the property.",
     },
   ],
   [
-    "/manageproperty/usergroups",
+    "/administrer/brukergrupper",
     {
       title: "User groups",
       description: "Group users together to share access, costs, or bookings.",
     },
   ],
   [
-    "/manageproperty/users",
+    "/administrer/brukere",
     {
       title: "Users",
       description:
@@ -48,7 +48,7 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
-    "/manageproperty/invites",
+    "/administrer/invitasjoner",
     {
       title: "Invites",
       description:
@@ -56,14 +56,14 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
-    "/manageproperty/structures",
+    "/administrer/bygninger",
     {
       title: "Structures",
       description: "Buildings on the property and the rooms inside them.",
     },
   ],
   [
-    "/manageproperty/infrastructure",
+    "/administrer/infrastruktur",
     {
       title: "Infrastructure",
       description:
@@ -71,14 +71,14 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
-    "/manageproperty/equipment",
+    "/administrer/utstyr",
     {
       title: "Equipment",
       description: "Tools, appliances, and gear kept at the property.",
     },
   ],
   [
-    "/manageproperty/split-policy",
+    "/administrer/fordelingspolicy",
     {
       title: "Split policy",
       description:
@@ -86,14 +86,14 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
-    "/manageproperty/priority",
+    "/administrer/prioritet",
     {
       title: "Priority weeks",
       description: "Each household head claims one peak summer week.",
     },
   ],
   [
-    "/manageproperty/settings",
+    "/administrer/innstillinger",
     {
       title: "Settings",
       description: "Per-property preferences and danger zone actions.",
@@ -120,28 +120,28 @@ const DESKTOP_GROUPS = [
   {
     label: "Property",
     items: [
-      { to: "/manageproperty/info", label: "Info" },
-      { to: "/manageproperty/contacts", label: "Contacts" },
-      { to: "/manageproperty/ownership", label: "Ownership" },
-      { to: "/manageproperty/structures", label: "Structures" },
-      { to: "/manageproperty/infrastructure", label: "Infrastructure" },
-      { to: "/manageproperty/equipment", label: "Equipment" },
+      { to: "/administrer/info", label: "Info" },
+      { to: "/administrer/kontakter", label: "Contacts" },
+      { to: "/administrer/eierskap", label: "Ownership" },
+      { to: "/administrer/bygninger", label: "Structures" },
+      { to: "/administrer/infrastruktur", label: "Infrastructure" },
+      { to: "/administrer/utstyr", label: "Equipment" },
     ],
   },
   {
     label: "People",
     items: [
-      { to: "/manageproperty/users", label: "Users" },
-      { to: "/manageproperty/usergroups", label: "User groups" },
-      { to: "/manageproperty/invites", label: "Invites" },
+      { to: "/administrer/brukere", label: "Users" },
+      { to: "/administrer/brukergrupper", label: "User groups" },
+      { to: "/administrer/invitasjoner", label: "Invites" },
     ],
   },
   {
     label: "Domain model",
     items: [
-      { to: "/manageproperty/split-policy", label: "Split policy" },
-      { to: "/manageproperty/priority", label: "Priority weeks" },
-      { to: "/manageproperty/settings", label: "Settings" },
+      { to: "/administrer/fordelingspolicy", label: "Split policy" },
+      { to: "/administrer/prioritet", label: "Priority weeks" },
+      { to: "/administrer/innstillinger", label: "Settings" },
     ],
   },
 ] as const
@@ -150,28 +150,28 @@ const MOBILE_GROUPS = [
   {
     label: "Property",
     items: [
-      { to: "/manageproperty/info", label: "Info" },
-      { to: "/manageproperty/contacts", label: "Contacts" },
-      { to: "/manageproperty/ownership", label: "Ownership" },
-      { to: "/manageproperty/structures", label: "Structures" },
-      { to: "/manageproperty/infrastructure", label: "Infrastructure" },
-      { to: "/manageproperty/equipment", label: "Equipment" },
+      { to: "/administrer/info", label: "Info" },
+      { to: "/administrer/kontakter", label: "Contacts" },
+      { to: "/administrer/eierskap", label: "Ownership" },
+      { to: "/administrer/bygninger", label: "Structures" },
+      { to: "/administrer/infrastruktur", label: "Infrastructure" },
+      { to: "/administrer/utstyr", label: "Equipment" },
     ],
   },
   {
     label: "People",
     items: [
-      { to: "/manageproperty/users", label: "Users" },
-      { to: "/manageproperty/usergroups", label: "User groups" },
-      { to: "/manageproperty/invites", label: "Invites" },
+      { to: "/administrer/brukere", label: "Users" },
+      { to: "/administrer/brukergrupper", label: "User groups" },
+      { to: "/administrer/invitasjoner", label: "Invites" },
     ],
   },
   {
     label: "Domain model",
     items: [
-      { to: "/manageproperty/split-policy", label: "Split policy" },
-      { to: "/manageproperty/priority", label: "Priority weeks" },
-      { to: "/manageproperty/settings", label: "Settings" },
+      { to: "/administrer/fordelingspolicy", label: "Split policy" },
+      { to: "/administrer/prioritet", label: "Priority weeks" },
+      { to: "/administrer/innstillinger", label: "Settings" },
     ],
   },
 ] as const

@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { DangerZone } from "@/features/property/dangerzone/DangerZone"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_authed/manageproperty/settings")({
-  component: DangerZone,
+  beforeLoad: () => { throw redirect({ to: "/administrer/innstillinger" }) },
 })
