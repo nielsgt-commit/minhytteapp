@@ -40,6 +40,7 @@ export const usersTable = pgTable("users", {
       "rooms",
       "infrastructure",
       "equipment",
+      "expenses",
       "done",
     ],
   }),

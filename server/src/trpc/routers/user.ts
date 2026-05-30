@@ -128,6 +128,7 @@ export const userRouter = router({
           "rooms",
           "infrastructure",
           "equipment",
+          "expenses",
           "done",
         ]),
       }),

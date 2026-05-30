@@ -148,8 +148,10 @@
   "Phone": "Telefon",
   "Priority weeks": "Prioritetsuker",
   "Each household head claims one peak summer week.": "Hvert husstandsoverhode tar én toppuke om sommeren.",
+  "Expense categories": "Utgiftskategorier",
+  "Categories used to label shared expenses across the property. Add or remove the categories available when recording an expense.": "Kategorier som brukes til å merke delte utgifter på eiendommen. Legg til eller fjern kategoriene som er tilgjengelige når du registrerer en utgift.",
   "People": "Folk",
-  "Domain model": "Domenemodell",
+  "Policies": "Retningslinjer",
   "Users": "Brukere",
   "Invites": "Invitasjoner",
   "Everyone with access to this property — edit roles or remove people.": "Alle med tilgang til denne eiendommen — endre roller eller fjern personer.",
@@ -188,6 +190,7 @@
   "structure name": "byggnavn",
   "Structure names": "Byggnavn",
   "Structures": "Bygg",
+  "Buildings on the property and the rooms inside them. A building can be habitable or not, and you can add rooms where applicable. Rooms and beds count against capacity, and structures can have maintenance tasks assigned to them.": "Bygg på eiendommen og rommene inni dem. Et bygg kan være beboelig eller ikke, og du kan legge til rom der det er aktuelt. Rom og senger teller mot kapasiteten, og bygg kan ha vedlikeholdsoppgaver tilordnet seg.",
   "Structures for {{name}}": "Bygg for {{name}}",
   "Structures Test Form": "Testskjema for bygg",
   "Total: <1>{{total}}%</1> ": "Totalt: <1>{{total}}%</1> ",
@@ -218,5 +221,5 @@
   "Tools, appliances, and gear kept at the property.": "Verktøy, apparater og utstyr som oppbevares på eiendommen.",
   "User groups": "Brukergrupper",
   "Water, power, heating, network, and other systems serving the property.": "Vann, strøm, varme, nettverk og andre systemer som betjener eiendommen.",
-  "Who owns what share of the property.": "Hvem eier hvilken andel av eiendommen."
+  "Who owns what share of the property. These values don't affect any functionality — they can be used in a split policy if necessary.": "Hvem eier hvilken andel av eiendommen. Disse verdiene påvirker ingen funksjonalitet – de kan brukes i en fordelingspolicy om nødvendig."
 }

@@ -14,6 +14,7 @@ import { BuildingsStep } from "./BuildingsStep"
 import { BedroomsStep } from "./BedroomsStep"
 import { InfrastructureStep } from "./InfrastructureStep"
 import { EquipmentStep } from "./EquipmentStep"
+import { ExpenseStep } from "./ExpenseStep"
 import { WizardFooter } from "./WizardFooter"
 import styles from "./OnboardingFlow.module.css"
 
@@ -24,6 +25,7 @@ type Step =
   | "rooms"
   | "infrastructure"
   | "equipment"
+  | "expenses"
   | "done"
 
 const STEPS: readonly Step[] = [
@@ -33,6 +35,7 @@ const STEPS: readonly Step[] = [
   "rooms",
   "infrastructure",
   "equipment",
+  "expenses",
   "done",
 ] as const
 
@@ -42,7 +45,8 @@ const NEXT: Record<Step, Step> = {
   buildings: "rooms",
   rooms: "infrastructure",
   infrastructure: "equipment",
-  equipment: "done",
+  equipment: "expenses",
+  expenses: "done",
   done: "done",
 }
 
@@ -51,6 +55,7 @@ const PREV: Partial<Record<Step, Step>> = {
   rooms: "buildings",
   infrastructure: "rooms",
   equipment: "infrastructure",
+  expenses: "equipment",
 }
 
 type Props = {
@@ -237,6 +242,8 @@ export function OnboardingFlow({ preview = false }: Props) {
               <EquipmentStep propertyId={firstProperty.id} />
             )}
 
+            {currentStep === "expenses" && firstProperty && <ExpenseStep />}
+
             {currentStep === "done" && (
               <div>
                 <p>
@@ -261,7 +268,7 @@ export function OnboardingFlow({ preview = false }: Props) {
                     data-size="sm"
                     disabled={footerPending}
                     onClick={() => {
-                      void persistStep("equipment")
+                      void persistStep("expenses")
                     }}
                   >
                     {t("Back")}

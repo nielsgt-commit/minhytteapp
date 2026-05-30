@@ -21,6 +21,7 @@
   "My expenses ({{count}})_one": "My expenses ({{count}})",
   "My expenses ({{count}})_other": "My expenses ({{count}})",
   "No more items to review.": "No more items to review.",
+  "Only property heads can manage expense categories.": "Only property heads can manage expense categories.",
   "Only the group head can review submitted expenses.": "Only the group head can review submitted expenses.",
   "Optional": "Optional",
   "Receipt": "Receipt",

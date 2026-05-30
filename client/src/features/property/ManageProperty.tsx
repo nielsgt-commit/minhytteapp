@@ -29,7 +29,8 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     "/administrer/eierskap",
     {
       title: "Ownership",
-      description: "Who owns what share of the property.",
+      description:
+        "Who owns what share of the property. These values don't affect any functionality — they can be used in a split policy if necessary.",
     },
   ],
   [
@@ -59,7 +60,8 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     "/administrer/bygninger",
     {
       title: "Structures",
-      description: "Buildings on the property and the rooms inside them.",
+      description:
+        "Buildings on the property and the rooms inside them. A building can be habitable or not, and you can add rooms where applicable. Rooms and beds count against capacity, and structures can have maintenance tasks assigned to them.",
     },
   ],
   [
@@ -90,6 +92,14 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     {
       title: "Priority weeks",
       description: "Each household head claims one peak summer week.",
+    },
+  ],
+  [
+    "/administrer/utgiftskategorier",
+    {
+      title: "Expense categories",
+      description:
+        "Categories used to label shared expenses across the property. Add or remove the categories available when recording an expense.",
     },
   ],
   [
@@ -137,10 +147,11 @@ const DESKTOP_GROUPS = [
     ],
   },
   {
-    label: "Domain model",
+    label: "Policies",
     items: [
       { to: "/administrer/fordelingspolicy", label: "Split policy" },
       { to: "/administrer/prioritet", label: "Priority weeks" },
+      { to: "/administrer/utgiftskategorier", label: "Expense categories" },
       { to: "/administrer/innstillinger", label: "Settings" },
     ],
   },
@@ -167,10 +178,11 @@ const MOBILE_GROUPS = [
     ],
   },
   {
-    label: "Domain model",
+    label: "Policies",
     items: [
       { to: "/administrer/fordelingspolicy", label: "Split policy" },
       { to: "/administrer/prioritet", label: "Priority weeks" },
+      { to: "/administrer/utgiftskategorier", label: "Expense categories" },
       { to: "/administrer/innstillinger", label: "Settings" },
     ],
   },

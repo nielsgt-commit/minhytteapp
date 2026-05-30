@@ -5,17 +5,7 @@ import {
   expenseCategoriesTable,
   expensesTable,
 } from "../../db/schema/settlement.schema.ts"
-import { protectedProcedure, router } from "../init.ts"
-
-const headProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!ctx.user.is_head) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "must be a head to manage expense categories",
-    })
-  }
-  return next()
-})
+import { headOrAdminProcedure, protectedProcedure, router } from "../init.ts"
 
 export const expenseCategoryRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -40,7 +30,7 @@ export const expenseCategoryRouter = router({
       .orderBy(asc(expenseCategoriesTable.name))
   }),
 
-  create: headProcedure
+  create: headOrAdminProcedure
     .input(z.object({ name: z.string().trim().min(1).max(64) }))
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
@@ -50,7 +40,7 @@ export const expenseCategoryRouter = router({
       return created
     }),
 
-  rename: headProcedure
+  rename: headOrAdminProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -91,7 +81,7 @@ export const expenseCategoryRouter = router({
       })
     }),
 
-  archive: headProcedure
+  archive: headOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const archived = (
@@ -107,7 +97,7 @@ export const expenseCategoryRouter = router({
       return archived
     }),
 
-  unarchive: headProcedure
+  unarchive: headOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const unarchived = (

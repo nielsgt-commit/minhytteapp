@@ -1,21 +1,13 @@
-import { type SyntheticEvent, useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import {
-  Card,
-  Heading,
-  Textfield,
-  ValidationMessage,
-} from "@digdir/designsystemet-react"
+import { type SyntheticEvent, useState } from "react"
+import { Card, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 import { useExpenseEditor } from "./useExpenseEditor"
 import { useExpenseDrafts, type ExpenseDraft } from "./useExpenseDrafts.ts"
-import { useCategoryMutations } from "./useCategoryMutations.ts"
 import { DraftList } from "./DraftList.tsx"
 import { CategoryPicker } from "./CategoryPicker.tsx"
 import { AmountEditor } from "./AmountEditor.tsx"
 import { SubmitRow } from "./SubmitRow.tsx"
-import { useTRPC } from "@/trpc/trpc"
 
 export type { ExpenseDraft } from "./useExpenseDrafts.ts"
 
@@ -33,17 +25,10 @@ export function AddNewExpenseFlow({
   onCancel,
 }: Props) {
   const { t } = useTranslation("expenses")
-  const trpc = useTRPC()
-  const { data: me } = useQuery(trpc.user.me.queryOptions())
-  const canManageCategories = me?.is_head ?? false
 
   const drafts = useExpenseDrafts()
   const editor = useExpenseEditor()
   const [description, setDescription] = useState("")
-  const suggestionInputRef = useRef<HTMLInputElement>(null)
-
-  const { selectedCats, handleCategoriesChange, createError, archiveError } =
-    useCategoryMutations(categories, suggestionInputRef)
 
   const parsedAmount = Number(editor.amount)
 
@@ -89,25 +74,10 @@ export function AddNewExpenseFlow({
 
             <CategoryPicker
               categories={categories}
-              canManage={canManageCategories}
-              selectedCats={selectedCats}
-              onCategoriesChange={handleCategoriesChange}
-              suggestionInputRef={suggestionInputRef}
               pending={pending}
               openCategory={editor.openCategory}
               onOpenCategory={editor.open}
             />
-
-            {createError && (
-              <ValidationMessage>
-                {t("Error: {{message}}", { message: createError.message })}
-              </ValidationMessage>
-            )}
-            {archiveError && (
-              <ValidationMessage>
-                {t("Error: {{message}}", { message: archiveError.message })}
-              </ValidationMessage>
-            )}
 
             {editor.openCategory != null && (
               <AmountEditor

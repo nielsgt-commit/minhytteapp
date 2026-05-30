@@ -21,6 +21,7 @@ export type AuthUser = {
     | "rooms"
     | "infrastructure"
     | "equipment"
+    | "expenses"
     | "done"
     | null
   onboarding_dismissed_at: Date | null
