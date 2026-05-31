@@ -47,6 +47,7 @@
   "Ownership %": "Eierandel %",
   "Pending": "Venter",
   "People with these emails can request a sign-in link, even if they don't have an invite yet.": "Personer med disse e-postadressene kan be om en innloggingslenke, selv om de ikke har en invitasjon ennå.",
+  "Placeholder email — this user can't sign in until it is replaced with a real address.": "Plassholder-e-post – denne brukeren kan ikke logge inn før den erstattes med en ekte adresse.",
   "Remove": "Fjern",
   "Remove invite {{email}}": "Fjern invitasjon {{email}}",
   "Remove {{email}} from the allowlist?": "Fjerne {{email}} fra listen?",

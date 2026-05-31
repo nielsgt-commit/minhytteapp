@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -8,11 +8,13 @@ import {
   Heading,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { ExclamationmarkTriangleFillIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
 import { fdBoolean, fdString } from "@/utils/formData.ts"
+import { isSyntheticEmail } from "@/utils/syntheticEmail.ts"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 
 type ListUsersProps = {
@@ -28,6 +30,8 @@ export function ListUsers({ canEdit }: ListUsersProps) {
   const { data: users } = useSuspenseQuery(
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
   )
+  const { data: me } = useQuery(trpc.user.me.queryOptions())
+  const isAdmin = me?.is_admin ?? false
 
   const userAndGroupKeys = [trpc.user.pathKey(), trpc.userGroup.pathKey()]
   const updateUser = useMutationWithInvalidation(
@@ -57,6 +61,7 @@ export function ListUsers({ canEdit }: ListUsersProps) {
       updateUser.mutate(
         {
           id: userId,
+          property_id: propertyId,
           name,
           email,
           is_admin: fdBoolean(fd, "is_admin"),
@@ -98,20 +103,24 @@ export function ListUsers({ canEdit }: ListUsersProps) {
             required
           />
         </div>
-        <div>
-          <Checkbox
-            label={t("Admin")}
-            name="is_admin"
-            defaultChecked={u.is_admin}
-          />
-        </div>
-        <div>
-          <Checkbox
-            label={t("Child")}
-            name="is_child"
-            defaultChecked={u.is_child}
-          />
-        </div>
+        {isAdmin && (
+          <>
+            <div>
+              <Checkbox
+                label={t("Admin")}
+                name="is_admin"
+                defaultChecked={u.is_admin}
+              />
+            </div>
+            <div>
+              <Checkbox
+                label={t("Child")}
+                name="is_child"
+                defaultChecked={u.is_child}
+              />
+            </div>
+          </>
+        )}
         <div>
           <Button type="submit" disabled={updateUser.isPending}>
             {t("Save")}
@@ -173,7 +182,23 @@ export function ListUsers({ canEdit }: ListUsersProps) {
                         view={
                           <>
                             <Heading level={4}>{u.name}</Heading>
-                            <p>{u.email}</p>
+                            <p>
+                              {u.email}
+                              {isSyntheticEmail(u.email) && (
+                                <ExclamationmarkTriangleFillIcon
+                                  title={t(
+                                    "Placeholder email — this user can't sign in until it is replaced with a real address.",
+                                  )}
+                                  fontSize="1.25em"
+                                  style={{
+                                    color:
+                                      "var(--ds-color-warning-text-default)",
+                                    marginInlineStart: "var(--ds-size-2)",
+                                    verticalAlign: "text-bottom",
+                                  }}
+                                />
+                              )}
+                            </p>
                             <p>
                               <small>{roles}</small>
                             </p>

@@ -56,6 +56,37 @@ export async function relevantGroupIdsForProperty(
   return { relevantGroupIds: relevantIds, peopleSet }
 }
 
+// The set of user ids considered "part of" a property: people in its
+// owning/linked groups, plus everyone in groups those people belong to, plus
+// the calling user. This is the same population `user.listForProperty`
+// exposes, and the authorization boundary for editing a property's users.
+export async function userIdsForProperty(
+  ctx: Context,
+  property_id: number,
+  calling_user_id: number,
+): Promise<Set<number>> {
+  const { relevantGroupIds, peopleSet } = await relevantGroupIdsForProperty(
+    ctx,
+    property_id,
+    calling_user_id,
+  )
+  const ids = new Set<number>(peopleSet)
+  if (relevantGroupIds.size > 0) {
+    const memberRows = await ctx.db
+      .selectDistinct({ user_id: userGroupMembersTable.user_id })
+      .from(userGroupMembersTable)
+      .where(
+        inArray(
+          userGroupMembersTable.user_group_id,
+          Array.from(relevantGroupIds),
+        ),
+      )
+    for (const row of memberRows) ids.add(row.user_id)
+  }
+  ids.add(calling_user_id)
+  return ids
+}
+
 const userGroupFields = {
   name: z.string().min(1, { error: "name is required" }),
   is_family: z.boolean().optional(),

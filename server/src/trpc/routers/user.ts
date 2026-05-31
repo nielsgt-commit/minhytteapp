@@ -13,7 +13,8 @@ import {
   protectedProcedure,
   router,
 } from "../init.ts"
-import { relevantGroupIdsForProperty } from "./userGroup.ts"
+import { userIdsForProperty } from "./userGroup.ts"
+import { normalizeEmail } from "../../auth/email.ts"
 
 const birthdayString = z
   .string()
@@ -36,27 +37,7 @@ const updateInput = z.object({
 
 export const userRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
-    const { relevantGroupIds, peopleSet } = await relevantGroupIdsForProperty(
-      ctx,
-      input.property_id,
-      ctx.user.id,
-    )
-
-    const ids = new Set<number>(peopleSet)
-    ids.delete(ctx.user.id)
-    if (relevantGroupIds.size > 0) {
-      const memberRows = await ctx.db
-        .selectDistinct({ user_id: userGroupMembersTable.user_id })
-        .from(userGroupMembersTable)
-        .where(
-          inArray(
-            userGroupMembersTable.user_group_id,
-            Array.from(relevantGroupIds),
-          ),
-        )
-      for (const row of memberRows) ids.add(row.user_id)
-    }
-    ids.add(ctx.user.id)
+    const ids = await userIdsForProperty(ctx, input.property_id, ctx.user.id)
 
     if (ids.size === 0) return []
     const idList = Array.from(ids)
@@ -324,15 +305,43 @@ export const userRouter = router({
       return deleted
     }),
 
-  update: adminProcedure.input(updateInput).mutation(async ({ ctx, input }) => {
-    const { id, ...rest } = input
-    const [updated] = await ctx.db
-      .update(usersTable)
-      .set(rest)
-      .where(eq(usersTable.id, id))
-      .returning()
-    return updated
-  }),
+  // propertyAdminProcedure requires a `property_id` and verifies the caller is
+  // a member (or admin) of that property.
+  update: propertyAdminProcedure
+    .input(updateInput)
+    .mutation(async ({ ctx, input }) => {
+      const { id, is_admin, is_child, email, ...rest } = input
+      // Non-admins may only edit users they share a property with — the same
+      // population they can already see via listForProperty. Admins keep their
+      // global edit-anyone ability.
+      if (!ctx.user.is_admin) {
+        const propertyUserIds = await userIdsForProperty(
+          ctx,
+          input.property_id,
+          ctx.user.id,
+        )
+        if (!propertyUserIds.has(id)) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "user is not part of this property",
+          })
+        }
+      }
+      // Non-admins may edit a user's name/email (e.g. to replace the
+      // placeholder email on a quick-added stub user) but must not be able to
+      // grant admin or change child status — that would be privilege
+      // escalation. Role flags are only applied when the caller is an admin.
+      const roleFields = ctx.user.is_admin ? { is_admin, is_child } : {}
+      const [updated] = await ctx.db
+        .update(usersTable)
+        // Normalize the email so it matches the lowercase invariant the auth
+        // allowlist and magic-link lookup assume (see auth.ts). Without this a
+        // mixed-case email would never resolve to this user at sign-in.
+        .set({ ...rest, email: normalizeEmail(email), ...roleFields })
+        .where(eq(usersTable.id, id))
+        .returning()
+      return updated
+    }),
 
   delete: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))
