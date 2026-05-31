@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
   check,
+  index,
   integer,
   numeric,
   pgTable,
@@ -101,25 +102,20 @@ export const propertyOwnersTable = pgTable(
     property_id: integer("property_id")
       .notNull()
       .references(() => propertyTable.id),
-    user_id: integer("user_id").references(() => usersTable.id),
-    user_group_id: integer("user_group_id").references(
-      () => userGroupsTable.id,
-    ),
+    user_group_id: integer("user_group_id")
+      .notNull()
+      .references(() => userGroupsTable.id),
     ownership_pct: numeric("ownership_pct", {
       precision: 5,
       scale: 2,
     }).notNull(),
   },
   t => [
-    check(
-      "property_owners_exactly_one_ref",
-      sql`(${t.user_id} IS NULL) <> (${t.user_group_id} IS NULL)`,
-    ),
-    uniqueIndex("property_owners_user_uq")
-      .on(t.property_id, t.user_id)
-      .where(sql`${t.user_id} IS NOT NULL`),
     uniqueIndex("property_owners_group_uq")
       .on(t.property_id, t.user_group_id)
+      .where(sql`${t.user_group_id} IS NOT NULL`),
+    index("property_owners_user_group_id_idx")
+      .on(t.user_group_id)
       .where(sql`${t.user_group_id} IS NOT NULL`),
   ],
 )
@@ -148,9 +144,9 @@ export const propertyPriorityWeeksTable = pgTable(
     property_id: integer("property_id")
       .notNull()
       .references(() => propertyTable.id),
-    property_owner_id: integer("property_owner_id")
+    user_group_id: integer("user_group_id")
       .notNull()
-      .references(() => propertyOwnersTable.id),
+      .references(() => userGroupsTable.id),
     year: integer("year").notNull(),
     iso_week: integer("iso_week").notNull(),
     created_at: timestamp("created_at").notNull().defaultNow(),
@@ -158,7 +154,7 @@ export const propertyPriorityWeeksTable = pgTable(
   },
   t => [
     check("priority_week_peak_only", sql`${t.iso_week} IN (28, 29, 30)`),
-    uniqueIndex("priority_week_uq_owner_year").on(t.property_owner_id, t.year),
+    uniqueIndex("priority_week_uq_group_year").on(t.user_group_id, t.year),
   ],
 )
 

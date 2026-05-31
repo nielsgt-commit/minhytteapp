@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm"
+import { and, desc, eq, isNotNull, isNull, sql } from "drizzle-orm"
 import { z } from "zod"
 import { normalizeEmail } from "../../auth/email.ts"
 import {
@@ -12,7 +12,7 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
-import { assertPropertyMember, headOrAdminProcedure, router } from "../init.ts"
+import { assertPropertyHead, headOrAdminProcedure, router } from "../init.ts"
 
 export const allowedEmailRouter = router({
   list: headOrAdminProcedure
@@ -22,6 +22,9 @@ export const allowedEmailRouter = router({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
+      if (input?.property_id != null) {
+        await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+      }
       return ctx.db
         .select({
           id: allowedEmailsTable.id,
@@ -76,7 +79,7 @@ export const allowedEmailRouter = router({
           })
         }
       } else {
-        await assertPropertyMember(ctx.db, ctx.user, property_id)
+        await assertPropertyHead(ctx.db, ctx.user, property_id)
         if (user_group_id == null && ownership_pct == null) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -126,7 +129,7 @@ export const allowedEmailRouter = router({
           .from(allowedEmailsTable)
           .where(
             and(
-              eq(allowedEmailsTable.email, email),
+              eq(sql`lower(${allowedEmailsTable.email})`, email),
               isNull(allowedEmailsTable.used_at),
               property_id == null
                 ? isNull(allowedEmailsTable.property_id)
@@ -149,7 +152,7 @@ export const allowedEmailRouter = router({
               .from(allowedEmailsTable)
               .where(
                 and(
-                  eq(allowedEmailsTable.email, email),
+                  eq(sql`lower(${allowedEmailsTable.email})`, email),
                   eq(allowedEmailsTable.property_id, property_id),
                   isNotNull(allowedEmailsTable.used_at),
                 ),
@@ -158,100 +161,11 @@ export const allowedEmailRouter = router({
           ).at(0)
 
           if (accepted) {
-            const userId = accepted.used_by_user_id
-            if (userId == null) {
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "accepted invite is missing used_by_user_id",
-              })
-            }
-
-            const ownerRow = (
-              await tx
-                .select({
-                  id: propertyOwnersTable.id,
-                  ownership_pct: propertyOwnersTable.ownership_pct,
-                })
-                .from(propertyOwnersTable)
-                .where(
-                  and(
-                    eq(propertyOwnersTable.property_id, property_id),
-                    eq(propertyOwnersTable.user_id, userId),
-                  ),
-                )
-                .limit(1)
-            ).at(0)
-
-            if (ownership_pct_str == null && ownerRow) {
-              const blockers = await tx
-                .select({ id: propertyPriorityWeeksTable.id })
-                .from(propertyPriorityWeeksTable)
-                .where(
-                  eq(propertyPriorityWeeksTable.property_owner_id, ownerRow.id),
-                )
-                .limit(1)
-              if (blockers.length > 0) {
-                throw new TRPCError({
-                  code: "CONFLICT",
-                  message:
-                    "user has priority week claims; remove them before clearing ownership",
-                })
-              }
-              await tx
-                .delete(propertyOwnersTable)
-                .where(eq(propertyOwnersTable.id, ownerRow.id))
-            } else if (ownership_pct_str != null && !ownerRow) {
-              await tx.insert(propertyOwnersTable).values({
-                property_id,
-                user_id: userId,
-                ownership_pct: ownership_pct_str,
-              })
-            } else if (
-              ownership_pct_str != null &&
-              ownerRow &&
-              ownerRow.ownership_pct !== ownership_pct_str
-            ) {
-              await tx
-                .update(propertyOwnersTable)
-                .set({ ownership_pct: ownership_pct_str })
-                .where(eq(propertyOwnersTable.id, ownerRow.id))
-            }
-
-            if (accepted.user_group_id !== user_group_id) {
-              if (accepted.user_group_id != null) {
-                await tx
-                  .delete(userGroupMembersTable)
-                  .where(
-                    and(
-                      eq(
-                        userGroupMembersTable.user_group_id,
-                        accepted.user_group_id,
-                      ),
-                      eq(userGroupMembersTable.user_id, userId),
-                    ),
-                  )
-              }
-              if (user_group_id != null) {
-                await tx
-                  .insert(userGroupMembersTable)
-                  .values({ user_group_id, user_id: userId })
-                  .onConflictDoNothing()
-              }
-            }
-
-            if (user_group_id != null) {
-              await ensureGroupLinkedToProperty(property_id, user_group_id)
-            }
-
-            const [updated] = await tx
-              .update(allowedEmailsTable)
-              .set({
-                user_group_id,
-                ownership_pct: ownership_pct_str,
-              })
-              .where(eq(allowedEmailsTable.id, accepted.id))
-              .returning()
-            return updated
+            throw new TRPCError({
+              code: "CONFLICT",
+              message:
+                "this person has already accepted an invite for this property; manage their ownership and group membership from the owners/groups panels",
+            })
           }
 
           const existingUser = (
@@ -265,7 +179,7 @@ export const allowedEmailRouter = router({
           if (existingUser) {
             const userId = existingUser.id
 
-            if (ownership_pct_str != null) {
+            if (ownership_pct_str != null && user_group_id != null) {
               const ownerRow = (
                 await tx
                   .select({ id: propertyOwnersTable.id })
@@ -273,7 +187,7 @@ export const allowedEmailRouter = router({
                   .where(
                     and(
                       eq(propertyOwnersTable.property_id, property_id),
-                      eq(propertyOwnersTable.user_id, userId),
+                      eq(propertyOwnersTable.user_group_id, user_group_id),
                     ),
                   )
                   .limit(1)
@@ -286,7 +200,7 @@ export const allowedEmailRouter = router({
               } else {
                 await tx.insert(propertyOwnersTable).values({
                   property_id,
-                  user_id: userId,
+                  user_group_id,
                   ownership_pct: ownership_pct_str,
                 })
               }
@@ -349,7 +263,7 @@ export const allowedEmailRouter = router({
       }
 
       if (invite.property_id != null) {
-        await assertPropertyMember(ctx.db, ctx.user, invite.property_id)
+        await assertPropertyHead(ctx.db, ctx.user, invite.property_id)
       } else if (!ctx.user.is_admin) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -375,7 +289,8 @@ export const allowedEmailRouter = router({
       const propertyId = invite.property_id
 
       return ctx.db.transaction(async tx => {
-        if (invite.ownership_pct != null) {
+        if (invite.ownership_pct != null && invite.user_group_id != null) {
+          const groupId = invite.user_group_id
           const ownerRow = (
             await tx
               .select({ id: propertyOwnersTable.id })
@@ -383,7 +298,7 @@ export const allowedEmailRouter = router({
               .where(
                 and(
                   eq(propertyOwnersTable.property_id, propertyId),
-                  eq(propertyOwnersTable.user_id, userId),
+                  eq(propertyOwnersTable.user_group_id, groupId),
                 ),
               )
               .limit(1)
@@ -392,9 +307,7 @@ export const allowedEmailRouter = router({
             const blockers = await tx
               .select({ id: propertyPriorityWeeksTable.id })
               .from(propertyPriorityWeeksTable)
-              .where(
-                eq(propertyPriorityWeeksTable.property_owner_id, ownerRow.id),
-              )
+              .where(eq(propertyPriorityWeeksTable.user_group_id, groupId))
               .limit(1)
             if (blockers.length > 0) {
               throw new TRPCError({
@@ -420,16 +333,11 @@ export const allowedEmailRouter = router({
             )
         }
 
-        const [updated] = await tx
-          .update(allowedEmailsTable)
-          .set({
-            property_id: null,
-            user_group_id: null,
-            ownership_pct: null,
-          })
+        const [deleted] = await tx
+          .delete(allowedEmailsTable)
           .where(eq(allowedEmailsTable.id, invite.id))
           .returning()
-        return updated
+        return deleted
       })
     }),
 })

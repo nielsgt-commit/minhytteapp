@@ -73,8 +73,9 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
 
   const adjustmentsByBooking = new Map(adjustments.map(a => [a.booking_id, a]))
 
+  const iAmHead = me.is_admin || me.head_property_ids.includes(propertyId)
   const allowedBookerIds = new Set<number>(
-    me.is_head
+    iAmHead
       ? groups
           .filter(g => g.members.some(m => m.user_id === me.id))
           .flatMap(g => g.members.map(m => m.user_id))

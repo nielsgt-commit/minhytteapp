@@ -1,18 +1,19 @@
 import { TRPCError } from "@trpc/server"
 import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
-import {
-  propertyOwnersTable,
-  propertyPriorityWeeksTable,
-} from "../../db/schema/property.schema.ts"
-import { usersTable } from "../../db/schema/users.schema.ts"
-import { propertyAdminProcedure, router } from "../init.ts"
+import { propertyPriorityWeeksTable } from "../../db/schema/property.schema.ts"
+import { userGroupsTable } from "../../db/schema/users.schema.ts"
+import { isPropertyHead, propertyAdminProcedure, router } from "../init.ts"
+import type { AuthUser } from "../context.ts"
+import type { db as dbClient } from "../../db/client.ts"
+
+type Db = typeof dbClient
 
 const yearField = z.number().int().min(2000).max(2100)
 const peakWeek = z.union([z.literal(28), z.literal(29), z.literal(30)])
 
-function ensureCanEdit(user: { is_head: boolean; is_admin: boolean }) {
-  if (!user.is_head && !user.is_admin) {
+async function ensureCanEdit(db: Db, user: AuthUser, propertyId: number) {
+  if (!(await isPropertyHead(db, user, propertyId))) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "must be a household head to edit priority weeks",
@@ -20,15 +21,26 @@ function ensureCanEdit(user: { is_head: boolean; is_admin: boolean }) {
   }
 }
 
-function ensureOwnsRow(
-  user: { id: number; is_admin: boolean },
-  ownerUserId: number | null,
+async function ensureMainGroupOfProperty(
+  db: Db,
+  userGroupId: number,
+  propertyId: number,
 ) {
-  if (user.is_admin) return
-  if (ownerUserId !== user.id) {
+  const group = await db
+    .select({ id: userGroupsTable.id })
+    .from(userGroupsTable)
+    .where(
+      and(
+        eq(userGroupsTable.id, userGroupId),
+        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.property_id, propertyId),
+      ),
+    )
+    .limit(1)
+  if (group.length === 0) {
     throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "you can only edit your own priority week",
+      code: "BAD_REQUEST",
+      message: "group is not a family group for this property",
     })
   }
 }
@@ -42,25 +54,23 @@ export const priorityRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const eligibleOwners = await ctx.db
-        .select({
-          property_owner_id: propertyOwnersTable.id,
-          user_id: usersTable.id,
-          user_name: usersTable.name,
+        .selectDistinct({
+          user_group_id: userGroupsTable.id,
+          user_group_name: userGroupsTable.name,
         })
-        .from(propertyOwnersTable)
-        .innerJoin(usersTable, eq(usersTable.id, propertyOwnersTable.user_id))
+        .from(userGroupsTable)
         .where(
           and(
-            eq(propertyOwnersTable.property_id, input.property_id),
-            eq(usersTable.is_head, true),
+            eq(userGroupsTable.is_main, true),
+            eq(userGroupsTable.property_id, input.property_id),
           ),
         )
-        .orderBy(asc(usersTable.name))
+        .orderBy(asc(userGroupsTable.name))
 
       const assignments = await ctx.db
         .select({
           id: propertyPriorityWeeksTable.id,
-          property_owner_id: propertyPriorityWeeksTable.property_owner_id,
+          user_group_id: propertyPriorityWeeksTable.user_group_id,
           year: propertyPriorityWeeksTable.year,
           iso_week: propertyPriorityWeeksTable.iso_week,
         })
@@ -78,44 +88,18 @@ export const priorityRouter = router({
   set: propertyAdminProcedure
     .input(
       z.object({
-        property_owner_id: z.number().int().positive(),
+        user_group_id: z.number().int().positive(),
         year: yearField,
         iso_week: peakWeek,
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      ensureCanEdit(ctx.user)
-
-      const owner = (
-        await ctx.db
-          .select({
-            id: propertyOwnersTable.id,
-            user_id: propertyOwnersTable.user_id,
-            is_head: usersTable.is_head,
-          })
-          .from(propertyOwnersTable)
-          .innerJoin(usersTable, eq(usersTable.id, propertyOwnersTable.user_id))
-          .where(
-            and(
-              eq(propertyOwnersTable.id, input.property_owner_id),
-              eq(propertyOwnersTable.property_id, input.property_id),
-            ),
-          )
-          .limit(1)
-      ).at(0)
-      if (!owner) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "owner not found for this property",
-        })
-      }
-      if (!owner.is_head) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "owner is not flagged as a household head",
-        })
-      }
-      ensureOwnsRow(ctx.user, owner.user_id)
+      await ensureCanEdit(ctx.db, ctx.user, input.property_id)
+      await ensureMainGroupOfProperty(
+        ctx.db,
+        input.user_group_id,
+        input.property_id,
+      )
 
       return ctx.db.transaction(async tx => {
         await tx
@@ -123,8 +107,8 @@ export const priorityRouter = router({
           .where(
             and(
               eq(
-                propertyPriorityWeeksTable.property_owner_id,
-                input.property_owner_id,
+                propertyPriorityWeeksTable.user_group_id,
+                input.user_group_id,
               ),
               eq(propertyPriorityWeeksTable.year, input.year),
             ),
@@ -133,7 +117,7 @@ export const priorityRouter = router({
           .insert(propertyPriorityWeeksTable)
           .values({
             property_id: input.property_id,
-            property_owner_id: input.property_owner_id,
+            user_group_id: input.user_group_id,
             year: input.year,
             iso_week: input.iso_week,
           })
@@ -145,41 +129,23 @@ export const priorityRouter = router({
   clear: propertyAdminProcedure
     .input(
       z.object({
-        property_owner_id: z.number().int().positive(),
+        user_group_id: z.number().int().positive(),
         year: yearField,
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      ensureCanEdit(ctx.user)
-
-      const owner = (
-        await ctx.db
-          .select({ user_id: propertyOwnersTable.user_id })
-          .from(propertyOwnersTable)
-          .where(
-            and(
-              eq(propertyOwnersTable.id, input.property_owner_id),
-              eq(propertyOwnersTable.property_id, input.property_id),
-            ),
-          )
-          .limit(1)
-      ).at(0)
-      if (!owner) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "owner not found for this property",
-        })
-      }
-      ensureOwnsRow(ctx.user, owner.user_id)
+      await ensureCanEdit(ctx.db, ctx.user, input.property_id)
+      await ensureMainGroupOfProperty(
+        ctx.db,
+        input.user_group_id,
+        input.property_id,
+      )
 
       const rows = await ctx.db
         .delete(propertyPriorityWeeksTable)
         .where(
           and(
-            eq(
-              propertyPriorityWeeksTable.property_owner_id,
-              input.property_owner_id,
-            ),
+            eq(propertyPriorityWeeksTable.user_group_id, input.user_group_id),
             eq(propertyPriorityWeeksTable.property_id, input.property_id),
             eq(propertyPriorityWeeksTable.year, input.year),
           ),

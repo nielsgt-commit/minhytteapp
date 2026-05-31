@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, isNull, sql } from "drizzle-orm"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { magicLink } from "better-auth/plugins"
@@ -29,7 +29,7 @@ async function applyInvitesForNewUser(new_user_id: number, email: string) {
     .from(allowedEmailsTable)
     .where(
       and(
-        eq(allowedEmailsTable.email, lower),
+        eq(sql`lower(${allowedEmailsTable.email})`, lower),
         isNull(allowedEmailsTable.used_at),
       ),
     )
@@ -52,15 +52,43 @@ async function applyInvitesForNewUser(new_user_id: number, email: string) {
   }
 
   for (const inv of invites) {
-    if (inv.property_id != null && inv.ownership_pct != null) {
-      await db
-        .insert(propertyOwnersTable)
-        .values({
-          property_id: inv.property_id,
-          user_id: new_user_id,
+    if (
+      inv.property_id != null &&
+      inv.ownership_pct != null &&
+      inv.user_group_id != null
+    ) {
+      const propertyId = inv.property_id
+      const groupId = inv.user_group_id
+      const existing = (
+        await db
+          .select({
+            id: propertyOwnersTable.id,
+            ownership_pct: propertyOwnersTable.ownership_pct,
+          })
+          .from(propertyOwnersTable)
+          .where(
+            and(
+              eq(propertyOwnersTable.property_id, propertyId),
+              eq(propertyOwnersTable.user_group_id, groupId),
+            ),
+          )
+          .limit(1)
+      ).at(0)
+      if (existing) {
+        const summed = (
+          Number(existing.ownership_pct) + Number(inv.ownership_pct)
+        ).toFixed(2)
+        await db
+          .update(propertyOwnersTable)
+          .set({ ownership_pct: summed })
+          .where(eq(propertyOwnersTable.id, existing.id))
+      } else {
+        await db.insert(propertyOwnersTable).values({
+          property_id: propertyId,
+          user_group_id: groupId,
           ownership_pct: inv.ownership_pct,
         })
-        .onConflictDoNothing()
+      }
     }
   }
 
@@ -92,7 +120,7 @@ async function isEmailAllowed(email: string): Promise<boolean> {
   const allowHit = await db
     .select({ id: allowedEmailsTable.id })
     .from(allowedEmailsTable)
-    .where(eq(allowedEmailsTable.email, lower))
+    .where(eq(sql`lower(${allowedEmailsTable.email})`, lower))
     .limit(1)
   return allowHit.length > 0
 }
@@ -150,12 +178,6 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false,
       },
-      is_head: {
-        type: "boolean",
-        required: false,
-        defaultValue: false,
-        input: false,
-      },
       is_child: {
         type: "boolean",
         required: false,
@@ -164,12 +186,6 @@ export const auth = betterAuth({
       parent_user_id: {
         type: "number",
         required: false,
-        input: false,
-      },
-      settlement_progress: {
-        type: "string",
-        required: false,
-        defaultValue: "in_progress",
         input: false,
       },
       birthday: {

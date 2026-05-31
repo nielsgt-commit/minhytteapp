@@ -141,10 +141,12 @@ export function RuleEditor({
               {eligibleOwners.length > 0 && (
                 <Select.Optgroup label={t("Specific priority week")}>
                   {eligibleOwners.map(o => {
-                    const enc = `during_priority_week:${String(o.property_owner_id)}`
+                    const enc = `during_priority_week:${String(o.user_group_id)}`
                     return (
                       <Select.Option key={enc} value={enc}>
-                        {t("{{name}}'s priority week", { name: o.user_name })}
+                        {t("{{name}}'s priority week", {
+                          name: o.user_group_name,
+                        })}
                       </Select.Option>
                     )
                   })}

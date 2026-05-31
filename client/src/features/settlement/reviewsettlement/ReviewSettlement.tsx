@@ -11,11 +11,7 @@ import styles from "./ReviewSettlement.module.css"
 import expenseRowStyles from "./SettlementExpenseRow.module.css"
 import { SettlementExpenseRow } from "./SettlementExpenseRow"
 import { useHeadVisibility } from "./useHeadVisibility"
-import {
-  type ExpenseRow,
-  type Progress,
-  useReviewSettlementData,
-} from "./useReviewSettlementData"
+import { type ExpenseRow, useReviewSettlementData } from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
 import {
   NEXT_PHASE,
@@ -42,7 +38,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
   const { visibleIds } = useHeadVisibility()
 
   const updateProgress = useMutation(
-    trpc.user.updateMySettlementProgress.mutationOptions({
+    trpc.settlement.setMyReviewProgress.mutationOptions({
       onSuccess: invalidate,
     }),
   )
@@ -68,10 +64,8 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
   }
 
   const myHead = heads.find(h => h.id === editableHeadId)
-  const myProgress: Progress =
-    (myHead?.settlement_progress as Progress | null | undefined) ??
-    "in_progress"
-  const stillReviewing = myProgress !== "all_done"
+  const myReviewDone = myHead?.review_done ?? false
+  const stillReviewing = !myReviewDone
 
   const otherHeads = heads.filter(h => h.id !== editableHeadId)
   const displayedHeads =
@@ -89,15 +83,12 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
     }),
   )
 
-  const pendingOthers = otherHeads.filter(
-    h => h.settlement_progress !== "all_done",
-  )
-  const allHeadsDone = pendingOthers.length === 0 && myProgress === "all_done"
+  const pendingOthers = otherHeads.filter(h => !h.review_done)
+  const allHeadsDone = pendingOthers.length === 0 && myReviewDone
 
   const onProgressToggle = (checked: boolean) => {
     setShowWaiting(false)
-    const nextProgress: Progress = checked ? "in_progress" : "all_done"
-    updateProgress.mutate({ settlement_progress: nextProgress })
+    updateProgress.mutate({ id: settlementId, done: !checked })
   }
 
   const onContinueClick = () => {

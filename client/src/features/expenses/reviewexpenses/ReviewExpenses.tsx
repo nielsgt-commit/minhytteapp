@@ -65,7 +65,9 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
 
   if (selectedPropertyId == null) return null
 
-  if (!me.is_head) {
+  const iAmHead =
+    me.is_admin || me.head_property_ids.includes(selectedPropertyId)
+  if (!iAmHead) {
     return <p>{t("Only the group head can review submitted expenses.")}</p>
   }
 

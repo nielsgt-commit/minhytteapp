@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server"
 import { and, asc, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
-import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
+import { propertyTable } from "../../db/schema/property.schema.ts"
 import {
   userGroupMembersTable,
+  userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
 import {
@@ -22,7 +23,6 @@ const userFields = {
   name: z.string().min(1, { error: "name is required" }),
   email: z.email(),
   is_admin: z.boolean().optional(),
-  is_head: z.boolean().optional(),
   is_child: z.boolean().optional(),
   birthday: birthdayString.nullable().optional(),
 }
@@ -44,13 +44,6 @@ export const userRouter = router({
 
     const ids = new Set<number>(peopleSet)
     ids.delete(ctx.user.id)
-    const directOwnerRows = await ctx.db
-      .select({ user_id: propertyOwnersTable.user_id })
-      .from(propertyOwnersTable)
-      .where(eq(propertyOwnersTable.property_id, input.property_id))
-    for (const row of directOwnerRows) {
-      if (row.user_id != null) ids.add(row.user_id)
-    }
     if (relevantGroupIds.size > 0) {
       const memberRows = await ctx.db
         .selectDistinct({ user_id: userGroupMembersTable.user_id })
@@ -66,14 +59,87 @@ export const userRouter = router({
     ids.add(ctx.user.id)
 
     if (ids.size === 0) return []
-    return ctx.db
+    const idList = Array.from(ids)
+    const rows = await ctx.db
       .select()
       .from(usersTable)
-      .where(inArray(usersTable.id, Array.from(ids)))
+      .where(inArray(usersTable.id, idList))
       .orderBy(asc(usersTable.id))
+
+    // Per-property head flag (transitional `is_head` for the client list):
+    // head-flagged member of an is_main group of this property.
+    const headRows = await ctx.db
+      .selectDistinct({ user_id: userGroupMembersTable.user_id })
+      .from(userGroupMembersTable)
+      .innerJoin(
+        userGroupsTable,
+        eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+      )
+      .where(
+        and(
+          inArray(userGroupMembersTable.user_id, idList),
+          eq(userGroupMembersTable.is_head, true),
+          eq(userGroupsTable.is_main, true),
+          eq(userGroupsTable.property_id, input.property_id),
+        ),
+      )
+    const headIds = new Set(headRows.map(r => r.user_id))
+    return rows.map(u => ({ ...u, is_head: headIds.has(u.id) }))
   }),
 
-  me: protectedProcedure.query(({ ctx }) => ctx.user),
+  me: protectedProcedure.query(async ({ ctx }) => {
+    const headRows = await ctx.db
+      .selectDistinct({ property_id: userGroupsTable.property_id })
+      .from(userGroupMembersTable)
+      .innerJoin(
+        userGroupsTable,
+        eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+      )
+      .where(
+        and(
+          eq(userGroupMembersTable.user_id, ctx.user.id),
+          eq(userGroupMembersTable.is_head, true),
+          eq(userGroupsTable.is_main, true),
+        ),
+      )
+    const head_property_ids = headRows
+      .map(r => r.property_id)
+      .filter((id): id is number => id != null)
+    const mainMembershipRows = await ctx.db
+      .select({
+        property_id: userGroupsTable.property_id,
+        property_name: propertyTable.name,
+        user_group_id: userGroupMembersTable.user_group_id,
+        is_head: userGroupMembersTable.is_head,
+      })
+      .from(userGroupMembersTable)
+      .innerJoin(
+        userGroupsTable,
+        eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+      )
+      .innerJoin(
+        propertyTable,
+        eq(propertyTable.id, userGroupsTable.property_id),
+      )
+      .where(
+        and(
+          eq(userGroupMembersTable.user_id, ctx.user.id),
+          eq(userGroupsTable.is_main, true),
+        ),
+      )
+    const my_main_memberships = mainMembershipRows
+      .filter(
+        (r): r is typeof r & { property_id: number } => r.property_id != null,
+      )
+      .map(r => ({
+        property_id: r.property_id,
+        property_name: r.property_name,
+        user_group_id: r.user_group_id,
+        is_head: r.is_head,
+      }))
+    // is_head kept = is_head_anywhere for transitional client compat.
+    return { ...ctx.user, head_property_ids, my_main_memberships }
+  }),
 
   create: protectedProcedure
     .input(createInput)
@@ -96,13 +162,49 @@ export const userRouter = router({
       return updated
     }),
 
-  updateMyIsHead: protectedProcedure
-    .input(z.object({ is_head: z.boolean() }))
+  updateMyHeadForProperty: protectedProcedure
+    .input(
+      z.object({
+        property_id: z.number().int().positive(),
+        is_head: z.boolean(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
+      const membership = (
+        await ctx.db
+          .select({ user_group_id: userGroupMembersTable.user_group_id })
+          .from(userGroupMembersTable)
+          .innerJoin(
+            userGroupsTable,
+            eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+          )
+          .where(
+            and(
+              eq(userGroupMembersTable.user_id, ctx.user.id),
+              eq(userGroupsTable.is_main, true),
+              eq(userGroupsTable.property_id, input.property_id),
+            ),
+          )
+          .limit(1)
+      ).at(0)
+      if (!membership) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "no main-group membership for this property",
+        })
+      }
       const [updated] = await ctx.db
-        .update(usersTable)
+        .update(userGroupMembersTable)
         .set({ is_head: input.is_head })
-        .where(eq(usersTable.id, ctx.user.id))
+        .where(
+          and(
+            eq(userGroupMembersTable.user_id, ctx.user.id),
+            eq(
+              userGroupMembersTable.user_group_id,
+              membership.user_group_id,
+            ),
+          ),
+        )
         .returning()
       return updated
     }),
@@ -150,27 +252,6 @@ export const userRouter = router({
       .returning()
     return updated
   }),
-
-  updateMySettlementProgress: protectedProcedure
-    .input(
-      z.object({
-        settlement_progress: z.enum(["in_progress", "all_done"]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.user.is_head) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "only heads can update settlement progress",
-        })
-      }
-      const [updated] = await ctx.db
-        .update(usersTable)
-        .set({ settlement_progress: input.settlement_progress })
-        .where(eq(usersTable.id, ctx.user.id))
-        .returning()
-      return updated
-    }),
 
   listMyChildren: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db

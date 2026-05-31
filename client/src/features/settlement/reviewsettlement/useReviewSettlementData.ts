@@ -1,10 +1,13 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 
 export type Status = "draft" | "submitted" | "reimbursed" | "rejected"
 export type ExpenseType = "food" | "gas" | "maintenance"
-export type Progress = "in_progress" | "all_done"
 
 export type ExpenseRow = {
   id: number
@@ -54,6 +57,14 @@ export function useReviewSettlementData(settlementId: number) {
   const { data: adjustments } = useSuspenseQuery(
     trpc.settlement.getBookingAdjustments.queryOptions({ settlementId }),
   )
+  const { data: preview } = useQuery({
+    ...trpc.settlement.previewSplit.queryOptions({ id: settlementId }),
+    retry: false,
+  })
+
+  const reviewDoneHeadIds = new Set(
+    (preview?.heads ?? []).filter(h => h.review_done).map(h => h.user_id),
+  )
 
   const excludedBookingIds = new Set(
     adjustments.filter(a => a.excluded).map(a => a.booking_id),
@@ -64,14 +75,20 @@ export function useReviewSettlementData(settlementId: number) {
       .map(a => [a.booking_id, a.extra_names]),
   )
 
-  const heads = users.filter(u => u.is_head)
+  const heads = users
+    .filter(u => u.is_head)
+    .map(u => ({ ...u, review_done: reviewDoneHeadIds.has(u.id) }))
   const headIds = new Set(heads.map(h => h.id))
   const reimbursed = expenses.filter(e => {
     if (e.status === "reimbursed" && e.reimbursed_by_id != null) return true
     if (e.status === "submitted" && headIds.has(e.payer_id)) return true
     return false
   }) as ExpenseRow[]
-  const editableHeadId = me.is_head ? me.id : null
+  const iAmHead =
+    me.is_admin ||
+    (selectedPropertyId != null &&
+      me.head_property_ids.includes(selectedPropertyId))
+  const editableHeadId = iAmHead ? me.id : null
 
   const mainGroupForHead = (headId: number) =>
     groups.find(g => g.is_main && g.members.some(m => m.user_id === headId))
@@ -101,6 +118,7 @@ export function useReviewSettlementData(settlementId: number) {
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
     void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
+    void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
   }
 
   return {

@@ -12,20 +12,16 @@ vi.mock("react-i18next", () => ({
   }),
 }))
 
-const userOwner = {
+const ownerA = {
   id: 1,
-  user_id: 7,
-  user_group_id: null,
-  user_name: "Alice",
-  user_group_name: null,
+  user_group_id: 7,
+  user_group_name: "Alice",
   ownership_pct: 60,
 }
 
 const groupOwner = {
   id: 2,
-  user_id: null,
   user_group_id: 3,
-  user_name: null,
   user_group_name: "Family",
   ownership_pct: 40,
 }
@@ -47,10 +43,10 @@ describe("OwnerListView", () => {
     expect(screen.getByText("No owners yet.")).toBeInTheDocument()
   })
 
-  test("renders one row per owner with name and User/Group tag", () => {
+  test("renders one row per owner with its group name", () => {
     render(
       <OwnerListView
-        owners={[userOwner, groupOwner]}
+        owners={[ownerA, groupOwner]}
         canEdit={false}
         pending={false}
         onPctSave={noop}
@@ -60,14 +56,12 @@ describe("OwnerListView", () => {
     )
     expect(screen.getByText("Alice")).toBeInTheDocument()
     expect(screen.getByText("Family")).toBeInTheDocument()
-    expect(screen.getByText("User")).toBeInTheDocument()
-    expect(screen.getByText("Group")).toBeInTheDocument()
   })
 
   test("hides Delete and Add buttons when canEdit is false", () => {
     render(
       <OwnerListView
-        owners={[userOwner]}
+        owners={[ownerA]}
         canEdit={false}
         pending={false}
         onPctSave={noop}
@@ -105,7 +99,7 @@ describe("OwnerListView", () => {
     const user = userEvent.setup()
     render(
       <OwnerListView
-        owners={[userOwner]}
+        owners={[ownerA]}
         canEdit={true}
         pending={false}
         onPctSave={noop}
@@ -116,13 +110,13 @@ describe("OwnerListView", () => {
     await user.click(
       screen.getByRole("button", { name: "Remove Alice as owner?" }),
     )
-    expect(onRemove).toHaveBeenCalledWith(userOwner)
+    expect(onRemove).toHaveBeenCalledWith(ownerA)
   })
 
   test("disables Delete and Add buttons when pending", () => {
     render(
       <OwnerListView
-        owners={[userOwner]}
+        owners={[ownerA]}
         canEdit={true}
         pending={true}
         onPctSave={noop}

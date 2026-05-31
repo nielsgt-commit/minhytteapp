@@ -7,7 +7,7 @@
   "Edit": "Edit",
   "Error: {{message}}": "Error: {{message}}",
   "Household role": "Household role",
-  "I am a household head (can be assigned a priority week and settlement)": "I am a household head (can be assigned a priority week and settlement)",
+  "I am a household head for {{property}} (can be assigned a priority week and settlement)": "I am a household head for {{property}} (can be assigned a priority week and settlement)",
   "Loading…": "Loading…",
   "My children (under 13)": "My children (under 13)",
   "Name": "Name",
@@ -15,5 +15,6 @@
   "Remove": "Remove",
   "Remove {{name}}?": "Remove {{name}}?",
   "Save": "Save",
-  "User settings": "User settings"
+  "User settings": "User settings",
+  "You are not in a family group yet.": "You are not in a family group yet."
 }

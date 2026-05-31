@@ -11,6 +11,7 @@ const toSuggestionItems = (cats: Category[]): SuggestionItem[] =>
 export function useCategoryMutations(
   categories: Category[],
   suggestionInputRef: RefObject<HTMLInputElement | null>,
+  propertyId: number | null,
 ) {
   const trpc = useTRPC()
 
@@ -22,7 +23,9 @@ export function useCategoryMutations(
     setSelectedCats(toSuggestionItems(categories))
   }, [categories])
 
-  const categoryKey = [trpc.expenseCategory.list.queryKey()]
+  const categoryKey = [
+    trpc.expenseCategory.list.queryKey({ property_id: propertyId ?? 0 }),
+  ]
   const createCategoryMutation = useMutationWithInvalidation(
     trpc.expenseCategory.create.mutationOptions(),
     categoryKey,
@@ -39,7 +42,7 @@ export function useCategoryMutations(
       if (nextValues.has(item.value)) continue
       const id = Number(item.value)
       if (Number.isInteger(id) && id > 0) {
-        archiveCategoryMutation.mutate({ id })
+        archiveCategoryMutation.mutate({ property_id: propertyId ?? 0, id })
       }
     }
     let created = false
@@ -47,7 +50,7 @@ export function useCategoryMutations(
       if (prevValues.has(item.value)) continue
       const name = item.label.trim()
       if (name.length > 0) {
-        createCategoryMutation.mutate({ name })
+        createCategoryMutation.mutate({ property_id: propertyId ?? 0, name })
         created = true
       }
     }

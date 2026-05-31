@@ -13,6 +13,7 @@ import {
   propertySplitPoliciesTable,
   settlementAcceptancesTable,
   settlementBookingAdjustmentsTable,
+  settlementReviewsTable,
   settlementsTable,
   settlementTransfersTable,
   settlementUserGroupTotalsTable,
@@ -24,6 +25,7 @@ import {
 } from "../../db/schema/users.schema.ts"
 import {
   assertPropertyMember,
+  isPropertyHead,
   propertyAdminProcedure,
   protectedProcedure,
   router,
@@ -81,6 +83,7 @@ type HeadStatus = {
   user_name: string
   accepted: boolean
   accepted_at: string | null
+  review_done: boolean
 }
 
 type PreviewResult = {
@@ -157,16 +160,14 @@ async function listSettlementHeads(db: Db, propertyId: number) {
       eq(userGroupMembersTable.user_id, usersTable.id),
     )
     .innerJoin(
-      propertyOwnersTable,
-      eq(
-        propertyOwnersTable.user_group_id,
-        userGroupMembersTable.user_group_id,
-      ),
+      userGroupsTable,
+      eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
     )
     .where(
       and(
-        eq(propertyOwnersTable.property_id, propertyId),
-        eq(usersTable.is_head, true),
+        eq(userGroupsTable.property_id, propertyId),
+        eq(userGroupsTable.is_main, true),
+        eq(userGroupMembersTable.is_head, true),
       ),
     )
 }
@@ -465,6 +466,13 @@ async function computePreviewSplit(
   for (const a of acceptanceRows) {
     acceptanceByHead.set(a.head_user_id, a.accepted_at)
   }
+  const reviewRows = await db
+    .select({
+      head_user_id: settlementReviewsTable.head_user_id,
+    })
+    .from(settlementReviewsTable)
+    .where(eq(settlementReviewsTable.settlement_id, settlementId))
+  const reviewDoneHeads = new Set(reviewRows.map(r => r.head_user_id))
   const heads: HeadStatus[] = headsRows.map(h => {
     const at = acceptanceByHead.get(h.user_id)
     return {
@@ -472,6 +480,7 @@ async function computePreviewSplit(
       user_name: h.user_name,
       accepted: at != null,
       accepted_at: at != null ? at.toISOString() : null,
+      review_done: reviewDoneHeads.has(h.user_id),
     }
   })
 
@@ -591,13 +600,6 @@ export const settlementRouter = router({
   acceptSplit: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user.is_head) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "only heads can accept the split",
-        })
-      }
-
       const settlement = (
         await ctx.db
           .select()
@@ -610,6 +612,14 @@ export const settlementRouter = router({
           code: "NOT_FOUND",
           message: "settlement not found",
         })
+      }
+      if (settlement.property_id != null) {
+        if (!(await isPropertyHead(ctx.db, ctx.user, settlement.property_id))) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "only heads can accept the split",
+          })
+        }
       }
       if (settlement.phase !== "split_policy") {
         throw new TRPCError({
@@ -715,6 +725,72 @@ export const settlementRouter = router({
       }
     }),
 
+  setMyReviewProgress: protectedProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        done: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const settlement = (
+        await ctx.db
+          .select()
+          .from(settlementsTable)
+          .where(eq(settlementsTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (settlement == null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "settlement not found",
+        })
+      }
+      if (settlement.property_id == null) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "settlement is not linked to a property",
+        })
+      }
+      const propertyId = settlement.property_id
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "only heads can update review progress",
+        })
+      }
+
+      const heads = await listSettlementHeads(ctx.db, propertyId)
+      if (!heads.some(h => h.user_id === ctx.user.id)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "only heads of this property can update review progress",
+        })
+      }
+
+      if (input.done) {
+        await ctx.db
+          .insert(settlementReviewsTable)
+          .values({
+            settlement_id: input.id,
+            head_user_id: ctx.user.id,
+          })
+          .onConflictDoNothing()
+      } else {
+        await ctx.db
+          .delete(settlementReviewsTable)
+          .where(
+            and(
+              eq(settlementReviewsTable.settlement_id, input.id),
+              eq(settlementReviewsTable.head_user_id, ctx.user.id),
+            ),
+          )
+      }
+
+      return { id: input.id, done: input.done }
+    }),
+
   getBookingAdjustments: protectedProcedure
     .input(z.object({ settlementId: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
@@ -756,7 +832,7 @@ export const settlementRouter = router({
         ctx.db,
         input.settlementId,
         ctx.user.id,
-        ctx.user.is_head,
+        await isPropertyHead(ctx.db, ctx.user, propertyId),
       )
       await ctx.db
         .insert(settlementBookingAdjustmentsTable)
@@ -797,7 +873,7 @@ export const settlementRouter = router({
         ctx.db,
         input.settlementId,
         ctx.user.id,
-        ctx.user.is_head,
+        await isPropertyHead(ctx.db, ctx.user, propertyId),
       )
       await ctx.db
         .insert(settlementBookingAdjustmentsTable)
@@ -866,7 +942,7 @@ export const settlementRouter = router({
         .from(userGroupMembersTable)
         .where(eq(userGroupMembersTable.user_id, ctx.user.id))
       const myGroupIds = new Set(myMemberships.map(m => m.user_group_id))
-      const canMarkAnyPaid = ctx.user.is_head
+      const canMarkAnyPaid = await isPropertyHead(ctx.db, ctx.user, propertyId)
 
       const [groups, transfers] = await Promise.all([
         ctx.db
@@ -958,7 +1034,7 @@ export const settlementRouter = router({
           message: "transfer not found",
         })
       }
-      if (!ctx.user.is_head) {
+      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "only heads can mark transfers paid",
@@ -1012,7 +1088,7 @@ export const settlementRouter = router({
     .mutation(async ({ ctx, input }) => {
       const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      if (!ctx.user.is_head) {
+      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "only heads can advance settlement phase",
@@ -1057,7 +1133,7 @@ export const settlementRouter = router({
     .mutation(async ({ ctx, input }) => {
       const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      if (!ctx.user.is_head) {
+      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "only heads can regress settlement phase",

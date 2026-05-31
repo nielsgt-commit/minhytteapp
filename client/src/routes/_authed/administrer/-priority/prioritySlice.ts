@@ -2,9 +2,8 @@ import type { PayloadAction } from "@reduxjs/toolkit"
 import { createAppSlice } from "@/app/createAppSlice"
 
 export type PriorityWeekHolder = {
-  ownerId: number
-  userId: number
-  userName: string
+  userGroupId: number
+  userGroupName: string
 }
 
 export type PrioritySliceState = {

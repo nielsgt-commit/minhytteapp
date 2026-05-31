@@ -14,7 +14,7 @@ vi.mock("react-i18next", () => ({
 
 const nameMutate = vi.fn()
 const birthdayMutate = vi.fn()
-const isHeadMutate = vi.fn()
+const headMutate = vi.fn()
 const nameState = {
   isPending: false,
   error: null as { message: string } | null,
@@ -23,7 +23,7 @@ const birthdayState = {
   isPending: false,
   error: null as { message: string } | null,
 }
-const isHeadState = {
+const headState = {
   isPending: false,
   error: null as { message: string } | null,
 }
@@ -34,7 +34,7 @@ vi.mock("@/trpc/trpc", () => ({
       me: { queryKey: () => ["user", "me"] },
       updateMyName: { mutationOptions: (opts: unknown) => opts },
       updateMyBirthday: { mutationOptions: (opts: unknown) => opts },
-      updateMyIsHead: { mutationOptions: (opts: unknown) => opts },
+      updateMyHeadForProperty: { mutationOptions: (opts: unknown) => opts },
     },
   }),
 }))
@@ -61,52 +61,95 @@ type MutationStub = {
   state: { isPending: boolean; error: { message: string } | null }
 }
 
-// Mutation hooks are called in source order: name, birthday, isHead.
+// Mutation hooks are called in source order: name, birthday, head.
 let mutationDispatcher: MutationStub[] = []
 
 const me = {
   id: 1,
   name: "Alice",
   birthday: "1990-05-12",
-  is_head: false,
+  my_main_memberships: [
+    {
+      property_id: 10,
+      property_name: "Hytta",
+      user_group_id: 100,
+      is_head: false,
+    },
+  ],
 }
 
 beforeEach(() => {
   nameMutate.mockReset()
   birthdayMutate.mockReset()
-  isHeadMutate.mockReset()
+  headMutate.mockReset()
   nameState.isPending = false
   nameState.error = null
   birthdayState.isPending = false
   birthdayState.error = null
-  isHeadState.isPending = false
-  isHeadState.error = null
+  headState.isPending = false
+  headState.error = null
   mutationDispatcher = [
     { mutate: nameMutate, state: nameState },
     { mutate: birthdayMutate, state: birthdayState },
-    { mutate: isHeadMutate, state: isHeadState },
+    { mutate: headMutate, state: headState },
   ]
 })
 
 describe("ProfileSection", () => {
-  test("renders name, birthday and head-of-household fields", () => {
+  const headLabel =
+    "I am a household head for Hytta (can be assigned a priority week and settlement)"
+
+  test("renders name, birthday and per-property head fields", () => {
     render(<ProfileSection me={me} />)
     expect(screen.getByLabelText("Name")).toHaveValue("Alice")
     expect(screen.getByLabelText("Birthday")).toHaveValue("1990-05-12")
-    expect(
-      screen.getByLabelText(
-        "I am a household head (can be assigned a priority week and settlement)",
-      ),
-    ).not.toBeChecked()
+    expect(screen.getByLabelText(headLabel)).not.toBeChecked()
   })
 
-  test("reflects is_head=true in the checkbox", () => {
-    render(<ProfileSection me={{ ...me, is_head: true }} />)
+  test("reflects membership is_head=true in the checkbox", () => {
+    render(
+      <ProfileSection
+        me={{
+          ...me,
+          my_main_memberships: [
+            { ...me.my_main_memberships[0], is_head: true },
+          ],
+        }}
+      />,
+    )
+    expect(screen.getByLabelText(headLabel)).toBeChecked()
+  })
+
+  test("renders a checkbox per membership", () => {
+    render(
+      <ProfileSection
+        me={{
+          ...me,
+          my_main_memberships: [
+            me.my_main_memberships[0],
+            {
+              property_id: 11,
+              property_name: "Stua",
+              user_group_id: 101,
+              is_head: true,
+            },
+          ],
+        }}
+      />,
+    )
+    expect(screen.getByLabelText(headLabel)).toBeInTheDocument()
     expect(
       screen.getByLabelText(
-        "I am a household head (can be assigned a priority week and settlement)",
+        "I am a household head for Stua (can be assigned a priority week and settlement)",
       ),
-    ).toBeChecked()
+    ).toBeInTheDocument()
+  })
+
+  test("renders a note when there are no main memberships", () => {
+    render(<ProfileSection me={{ ...me, my_main_memberships: [] }} />)
+    expect(
+      screen.getByText("You are not in a family group yet."),
+    ).toBeInTheDocument()
   })
 
   test("renders empty birthday when null", () => {
@@ -163,15 +206,14 @@ describe("ProfileSection", () => {
     expect(birthdayMutate).not.toHaveBeenCalled()
   })
 
-  test("toggling head checkbox calls updateIsHead with new value", async () => {
+  test("toggling head checkbox calls updateMyHeadForProperty with property_id", async () => {
     const user = userEvent.setup()
     render(<ProfileSection me={me} />)
-    await user.click(
-      screen.getByLabelText(
-        "I am a household head (can be assigned a priority week and settlement)",
-      ),
-    )
-    expect(isHeadMutate).toHaveBeenCalledWith({ is_head: true })
+    await user.click(screen.getByLabelText(headLabel))
+    expect(headMutate).toHaveBeenCalledWith({
+      property_id: 10,
+      is_head: true,
+    })
   })
 
   test("renders an alert when updateName has an error", () => {

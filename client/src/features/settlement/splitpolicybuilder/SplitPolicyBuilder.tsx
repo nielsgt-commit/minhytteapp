@@ -66,7 +66,9 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
     }),
   )
   const { data: categories } = useSuspenseQuery(
-    trpc.expenseCategory.listAllForDisplay.queryOptions(),
+    trpc.expenseCategory.listAllForDisplay.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
   const activeCategories = categories.filter(c => c.archived_at == null)
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
@@ -436,11 +438,11 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                       {eligibleOwners.length > 0 && (
                         <Select.Optgroup label={t("Specific priority week")}>
                           {eligibleOwners.map(o => {
-                            const enc = `during_priority_week:${String(o.property_owner_id)}`
+                            const enc = `during_priority_week:${String(o.user_group_id)}`
                             return (
                               <Select.Option key={enc} value={enc}>
                                 {t("{{name}}'s priority week", {
-                                  name: o.user_name,
+                                  name: o.user_group_name,
                                 })}
                               </Select.Option>
                             )

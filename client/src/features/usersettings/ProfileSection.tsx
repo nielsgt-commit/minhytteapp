@@ -10,7 +10,12 @@ type Me = {
   id: number
   name: string
   birthday: string | null
-  is_head: boolean
+  my_main_memberships: {
+    property_id: number
+    property_name: string
+    user_group_id: number
+    is_head: boolean
+  }[]
 }
 
 type ProfileSectionProps = {
@@ -33,8 +38,8 @@ export function ProfileSection({ me }: ProfileSectionProps) {
     meKeys,
   )
 
-  const updateIsHead = useMutationWithInvalidation(
-    trpc.user.updateMyIsHead.mutationOptions(),
+  const updateHead = useMutationWithInvalidation(
+    trpc.user.updateMyHeadForProperty.mutationOptions(),
     meKeys,
   )
 
@@ -94,18 +99,29 @@ export function ProfileSection({ me }: ProfileSectionProps) {
 
       <Fieldset>
         <Fieldset.Legend>{t("Household role")}</Fieldset.Legend>
-        <Checkbox
-          name="is_head"
-          label={t(
-            "I am a household head (can be assigned a priority week and settlement)",
-          )}
-          checked={me.is_head}
-          disabled={updateIsHead.isPending}
-          onChange={e => {
-            updateIsHead.mutate({ is_head: e.target.checked })
-          }}
-        />
-        <ErrorAlert error={updateIsHead.error} />
+        {me.my_main_memberships.length === 0 ? (
+          <p>{t("You are not in a family group yet.")}</p>
+        ) : (
+          me.my_main_memberships.map(m => (
+            <Checkbox
+              key={m.property_id}
+              name={`is_head-${String(m.property_id)}`}
+              label={t(
+                "I am a household head for {{property}} (can be assigned a priority week and settlement)",
+                { property: m.property_name },
+              )}
+              checked={m.is_head}
+              disabled={updateHead.isPending}
+              onChange={e => {
+                updateHead.mutate({
+                  property_id: m.property_id,
+                  is_head: e.target.checked,
+                })
+              }}
+            />
+          ))
+        )}
+        <ErrorAlert error={updateHead.error} />
       </Fieldset>
     </>
   )

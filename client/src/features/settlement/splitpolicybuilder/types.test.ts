@@ -64,8 +64,8 @@ describe("encodeWhen / decodeWhen", () => {
     }
   })
 
-  test("round-trips during_priority_week with property_owner_id", () => {
-    const w: When = { kind: "during_priority_week", property_owner_id: 42 }
+  test("round-trips during_priority_week with user_group_id", () => {
+    const w: When = { kind: "during_priority_week", user_group_id: 42 }
     expect(encodeWhen(w)).toBe("during_priority_week:42")
     expect(decodeWhen("during_priority_week:42")).toEqual(w)
   })
@@ -186,13 +186,13 @@ describe("describe*", () => {
   test("describeWhen resolves owner name or falls back", () => {
     expect(describeWhen({ kind: "always" }, [])).toBe("anytime")
     expect(
-      describeWhen({ kind: "during_priority_week", property_owner_id: 7 }, [
-        { property_owner_id: 7, user_id: 99, user_name: "Dana" },
+      describeWhen({ kind: "during_priority_week", user_group_id: 7 }, [
+        { user_group_id: 7, user_group_name: "Dana" },
       ]),
     ).toBe("Dana's priority week")
     expect(
-      describeWhen({ kind: "during_priority_week", property_owner_id: 7 }, []),
-    ).toBe("priority week (owner #7)")
+      describeWhen({ kind: "during_priority_week", user_group_id: 7 }, []),
+    ).toBe("priority week (group #7)")
   })
 })
 

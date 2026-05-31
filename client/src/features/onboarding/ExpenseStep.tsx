@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Chip, Divider, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
@@ -22,13 +23,15 @@ const SUGGESTED = [
 export function ExpenseStep() {
   const { t } = useTranslation("onboarding")
   const trpc = useTRPC()
+  const selectedPropertyId = useSelectedPropertyId()
+  const propertyId = selectedPropertyId ?? 0
   const canEdit = useCanEdit()
 
   const { data: categories } = useSuspenseQuery(
-    trpc.expenseCategory.list.queryOptions(),
+    trpc.expenseCategory.list.queryOptions({ property_id: propertyId }),
   )
 
-  const keys = [trpc.expenseCategory.list.queryKey()]
+  const keys = [trpc.expenseCategory.list.queryKey({ property_id: propertyId })]
   const createCategory = useMutationWithInvalidation(
     trpc.expenseCategory.create.mutationOptions(),
     keys,
@@ -47,7 +50,7 @@ export function ExpenseStep() {
     const trimmed = name.trim()
     if (!trimmed || existingNames.has(trimmed.toLowerCase())) return
     try {
-      await createCategory.mutateAsync({ name: trimmed })
+      await createCategory.mutateAsync({ property_id: propertyId, name: trimmed })
     } catch {
       /* surfaced via lastError */
     }
@@ -86,7 +89,7 @@ export function ExpenseStep() {
                 disabled={!canEdit || pending}
                 aria-label={t('Remove category "{{name}}"', { name: c.name })}
                 onClick={() => {
-                  archiveCategory.mutate({ id: c.id })
+                  archiveCategory.mutate({ property_id: propertyId, id: c.id })
                 }}
               >
                 {c.name}

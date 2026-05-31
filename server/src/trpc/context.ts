@@ -1,6 +1,11 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch"
+import { and, eq } from "drizzle-orm"
 import { db } from "../db/client.ts"
 import { auth } from "../auth/auth.ts"
+import {
+  userGroupMembersTable,
+  userGroupsTable,
+} from "../db/schema/users.schema.ts"
 
 export type AuthUser = {
   id: number
@@ -9,10 +14,12 @@ export type AuthUser = {
   emailVerified: boolean
   image: string | null
   is_admin: boolean
+  // Derived: true if the user is a head-flagged member of any is_main group.
+  is_head_anywhere: boolean
+  // Transitional alias kept equal to is_head_anywhere for client compat.
   is_head: boolean
-  is_child: boolean | null
+  is_child: boolean
   parent_user_id: number | null
-  settlement_progress: "in_progress" | "all_done"
   birthday: string | null
   onboarding_step:
     | "user"
@@ -34,10 +41,35 @@ export const createContext = async ({ req }: FetchCreateContextFnOptions) => {
   if (!result) {
     return { db, session: null, user: null as AuthUser | null }
   }
-  const raw = result.user as unknown as Omit<AuthUser, "id"> & {
+  const raw = result.user as unknown as Omit<
+    AuthUser,
+    "id" | "is_head_anywhere" | "is_head"
+  > & {
     id: number | string
   }
-  const user: AuthUser = { ...raw, id: Number(raw.id) }
+  const id = Number(raw.id)
+  const headRows = await db
+    .select({ user_group_id: userGroupMembersTable.user_group_id })
+    .from(userGroupMembersTable)
+    .innerJoin(
+      userGroupsTable,
+      eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+    )
+    .where(
+      and(
+        eq(userGroupMembersTable.user_id, id),
+        eq(userGroupMembersTable.is_head, true),
+        eq(userGroupsTable.is_main, true),
+      ),
+    )
+    .limit(1)
+  const isHeadAnywhere = headRows.length > 0
+  const user: AuthUser = {
+    ...raw,
+    id,
+    is_head_anywhere: isHeadAnywhere,
+    is_head: isHeadAnywhere,
+  }
   return { db, session: result.session, user }
 }
 

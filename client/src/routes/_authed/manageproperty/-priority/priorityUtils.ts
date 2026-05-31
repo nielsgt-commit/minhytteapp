@@ -32,13 +32,12 @@ export function defaultYear(): number {
 }
 
 export type EligibleOwner = {
-  property_owner_id: number
-  user_id: number
-  user_name: string
+  user_group_id: number
+  user_group_name: string
 }
 
 export type PriorityAssignment = {
-  property_owner_id: number
+  user_group_id: number
   iso_week: number
 }
 
@@ -55,14 +54,14 @@ export function buildOwnerLookups(
   for (const a of assignments) {
     if (a.iso_week === 28 || a.iso_week === 29 || a.iso_week === 30) {
       const list = ownersByWeek.get(a.iso_week) ?? []
-      list.push(a.property_owner_id)
+      list.push(a.user_group_id)
       ownersByWeek.set(a.iso_week, list)
     }
   }
 
   const ownerNameById = new Map<number, string>()
   for (const o of eligibleOwners) {
-    ownerNameById.set(o.property_owner_id, o.user_name)
+    ownerNameById.set(o.user_group_id, o.user_group_name)
   }
 
   return { ownersByWeek, ownerNameById }

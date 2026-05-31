@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "allowed_emails_pending_property_uq" ON "allowed_emails" USING btree (lower("email"),"property_id") WHERE "allowed_emails"."used_at" IS NULL AND "allowed_emails"."property_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "allowed_emails_pending_global_uq" ON "allowed_emails" USING btree (lower("email")) WHERE "allowed_emails"."used_at" IS NULL AND "allowed_emails"."property_id" IS NULL;

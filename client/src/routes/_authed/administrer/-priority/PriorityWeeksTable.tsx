@@ -13,20 +13,18 @@ type PriorityWeeksTableProps = {
   year: number
   eligibleOwners: readonly EligibleOwner[]
   lookups: OwnerLookups
-  meUserId: number | undefined
-  myOwnerId: number | null
+  myGroupId: number | null
   isAdmin: boolean
   pending: boolean
-  onAssign: (ownerId: number, week: PeakWeek) => void
-  onClear: (ownerId: number) => void
+  onAssign: (groupId: number, week: PeakWeek) => void
+  onClear: (groupId: number) => void
 }
 
 export function PriorityWeeksTable({
   year,
   eligibleOwners,
   lookups,
-  meUserId,
-  myOwnerId,
+  myGroupId,
   isAdmin,
   pending,
   onAssign,
@@ -43,9 +41,9 @@ export function PriorityWeeksTable({
           <Table.HeaderCell>{t("Week")}</Table.HeaderCell>
           <Table.HeaderCell>{t("Dates")}</Table.HeaderCell>
           {eligibleOwners.map(o => (
-            <Table.HeaderCell key={o.property_owner_id}>
-              {o.user_name}
-              {o.user_id === meUserId ? t(" (you)") : ""}
+            <Table.HeaderCell key={o.user_group_id}>
+              {o.user_group_name}
+              {o.user_group_id === myGroupId ? t(" (you)") : ""}
             </Table.HeaderCell>
           ))}
           <Table.HeaderCell />
@@ -59,8 +57,7 @@ export function PriorityWeeksTable({
             year={year}
             eligibleOwners={eligibleOwners}
             ownersForWeek={ownersByWeek.get(week) ?? []}
-            meUserId={meUserId}
-            myOwnerId={myOwnerId}
+            myGroupId={myGroupId}
             isAdmin={isAdmin}
             pending={pending}
             onAssign={onAssign}

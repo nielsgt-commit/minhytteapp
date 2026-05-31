@@ -17,7 +17,7 @@ export type When =
   | { kind: "present_when_expense_added" }
   | { kind: "present_this_year" }
   | { kind: "during_any_priority_week" }
-  | { kind: "during_priority_week"; property_owner_id: number }
+  | { kind: "during_priority_week"; user_group_id: number }
 
 export type ExceptItem =
   | { kind: "user"; user_id: number }
@@ -94,7 +94,7 @@ export const WHEN_LABEL: Record<StaticWhen["kind"], string> = {
 
 export function encodeWhen(w: When): string {
   if (w.kind === "during_priority_week") {
-    return `during_priority_week:${String(w.property_owner_id)}`
+    return `during_priority_week:${String(w.user_group_id)}`
   }
   return w.kind
 }
@@ -103,7 +103,7 @@ export function decodeWhen(v: string): When {
   if (v.startsWith("during_priority_week:")) {
     return {
       kind: "during_priority_week",
-      property_owner_id: Number(v.slice("during_priority_week:".length)),
+      user_group_id: Number(v.slice("during_priority_week:".length)),
     }
   }
   return { kind: v as StaticWhen["kind"] }
@@ -174,9 +174,8 @@ export type GroupWithMembers = {
 }
 
 export type EligibleOwner = {
-  property_owner_id: number
-  user_id: number
-  user_name: string
+  user_group_id: number
+  user_group_name: string
 }
 
 export type Category = { id: number; name: string }
@@ -238,11 +237,11 @@ export function describeExcept(item: ExceptItem, groups: GroupWithMembers[]) {
 export function describeWhen(w: When, eligibleOwners: EligibleOwner[]): string {
   if (w.kind === "during_priority_week") {
     const owner = eligibleOwners.find(
-      o => o.property_owner_id === w.property_owner_id,
+      o => o.user_group_id === w.user_group_id,
     )
     return owner
-      ? `${owner.user_name}'s priority week`
-      : `priority week (owner #${String(w.property_owner_id)})`
+      ? `${owner.user_group_name}'s priority week`
+      : `priority week (group #${String(w.user_group_id)})`
   }
   return WHEN_LABEL[w.kind]
 }

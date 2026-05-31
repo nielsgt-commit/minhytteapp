@@ -156,10 +156,6 @@ export const propertyOwnersRelations = relations(
       fields: [propertyOwnersTable.property_id],
       references: [propertyTable.id],
     }),
-    user: one(usersTable, {
-      fields: [propertyOwnersTable.user_id],
-      references: [usersTable.id],
-    }),
     userGroup: one(userGroupsTable, {
       fields: [propertyOwnersTable.user_group_id],
       references: [userGroupsTable.id],

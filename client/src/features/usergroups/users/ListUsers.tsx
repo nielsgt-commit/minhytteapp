@@ -109,7 +109,7 @@ export function ListUsers({ canEdit }: ListUsersProps) {
           <Checkbox
             label={t("Child")}
             name="is_child"
-            defaultChecked={u.is_child ?? false}
+            defaultChecked={u.is_child}
           />
         </div>
         <div>

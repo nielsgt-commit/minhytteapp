@@ -75,12 +75,15 @@ export const expenseCategoriesTable = pgTable(
   "expense_categories",
   {
     id: serial("id").primaryKey(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
     name: varchar("name", { length: 64 }).notNull(),
     archived_at: timestamp("archived_at"),
   },
   t => [
-    uniqueIndex("expense_categories_name_active")
-      .on(t.name)
+    uniqueIndex("expense_categories_property_name_active")
+      .on(t.property_id, t.name)
       .where(sql`${t.archived_at} IS NULL`),
   ],
 )
@@ -172,6 +175,20 @@ export const settlementAcceptancesTable = pgTable(
   t => [primaryKey({ columns: [t.settlement_id, t.head_user_id] })],
 )
 
+export const settlementReviewsTable = pgTable(
+  "settlement_reviews",
+  {
+    settlement_id: integer("settlement_id")
+      .notNull()
+      .references(() => settlementsTable.id, { onDelete: "cascade" }),
+    head_user_id: integer("head_user_id")
+      .notNull()
+      .references(() => usersTable.id),
+    reviewed_at: timestamp("reviewed_at").notNull().defaultNow(),
+  },
+  t => [primaryKey({ columns: [t.settlement_id, t.head_user_id] })],
+)
+
 export const settlementBookingAdjustmentsTable = pgTable(
   "settlement_booking_adjustments",
   {
@@ -211,7 +228,7 @@ export type SplitPolicyWhen =
   | { kind: "present_when_expense_added" }
   | { kind: "present_this_year" }
   | { kind: "during_any_priority_week" }
-  | { kind: "during_priority_week"; property_owner_id: number }
+  | { kind: "during_priority_week"; user_group_id: number }
 
 export type SplitPolicyExcept =
   | { kind: "user"; user_id: number }

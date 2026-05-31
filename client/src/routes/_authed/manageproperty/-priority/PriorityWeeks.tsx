@@ -24,6 +24,13 @@ export function PriorityWeeks() {
 
   const { data: me } = useQuery(trpc.user.me.queryOptions())
 
+  const groupsQuery = useQuery({
+    ...trpc.userGroup.listWithMembersForProperty.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
+    enabled: selectedPropertyId != null,
+  })
+
   const priorityQuery = useQuery({
     ...trpc.priority.list.queryOptions({
       property_id: selectedPropertyId ?? 0,
@@ -74,29 +81,35 @@ export function PriorityWeeks() {
 
   const { eligibleOwners, assignments } = data
   const lookups = buildOwnerLookups(eligibleOwners, assignments)
-  const myOwnerRow = me
-    ? eligibleOwners.find(o => o.user_id === me.id)
+  const myMainGroup = me
+    ? groupsQuery.data?.find(
+        g => g.is_main && g.members.some(m => m.user_id === me.id),
+      )
     : undefined
-  const myOwnerId = myOwnerRow?.property_owner_id ?? null
+  const myGroupId =
+    myMainGroup != null &&
+    eligibleOwners.some(o => o.user_group_id === myMainGroup.id)
+      ? myMainGroup.id
+      : null
   const isAdmin = me?.is_admin === true
 
   const unassigned = PEAK_WEEKS.filter(
     w => (lookups.ownersByWeek.get(w)?.length ?? 0) === 0,
   )
 
-  const handleAssign = (ownerId: number, week: PeakWeek) => {
+  const handleAssign = (groupId: number, week: PeakWeek) => {
     setMutation.mutate({
       property_id: selectedPropertyId,
-      property_owner_id: ownerId,
+      user_group_id: groupId,
       year,
       iso_week: week,
     })
   }
 
-  const handleClear = (ownerId: number) => {
+  const handleClear = (groupId: number) => {
     clearMutation.mutate({
       property_id: selectedPropertyId,
-      property_owner_id: ownerId,
+      user_group_id: groupId,
       year,
     })
   }
@@ -107,16 +120,16 @@ export function PriorityWeeks() {
 
       <Paragraph>
         {t(
-          "Each household head picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
+          "Each main owner group picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
         )}
       </Paragraph>
 
       <YearNavigator year={year} onChange={setYear} />
 
-      {myOwnerId == null && !isAdmin && (
+      {myGroupId == null && !isAdmin && (
         <Paragraph>
           {t(
-            "You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings.",
+            "You don't have an editable column here. Either you're not an owner of this property, or your family group isn't a main owner group.",
           )}
         </Paragraph>
       )}
@@ -124,7 +137,7 @@ export function PriorityWeeks() {
       {eligibleOwners.length === 0 ? (
         <Paragraph role="alert">
           {t(
-            'No household heads found for this property. Owners must enable the "household head" flag in their user settings before they can be assigned a priority week.',
+            "No main owner groups found for this property. A family group must be a main owner group before it can be assigned a priority week.",
           )}
         </Paragraph>
       ) : (
@@ -146,8 +159,7 @@ export function PriorityWeeks() {
             year={year}
             eligibleOwners={eligibleOwners}
             lookups={lookups}
-            meUserId={me?.id}
-            myOwnerId={myOwnerId}
+            myGroupId={myGroupId}
             isAdmin={isAdmin}
             pending={pending}
             onAssign={handleAssign}

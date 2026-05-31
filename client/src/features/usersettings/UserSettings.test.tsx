@@ -24,7 +24,7 @@ vi.mock("@/trpc/trpc", () => ({
       },
       updateMyName: { mutationOptions: (opts: unknown) => opts },
       updateMyBirthday: { mutationOptions: (opts: unknown) => opts },
-      updateMyIsHead: { mutationOptions: (opts: unknown) => opts },
+      updateMyHeadForProperty: { mutationOptions: (opts: unknown) => opts },
       createChild: { mutationOptions: (opts: unknown) => opts },
       updateChild: { mutationOptions: (opts: unknown) => opts },
       removeChild: { mutationOptions: (opts: unknown) => opts },
@@ -33,7 +33,17 @@ vi.mock("@/trpc/trpc", () => ({
 }))
 
 let meData:
-  | { id: number; name: string; birthday: string | null; is_head: boolean }
+  | {
+      id: number
+      name: string
+      birthday: string | null
+      my_main_memberships: {
+        property_id: number
+        property_name: string
+        user_group_id: number
+        is_head: boolean
+      }[]
+    }
   | undefined
 
 vi.mock("@tanstack/react-query", () => ({
@@ -62,7 +72,7 @@ describe("UserSettings", () => {
   })
 
   test("renders the user-settings heading once `me` loads", () => {
-    meData = { id: 1, name: "Alice", birthday: null, is_head: false }
+    meData = { id: 1, name: "Alice", birthday: null, my_main_memberships: [] }
     render(<UserSettings />)
     expect(
       screen.getByRole("heading", { level: 2, name: "User settings" }),
@@ -70,7 +80,7 @@ describe("UserSettings", () => {
   })
 
   test("renders the ProfileSection name input bound to me.name", () => {
-    meData = { id: 2, name: "Bob", birthday: null, is_head: false }
+    meData = { id: 2, name: "Bob", birthday: null, my_main_memberships: [] }
     render(<UserSettings />)
     // Two "Name" inputs render: ProfileSection display name (first) + ChildrenSection add-child.
     const nameInputs = screen.getAllByLabelText("Name")
@@ -78,13 +88,13 @@ describe("UserSettings", () => {
   })
 
   test("renders the ChildrenSection heading", () => {
-    meData = { id: 3, name: "Carol", birthday: null, is_head: false }
+    meData = { id: 3, name: "Carol", birthday: null, my_main_memberships: [] }
     render(<UserSettings />)
     expect(screen.getByText("My children (under 13)")).toBeInTheDocument()
   })
 
   test("does not render Loading text once data is present", () => {
-    meData = { id: 4, name: "Dan", birthday: null, is_head: true }
+    meData = { id: 4, name: "Dan", birthday: null, my_main_memberships: [] }
     render(<UserSettings />)
     expect(screen.queryByText("Loading…")).not.toBeInTheDocument()
   })

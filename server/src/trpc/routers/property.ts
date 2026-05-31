@@ -62,19 +62,14 @@ export const propertyRouter = router({
     const viaOwners = await ctx.db
       .selectDistinct({ id: propertyOwnersTable.property_id })
       .from(propertyOwnersTable)
-      .leftJoin(
+      .innerJoin(
         userGroupMembersTable,
         eq(
           userGroupMembersTable.user_group_id,
           propertyOwnersTable.user_group_id,
         ),
       )
-      .where(
-        or(
-          eq(propertyOwnersTable.user_id, userId),
-          eq(userGroupMembersTable.user_id, userId),
-        ),
-      )
+      .where(eq(userGroupMembersTable.user_id, userId))
 
     const viaGroupLink = await ctx.db
       .selectDistinct({ id: userGroupsTable.property_id })
@@ -127,9 +122,22 @@ export const propertyRouter = router({
           .insert(propertyTable)
           .values({ ...input, ...coords })
           .returning()
+        const [group] = await tx
+          .insert(userGroupsTable)
+          .values({
+            name: ctx.user.name,
+            is_main: true,
+            property_id: created.id,
+          })
+          .returning()
+        await tx.insert(userGroupMembersTable).values({
+          user_group_id: group.id,
+          user_id: ctx.user.id,
+          is_head: true,
+        })
         await tx.insert(propertyOwnersTable).values({
           property_id: created.id,
-          user_id: ctx.user.id,
+          user_group_id: group.id,
           ownership_pct: "100.00",
         })
         return created

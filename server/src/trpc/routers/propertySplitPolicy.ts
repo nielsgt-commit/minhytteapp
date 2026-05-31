@@ -41,7 +41,7 @@ const whenSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("during_any_priority_week") }),
   z.object({
     kind: z.literal("during_priority_week"),
-    property_owner_id: z.number().int().positive(),
+    user_group_id: z.number().int().positive(),
   }),
 ])
 

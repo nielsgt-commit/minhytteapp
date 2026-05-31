@@ -21,9 +21,7 @@ type AddKind = "user" | "group"
 
 type Owner = {
   id: number
-  user_id: number | null
   user_group_id: number | null
-  user_name: string | null
   user_group_name: string | null
   ownership_pct: number | string
 }
@@ -97,13 +95,16 @@ export function PropertyOwnersPanel() {
   const totalPct = totalOwnershipPct(owners)
   const offBy = ownershipOffBy(owners)
 
-  const takenUserIds = new Set(
-    owners.flatMap(o => (o.user_id != null ? [o.user_id] : [])),
-  )
-  const takenGroupIds = new Set(
-    owners.flatMap(o => (o.user_group_id != null ? [o.user_group_id] : [])),
-  )
-  const availableUsers = users.filter(u => !takenUserIds.has(u.id))
+  // Owners are group-only; adding a user resolves to that user's family
+  // group server-side. We dedup on group id (uniqueness is enforced there);
+  // a user whose group is already an owner is filtered out below.
+  const takenGroupIds = new Set(owners.map(o => o.user_group_id))
+  const availableUsers = users.filter(u => {
+    const userGroupId = groups.find(g =>
+      g.members.some(m => m.user_id === u.id),
+    )?.id
+    return userGroupId == null || !takenGroupIds.has(userGroupId)
+  })
   const availableGroups = groups.filter(g => !takenGroupIds.has(g.id))
 
   const handlePctSave = (o: Owner, pct: number) => {

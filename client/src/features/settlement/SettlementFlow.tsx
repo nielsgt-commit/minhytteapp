@@ -24,7 +24,10 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
   if (!openSettlement) {
     return (
       <Suspense fallback={<p>{t("Loading…")}</p>}>
-        <CreateSettlementFlow propertyId={propertyId} isHead={me.is_head} />
+        <CreateSettlementFlow
+          propertyId={propertyId}
+          isHead={me.is_admin || me.head_property_ids.includes(propertyId)}
+        />
       </Suspense>
     )
   }

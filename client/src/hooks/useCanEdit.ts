@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 
-export function useCanEdit(): boolean {
+export function useCanEdit(propertyId?: number): boolean {
   const trpc = useTRPC()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
+  const selectedPropertyId = useSelectedPropertyId()
   if (!me) return false
-  return me.is_admin || me.is_head
+  if (me.is_admin) return true
+  const pid = propertyId ?? selectedPropertyId
+  return pid != null && me.head_property_ids.includes(pid)
 }

@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Select } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 
 export function CategorySelect({
   value,
@@ -12,8 +13,11 @@ export function CategorySelect({
 }) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
+  const selectedPropertyId = useSelectedPropertyId()
   const { data: categories } = useSuspenseQuery(
-    trpc.expenseCategory.list.queryOptions(),
+    trpc.expenseCategory.list.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
   const known = categories.some(c => c.name === value)
   return (

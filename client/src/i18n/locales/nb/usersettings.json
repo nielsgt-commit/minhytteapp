@@ -8,7 +8,7 @@
   "Edit": "Rediger",
   "Error: {{message}}": "Feil: {{message}}",
   "Household role": "Husholdningsrolle",
-  "I am a household head (can be assigned a priority week and settlement)": "Jeg er husstandsoverhode (kan tildeles prioritetsuke og oppgjør)",
+  "I am a household head for {{property}} (can be assigned a priority week and settlement)": "Jeg er husstandsoverhode for {{property}} (kan tildeles prioritetsuke og oppgjør)",
   "Loading…": "Laster…",
   "My children": "Mine barn",
   "My children (under 13)": "Mine barn (under 13)",
@@ -17,5 +17,6 @@
   "Remove": "Fjern",
   "Remove {{name}}?": "Fjerne {{name}}?",
   "Save": "Lagre",
-  "User settings": "Brukerinnstillinger"
+  "User settings": "Brukerinnstillinger",
+  "You are not in a family group yet.": "Du er ikke i en familiegruppe ennå."
 }

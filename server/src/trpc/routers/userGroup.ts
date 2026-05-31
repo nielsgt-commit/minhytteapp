@@ -23,9 +23,7 @@ export async function relevantGroupIdsForProperty(
         isNotNull(propertyOwnersTable.user_group_id),
       ),
     )
-  const owningGroupIds = owningGroupRows
-    .map(r => r.id)
-    .filter((id): id is number => id != null)
+  const owningGroupIds = owningGroupRows.map(r => r.id)
 
   const linkedGroupRows = await ctx.db
     .select({ id: userGroupsTable.id })
@@ -37,20 +35,7 @@ export async function relevantGroupIdsForProperty(
     new Set<number>([...owningGroupIds, ...linkedGroupIds]),
   )
 
-  const directOwnerRows = await ctx.db
-    .select({ user_id: propertyOwnersTable.user_id })
-    .from(propertyOwnersTable)
-    .where(
-      and(
-        eq(propertyOwnersTable.property_id, property_id),
-        isNotNull(propertyOwnersTable.user_id),
-      ),
-    )
-
   const peopleSet = new Set<number>([calling_user_id])
-  for (const r of directOwnerRows) {
-    if (r.user_id != null) peopleSet.add(r.user_id)
-  }
   if (propertyGroupIds.length > 0) {
     const owningMembers = await ctx.db
       .select({ user_id: userGroupMembersTable.user_id })

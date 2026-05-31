@@ -25,19 +25,15 @@ export function usePrioritySliceSync(
   useEffect(() => {
     if (!data) return
     const ownerById = new Map(
-      data.eligibleOwners.map(o => [
-        o.property_owner_id,
-        { userId: o.user_id, userName: o.user_name },
-      ]),
+      data.eligibleOwners.map(o => [o.user_group_id, o.user_group_name]),
     )
     const next: Record<number, PriorityWeekHolder> = {}
     for (const a of data.assignments) {
-      const owner = ownerById.get(a.property_owner_id)
-      if (!owner) continue
+      const groupName = ownerById.get(a.user_group_id)
+      if (groupName == null) continue
       next[a.iso_week] = {
-        ownerId: a.property_owner_id,
-        userId: owner.userId,
-        userName: owner.userName,
+        userGroupId: a.user_group_id,
+        userGroupName: groupName,
       }
     }
     dispatch(setPriorityYearAssignments({ year, assignments: next }))

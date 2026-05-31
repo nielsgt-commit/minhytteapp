@@ -98,7 +98,10 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
     const endDate = draft.end_date
     if (!startDate || !endDate || !priorityData) return []
     const ownerNameById = new Map(
-      priorityData.eligibleOwners.map(o => [o.property_owner_id, o.user_name]),
+      priorityData.eligibleOwners.map(o => [
+        o.user_group_id,
+        o.user_group_name,
+      ]),
     )
     return priorityData.assignments
       .filter(a => {
@@ -113,8 +116,8 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
       .map(a => ({
         iso_week: a.iso_week,
         owner_name:
-          ownerNameById.get(a.property_owner_id) ??
-          `#${String(a.property_owner_id)}`,
+          ownerNameById.get(a.user_group_id) ??
+          `#${String(a.user_group_id)}`,
       }))
   }, [draft.start_date, draft.end_date, priorityData])
 

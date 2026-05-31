@@ -1,7 +1,11 @@
+import { TRPCError } from "@trpc/server"
 import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
-import { userGroupsTable, usersTable } from "../../db/schema/users.schema.ts"
+import {
+  userGroupMembersTable,
+  userGroupsTable,
+} from "../../db/schema/users.schema.ts"
 import { propertyAdminProcedure, router } from "../init.ts"
 
 const pctField = z.number().min(0).max(100).multipleOf(0.01)
@@ -12,14 +16,11 @@ export const propertyOwnerRouter = router({
       .select({
         id: propertyOwnersTable.id,
         property_id: propertyOwnersTable.property_id,
-        user_id: propertyOwnersTable.user_id,
         user_group_id: propertyOwnersTable.user_group_id,
         ownership_pct: propertyOwnersTable.ownership_pct,
-        user_name: usersTable.name,
         user_group_name: userGroupsTable.name,
       })
       .from(propertyOwnersTable)
-      .leftJoin(usersTable, eq(usersTable.id, propertyOwnersTable.user_id))
       .leftJoin(
         userGroupsTable,
         eq(userGroupsTable.id, propertyOwnersTable.user_group_id),
@@ -37,11 +38,34 @@ export const propertyOwnerRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const familyGroup = (
+        await ctx.db
+          .select({ user_group_id: userGroupsTable.id })
+          .from(userGroupMembersTable)
+          .innerJoin(
+            userGroupsTable,
+            eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+          )
+          .where(
+            and(
+              eq(userGroupMembersTable.user_id, input.user_id),
+              eq(userGroupsTable.is_main, true),
+              eq(userGroupsTable.property_id, input.property_id),
+            ),
+          )
+          .limit(1)
+      ).at(0)
+      if (!familyGroup) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "user has no family group for this property",
+        })
+      }
       const [created] = await ctx.db
         .insert(propertyOwnersTable)
         .values({
           property_id: input.property_id,
-          user_id: input.user_id,
+          user_group_id: familyGroup.user_group_id,
           ownership_pct: input.ownership_pct.toFixed(2),
         })
         .returning()

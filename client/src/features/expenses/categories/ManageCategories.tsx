@@ -7,19 +7,24 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useCategoryMutations } from "@/features/expenses/testform/useCategoryMutations.ts"
 
 export function ManageCategories() {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
+  const propertyId = useSelectedPropertyId()
   const { data: me } = useQuery(trpc.user.me.queryOptions())
-  const canManageCategories = me != null && (me.is_head || me.is_admin)
+  const canManageCategories =
+    me != null &&
+    (me.is_admin ||
+      (propertyId != null && me.head_property_ids.includes(propertyId)))
   const { data: categories } = useSuspenseQuery(
-    trpc.expenseCategory.list.queryOptions(),
+    trpc.expenseCategory.list.queryOptions({ property_id: propertyId ?? 0 }),
   )
   const suggestionInputRef = useRef<HTMLInputElement>(null)
   const { selectedCats, handleCategoriesChange, createError, archiveError } =
-    useCategoryMutations(categories, suggestionInputRef)
+    useCategoryMutations(categories, suggestionInputRef, propertyId)
 
   if (!canManageCategories) {
     return (

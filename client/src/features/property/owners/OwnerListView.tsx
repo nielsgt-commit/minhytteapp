@@ -1,4 +1,4 @@
-import { Button, Card, Tag } from "@digdir/designsystemet-react"
+import { Button, Card } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { InlineEditField } from "@/components/shared/InlineEditField"
 import { ownerLabel } from "./ownershipCalculations.ts"
@@ -6,9 +6,7 @@ import styles from "./OwnerListView.module.css"
 
 type Owner = {
   id: number
-  user_id: number | null
   user_group_id: number | null
-  user_name: string | null
   user_group_name: string | null
   ownership_pct: number | string
 }
@@ -38,16 +36,12 @@ export function OwnerListView({
       ) : (
         <ul className={styles.list}>
           {owners.map(o => {
-            const isUser = o.user_id != null
             const label = ownerLabel(o)
             return (
               <Card asChild key={o.id}>
                 <li>
                   <Card.Block className={styles.row}>
                     <span className={styles.rowName}>{label}</span>
-                    <Tag data-color={isUser ? "info" : "neutral"}>
-                      {isUser ? t("User") : t("Group")}
-                    </Tag>
                     <span className={styles.pct}>
                       <InlineEditField
                         value={String(o.ownership_pct)}

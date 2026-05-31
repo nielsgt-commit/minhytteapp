@@ -12,12 +12,11 @@ type PriorityWeekRowProps = {
   year: number
   eligibleOwners: readonly EligibleOwner[]
   ownersForWeek: readonly number[]
-  meUserId: number | undefined
-  myOwnerId: number | null
+  myGroupId: number | null
   isAdmin: boolean
   pending: boolean
-  onAssign: (ownerId: number, week: PeakWeek) => void
-  onClear: (ownerId: number) => void
+  onAssign: (groupId: number, week: PeakWeek) => void
+  onClear: (groupId: number) => void
 }
 
 export function PriorityWeekRow({
@@ -25,8 +24,7 @@ export function PriorityWeekRow({
   year,
   eligibleOwners,
   ownersForWeek,
-  meUserId,
-  myOwnerId,
+  myGroupId,
   isAdmin,
   pending,
   onAssign,
@@ -36,29 +34,29 @@ export function PriorityWeekRow({
   const range = peakWeekRange(year, week)
   const showClear =
     ownersForWeek.length > 0 &&
-    (isAdmin || (myOwnerId != null && ownersForWeek.includes(myOwnerId)))
+    (isAdmin || (myGroupId != null && ownersForWeek.includes(myGroupId)))
 
   return (
     <Table.Row>
       <Table.Cell>{t("W{{week}}", { week })}</Table.Cell>
       <Table.Cell>{formatRange(range)}</Table.Cell>
       {eligibleOwners.map(o => {
-        const checked = ownersForWeek.includes(o.property_owner_id)
-        const isMyColumn = o.user_id === meUserId
+        const checked = ownersForWeek.includes(o.user_group_id)
+        const isMyColumn = o.user_group_id === myGroupId
         const editable = (isMyColumn || isAdmin) && !pending
         return (
-          <Table.Cell key={o.property_owner_id}>
+          <Table.Cell key={o.user_group_id}>
             <Radio
               aria-label={t("W{{week}} – {{name}}", {
                 week,
-                name: o.user_name,
+                name: o.user_group_name,
               })}
-              name={`priority-week-owner-${String(o.property_owner_id)}`}
+              name={`priority-week-owner-${String(o.user_group_id)}`}
               value={String(week)}
               checked={checked}
               disabled={!editable}
               onChange={() => {
-                onAssign(o.property_owner_id, week)
+                onAssign(o.user_group_id, week)
               }}
             />
           </Table.Cell>
@@ -72,9 +70,9 @@ export function PriorityWeekRow({
             data-size="sm"
             disabled={pending}
             onClick={() => {
-              const targetOwnerId = isAdmin ? ownersForWeek[0] : myOwnerId
-              if (targetOwnerId == null) return
-              onClear(targetOwnerId)
+              const targetGroupId = isAdmin ? ownersForWeek[0] : myGroupId
+              if (targetGroupId == null) return
+              onClear(targetGroupId)
             }}
           >
             {t("Clear")}

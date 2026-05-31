@@ -15,7 +15,9 @@ export function ExpensesTestForm() {
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { data: categories } = useSuspenseQuery(
-    trpc.expenseCategory.list.queryOptions(),
+    trpc.expenseCategory.list.queryOptions({
+      property_id: selectedPropertyId ?? 0,
+    }),
   )
 
   const createMutation = useMutationWithInvalidation(

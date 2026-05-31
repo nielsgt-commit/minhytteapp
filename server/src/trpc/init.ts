@@ -1,8 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server"
-import { and, eq, or } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 import type { db as dbClient } from "../db/client.ts"
-import { propertyOwnersTable } from "../db/schema/property.schema.ts"
 import {
   userGroupMembersTable,
   userGroupsTable,
@@ -31,7 +30,7 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 })
 
 export const headOrAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!ctx.user.is_admin && !ctx.user.is_head) {
+  if (!ctx.user.is_admin && !ctx.user.is_head_anywhere) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "head or admin role required",
@@ -40,33 +39,50 @@ export const headOrAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx })
 })
 
+export async function isPropertyHead(
+  db: Db,
+  user: AuthUser,
+  propertyId: number,
+): Promise<boolean> {
+  if (user.is_admin) return true
+  const rows = await db
+    .select({ user_id: userGroupMembersTable.user_id })
+    .from(userGroupMembersTable)
+    .innerJoin(
+      userGroupsTable,
+      eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+    )
+    .where(
+      and(
+        eq(userGroupMembersTable.user_id, user.id),
+        eq(userGroupMembersTable.is_head, true),
+        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.property_id, propertyId),
+      ),
+    )
+    .limit(1)
+  return rows.length > 0
+}
+
+export async function assertPropertyHead(
+  db: Db,
+  user: AuthUser,
+  propertyId: number,
+) {
+  if (!(await isPropertyHead(db, user, propertyId))) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "head or admin role required for this property",
+    })
+  }
+}
+
 export async function assertPropertyMember(
   db: Db,
   user: AuthUser,
   propertyId: number,
 ) {
   if (user.is_admin) return
-  const viaOwners = await db
-    .select({ id: propertyOwnersTable.id })
-    .from(propertyOwnersTable)
-    .leftJoin(
-      userGroupMembersTable,
-      eq(
-        userGroupMembersTable.user_group_id,
-        propertyOwnersTable.user_group_id,
-      ),
-    )
-    .where(
-      and(
-        eq(propertyOwnersTable.property_id, propertyId),
-        or(
-          eq(propertyOwnersTable.user_id, user.id),
-          eq(userGroupMembersTable.user_id, user.id),
-        ),
-      ),
-    )
-    .limit(1)
-  if (viaOwners.length > 0) return
 
   const viaGroupLink = await db
     .select({ id: userGroupsTable.id })
@@ -91,5 +107,12 @@ export const propertyAdminProcedure = protectedProcedure
   .input(z.object({ property_id: z.number().int().positive() }))
   .use(async ({ ctx, input, next }) => {
     await assertPropertyMember(ctx.db, ctx.user, input.property_id)
+    return next()
+  })
+
+export const propertyHeadOrAdminProcedure = protectedProcedure
+  .input(z.object({ property_id: z.number().int().positive() }))
+  .use(async ({ ctx, input, next }) => {
+    await assertPropertyHead(ctx.db, ctx.user, input.property_id)
     return next()
   })

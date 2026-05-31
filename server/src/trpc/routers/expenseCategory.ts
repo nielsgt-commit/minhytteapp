@@ -1,25 +1,34 @@
 import { TRPCError } from "@trpc/server"
-import { asc, eq, isNull, sql } from "drizzle-orm"
+import { and, asc, eq, isNull, sql } from "drizzle-orm"
 import { z } from "zod"
 import {
   expenseCategoriesTable,
   expensesTable,
 } from "../../db/schema/settlement.schema.ts"
-import { headOrAdminProcedure, protectedProcedure, router } from "../init.ts"
+import {
+  propertyAdminProcedure,
+  propertyHeadOrAdminProcedure,
+  router,
+} from "../init.ts"
 
 export const expenseCategoryRouter = router({
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: propertyAdminProcedure.query(async ({ ctx, input }) => {
     return ctx.db
       .select({
         id: expenseCategoriesTable.id,
         name: expenseCategoriesTable.name,
       })
       .from(expenseCategoriesTable)
-      .where(isNull(expenseCategoriesTable.archived_at))
+      .where(
+        and(
+          eq(expenseCategoriesTable.property_id, input.property_id),
+          isNull(expenseCategoriesTable.archived_at),
+        ),
+      )
       .orderBy(asc(expenseCategoriesTable.name))
   }),
 
-  listAllForDisplay: protectedProcedure.query(async ({ ctx }) => {
+  listAllForDisplay: propertyAdminProcedure.query(async ({ ctx, input }) => {
     return ctx.db
       .select({
         id: expenseCategoriesTable.id,
@@ -27,20 +36,21 @@ export const expenseCategoryRouter = router({
         archived_at: expenseCategoriesTable.archived_at,
       })
       .from(expenseCategoriesTable)
+      .where(eq(expenseCategoriesTable.property_id, input.property_id))
       .orderBy(asc(expenseCategoriesTable.name))
   }),
 
-  create: headOrAdminProcedure
+  create: propertyHeadOrAdminProcedure
     .input(z.object({ name: z.string().trim().min(1).max(64) }))
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
         .insert(expenseCategoriesTable)
-        .values({ name: input.name })
+        .values({ name: input.name, property_id: input.property_id })
         .returning()
       return created
     }),
 
-  rename: headOrAdminProcedure
+  rename: propertyHeadOrAdminProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -52,13 +62,14 @@ export const expenseCategoryRouter = router({
         const existing = (
           await tx
             .select({
+              property_id: expenseCategoriesTable.property_id,
               name: expenseCategoriesTable.name,
               archived_at: expenseCategoriesTable.archived_at,
             })
             .from(expenseCategoriesTable)
             .where(eq(expenseCategoriesTable.id, input.id))
         ).at(0)
-        if (!existing) {
+        if (existing?.property_id !== input.property_id) {
           throw new TRPCError({ code: "NOT_FOUND" })
         }
         if (existing.archived_at != null) {
@@ -73,43 +84,54 @@ export const expenseCategoryRouter = router({
           .where(eq(expenseCategoriesTable.id, input.id))
           .returning()
         if (existing.name !== input.name) {
-          await tx.update(expensesTable).set({
-            expense_types: sql`array_replace(${expensesTable.expense_types}, ${existing.name}, ${input.name})`,
-          })
+          await tx
+            .update(expensesTable)
+            .set({
+              expense_types: sql`array_replace(${expensesTable.expense_types}, ${existing.name}, ${input.name})`,
+            })
+            .where(eq(expensesTable.property_id, input.property_id))
         }
         return updated
       })
     }),
 
-  archive: headOrAdminProcedure
+  archive: propertyHeadOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const archived = (
+      const existing = (
         await ctx.db
-          .update(expenseCategoriesTable)
-          .set({ archived_at: new Date() })
+          .select({ property_id: expenseCategoriesTable.property_id })
+          .from(expenseCategoriesTable)
           .where(eq(expenseCategoriesTable.id, input.id))
-          .returning()
       ).at(0)
-      if (!archived) {
+      if (existing?.property_id !== input.property_id) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
+      const [archived] = await ctx.db
+        .update(expenseCategoriesTable)
+        .set({ archived_at: new Date() })
+        .where(eq(expenseCategoriesTable.id, input.id))
+        .returning()
       return archived
     }),
 
-  unarchive: headOrAdminProcedure
+  unarchive: propertyHeadOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const unarchived = (
+      const existing = (
         await ctx.db
-          .update(expenseCategoriesTable)
-          .set({ archived_at: null })
+          .select({ property_id: expenseCategoriesTable.property_id })
+          .from(expenseCategoriesTable)
           .where(eq(expenseCategoriesTable.id, input.id))
-          .returning()
       ).at(0)
-      if (!unarchived) {
+      if (existing?.property_id !== input.property_id) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
+      const [unarchived] = await ctx.db
+        .update(expenseCategoriesTable)
+        .set({ archived_at: null })
+        .where(eq(expenseCategoriesTable.id, input.id))
+        .returning()
       return unarchived
     }),
 })

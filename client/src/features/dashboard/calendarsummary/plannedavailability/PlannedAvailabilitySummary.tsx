@@ -65,9 +65,9 @@ export default function PlannedAvailabilitySummary({
     const a = priority.assignments.find(x => x.iso_week === weekNumber)
     if (!a) return null
     const o = priority.eligibleOwners.find(
-      x => x.property_owner_id === a.property_owner_id,
+      x => x.user_group_id === a.user_group_id,
     )
-    return o?.user_name ?? null
+    return o?.user_group_name ?? null
   })()
 
   const [selectedDay, setSelectedDay] = useState<string | null>(() =>

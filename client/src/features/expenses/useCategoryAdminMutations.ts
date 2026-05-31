@@ -2,16 +2,18 @@ import { useState } from "react"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 
-export function useCategoryAdminMutations() {
+export function useCategoryAdminMutations(propertyId: number | null) {
   const trpc = useTRPC()
 
   const [newName, setNewName] = useState("")
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editingName, setEditingName] = useState("")
 
-  const categoryKey = [trpc.expenseCategory.list.queryKey()]
+  const categoryKey = [
+    trpc.expenseCategory.list.queryKey({ property_id: propertyId ?? 0 }),
+  ]
   const categoryAndExpenseKeys = [
-    trpc.expenseCategory.list.queryKey(),
+    trpc.expenseCategory.list.queryKey({ property_id: propertyId ?? 0 }),
     trpc.expense.pathKey(),
   ]
 
