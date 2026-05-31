@@ -21,6 +21,7 @@ import {
   type GeonorgeAddress,
 } from "@/features/property/register/AddressLookup"
 import PropertyEvents from "@/features/dashboard/propertyevents/PropertyEvents.tsx"
+import styles from "./PropertyInfo.module.css"
 
 type MatrikkelDraft = {
   address: string
@@ -242,20 +243,25 @@ export default function PropertyInfo() {
           )}
         </p>
         {showRegister && hasMatrikkel && (
-          <dl>
-            <dt>{t("Adressekode")}</dt>
-            <dd>{selectedProperty.adressekode ?? "—"}</dd>
-            <dt>{t("Kommunenummer")}</dt>
-            <dd>{selectedProperty.kommunenummer ?? "—"}</dd>
-            <dt>{t("Gnr")}</dt>
-            <dd>{selectedProperty.gardsnummer ?? "—"}</dd>
-            <dt>{t("Bnr")}</dt>
-            <dd>{selectedProperty.bruksnummer ?? "—"}</dd>
-            <dt>{t("Fnr")}</dt>
-            <dd>{selectedProperty.festenummer ?? "—"}</dd>
-            <dt>{t("Snr")}</dt>
-            <dd>{selectedProperty.undernummer ?? "—"}</dd>
-          </dl>
+          <Card data-color="neutral">
+            <Card.Block className={styles.register}>
+              {(
+                [
+                  [t("Adressekode"), selectedProperty.adressekode],
+                  [t("Kommunenummer"), selectedProperty.kommunenummer],
+                  [t("Gnr"), selectedProperty.gardsnummer],
+                  [t("Bnr"), selectedProperty.bruksnummer],
+                  [t("Fnr"), selectedProperty.festenummer],
+                  [t("Snr"), selectedProperty.undernummer],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label} className={styles.registerRow}>
+                  <span className={styles.registerLabel}>{label}:</span>
+                  <span>{value ?? "—"}</span>
+                </div>
+              ))}
+            </Card.Block>
+          </Card>
         )}
         <p>
           {t("This property has been in the family since:")}{" "}

@@ -33,9 +33,6 @@ export default function CalendarSummary() {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">
-              {t("Availability")}
-            </Heading>
             <PlannedAvailabilitySummary
               weekStart={weekStart}
               onWeekStartChange={setWeekStart}
@@ -46,9 +43,6 @@ export default function CalendarSummary() {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">
-              {t("Planned maintenance")}
-            </Heading>
             <PlannedMaintenanceSummary mode="this-week" weekStart={weekStart} />
           </Card.Block>
         </section>

@@ -11,6 +11,7 @@ import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { ErrorAlert } from "./ErrorAlert"
+import styles from "./ChildrenSection.module.css"
 
 export function ChildrenSection() {
   const { t } = useTranslation("usersettings")
@@ -79,16 +80,18 @@ export function ChildrenSection() {
     <section>
       <Heading level={2}>{t("My children (under 13)")}</Heading>
       {children && children.length > 0 ? (
-        <ul>
+        <ul className={styles.list}>
           {children.map(c => (
             <li key={c.id}>
               {editingId === c.id ? (
                 <form
+                  className={styles.row}
                   onSubmit={e => {
                     handleEditSubmit(e, c.id)
                   }}
                 >
                   <Textfield
+                    className={styles.field}
                     label={t("Name")}
                     type="text"
                     value={editDraft}
@@ -113,8 +116,8 @@ export function ChildrenSection() {
                   </Button>
                 </form>
               ) : (
-                <>
-                  <span>{c.name}</span>
+                <div className={styles.row}>
+                  <span className={styles.name}>{c.name}</span>
                   <Button
                     type="button"
                     onClick={() => {
@@ -133,7 +136,7 @@ export function ChildrenSection() {
                   >
                     {t("Remove")}
                   </Button>
-                </>
+                </div>
               )}
             </li>
           ))}
@@ -146,10 +149,18 @@ export function ChildrenSection() {
       <form onSubmit={handleAddChild}>
         <Fieldset>
           <Fieldset.Legend>{t("Add child (under 13)")}</Fieldset.Legend>
-          <Textfield label={t("Name")} type="text" name="name" required />
-          <Button type="submit" disabled={createChild.isPending}>
-            {t("Add")}
-          </Button>
+          <div className={styles.row}>
+            <Textfield
+              className={styles.field}
+              label={t("Name")}
+              type="text"
+              name="name"
+              required
+            />
+            <Button type="submit" disabled={createChild.isPending}>
+              {t("Add")}
+            </Button>
+          </div>
           <ErrorAlert error={createChild.error} />
         </Fieldset>
       </form>

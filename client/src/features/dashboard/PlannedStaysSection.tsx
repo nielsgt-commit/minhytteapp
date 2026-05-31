@@ -35,9 +35,6 @@ export default function PlannedStaysSection({
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">
-              {t("Planned maintenance")}
-            </Heading>
             <PlannedMaintenanceSummary mode="rest" />
           </Card.Block>
         </section>

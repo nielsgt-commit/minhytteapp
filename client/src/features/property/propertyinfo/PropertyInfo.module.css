@@ -1,0 +1,15 @@
+.register {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.registerRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.registerLabel {
+  font-weight: var(--ds-font-weight-medium, 500);
+}

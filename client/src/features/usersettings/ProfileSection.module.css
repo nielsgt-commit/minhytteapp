@@ -1,0 +1,11 @@
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  flex: 1;
+  min-width: 12rem;
+}

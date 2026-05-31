@@ -5,6 +5,7 @@ import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { ErrorAlert } from "./ErrorAlert"
+import styles from "./ProfileSection.module.css"
 
 type Me = {
   id: number
@@ -58,15 +59,18 @@ export function ProfileSection({ me }: ProfileSectionProps) {
       >
         <Fieldset>
           <Fieldset.Legend>{t("Display name")}</Fieldset.Legend>
-          <Textfield
-            label={t("Name")}
-            type="text"
-            name="name"
-            defaultValue={me.name}
-            required
-            key={`name-${String(me.id)}-${me.name}`}
-          />
-          <SubmitButton>{t("Save")}</SubmitButton>
+          <div className={styles.row}>
+            <Textfield
+              className={styles.field}
+              label={t("Name")}
+              type="text"
+              name="name"
+              defaultValue={me.name}
+              required
+              key={`name-${String(me.id)}-${me.name}`}
+            />
+            <SubmitButton>{t("Save")}</SubmitButton>
+          </div>
           <ErrorAlert error={updateName.error} />
         </Fieldset>
       </form>
@@ -85,14 +89,17 @@ export function ProfileSection({ me }: ProfileSectionProps) {
       >
         <Fieldset>
           <Fieldset.Legend>{t("Birthday")}</Fieldset.Legend>
-          <Textfield
-            label={t("Birthday")}
-            type="date"
-            name="birthday"
-            defaultValue={me.birthday ?? ""}
-            key={`birthday-${String(me.id)}-${me.birthday ?? ""}`}
-          />
-          <SubmitButton>{t("Save")}</SubmitButton>
+          <div className={styles.row}>
+            <Textfield
+              className={styles.field}
+              label={t("Birthday")}
+              type="date"
+              name="birthday"
+              defaultValue={me.birthday ?? ""}
+              key={`birthday-${String(me.id)}-${me.birthday ?? ""}`}
+            />
+            <SubmitButton>{t("Save")}</SubmitButton>
+          </div>
           <ErrorAlert error={updateBirthday.error} />
         </Fieldset>
       </form>

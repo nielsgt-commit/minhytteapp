@@ -77,6 +77,14 @@
   font-weight: 600;
 }
 
+/* Dark mode: the accent text token is too dark to see the chevrons — force white */
+[data-color-scheme="dark"] .flatpickr-prev-month svg,
+[data-color-scheme="dark"] .flatpickr-next-month svg,
+[data-color-scheme="dark"] .flatpickr-prev-month svg path,
+[data-color-scheme="dark"] .flatpickr-next-month svg path {
+  fill: #fff;
+}
+
 /* Weekday header */
 .flatpickr-weekdays {
   background: transparent;
