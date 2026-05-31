@@ -142,7 +142,6 @@ function MobileYearPanel() {
 }
 
 function MobileWeekPanel() {
-  const { t } = useTranslation("dashboard")
   const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
 
   return (

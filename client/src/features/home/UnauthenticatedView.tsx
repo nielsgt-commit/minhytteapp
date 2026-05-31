@@ -62,6 +62,7 @@ export function UnauthenticatedView() {
         <Textfield
           type="email"
           required
+          aria-label={t("Email")}
           placeholder={t("you@example.com")}
           value={email}
           onChange={e => {
