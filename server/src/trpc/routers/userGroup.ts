@@ -172,10 +172,10 @@ export const userGroupRouter = router({
   create: propertyAdminProcedure
     .input(z.object(userGroupFields))
     .mutation(async ({ ctx, input }) => {
-      const { property_id: _propId, ...rest } = input
+      const { property_id, ...rest } = input
       const [created] = await ctx.db
         .insert(userGroupsTable)
-        .values(rest)
+        .values({ ...rest, property_id })
         .returning()
       await ctx.db
         .insert(userGroupMembersTable)

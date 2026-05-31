@@ -17,6 +17,7 @@
     "db:check-ownership": "tsx server/src/db/check-ownership-consolidation.ts",
     "db:remap-priority-policies": "tsx server/src/db/remap-priority-week-policies.ts",
     "db:verify-0069": "tsx server/src/db/verify-0069.ts",
+    "db:backfill-group-property": "tsx server/src/db/backfill-group-property.ts",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "i18n:extract": "i18next-cli extract",
