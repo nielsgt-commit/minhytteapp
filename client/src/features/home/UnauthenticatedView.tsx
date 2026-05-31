@@ -1,5 +1,12 @@
 import { useState } from "react"
-import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Heading,
+  Paragraph,
+  Textfield,
+  ValidationMessage,
+} from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { signIn } from "@/auth/auth-client"
 import styles from "./Home.module.css"
@@ -52,7 +59,7 @@ export function UnauthenticatedView() {
           void handleSubmit(e)
         }}
       >
-        <input
+        <Textfield
           type="email"
           required
           placeholder={t("you@example.com")}
@@ -66,7 +73,9 @@ export function UnauthenticatedView() {
           {status === "sending" ? t("Sending…") : t("Send magic link")}
         </Button>
       </form>
-      {errorMsg ? <p role="alert">{errorMsg}</p> : null}
+      {errorMsg ? (
+        <ValidationMessage role="alert">{errorMsg}</ValidationMessage>
+      ) : null}
     </Card>
   )
 }
