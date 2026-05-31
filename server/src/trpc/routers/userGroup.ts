@@ -58,7 +58,7 @@ export async function relevantGroupIdsForProperty(
 
 const userGroupFields = {
   name: z.string().min(1, { error: "name is required" }),
-  is_main: z.boolean().optional(),
+  is_family: z.boolean().optional(),
 }
 
 async function fetchGroupsWithMembers(ctx: Context, groupIds: number[]) {
@@ -67,7 +67,7 @@ async function fetchGroupsWithMembers(ctx: Context, groupIds: number[]) {
     .select({
       id: userGroupsTable.id,
       name: userGroupsTable.name,
-      is_main: userGroupsTable.is_main,
+      is_family: userGroupsTable.is_family,
     })
     .from(userGroupsTable)
     .where(inArray(userGroupsTable.id, groupIds))

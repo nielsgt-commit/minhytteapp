@@ -126,7 +126,7 @@ export const propertyRouter = router({
           .insert(userGroupsTable)
           .values({
             name: ctx.user.name,
-            is_main: true,
+            is_family: true,
             property_id: created.id,
           })
           .returning()

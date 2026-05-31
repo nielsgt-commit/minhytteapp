@@ -12,7 +12,7 @@ import { db, pool } from "./client.ts"
 //
 // For every policy it walks config.rules[].when and config.fallback.when; for
 // kind === "during_priority_week" it maps property_owner_id -> the owner's family group id
-// (the group-owner's own group, or a user-owner's is_main group for that property) and
+// (the group-owner's own group, or a user-owner's is_family group for that property) and
 // rewrites the rule to { kind, user_group_id }. Policies whose refs can't be resolved are
 // reported and left untouched.
 //
@@ -49,7 +49,7 @@ async function loadOwnerToGroup(): Promise<Map<number, number | null>> {
              select g.id from user_group_members m
              join user_groups g on g.id = m.user_group_id
              where m.user_id = po.user_id
-               and g.is_main = true
+               and g.is_family = true
                and g.property_id = po.property_id
              limit 1
            )) as group_id

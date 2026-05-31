@@ -32,7 +32,7 @@ async function ensureMainGroupOfProperty(
     .where(
       and(
         eq(userGroupsTable.id, userGroupId),
-        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.is_family, true),
         eq(userGroupsTable.property_id, propertyId),
       ),
     )
@@ -61,7 +61,7 @@ export const priorityRouter = router({
         .from(userGroupsTable)
         .where(
           and(
-            eq(userGroupsTable.is_main, true),
+            eq(userGroupsTable.is_family, true),
             eq(userGroupsTable.property_id, input.property_id),
           ),
         )

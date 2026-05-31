@@ -10,7 +10,7 @@ vi.mock("react-i18next", () => ({
 const baseGroup = {
   id: 1,
   name: "Owners",
-  is_main: false,
+  is_family: false,
   members: [
     { user_id: 10, user_name: "Alice" },
     { user_id: 11, user_name: "Bob" },
@@ -60,9 +60,9 @@ describe("GroupCard", () => {
     expect(screen.getByText("Bob")).toBeInTheDocument()
   })
 
-  test("shows '(main)' marker when group.is_main is true", () => {
+  test("shows '(main)' marker when group.is_family is true", () => {
     render(
-      <GroupCard {...makeProps({ group: { ...baseGroup, is_main: true } })} />,
+      <GroupCard {...makeProps({ group: { ...baseGroup, is_family: true } })} />,
     )
     expect(screen.getByText("(main)")).toBeInTheDocument()
   })
@@ -137,7 +137,7 @@ describe("GroupCard", () => {
     expect(onRenameSubmit).toHaveBeenCalledTimes(1)
     expect(onRenameSubmit).toHaveBeenCalledWith({
       name: "Renamed",
-      is_main: true,
+      is_family: true,
     })
   })
 

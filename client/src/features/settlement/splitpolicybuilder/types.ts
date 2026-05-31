@@ -169,7 +169,7 @@ export function decodeExcept(v: string): ExceptItem | null {
 export type GroupWithMembers = {
   id: number
   name: string
-  is_main: boolean
+  is_family: boolean
   members: { user_id: number; user_name: string }[]
 }
 

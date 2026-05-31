@@ -166,7 +166,7 @@ async function listSettlementHeads(db: Db, propertyId: number) {
     .where(
       and(
         eq(userGroupsTable.property_id, propertyId),
-        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.is_family, true),
         eq(userGroupMembersTable.is_head, true),
       ),
     )
@@ -302,7 +302,7 @@ async function computePreviewSplit(
     .where(
       and(
         eq(propertyOwnersTable.property_id, propertyId),
-        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.is_family, true),
       ),
     )
   if (mainGroups.length === 0) {

@@ -6,7 +6,7 @@ import { fdBoolean, fdString } from "@/utils/formData"
 type CreateGroupFormProps = {
   pending: boolean
   onSubmit: (
-    input: { name: string; is_main: boolean },
+    input: { name: string; is_family: boolean },
     reset: () => void,
   ) => void
   onCancel: () => void
@@ -24,7 +24,7 @@ export function CreateGroupForm({
     const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
     if (!name) return
-    onSubmit({ name, is_main: fdBoolean(fd, "is_main") }, () => {
+    onSubmit({ name, is_family: fdBoolean(fd, "is_family") }, () => {
       form.reset()
     })
   }
@@ -43,7 +43,7 @@ export function CreateGroupForm({
           />
         </div>
         <div>
-          <Checkbox label={t("Main")} name="is_main" />
+          <Checkbox label={t("Main")} name="is_family" />
         </div>
         <div>
           <Button type="submit" disabled={pending}>

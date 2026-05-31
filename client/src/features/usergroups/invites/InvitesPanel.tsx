@@ -56,7 +56,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
   const { pending, error: lastError } = useMutationsStatus(add, remove)
 
   const entries = listQuery.data
-  const mainGroups = groupsQuery.data.filter(g => g.is_main)
+  const mainGroups = groupsQuery.data.filter(g => g.is_family)
   const groupName = (id: number | null) =>
     id == null ? null : (groupsQuery.data.find(g => g.id === id)?.name ?? null)
 

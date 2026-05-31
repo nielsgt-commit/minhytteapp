@@ -18,7 +18,7 @@ type Member = { user_id: number; user_name: string }
 type Group = {
   id: number
   name: string
-  is_main: boolean
+  is_family: boolean
   members: Member[]
 }
 
@@ -38,7 +38,7 @@ type GroupCardProps = {
   onStartRename: () => void
   onToggleAddMember: () => void
   onDelete: () => void
-  onRenameSubmit: (input: { name: string; is_main: boolean }) => Promise<void>
+  onRenameSubmit: (input: { name: string; is_family: boolean }) => Promise<void>
   onAddMember: (userId: number, reset: () => void) => void
   onCreateAndAddMember: (name: string, reset: () => void) => void
   onSwitchToCreateUser: () => void
@@ -80,7 +80,7 @@ export function GroupCard({
         const name = fdString(fd, "name").trim()
         if (!name) return
         try {
-          await onRenameSubmit({ name, is_main: fdBoolean(fd, "is_main") })
+          await onRenameSubmit({ name, is_family: fdBoolean(fd, "is_family") })
         } catch {
           /* surfaced by caller */
         }
@@ -101,8 +101,8 @@ export function GroupCard({
         <div>
           <Checkbox
             label={t("Main")}
-            name="is_main"
-            defaultChecked={group.is_main}
+            name="is_family"
+            defaultChecked={group.is_family}
           />
         </div>
         <div>
@@ -134,7 +134,7 @@ export function GroupCard({
               <>
                 <Heading level={4}>
                   {group.name}
-                  {group.is_main && <small> {t("(main)")}</small>}
+                  {group.is_family && <small> {t("(main)")}</small>}
                 </Heading>
                 <p>{t("{{count}} member", { count: group.members.length })}</p>
               </>

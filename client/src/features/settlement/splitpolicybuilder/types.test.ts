@@ -29,7 +29,7 @@ const groups: GroupWithMembers[] = [
   {
     id: 1,
     name: "Alpha",
-    is_main: true,
+    is_family: true,
     members: [
       { user_id: 10, user_name: "Alice" },
       { user_id: 11, user_name: "Bob" },
@@ -38,7 +38,7 @@ const groups: GroupWithMembers[] = [
   {
     id: 2,
     name: "Beta",
-    is_main: false,
+    is_family: false,
     members: [
       { user_id: 11, user_name: "Bob" },
       { user_id: 12, user_name: "Carol" },

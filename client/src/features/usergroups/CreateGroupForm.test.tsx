@@ -22,7 +22,7 @@ describe("CreateGroupForm", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
   })
 
-  test("submits name and is_main=false by default and exposes a reset", async () => {
+  test("submits name and is_family=false by default and exposes a reset", async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
@@ -38,11 +38,11 @@ describe("CreateGroupForm", () => {
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
     const [input, reset] = onSubmit.mock.calls[0]
-    expect(input).toEqual({ name: "Owners", is_main: false })
+    expect(input).toEqual({ name: "Owners", is_family: false })
     expect(typeof reset).toBe("function")
   })
 
-  test("submits is_main=true when checkbox is ticked and trims the name", async () => {
+  test("submits is_family=true when checkbox is ticked and trims the name", async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
@@ -59,7 +59,7 @@ describe("CreateGroupForm", () => {
 
     expect(onSubmit.mock.calls[0][0]).toEqual({
       name: "Family",
-      is_main: true,
+      is_family: true,
     })
   })
 

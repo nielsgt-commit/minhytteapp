@@ -3,18 +3,18 @@ import { sql } from "drizzle-orm"
 import { db, pool } from "./client.ts"
 
 // Pre-flight (and optional fix) for migration 0069, which makes property ownership
-// group-only: it folds each per-user owner row into the user's family (is_main) group
+// group-only: it folds each per-user owner row into the user's family (is_family) group
 // by SUMMING ownership_pct, then drops property_owners.user_id.
 //
 // MUST be run AFTER migration 0068 and BEFORE 0069 — it reads property_owners.user_id,
 // which 0069 removes.
 //
 // Checks:
-//   1. Orphan user-owners — a user-owner row whose user has no is_main (family) group
+//   1. Orphan user-owners — a user-owner row whose user has no is_family (family) group
 //      for that property. 0069 would DELETE these rows and their ownership_pct would be
-//      lost. --apply creates an is_main family group (the user as head) so the pct folds
+//      lost. --apply creates an is_family family group (the user as head) so the pct folds
 //      in during 0069.
-//   2. Users in 2+ is_main groups for one property — 0069's SUM would double-count.
+//   2. Users in 2+ is_family groups for one property — 0069's SUM would double-count.
 //      Reported only; must be resolved manually. --apply aborts if any exist.
 //   3. Projected per-property ownership_pct totals after consolidation (warns if != 100).
 //
@@ -59,7 +59,7 @@ async function findOrphans(): Promise<OrphanRow[]> {
         select 1 from user_group_members gm
         join user_groups g on g.id = gm.user_group_id
         where gm.user_id = po.user_id
-          and g.is_main = true
+          and g.is_family = true
           and g.property_id = po.property_id)
     order by po.property_id, u.name`)
   return r.rows
@@ -72,7 +72,7 @@ async function findDoubleMains(): Promise<DoubleMainRow[]> {
     from user_group_members gm
     join user_groups g on g.id = gm.user_group_id
     join users u on u.id = gm.user_id
-    where g.is_main = true and g.property_id is not null
+    where g.is_family = true and g.property_id is not null
     group by gm.user_id, u.name, g.property_id
     having count(*) > 1
     order by g.property_id, u.name`)
@@ -94,7 +94,7 @@ async function projectedTotals(): Promise<PctRow[]> {
 async function createFamilyGroup(orphan: OrphanRow): Promise<number> {
   return db.transaction(async tx => {
     const inserted = await tx.execute<{ id: number }>(sql`
-      insert into user_groups (name, is_main, property_id)
+      insert into user_groups (name, is_family, property_id)
       values (${orphan.user_name}, true, ${orphan.property_id})
       returning id`)
     const groupId = inserted.rows[0].id
@@ -130,7 +130,7 @@ async function main() {
     )
   }
 
-  console.log(`\n2) Users in 2+ is_main groups for one property: ${String(doubleMains.length)}`)
+  console.log(`\n2) Users in 2+ is_family groups for one property: ${String(doubleMains.length)}`)
   for (const d of doubleMains) {
     console.log(
       `   ${d.user_name} (#${String(d.user_id)}) on property ${String(d.property_id)}: ` +
@@ -146,7 +146,7 @@ async function main() {
 
   if (doubleMains.length > 0) {
     console.error(
-      `\nABORT: ${String(doubleMains.length)} user(s) belong to multiple is_main groups ` +
+      `\nABORT: ${String(doubleMains.length)} user(s) belong to multiple is_family groups ` +
         `for the same property; 0069 would double-count their share. Resolve these ` +
         `manually before applying.`,
     )
@@ -172,7 +172,7 @@ async function main() {
     const groupId = await createFamilyGroup(o)
     created++
     console.log(
-      `   created is_main group "${o.user_name}" (#${String(groupId)}) ` +
+      `   created is_family group "${o.user_name}" (#${String(groupId)}) ` +
         `for property ${String(o.property_id)}; user set as head`,
     )
   }

@@ -62,7 +62,7 @@ export default function UserMenu({ showCheckIn = true }: Props) {
   const mainGroup =
     selectedId != null && groups
       ? groups.find(
-          g => g.is_main && g.members.some(m => m.user_id === selectedId),
+          g => g.is_family && g.members.some(m => m.user_id === selectedId),
         )
       : undefined
 

@@ -91,10 +91,10 @@ export function useReviewSettlementData(settlementId: number) {
   const editableHeadId = iAmHead ? me.id : null
 
   const mainGroupForHead = (headId: number) =>
-    groups.find(g => g.is_main && g.members.some(m => m.user_id === headId))
+    groups.find(g => g.is_family && g.members.some(m => m.user_id === headId))
 
   const mainGroupForUser = (userId: number) =>
-    groups.find(g => g.is_main && g.members.some(m => m.user_id === userId))
+    groups.find(g => g.is_family && g.members.some(m => m.user_id === userId))
 
   const groupBookingDays = (memberIds: Set<number>) =>
     bookings

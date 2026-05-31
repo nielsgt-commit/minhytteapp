@@ -56,7 +56,7 @@ export async function isPropertyHead(
       and(
         eq(userGroupMembersTable.user_id, user.id),
         eq(userGroupMembersTable.is_head, true),
-        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.is_family, true),
         eq(userGroupsTable.property_id, propertyId),
       ),
     )

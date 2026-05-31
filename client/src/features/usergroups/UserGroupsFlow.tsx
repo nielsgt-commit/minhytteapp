@@ -77,7 +77,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   )
 
   const handleCreate = (
-    input: { name: string; is_main: boolean },
+    input: { name: string; is_family: boolean },
     reset: () => void,
   ) => {
     createGroup.mutate(
@@ -92,7 +92,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   }
 
   const handleRename =
-    (groupId: number) => async (input: { name: string; is_main: boolean }) => {
+    (groupId: number) => async (input: { name: string; is_family: boolean }) => {
       await updateGroup.mutateAsync({
         id: groupId,
         ...input,

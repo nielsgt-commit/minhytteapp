@@ -142,26 +142,26 @@ async function main() {
     )
   }
 
-  // priority weeks pointing at a group that isn't an is_main group of that property
+  // priority weeks pointing at a group that isn't an is_family group of that property
   const oddWeekGroups = await countWhere(sql`
     select count(*)::int as n
     from property_priority_weeks pw
     join user_groups g on g.id = pw.user_group_id
-    where g.is_main = false or g.property_id is distinct from pw.property_id`)
+    where g.is_family = false or g.property_id is distinct from pw.property_id`)
   record(
     oddWeekGroups === 0 ? "PASS" : "WARN",
-    `priority weeks whose group isn't an is_main group of its property: ${String(oddWeekGroups)} (want 0)`,
+    `priority weeks whose group isn't an is_family group of its property: ${String(oddWeekGroups)} (want 0)`,
   )
 
-  // owner rows whose group isn't an is_main group of that property (informational)
+  // owner rows whose group isn't an is_family group of that property (informational)
   const nonMainOwners = await countWhere(sql`
     select count(*)::int as n
     from property_owners po
     join user_groups g on g.id = po.user_group_id
-    where g.is_main = false or g.property_id is distinct from po.property_id`)
+    where g.is_family = false or g.property_id is distinct from po.property_id`)
   record(
     nonMainOwners === 0 ? "PASS" : "WARN",
-    `owner rows whose group isn't an is_main group of its property: ${String(nonMainOwners)} (info)`,
+    `owner rows whose group isn't an is_family group of its property: ${String(nonMainOwners)} (info)`,
   )
 
   const fails = results.filter(r => r.status === "FAIL").length

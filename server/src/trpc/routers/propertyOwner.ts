@@ -49,7 +49,7 @@ export const propertyOwnerRouter = router({
           .where(
             and(
               eq(userGroupMembersTable.user_id, input.user_id),
-              eq(userGroupsTable.is_main, true),
+              eq(userGroupsTable.is_family, true),
               eq(userGroupsTable.property_id, input.property_id),
             ),
           )

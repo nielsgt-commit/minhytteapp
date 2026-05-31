@@ -14,7 +14,7 @@ export type AuthUser = {
   emailVerified: boolean
   image: string | null
   is_admin: boolean
-  // Derived: true if the user is a head-flagged member of any is_main group.
+  // Derived: true if the user is a head-flagged member of any is_family group.
   is_head_anywhere: boolean
   // Transitional alias kept equal to is_head_anywhere for client compat.
   is_head: boolean
@@ -59,7 +59,7 @@ export const createContext = async ({ req }: FetchCreateContextFnOptions) => {
       and(
         eq(userGroupMembersTable.user_id, id),
         eq(userGroupMembersTable.is_head, true),
-        eq(userGroupsTable.is_main, true),
+        eq(userGroupsTable.is_family, true),
       ),
     )
     .limit(1)

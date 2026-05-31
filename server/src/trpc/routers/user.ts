@@ -67,7 +67,7 @@ export const userRouter = router({
       .orderBy(asc(usersTable.id))
 
     // Per-property head flag (transitional `is_head` for the client list):
-    // head-flagged member of an is_main group of this property.
+    // head-flagged member of an is_family group of this property.
     const headRows = await ctx.db
       .selectDistinct({ user_id: userGroupMembersTable.user_id })
       .from(userGroupMembersTable)
@@ -79,7 +79,7 @@ export const userRouter = router({
         and(
           inArray(userGroupMembersTable.user_id, idList),
           eq(userGroupMembersTable.is_head, true),
-          eq(userGroupsTable.is_main, true),
+          eq(userGroupsTable.is_family, true),
           eq(userGroupsTable.property_id, input.property_id),
         ),
       )
@@ -99,7 +99,7 @@ export const userRouter = router({
         and(
           eq(userGroupMembersTable.user_id, ctx.user.id),
           eq(userGroupMembersTable.is_head, true),
-          eq(userGroupsTable.is_main, true),
+          eq(userGroupsTable.is_family, true),
         ),
       )
     const head_property_ids = headRows
@@ -124,7 +124,7 @@ export const userRouter = router({
       .where(
         and(
           eq(userGroupMembersTable.user_id, ctx.user.id),
-          eq(userGroupsTable.is_main, true),
+          eq(userGroupsTable.is_family, true),
         ),
       )
     const my_main_memberships = mainMembershipRows
@@ -181,7 +181,7 @@ export const userRouter = router({
           .where(
             and(
               eq(userGroupMembersTable.user_id, ctx.user.id),
-              eq(userGroupsTable.is_main, true),
+              eq(userGroupsTable.is_family, true),
               eq(userGroupsTable.property_id, input.property_id),
             ),
           )

@@ -57,13 +57,13 @@ export const userGroupsTable = pgTable(
   {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     name: varchar("name", { length: 255 }).notNull(),
-    is_main: boolean("is_main").notNull().default(false),
+    is_family: boolean("is_family").notNull().default(false),
     property_id: integer("property_id").references(
       (): AnyPgColumn => propertyTable.id,
     ),
   },
-  // NOTE: is_main marks a "family/household (owning) group" — a property can
-  // have several. The real invariant is "a user belongs to at most one main
+  // NOTE: is_family marks a "family/household (owning) group" — a property can
+  // have several. The real invariant is "a user belongs to at most one family
   // group per property", which spans user_group_members + user_groups and is
   // enforced in app logic, not a DB unique index.
 )

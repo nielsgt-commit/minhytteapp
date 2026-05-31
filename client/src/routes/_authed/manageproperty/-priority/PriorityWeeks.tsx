@@ -83,7 +83,7 @@ export function PriorityWeeks() {
   const lookups = buildOwnerLookups(eligibleOwners, assignments)
   const myMainGroup = me
     ? groupsQuery.data?.find(
-        g => g.is_main && g.members.some(m => m.user_id === me.id),
+        g => g.is_family && g.members.some(m => m.user_id === me.id),
       )
     : undefined
   const myGroupId =
