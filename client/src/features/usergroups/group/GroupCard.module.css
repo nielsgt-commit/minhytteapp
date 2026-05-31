@@ -17,3 +17,9 @@
   flex: 1;
   min-width: 0;
 }
+
+.addMember {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--ds-size-2);
+}

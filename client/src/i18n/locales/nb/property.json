@@ -207,7 +207,7 @@
   "yes": "ja",
   "Contacts": "Kontakter",
   "Equipment": "Utstyr",
-  "Group users together to share access, costs, or bookings.": "Grupper brukere sammen for å dele tilgang, kostnader eller bookinger.",
+  "Group users together to share access, costs, or bookings. A group can own a share of a property and roll up settlements, and can't be deleted while it's in use.": "Grupper brukere sammen for å dele tilgang, kostnader eller bookinger. En gruppe kan eie en andel av en eiendom og slå sammen oppgjør, og kan ikke slettes mens den er i bruk.",
   "Habitable": "Beboelig",
   "Infrastructure": "Infrastruktur",
   "Name, address, link, and basic facts about the property.": "Navn, adresse, lenke og grunnleggende fakta om eiendommen.",

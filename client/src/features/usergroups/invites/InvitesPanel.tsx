@@ -103,9 +103,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
         <Card.Block>
           <Heading level={3}>{t("Invites")}</Heading>
           <p>
-            {t(
-              "People with these emails can request a sign-in link, even if they don't have an invite yet.",
-            )}
+            {t("People with these emails can request a sign-in link.")}
           </p>
 
           {lastError && (

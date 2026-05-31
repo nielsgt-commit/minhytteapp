@@ -2,6 +2,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Divider,
   Heading,
   Textfield,
 } from "@digdir/designsystemet-react"
@@ -157,8 +158,39 @@ export function GroupCard({
             }
           />
 
+          <Divider />
+
+          {group.members.length === 0 ? (
+            <p>{t("No members yet.")}</p>
+          ) : (
+            <ul className={styles.memberList}>
+              {group.members.map(m => (
+                <li key={m.user_id} className={styles.memberRow}>
+                  <span className={styles.memberName}>{m.user_name}</span>
+                  {canEdit && (
+                    <Button
+                      type="button"
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      aria-label={t("Remove {{userName}} from group", {
+                        userName: m.user_name,
+                      })}
+                      onClick={() => {
+                        onRemoveMember(m.user_id, m.user_name)
+                      }}
+                    >
+                      {t("Remove")}
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
           {canEdit && !isRenaming && (
-            <div>
+            <div className={styles.addMember}>
               <Button
                 type="button"
                 variant="secondary"
@@ -190,35 +222,6 @@ export function GroupCard({
               onSubmit={onCreateAndAddMember}
               onBack={onBackFromCreateUser}
             />
-          )}
-
-          {group.members.length === 0 ? (
-            <p>{t("No members yet.")}</p>
-          ) : (
-            <ul className={styles.memberList}>
-              {group.members.map(m => (
-                <li key={m.user_id} className={styles.memberRow}>
-                  <span className={styles.memberName}>{m.user_name}</span>
-                  {canEdit && (
-                    <Button
-                      type="button"
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      disabled={pending}
-                      aria-label={t("Remove {{userName}} from group", {
-                        userName: m.user_name,
-                      })}
-                      onClick={() => {
-                        onRemoveMember(m.user_id, m.user_name)
-                      }}
-                    >
-                      {t("Remove")}
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ul>
           )}
         </Card.Block>
       </li>

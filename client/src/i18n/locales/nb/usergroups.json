@@ -3,6 +3,7 @@
   "(none)": "(ingen)",
   "{{count}} member_one": "{{count}} medlem",
   "{{count}} member_other": "{{count}} medlemmer",
+  "+ Add group": "+ Legg til gruppe",
   "+ Add user": "+ Legg til bruker",
   "Accepted": "Akseptert",
   "Actions": "Handlinger",
@@ -34,7 +35,6 @@
   "Error: {{message}}": "Feil: {{message}}",
   "Give access to this property": "Gi tilgang til denne eiendommen",
   "Group": "Gruppe",
-  "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.": "Grupper samler brukere slik at du kan tildele gruppeeierskap til en eiendom og slå sammen oppgjør. Sletting av en gruppe blokkeres mens den er i bruk.",
   "Invites": "Invitasjoner",
   "Main": "Hoved",
   "Name": "Navn",
@@ -46,7 +46,7 @@
   "No users yet.": "Ingen brukere ennå.",
   "Ownership %": "Eierandel %",
   "Pending": "Venter",
-  "People with these emails can request a sign-in link, even if they don't have an invite yet.": "Personer med disse e-postadressene kan be om en innloggingslenke, selv om de ikke har en invitasjon ennå.",
+  "People with these emails can request a sign-in link.": "Personer med disse e-postadressene kan be om en innloggingslenke.",
   "Placeholder email — this user can't sign in until it is replaced with a real address.": "Plassholder-e-post – denne brukeren kan ikke logge inn før den erstattes med en ekte adresse.",
   "Remove": "Fjern",
   "Remove invite {{email}}": "Fjern invitasjon {{email}}",
@@ -65,6 +65,5 @@
   "Select user": "Velg bruker",
   "user": "bruker",
   "User": "Bruker",
-  "User groups": "Brukergrupper",
   "Users": "Brukere"
 }

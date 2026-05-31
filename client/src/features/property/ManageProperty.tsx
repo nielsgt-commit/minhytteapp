@@ -37,7 +37,8 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     "/administrer/brukergrupper",
     {
       title: "User groups",
-      description: "Group users together to share access, costs, or bookings.",
+      description:
+        "Group users together to share access, costs, or bookings. A group can own a share of a property and roll up settlements, and can't be deleted while it's in use.",
     },
   ],
   [

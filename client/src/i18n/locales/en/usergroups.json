@@ -3,6 +3,7 @@
   "(none)": "(none)",
   "{{count}} member_one": "{{count}} member",
   "{{count}} member_other": "{{count}} members",
+  "+ Add group": "+ Add group",
   "+ Add user": "+ Add user",
   "Accepted": "Accepted",
   "Add": "Add",
@@ -31,7 +32,6 @@
   "Error: {{message}}": "Error: {{message}}",
   "Give access to this property": "Give access to this property",
   "Group": "Group",
-  "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.": "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.",
   "Invites": "Invites",
   "Main": "Main",
   "Name": "Name",
@@ -43,7 +43,7 @@
   "No users yet.": "No users yet.",
   "Ownership %": "Ownership %",
   "Pending": "Pending",
-  "People with these emails can request a sign-in link, even if they don't have an invite yet.": "People with these emails can request a sign-in link, even if they don't have an invite yet.",
+  "People with these emails can request a sign-in link.": "People with these emails can request a sign-in link.",
   "Placeholder email — this user can't sign in until it is replaced with a real address.": "Placeholder email — this user can't sign in until it is replaced with a real address.",
   "Remove": "Remove",
   "Remove {{email}} from the allowlist?": "Remove {{email}} from the allowlist?",
@@ -60,6 +60,5 @@
   "Select user": "Select user",
   "user": "user",
   "User": "User",
-  "User groups": "User groups",
   "Users": "Users"
 }

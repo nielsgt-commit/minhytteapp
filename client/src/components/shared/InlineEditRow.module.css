@@ -1,6 +1,17 @@
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.content {
+  min-width: 0;
+}
+
 .actions {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  margin-left: auto;
+  flex-shrink: 0;
 }

@@ -183,7 +183,7 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
         {infrastructure.map(p => (
           <Card asChild key={p.id}>
             <li>
-              <Card.Block className={styles.row}>
+              <Card.Block>
                 <InlineEditRow
                   editing={editingId === p.id}
                   canEdit={canEdit}

@@ -1,7 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Heading } from "@digdir/designsystemet-react"
+import { Button, Card } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -171,50 +171,47 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
 
   return (
     <section>
-      <Heading level={2}>{t("User groups")}</Heading>
-      <p>
-        {t(
-          "Groups bundle users so you can assign group ownership on a property and roll up settlements. Deleting a group is blocked while it is in use.",
-        )}
-      </p>
-
       {lastError && (
         <p role="alert">
           {t("Error: {{message}}", { message: lastError.message })}
         </p>
       )}
 
-      {canEdit && (
-        <div>
-          <Button
-            type="button"
-            disabled={pending}
-            onClick={() => {
-              setOpenForm(v =>
-                v?.kind === "create" ? null : { kind: "create" },
-              )
-            }}
-          >
-            {openForm?.kind === "create" ? t("Cancel") : t("New group")}
-          </Button>
-        </div>
-      )}
+      <ul className={styles.groupList}>
+        {canEdit && (
+          <Card asChild>
+            <li>
+              <Card.Block>
+                {openForm?.kind === "create" ? (
+                  <CreateGroupForm
+                    pending={createGroup.isPending}
+                    onSubmit={handleCreate}
+                    onCancel={() => {
+                      setOpenForm(null)
+                    }}
+                  />
+                ) : (
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    className={styles.addGroup}
+                    disabled={pending}
+                    onClick={() => {
+                      setOpenForm({ kind: "create" })
+                    }}
+                  >
+                    {t("+ Add group")}
+                  </Button>
+                )}
+              </Card.Block>
+            </li>
+          </Card>
+        )}
 
-      {openForm?.kind === "create" && (
-        <CreateGroupForm
-          pending={createGroup.isPending}
-          onSubmit={handleCreate}
-          onCancel={() => {
-            setOpenForm(null)
-          }}
-        />
-      )}
-
-      {groups.length === 0 ? (
-        <p>{t("No groups yet.")}</p>
-      ) : (
-        <ul className={styles.groupList}>
-          {groups.map(g => {
+        {groups.length === 0 && !canEdit ? (
+          <p>{t("No groups yet.")}</p>
+        ) : (
+          groups.map(g => {
             const memberIds = new Set(g.members.map(m => m.user_id))
             const availableUsers = users.filter(u => !memberIds.has(u.id))
             const isRenaming =
@@ -267,9 +264,9 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
                 }}
               />
             )
-          })}
-        </ul>
-      )}
+          })
+        )}
+      </ul>
     </section>
   )
 }

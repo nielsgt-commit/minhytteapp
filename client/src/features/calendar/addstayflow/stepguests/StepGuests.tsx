@@ -63,23 +63,20 @@ export function StepGuests({
           <Label>{t("Add guests")}</Label>
           <Suggestion
             multiple
-            selected={draft.occupants
-              .filter(o => o.user_id !== selectedUserId)
-              .map(o => {
-                const u = users.find(x => x.id === o.user_id)
-                return {
-                  value: String(o.user_id),
-                  label: u
-                    ? `${u.name}${u.is_child ? t(" (child)") : ""}`
-                    : `#${String(o.user_id)}`,
-                }
-              })}
+            selected={draft.occupants.map(o => {
+              const u = users.find(x => x.id === o.user_id)
+              const isBooker = o.user_id === selectedUserId
+              return {
+                value: String(o.user_id),
+                label: u
+                  ? `${u.name}${isBooker ? t(" (you)") : ""}${u.is_child ? t(" (child)") : ""}`
+                  : `#${String(o.user_id)}`,
+              }
+            })}
             onSelectedChange={(newItems: SuggestionItem[]) => {
               const newIds = new Set(newItems.map(i => Number(i.value)))
               const currentIds = new Set(
-                draft.occupants
-                  .filter(o => o.user_id !== selectedUserId)
-                  .map(o => o.user_id),
+                draft.occupants.map(o => o.user_id),
               )
               let added = false
               for (const item of newItems) {
@@ -90,6 +87,8 @@ export function StepGuests({
                 }
               }
               for (const uid of currentIds) {
+                // The booker is always part of the stay — never remove them.
+                if (uid === selectedUserId) continue
                 if (!newIds.has(uid)) dispatch(removeOccupant(uid))
               }
               if (added && guestInputRef.current) {

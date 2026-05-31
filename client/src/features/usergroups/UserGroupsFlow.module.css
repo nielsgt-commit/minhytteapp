@@ -1,6 +1,6 @@
 .groupList {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--ds-size-4);
   list-style: none;
   padding: 0;
@@ -9,4 +9,8 @@
 
 .groupList > li {
   margin: 0;
+}
+
+.addGroup {
+  width: 100%;
 }

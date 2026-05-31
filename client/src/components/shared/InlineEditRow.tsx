@@ -35,24 +35,24 @@ export function InlineEditRow({
 
   if (editing) return <>{form}</>
 
+  if (!canEdit) return <>{view}</>
+
   return (
-    <>
-      {view}
-      {canEdit && (
-        <div className={styles.actions}>
-          <Button
-            ref={editButtonRef}
-            variant="tertiary"
-            data-size="sm"
-            disabled={pending}
-            aria-label={editLabel}
-            onClick={onStartEdit}
-          >
-            {t("Edit")}
-          </Button>
-          {actions}
-        </div>
-      )}
-    </>
+    <div className={styles.row}>
+      <div className={styles.content}>{view}</div>
+      <div className={styles.actions}>
+        <Button
+          ref={editButtonRef}
+          variant="tertiary"
+          data-size="sm"
+          disabled={pending}
+          aria-label={editLabel}
+          onClick={onStartEdit}
+        >
+          {t("Edit")}
+        </Button>
+        {actions}
+      </div>
+    </div>
   )
 }

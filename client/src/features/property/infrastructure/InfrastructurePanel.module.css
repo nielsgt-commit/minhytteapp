@@ -18,12 +18,6 @@
   gap: 0.5rem;
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .rowName {
   flex: 1;
   min-width: 0;
