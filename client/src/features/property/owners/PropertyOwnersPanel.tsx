@@ -85,7 +85,9 @@ export function PropertyOwnersPanel() {
   if (selectedPropertyId == null) {
     return (
       <div className={section.column}>
-        <Paragraph>{t("No property selected. Pick one from the header.")}</Paragraph>
+        <Paragraph>
+          {t("No property selected. Pick one from the header.")}
+        </Paragraph>
       </div>
     )
   }

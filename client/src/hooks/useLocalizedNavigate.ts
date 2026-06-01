@@ -6,7 +6,7 @@ export function useSwitchLocale() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
-  return (targetLocale: 'en' | 'nb') => {
+  return (targetLocale: "en" | "nb") => {
     void i18next.changeLanguage(targetLocale)
     const target = getEquivalentRoute(pathname, targetLocale)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

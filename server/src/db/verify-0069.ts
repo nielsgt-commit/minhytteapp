@@ -75,7 +75,10 @@ async function main() {
   )
 
   const xorGone = !(await constraintExists("property_owners_exactly_one_ref"))
-  record(xorGone ? "PASS" : "FAIL", `property_owners XOR check removed: ${String(xorGone)}`)
+  record(
+    xorGone ? "PASS" : "FAIL",
+    `property_owners XOR check removed: ${String(xorGone)}`,
+  )
 
   // ===== HARD checks: no NULL group refs (NOT NULL columns) =====
   const nullOwnerGroups = await countWhere(
@@ -96,7 +99,10 @@ async function main() {
 
   // ===== SOFT checks: data sanity =====
   // per-property ownership totals != 100
-  const badTotals = await db.execute<{ property_id: number; total: string }>(sql`
+  const badTotals = await db.execute<{
+    property_id: number
+    total: string
+  }>(sql`
     select property_id, sum(ownership_pct)::text as total
     from property_owners group by property_id having sum(ownership_pct) <> 100
     order by property_id`)
@@ -106,7 +112,9 @@ async function main() {
     record(
       "WARN",
       `${String(badTotals.rows.length)} property(ies) do NOT sum to 100: ` +
-        badTotals.rows.map(r => `#${String(r.property_id)}=${r.total}`).join(", "),
+        badTotals.rows
+          .map(r => `#${String(r.property_id)}=${r.total}`)
+          .join(", "),
     )
   }
 
@@ -132,7 +140,10 @@ async function main() {
         and (p.config->'fallback'->'when') ? 'property_owner_id')
     order by id`)
   if (stalePolicies.rows.length === 0) {
-    record("PASS", "no split policy still references property_owner_id in during_priority_week")
+    record(
+      "PASS",
+      "no split policy still references property_owner_id in during_priority_week",
+    )
   } else {
     record(
       "WARN",

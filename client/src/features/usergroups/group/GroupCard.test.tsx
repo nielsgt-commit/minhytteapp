@@ -64,7 +64,9 @@ describe("GroupCard", () => {
 
   test("shows '(main)' marker when group.is_family is true", () => {
     render(
-      <GroupCard {...makeProps({ group: { ...baseGroup, is_family: true } })} />,
+      <GroupCard
+        {...makeProps({ group: { ...baseGroup, is_family: true } })}
+      />,
     )
     expect(screen.getByText("(main)")).toBeInTheDocument()
   })

@@ -18,12 +18,7 @@ import styles from "./BottomNavBar.module.css"
 // Aksel icons are SVG components; we just need a callable component type
 // that accepts the standard SVG props plus an optional fontSize.
 type IconComp = ComponentType<SVGProps<SVGSVGElement> & { fontSize?: string }>
-type NavLabel =
-  | "Dashboard"
-  | "Plan"
-  | "Expenses"
-  | "Maintenance"
-  | "Settlement"
+type NavLabel = "Dashboard" | "Plan" | "Expenses" | "Maintenance" | "Settlement"
 
 // typescript-eslint's project service occasionally reports the Aksel icon
 // imports as "error typed" even though `tsc` is happy with them, so we cast

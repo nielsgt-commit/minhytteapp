@@ -122,7 +122,9 @@ async function main() {
   const doubleMains = await findDoubleMains()
   const totals = await projectedTotals()
 
-  console.log(`\n1) Orphan user-owners (no family group for the property): ${String(orphans.length)}`)
+  console.log(
+    `\n1) Orphan user-owners (no family group for the property): ${String(orphans.length)}`,
+  )
   for (const o of orphans) {
     console.log(
       `   owner#${String(o.owner_id)} property ${String(o.property_id)} ` +
@@ -130,7 +132,9 @@ async function main() {
     )
   }
 
-  console.log(`\n2) Users in 2+ is_family groups for one property: ${String(doubleMains.length)}`)
+  console.log(
+    `\n2) Users in 2+ is_family groups for one property: ${String(doubleMains.length)}`,
+  )
   for (const d of doubleMains) {
     console.log(
       `   ${d.user_name} (#${String(d.user_id)}) on property ${String(d.property_id)}: ` +
@@ -138,7 +142,9 @@ async function main() {
     )
   }
 
-  console.log(`\n3) Projected per-property ownership_pct totals after consolidation:`)
+  console.log(
+    `\n3) Projected per-property ownership_pct totals after consolidation:`,
+  )
   for (const t of totals) {
     const flag = Number(t.total) === 100 ? "" : "  <-- not 100"
     console.log(`   property ${String(t.property_id)}: ${t.total}%${flag}`)
@@ -176,7 +182,9 @@ async function main() {
         `for property ${String(o.property_id)}; user set as head`,
     )
   }
-  console.log(`\nCreated ${String(created)} family group(s). Re-run (dry) to confirm 0 orphans.`)
+  console.log(
+    `\nCreated ${String(created)} family group(s). Re-run (dry) to confirm 0 orphans.`,
+  )
 }
 
 main()

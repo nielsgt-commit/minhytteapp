@@ -136,7 +136,9 @@ async function main() {
     const summary = r.changes
       .map(c => `owner#${String(c.from)}->group#${String(c.to)}`)
       .join(", ")
-    console.log(`   policy #${String(r.policy.id)} "${r.policy.name}": ${summary}`)
+    console.log(
+      `   policy #${String(r.policy.id)} "${r.policy.name}": ${summary}`,
+    )
   }
 
   if (withUnresolved.length > 0) {

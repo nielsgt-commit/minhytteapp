@@ -1,5 +1,10 @@
 import { type SyntheticEvent } from "react"
-import { Button, Fieldset, Paragraph, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Fieldset,
+  Paragraph,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./ContactAddForm.module.css"
 

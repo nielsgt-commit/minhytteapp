@@ -27,8 +27,8 @@ describe("GuestListView", () => {
     expect(screen.getByText("Cleo")).toBeInTheDocument()
   })
 
-  test("renders 'No guests' fallback when names is empty", () => {
-    render(<GuestListView names={[]} />)
-    expect(screen.getByText("No guests")).toBeInTheDocument()
+  test("renders nothing when names is empty", () => {
+    const { container } = render(<GuestListView names={[]} />)
+    expect(container).toBeEmptyDOMElement()
   })
 })

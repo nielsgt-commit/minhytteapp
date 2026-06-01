@@ -116,8 +116,7 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
       .map(a => ({
         iso_week: a.iso_week,
         owner_name:
-          ownerNameById.get(a.user_group_id) ??
-          `#${String(a.user_group_id)}`,
+          ownerNameById.get(a.user_group_id) ?? `#${String(a.user_group_id)}`,
       }))
   }, [draft.start_date, draft.end_date, priorityData])
 

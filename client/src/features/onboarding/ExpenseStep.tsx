@@ -50,7 +50,10 @@ export function ExpenseStep() {
     const trimmed = name.trim()
     if (!trimmed || existingNames.has(trimmed.toLowerCase())) return
     try {
-      await createCategory.mutateAsync({ property_id: propertyId, name: trimmed })
+      await createCategory.mutateAsync({
+        property_id: propertyId,
+        name: trimmed,
+      })
     } catch {
       /* surfaced via lastError */
     }

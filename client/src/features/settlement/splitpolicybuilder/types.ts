@@ -236,9 +236,7 @@ export function describeExcept(item: ExceptItem, groups: GroupWithMembers[]) {
 
 export function describeWhen(w: When, eligibleOwners: EligibleOwner[]): string {
   if (w.kind === "during_priority_week") {
-    const owner = eligibleOwners.find(
-      o => o.user_group_id === w.user_group_id,
-    )
+    const owner = eligibleOwners.find(o => o.user_group_id === w.user_group_id)
     return owner
       ? `${owner.user_group_name}'s priority week`
       : `priority week (group #${String(w.user_group_id)})`

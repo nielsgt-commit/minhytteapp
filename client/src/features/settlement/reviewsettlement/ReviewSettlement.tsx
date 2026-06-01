@@ -11,7 +11,10 @@ import styles from "./ReviewSettlement.module.css"
 import expenseRowStyles from "./SettlementExpenseRow.module.css"
 import { SettlementExpenseRow } from "./SettlementExpenseRow"
 import { useHeadVisibility } from "./useHeadVisibility"
-import { type ExpenseRow, useReviewSettlementData } from "./useReviewSettlementData"
+import {
+  type ExpenseRow,
+  useReviewSettlementData,
+} from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
 import {
   NEXT_PHASE,

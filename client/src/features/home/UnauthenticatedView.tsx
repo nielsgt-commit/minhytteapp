@@ -110,9 +110,7 @@ export function UnauthenticatedView() {
             ) : (
               <List.Ordered data-size="sm">
                 <List.Item>{t("Open minhytte.app in Chrome.")}</List.Item>
-                <List.Item>
-                  {t("Tap the menu (⋮) in the top right.")}
-                </List.Item>
+                <List.Item>{t("Tap the menu (⋮) in the top right.")}</List.Item>
                 <List.Item>
                   {t("Choose “Add to Home screen” or “Install app”.")}
                 </List.Item>

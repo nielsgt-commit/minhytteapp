@@ -92,7 +92,7 @@ export default function PlannedAvailabilitySummary({
     setSelectedDay(firstWithGuests ?? null)
   }, [weekStart, bookings])
 
-  const hasForecast = (weather?.days?.length ?? 0) > 0
+  const hasForecast = (weather?.days.length ?? 0) > 0
 
   const propertyBookings = bookings.filter(b => b.status !== "cancelled")
 

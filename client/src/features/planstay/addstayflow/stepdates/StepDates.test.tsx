@@ -81,7 +81,7 @@ describe("StepDates overlapping data", () => {
   test("shows 'no other bookings' message when range is empty and no overlap", () => {
     render(<StepDates {...baseProps()} occupiedBeds={0} hasStartDate />)
     expect(
-      screen.getByText(/no other bookings in this period/i),
+      screen.getByText(/no other planned stays in this period/i),
     ).toBeInTheDocument()
   })
 })

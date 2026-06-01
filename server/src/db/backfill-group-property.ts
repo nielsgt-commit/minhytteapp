@@ -37,7 +37,9 @@ async function main() {
         `groups can only be safely attributed when a single property exists. ` +
         `Resolve group->property links manually.`,
     )
-    allProperties.forEach(p => console.error(`  #${String(p.id)} ${p.name}`))
+    allProperties.forEach(p => {
+      console.error(`  #${String(p.id)} ${p.name}`)
+    })
     process.exitCode = 1
     return
   }

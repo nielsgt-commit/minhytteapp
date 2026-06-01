@@ -7,9 +7,9 @@ function detectPlatform(): Platform {
   // iPadOS 13+ reports as "Macintosh" but has touch support.
   const isIos =
     /iPad|iPhone|iPod/.test(ua) ||
-    (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+    (ua.includes("Macintosh") && navigator.maxTouchPoints > 1)
   if (isIos) return "ios"
-  if (/Android/.test(ua)) return "android"
+  if (ua.includes("Android")) return "android"
   return "other"
 }
 

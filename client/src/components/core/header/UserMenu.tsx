@@ -80,7 +80,9 @@ export default function UserMenu({ showCheckIn = true }: Props) {
       // page load showed the user still logged in.
       const { error } = await signOut()
       if (error) {
-        setLogoutError(error.message ?? t("Could not log out. Please try again."))
+        setLogoutError(
+          error.message ?? t("Could not log out. Please try again."),
+        )
         setIsLoggingOut(false)
         return
       }

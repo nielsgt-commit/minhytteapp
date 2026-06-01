@@ -106,10 +106,7 @@ export const priorityRouter = router({
           .delete(propertyPriorityWeeksTable)
           .where(
             and(
-              eq(
-                propertyPriorityWeeksTable.user_group_id,
-                input.user_group_id,
-              ),
+              eq(propertyPriorityWeeksTable.user_group_id, input.user_group_id),
               eq(propertyPriorityWeeksTable.year, input.year),
             ),
           )

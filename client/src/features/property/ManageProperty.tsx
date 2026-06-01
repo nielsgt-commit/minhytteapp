@@ -245,11 +245,7 @@ export function ManageProperty() {
         <div className={styles.content}>
           <RouteBanner pathname={pathname} />
           {selectedProperty && (
-            <Heading
-              level={3}
-              data-size="sm"
-              className={styles.propertyName}
-            >
+            <Heading level={3} data-size="sm" className={styles.propertyName}>
               {selectedProperty.name}
             </Heading>
           )}

@@ -11,7 +11,9 @@ export function Invites() {
   const canEdit = useCanEdit()
 
   if (selectedPropertyId == null) {
-    return <Paragraph>{t("Select a property to manage its invites.")}</Paragraph>
+    return (
+      <Paragraph>{t("Select a property to manage its invites.")}</Paragraph>
+    )
   }
 
   return (
