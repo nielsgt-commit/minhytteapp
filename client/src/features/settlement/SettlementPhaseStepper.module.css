@@ -4,6 +4,12 @@
   margin-bottom: 1rem;
 }
 
+@media (max-width: 640px) {
+  .stepper {
+    display: none;
+  }
+}
+
 .stepperItem {
   flex: 1;
   display: flex;
