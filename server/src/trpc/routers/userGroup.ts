@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server"
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm"
 import { z } from "zod"
 import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
@@ -186,10 +187,26 @@ export const userGroupRouter = router({
   update: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive(), ...userGroupFields }))
     .mutation(async ({ ctx, input }) => {
-      const { id, property_id: _propId, ...rest } = input
+      // property_id comes from propertyAdminProcedure (the property in context).
+      // We never *move* a group between properties here, but we do heal an
+      // orphaned group: if it was created with a NULL link (legacy / older
+      // code path), linking it now restores visibility for all its members
+      // instead of forcing an admin to delete + recreate the group. A group
+      // already linked to a property is left untouched.
+      const { id, property_id, ...rest } = input
+      const existing = (
+        await ctx.db
+          .select({ property_id: userGroupsTable.property_id })
+          .from(userGroupsTable)
+          .where(eq(userGroupsTable.id, id))
+          .limit(1)
+      ).at(0)
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "group not found" })
+      }
       const [updated] = await ctx.db
         .update(userGroupsTable)
-        .set(rest)
+        .set(existing.property_id == null ? { ...rest, property_id } : rest)
         .where(eq(userGroupsTable.id, id))
         .returning()
       return updated

@@ -18,6 +18,7 @@
     "db:remap-priority-policies": "tsx server/src/db/remap-priority-week-policies.ts",
     "db:verify-0069": "tsx server/src/db/verify-0069.ts",
     "db:backfill-group-property": "tsx server/src/db/backfill-group-property.ts",
+    "db:diagnose-user-access": "tsx server/src/db/diagnose-user-access.ts",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "i18n:extract": "i18next-cli extract",
