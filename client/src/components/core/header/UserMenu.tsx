@@ -40,6 +40,8 @@ export default function UserMenu({ showCheckIn = true }: Props) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState<string | null>(null)
 
   const list = useMemo(
     () => (me ? [{ ...me, name: me.name || me.email }] : []),
@@ -67,8 +69,32 @@ export default function UserMenu({ showCheckIn = true }: Props) {
       : undefined
 
   const handleLogout = async () => {
-    await signOut()
-    window.location.assign("/")
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+    setLogoutError(null)
+    try {
+      // better-auth's client resolves with { error } on HTTP/network
+      // failure rather than throwing, so we must inspect it. Redirecting
+      // unconditionally (the old behaviour) made a failed sign-out look
+      // like a successful one — the cookie was never cleared, so the next
+      // page load showed the user still logged in.
+      const { error } = await signOut()
+      if (error) {
+        setLogoutError(error.message ?? t("Could not log out. Please try again."))
+        setIsLoggingOut(false)
+        return
+      }
+      // Full reload so all in-memory and React Query state is dropped and
+      // the cleared session cookie takes effect on the next request.
+      window.location.assign("/")
+    } catch (e) {
+      setLogoutError(
+        e instanceof Error
+          ? e.message
+          : t("Could not log out. Please try again."),
+      )
+      setIsLoggingOut(false)
+    }
   }
 
   return (
@@ -142,13 +168,21 @@ export default function UserMenu({ showCheckIn = true }: Props) {
           <Dropdown.Item>
             <Dropdown.Button
               data-color="danger"
+              disabled={isLoggingOut}
               onClick={() => {
                 void handleLogout()
               }}
             >
-              {t("Log out")}
+              {isLoggingOut ? t("Logging out…") : t("Log out")}
             </Dropdown.Button>
           </Dropdown.Item>
+          {logoutError && (
+            <Dropdown.Item>
+              <p role="alert" data-color="danger">
+                {t("Error: {{message}}", { message: logoutError })}
+              </p>
+            </Dropdown.Item>
+          )}
         </Dropdown.List>
       </Dropdown>
     </Dropdown.TriggerContext>

@@ -128,6 +128,26 @@ async function isEmailAllowed(email: string): Promise<boolean> {
 const secret = process.env.BETTER_AUTH_SECRET
 if (!secret) throw new Error("BETTER_AUTH_SECRET is not set")
 
+// better-auth enforces a strict Origin match on every non-GET request that
+// carries a cookie (CSRF protection). The app is reachable on both the apex
+// (minhytte.app) and the www. host, so a POST like /sign-out coming from
+// whichever host isn't the configured origin was rejected with 403 — the
+// session cookie never got cleared and logout silently failed. Trust both
+// the apex and www. variant of the configured origin so it works either way.
+function buildTrustedOrigins(): string[] {
+  const configured = process.env.CORS_ORIGIN ?? "http://localhost:5173"
+  const origins = new Set([configured])
+  try {
+    const url = new URL(configured)
+    const apex = url.hostname.replace(/^www\./, "")
+    origins.add(`${url.protocol}//${apex}`)
+    origins.add(`${url.protocol}//www.${apex}`)
+  } catch {
+    // Non-URL value (shouldn't happen) — fall back to the configured string.
+  }
+  return [...origins]
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -141,7 +161,7 @@ export const auth = betterAuth({
   }),
   secret,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
-  trustedOrigins: [process.env.CORS_ORIGIN ?? "http://localhost:5173"],
+  trustedOrigins: buildTrustedOrigins(),
   advanced: {
     database: { generateId: "serial" },
     // Render's load balancer terminates TLS and sets X-Forwarded-For with the

@@ -41,6 +41,35 @@ app.get("/ready", async c => {
   }
 })
 
+// Canonical-host redirect. The app is reachable on both the apex and the
+// www. host, but cookies/sessions are host-scoped, so split hosts mean a
+// user logged in on one isn't logged in on the other (and was the original
+// cause of logout silently failing via a cross-origin 403). Force a single
+// canonical host derived from BETTER_AUTH_URL — the same host magic links
+// and auth cookies already use. Registered *after* /health and /ready so
+// Render's health probes (which hit the service on its internal host) are
+// served directly and never receive a 301.
+const canonicalUrl = (() => {
+  try {
+    return new URL(process.env.BETTER_AUTH_URL ?? "http://localhost:5173")
+  } catch {
+    return undefined
+  }
+})()
+
+if (process.env.NODE_ENV === "production" && canonicalUrl) {
+  app.use("*", async (c, next) => {
+    const host = c.req.header("host")
+    if (host && host !== canonicalUrl.host) {
+      const target = new URL(c.req.url)
+      target.protocol = canonicalUrl.protocol
+      target.host = canonicalUrl.host
+      return c.redirect(target.toString(), 301)
+    }
+    await next()
+  })
+}
+
 app.on(["POST", "GET"], "/api/auth/*", c => auth.handler(c.req.raw))
 
 const isDev = process.env.NODE_ENV !== "production"

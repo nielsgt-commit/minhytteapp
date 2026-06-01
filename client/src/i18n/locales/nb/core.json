@@ -1,6 +1,7 @@
 {
   "+ Add property": "+ Legg til eiendom",
   "Cancel": "Avbryt",
+  "Could not log out. Please try again.": "Kunne ikke logge ut. Prøv igjen.",
   "Dark mode": "Mørk modus",
   "Error: {{message}}": "Feil: {{message}}",
   "Footer": "Bunntekst",
@@ -9,6 +10,7 @@
   "Loading…": "Laster…",
   "Log out": "Logg ut",
   "Logged in as": "Logget inn som",
+  "Logging out…": "Logger ut…",
   "Manage Property": "Administrer eiendom",
   "New property name": "Nytt eiendomsnavn",
   "No properties": "Ingen eiendommer",
