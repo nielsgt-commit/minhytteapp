@@ -1,9 +1,10 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Heading, Paragraph } from "@digdir/designsystemet-react"
+import { Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import section from "@/features/property/managePropertySection.module.css"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import {
   PEAK_WEEKS,
@@ -115,9 +116,7 @@ export function PriorityWeeks() {
   }
 
   return (
-    <section>
-      <Heading level={3}>{t("Priority weeks (peak summer)")}</Heading>
-
+    <div className={section.column}>
       <Paragraph>
         {t(
           "Each main owner group picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
@@ -173,6 +172,6 @@ export function PriorityWeeks() {
           {t("Error: {{message}}", { message: lastError.message })}
         </Paragraph>
       )}
-    </section>
+    </div>
   )
 }

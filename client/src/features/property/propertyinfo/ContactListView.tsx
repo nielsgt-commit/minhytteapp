@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react"
-import { Button, Card, Link, Tag } from "@digdir/designsystemet-react"
+import { Button, Card, Link, List, Tag } from "@digdir/designsystemet-react"
 import { EnvelopeClosedIcon, PhoneIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
@@ -42,14 +42,14 @@ export function ContactListView({
   const { t } = useTranslation("property")
   const [expandedId, setExpandedId] = useState<number | null>(null)
   return (
-    <ul className={styles.list}>
+    <List.Unordered className={styles.list}>
       {contacts?.map(c => {
         const hasDetails = Boolean(c.phone ?? c.email)
         const isEditing = editingId === c.id
         const expanded = !isEditing && expandedId === c.id && hasDetails
         return (
           <Card asChild key={c.id}>
-            <li>
+            <List.Item>
               <Card.Block className={styles.row}>
                 <InlineEditRow
                   editing={isEditing}
@@ -60,7 +60,7 @@ export function ContactListView({
                     onEdit(c.id)
                   }}
                   view={
-                    <button
+                    <Button
                       type="button"
                       className={styles.toggle}
                       aria-expanded={expanded}
@@ -90,7 +90,7 @@ export function ContactListView({
                           {t("Email")}
                         </Tag>
                       )}
-                    </button>
+                    </Button>
                   }
                   form={renderEditForm(c)}
                   actions={
@@ -127,14 +127,14 @@ export function ContactListView({
                   )}
                 </Card.Block>
               )}
-            </li>
+            </List.Item>
           </Card>
         )
       })}
 
       {canEdit && (
         <Card asChild key="__add">
-          <li>
+          <List.Item>
             <Card.Block className={styles.addBlock}>
               {isAdding ? (
                 addSlot
@@ -149,9 +149,9 @@ export function ContactListView({
                 </Button>
               )}
             </Card.Block>
-          </li>
+          </List.Item>
         </Card>
       )}
-    </ul>
+    </List.Unordered>
   )
 }

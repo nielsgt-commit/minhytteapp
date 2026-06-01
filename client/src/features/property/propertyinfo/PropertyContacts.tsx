@@ -1,9 +1,10 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Heading } from "@digdir/designsystemet-react"
+import { ValidationMessage } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import section from "@/features/property/managePropertySection.module.css"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useCanEdit } from "@/hooks/useCanEdit"
@@ -136,13 +137,11 @@ export default function PropertyContacts() {
   }
 
   return (
-    <section>
-      <Heading level={3}>{t("Property contacts")}</Heading>
-
+    <div className={section.column}>
       {lastError && (
-        <p role="alert">
+        <ValidationMessage role="alert">
           {t("Error: {{message}}", { message: lastError.message })}
-        </p>
+        </ValidationMessage>
       )}
 
       <ContactListView
@@ -182,6 +181,6 @@ export default function PropertyContacts() {
           />
         }
       />
-    </section>
+    </div>
   )
 }

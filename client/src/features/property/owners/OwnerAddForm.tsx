@@ -3,6 +3,7 @@ import {
   Chip,
   Fieldset,
   Label,
+  Paragraph,
   Select,
   Textfield,
 } from "@digdir/designsystemet-react"
@@ -86,9 +87,9 @@ export function OwnerAddForm({
               ))}
             </Select>
             {availableUsers.length === 0 && (
-              <p>
+              <Paragraph>
                 <em>{t("All users are already owners.")}</em>
-              </p>
+              </Paragraph>
             )}
           </div>
         ) : (
@@ -119,14 +120,14 @@ export function OwnerAddForm({
               ))}
             </Select>
             {availableGroups.length === 0 && (
-              <p>
+              <Paragraph>
                 <em>
                   {t("No available groups.")}{" "}
                   {totalGroups === 0
                     ? t("Create one from Manage user groups.")
                     : t("All groups are already owners.")}
                 </em>
-              </p>
+              </Paragraph>
             )}
           </div>
         )}

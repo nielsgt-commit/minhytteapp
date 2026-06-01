@@ -1,5 +1,5 @@
 import { type SyntheticEvent } from "react"
-import { Button, Select } from "@digdir/designsystemet-react"
+import { Button, Label, Select } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 
@@ -57,7 +57,7 @@ export function AddMemberForm({
       <fieldset>
         <legend>{t("Add member to {{groupName}}", { groupName })}</legend>
         <div>
-          <label>
+          <Label>
             {t("User")}
             <Select
               name="user_id"
@@ -89,7 +89,7 @@ export function AddMemberForm({
                 {t("+ Add user")}
               </Select.Option>
             </Select>
-          </label>
+          </Label>
         </div>
         <div>
           <Button type="submit" disabled={pending || !hasOptions}>

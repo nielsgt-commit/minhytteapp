@@ -10,8 +10,10 @@ import {
   Checkbox,
   Fieldset,
   Heading,
+  Paragraph,
   Switch,
   Textfield,
+  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { useAppDispatch } from "@/app/hooks.ts"
@@ -47,7 +49,7 @@ export function DeletePropertyFlow() {
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
   if (!selectedProperty) {
-    return <p>{t("No property selected.")}</p>
+    return <Paragraph>{t("No property selected.")}</Paragraph>
   }
 
   const nameMatches = typedName === selectedProperty.name
@@ -73,14 +75,14 @@ export function DeletePropertyFlow() {
     return (
       <div>
         <Heading level={4}>{t("Delete property")}</Heading>
-        <p>
+        <Paragraph>
           <Trans
             t={t}
             i18nKey="Permanently delete <1>{{name}}</1> and all data associated with it."
             values={{ name: selectedProperty.name }}
             components={{ 1: <strong /> }}
           />
-        </p>
+        </Paragraph>
         <Button
           type="button"
           onClick={() => {
@@ -97,14 +99,14 @@ export function DeletePropertyFlow() {
     <div>
       <Heading level={4}>{t("Delete property")}</Heading>
 
-      <p role="alert">
+      <ValidationMessage role="alert">
         <Trans
           t={t}
           i18nKey="<1>Warning:</1> This action cannot be undone. Deleting <3>{{name}}</3> will permanently remove the property along with all its Structures, rooms, bookings, and history."
           values={{ name: selectedProperty.name }}
           components={{ 1: <strong />, 3: <strong /> }}
         />
-      </p>
+      </ValidationMessage>
 
       <form onSubmit={handleDelete}>
         <Fieldset>
@@ -171,11 +173,11 @@ export function DeletePropertyFlow() {
           </div>
 
           {deleteProperty.error && (
-            <p role="alert">
+            <ValidationMessage role="alert">
               {t("Error: {{message}}", {
                 message: deleteProperty.error.message,
               })}
-            </p>
+            </ValidationMessage>
           )}
         </Fieldset>
       </form>

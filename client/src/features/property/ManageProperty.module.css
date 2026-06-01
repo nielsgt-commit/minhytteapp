@@ -13,6 +13,10 @@
   margin: 0;
 }
 
+.propertyName {
+  margin: 0;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);

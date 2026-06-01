@@ -2,7 +2,7 @@ import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { Suspense } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Outlet, useLocation } from "@tanstack/react-router"
-import { Card, Heading } from "@digdir/designsystemet-react"
+import { Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./ManageProperty.module.css"
 import { SideNav } from "@/components/shared/SideNav"
@@ -46,7 +46,7 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     {
       title: "Users",
       description:
-        "Everyone with access to this property — edit roles or remove people.",
+        "Everyone with access to this property. Edit user details or remove people — deletion is blocked while a user is still referenced by any group, ownership, booking, or expense.",
     },
   ],
   [
@@ -121,7 +121,7 @@ function RouteBanner({ pathname }: { pathname: string }) {
     <Card asChild>
       <header>
         <Heading level={2}>{td(banner.title)}</Heading>
-        <p>{td(banner.description)}</p>
+        <Paragraph>{td(banner.description)}</Paragraph>
       </header>
     </Card>
   )
@@ -195,7 +195,10 @@ export function ManageProperty() {
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const { pathname } = useLocation()
-  useSuspenseQuery(trpc.property.mine.queryOptions())
+  const { data: properties } = useSuspenseQuery(
+    trpc.property.mine.queryOptions(),
+  )
+  const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
   const translateGroups = (
     groups: readonly {
@@ -214,11 +217,11 @@ export function ManageProperty() {
         <Heading level={2} className={styles.title}>
           {t("Manage Property")}
         </Heading>
-        <p>
+        <Paragraph>
           {t(
             "Add or select a property to edit its details, structures, owners, and invites.",
           )}
-        </p>
+        </Paragraph>
       </section>
     )
   }
@@ -241,7 +244,16 @@ export function ManageProperty() {
         </div>
         <div className={styles.content}>
           <RouteBanner pathname={pathname} />
-          <Suspense fallback={<p>{t("Loading…")}</p>}>
+          {selectedProperty && (
+            <Heading
+              level={3}
+              data-size="sm"
+              className={styles.propertyName}
+            >
+              {selectedProperty.name}
+            </Heading>
+          )}
+          <Suspense fallback={<Paragraph>{t("Loading…")}</Paragraph>}>
             <Outlet />
           </Suspense>
         </div>

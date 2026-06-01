@@ -6,12 +6,21 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
-import { Button, Card, Divider, Heading } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Divider,
+  Heading,
+  List,
+  Paragraph,
+  ValidationMessage,
+} from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditField } from "@/components/shared/InlineEditField"
+import section from "@/features/property/managePropertySection.module.css"
 import { AddStructureFlow } from "@/features/property/testform/AddStructureFlow.tsx"
 import {
   AddBedsFlow,
@@ -238,26 +247,24 @@ export function ListPropertyStructures() {
 
   if (!selectedProperty) {
     return (
-      <section>
+      <div className={section.column}>
         <Heading level={3}>{t("Structures")}</Heading>
-        <p>{t("No property selected. Pick one from the header.")}</p>
-      </section>
+        <Paragraph>
+          {t("No property selected. Pick one from the header.")}
+        </Paragraph>
+      </div>
     )
   }
 
   return (
-    <section>
-      <Heading level={3}>
-        {t("Structures for {{name}}", { name: selectedProperty.name })}
-      </Heading>
-
+    <div className={section.column}>
       {lastError && (
-        <p role="alert">
+        <ValidationMessage>
           {t("Error: {{message}}", { message: lastError.message })}
-        </p>
+        </ValidationMessage>
       )}
 
-      <ul className={styles.list}>
+      <List.Unordered className={styles.list}>
         {propertyStructures.map(b => {
           const structureRooms = roomsByStructure.get(b.id) ?? []
           const isExpanded = expandedId === b.id
@@ -270,7 +277,7 @@ export function ListPropertyStructures() {
 
           return (
             <Card asChild key={b.id}>
-              <li className={styles.cardItem}>
+              <List.Item className={styles.cardItem}>
                 <Card.Block className={styles.cardBlock}>
                   <div className={styles.header}>
                     <InlineEditField
@@ -304,9 +311,9 @@ export function ListPropertyStructures() {
                       />
                     )}
                     {b.built_year != null && (
-                      <small title={t("Built year")}>
+                      <Paragraph data-size="sm" title={t("Built year")}>
                         {t("Built {{year}}", { year: b.built_year })}
-                      </small>
+                      </Paragraph>
                     )}
                   </div>
 
@@ -340,11 +347,11 @@ export function ListPropertyStructures() {
                           }}
                         />
                       ) : structureRooms.length === 0 ? (
-                        <p>{t("No rooms yet.")}</p>
+                        <Paragraph>{t("No rooms yet.")}</Paragraph>
                       ) : (
-                        <ul className={styles.roomList}>
+                        <List.Unordered className={styles.roomList}>
                           {structureRooms.map(r => (
-                            <li key={r.id} className={styles.roomRow}>
+                            <List.Item key={r.id} className={styles.roomRow}>
                               <span className={styles.roomName}>{r.name}</span>
                               <Button
                                 variant="tertiary"
@@ -371,9 +378,9 @@ export function ListPropertyStructures() {
                               >
                                 {t("Delete")}
                               </Button>
-                            </li>
+                            </List.Item>
                           ))}
-                        </ul>
+                        </List.Unordered>
                       )}
 
                       <Button
@@ -436,18 +443,20 @@ export function ListPropertyStructures() {
                     </Button>
                   )}
                 </Card.Block>
-              </li>
+              </List.Item>
             </Card>
           )
         })}
 
         {canEdit && (
           <Card asChild key="__add">
-            <li className={styles.cardItem}>
+            <List.Item className={styles.cardItem}>
               <Card.Block className={styles.cardBlock}>
                 {isAdding ? (
                   <>
-                    <strong>{t("Add structure")}</strong>
+                    <Paragraph data-weight="medium">
+                      {t("Add structure")}
+                    </Paragraph>
                     <AddStructureFlow
                       onAdded={() => {
                         setIsAdding(false)
@@ -469,10 +478,10 @@ export function ListPropertyStructures() {
                   </Button>
                 )}
               </Card.Block>
-            </li>
+            </List.Item>
           </Card>
         )}
-      </ul>
-    </section>
+      </List.Unordered>
+    </div>
   )
 }

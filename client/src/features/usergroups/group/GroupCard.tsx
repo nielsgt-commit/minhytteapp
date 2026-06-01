@@ -4,6 +4,8 @@ import {
   Checkbox,
   Divider,
   Heading,
+  List,
+  Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -128,7 +130,7 @@ export function GroupCard({
 
   return (
     <Card asChild>
-      <li>
+      <List.Item>
         <Card.Block>
           <InlineEditRow
             editing={isRenaming}
@@ -140,9 +142,13 @@ export function GroupCard({
               <>
                 <Heading level={4}>
                   {group.name}
-                  {group.is_family && <small> {t("(main)")}</small>}
+                  {group.is_family && (
+                    <Paragraph data-size="sm"> {t("(main)")}</Paragraph>
+                  )}
                 </Heading>
-                <p>{t("{{count}} member", { count: group.members.length })}</p>
+                <Paragraph>
+                  {t("{{count}} member", { count: group.members.length })}
+                </Paragraph>
               </>
             }
             form={renameForm}
@@ -166,11 +172,11 @@ export function GroupCard({
           <Divider />
 
           {group.members.length === 0 ? (
-            <p>{t("No members yet.")}</p>
+            <Paragraph>{t("No members yet.")}</Paragraph>
           ) : (
-            <ul className={styles.memberList}>
+            <List.Unordered className={styles.memberList}>
               {group.members.map(m => (
-                <li key={m.user_id} className={styles.memberRow}>
+                <List.Item key={m.user_id} className={styles.memberRow}>
                   <span className={styles.memberName}>{m.user_name}</span>
                   {canEdit && (
                     <Button
@@ -189,9 +195,9 @@ export function GroupCard({
                       {t("Remove")}
                     </Button>
                   )}
-                </li>
+                </List.Item>
               ))}
-            </ul>
+            </List.Unordered>
           )}
 
           {canEdit && !isRenaming && (
@@ -231,7 +237,7 @@ export function GroupCard({
             />
           )}
         </Card.Block>
-      </li>
+      </List.Item>
     </Card>
   )
 }

@@ -1,4 +1,4 @@
-import { Button, Card } from "@digdir/designsystemet-react"
+import { Button, Card, List, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { InlineEditField } from "@/components/shared/InlineEditField"
 import { ownerLabel } from "./ownershipCalculations.ts"
@@ -32,14 +32,14 @@ export function OwnerListView({
   return (
     <>
       {owners.length === 0 ? (
-        <p>{t("No owners yet.")}</p>
+        <Paragraph>{t("No owners yet.")}</Paragraph>
       ) : (
-        <ul className={styles.list}>
+        <List.Unordered className={styles.list}>
           {owners.map(o => {
             const label = ownerLabel(o)
             return (
               <Card asChild key={o.id}>
-                <li>
+                <List.Item>
                   <Card.Block className={styles.row}>
                     <span className={styles.rowName}>{label}</span>
                     <span className={styles.pct}>
@@ -72,11 +72,11 @@ export function OwnerListView({
                       </Button>
                     )}
                   </Card.Block>
-                </li>
+                </List.Item>
               </Card>
             )
           })}
-        </ul>
+        </List.Unordered>
       )}
 
       {canEdit && (

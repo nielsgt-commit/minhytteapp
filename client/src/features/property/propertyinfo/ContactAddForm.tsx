@@ -1,5 +1,5 @@
 import { type SyntheticEvent } from "react"
-import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
+import { Button, Fieldset, Paragraph, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./ContactAddForm.module.css"
 
@@ -13,7 +13,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
   const { t } = useTranslation("property")
   return (
     <>
-      <strong>{t("Add contact")}</strong>
+      <Paragraph data-weight="medium">{t("Add contact")}</Paragraph>
       <form onSubmit={onSubmit} className={styles.form}>
         <Fieldset>
           <Fieldset.Legend>{t("New contact")}</Fieldset.Legend>

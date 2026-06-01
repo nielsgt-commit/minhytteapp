@@ -1,7 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Heading } from "@digdir/designsystemet-react"
+import { Paragraph, Tag, ValidationMessage } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
@@ -16,6 +16,7 @@ import {
 } from "./ownershipCalculations.ts"
 import { OwnerListView } from "./OwnerListView.tsx"
 import { OwnerAddForm } from "./OwnerAddForm.tsx"
+import section from "@/features/property/managePropertySection.module.css"
 
 type AddKind = "user" | "group"
 
@@ -83,10 +84,9 @@ export function PropertyOwnersPanel() {
 
   if (selectedPropertyId == null) {
     return (
-      <section>
-        <Heading level={3}>{t("Property Owners")}</Heading>
-        <p>{t("No property selected. Pick one from the header.")}</p>
-      </section>
+      <div className={section.column}>
+        <Paragraph>{t("No property selected. Pick one from the header.")}</Paragraph>
+      </div>
     )
   }
 
@@ -154,10 +154,8 @@ export function PropertyOwnersPanel() {
     (addKind === "group" && availableGroups.length === 0)
 
   return (
-    <section>
-      <Heading level={3}>{t("Property Owners")}</Heading>
-
-      <p>
+    <div className={section.column}>
+      <Paragraph>
         <Trans
           t={t}
           i18nKey="Total: <1>{{total}}%</1> "
@@ -165,14 +163,16 @@ export function PropertyOwnersPanel() {
           components={{ 1: <strong /> }}
         />
         {offBy > 0.001 && (
-          <strong role="alert">{t("(does not sum to 100%)")}</strong>
+          <Tag data-color="danger" role="alert">
+            {t("(does not sum to 100%)")}
+          </Tag>
         )}
-      </p>
+      </Paragraph>
 
       {lastError && (
-        <p role="alert">
+        <ValidationMessage>
           {t("Error: {{message}}", { message: lastError.message })}
-        </p>
+        </ValidationMessage>
       )}
 
       {adding.value ? (
@@ -199,6 +199,6 @@ export function PropertyOwnersPanel() {
           onStartAdd={adding.open}
         />
       )}
-    </section>
+    </div>
   )
 }

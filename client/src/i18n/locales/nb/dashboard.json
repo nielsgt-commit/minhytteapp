@@ -19,7 +19,6 @@
   "Available beds": "Ledige senger",
   "Available parking": "Ledig parkering",
   "Bedrooms": "Soverom",
-  "Bicycle": "Sykkel",
   "Beds (double)": "Senger (dobbel)",
   "Beds (kid)": "Senger (barn)",
   "Beds (large)": "Senger (stor)",
@@ -63,7 +62,6 @@
   "Solo stay": "Alene-opphold",
   "Spot {{slot}} — free": "Plass {{slot}} — ledig",
   "Spot {{slot}} — taken by {{userName}}": "Plass {{slot}} — tatt av {{userName}}",
-  "Stroller": "Barnevogn",
   "Structure #{{id}}": "Bygning #{{id}}",
   "Structures": "Bygninger",
   "THU": "Tor",
@@ -79,7 +77,6 @@
   "WED": "Ons",
   "Weather now": "Været nå",
   "Week {{weekNumber}}": "Uke {{weekNumber}}",
-  "Wheelbarrow": "Trillebår",
   "{{vehicle}} — free": "{{vehicle}} — ledig",
   "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}"
 }

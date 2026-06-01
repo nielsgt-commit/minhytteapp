@@ -2,19 +2,15 @@ import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@digdir/designsystemet-react"
 import {
-  BicycleIcon,
   CarFillIcon,
   CarIcon,
   MotorcycleFillIcon,
   MotorcycleIcon,
-  StrollerFillIcon,
-  StrollerIcon,
 } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./AvailableParking.module.css"
 import { useParking } from "./useParking"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { WheelbarrowFillIcon, WheelbarrowIcon } from "./WheelbarrowIcon"
 
 const EXTRA_SLOT_BASE = 1000
 
@@ -22,7 +18,7 @@ type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>
 
 type ExtraVehicle = {
   offset: number
-  labelKey: "Motorcycle" | "Bicycle" | "Stroller" | "Wheelbarrow"
+  labelKey: "Motorcycle"
   Icon: IconComponent
   FillIcon: IconComponent
 }
@@ -38,24 +34,6 @@ const EXTRAS: readonly ExtraVehicle[] = [
     labelKey: "Motorcycle",
     Icon: asIcon(MotorcycleIcon),
     FillIcon: asIcon(MotorcycleFillIcon),
-  },
-  {
-    offset: 1,
-    labelKey: "Bicycle",
-    Icon: asIcon(BicycleIcon),
-    FillIcon: asIcon(BicycleIcon),
-  },
-  {
-    offset: 2,
-    labelKey: "Stroller",
-    Icon: asIcon(StrollerIcon),
-    FillIcon: asIcon(StrollerFillIcon),
-  },
-  {
-    offset: 3,
-    labelKey: "Wheelbarrow",
-    Icon: asIcon(WheelbarrowIcon),
-    FillIcon: asIcon(WheelbarrowFillIcon),
   },
 ]
 
@@ -129,9 +107,6 @@ export default function AvailableParking() {
           const occupied = occupant != null
           const vehicleLabels = {
             Motorcycle: t("Motorcycle"),
-            Bicycle: t("Bicycle"),
-            Stroller: t("Stroller"),
-            Wheelbarrow: t("Wheelbarrow"),
           } satisfies Record<typeof labelKey, string>
           const vehicle = vehicleLabels[labelKey]
           const title = occupied

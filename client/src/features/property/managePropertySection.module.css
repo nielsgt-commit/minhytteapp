@@ -1,0 +1,8 @@
+/* Shared single-column layout for Manage Property child route content.
+   Keeps the gap between stacked blocks consistent across every section. */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}

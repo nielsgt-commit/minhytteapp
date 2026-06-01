@@ -1,4 +1,4 @@
-import { Card, Heading } from "@digdir/designsystemet-react"
+import { Card, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { DeletePropertyFlow } from "./DeletePropertyFlow.tsx"
 
@@ -7,12 +7,11 @@ export function DangerZone() {
   return (
     <Card asChild>
       <section>
-        <Heading level={3}>{t("Danger zone")}</Heading>
-        <p>
+        <Paragraph>
           {t(
             "Destructive actions below. These are irreversible — proceed with care.",
           )}
-        </p>
+        </Paragraph>
         <DeletePropertyFlow />
       </section>
     </Card>

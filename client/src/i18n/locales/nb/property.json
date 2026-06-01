@@ -154,7 +154,7 @@
   "Policies": "Retningslinjer",
   "Users": "Brukere",
   "Invites": "Invitasjoner",
-  "Everyone with access to this property — edit roles or remove people.": "Alle med tilgang til denne eiendommen — endre roller eller fjern personer.",
+  "Everyone with access to this property. Edit user details or remove people — deletion is blocked while a user is still referenced by any group, ownership, booking, or expense.": "Alle med tilgang til denne eiendommen. Rediger brukerdetaljer eller fjern personer — sletting blokkeres så lenge en bruker er knyttet til en gruppe, et eierskap, en booking eller en utgift.",
   "Email addresses allowed to sign in and claim a spot on this property.": "E-postadresser som har lov til å logge inn og ta en plass på denne eiendommen.",
   "Property": "Eiendom",
   "Property contacts": "Eiendomskontakter",

@@ -3,6 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Card,
   EXPERIMENTAL_Suggestion as Suggestion,
+  Paragraph,
   ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -30,7 +31,9 @@ export function ManageCategories() {
     return (
       <Card asChild>
         <section>
-          <p>{t("Only property heads can manage expense categories.")}</p>
+          <Paragraph>
+            {t("Only property heads can manage expense categories.")}
+          </Paragraph>
         </section>
       </Card>
     )

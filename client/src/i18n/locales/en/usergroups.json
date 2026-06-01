@@ -28,7 +28,6 @@
   "Edit group {{groupName}}": "Edit group {{groupName}}",
   "Edit user": "Edit user",
   "Edit user {{userName}}": "Edit user {{userName}}",
-  "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.": "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.",
   "Email": "Email",
   "Error: {{message}}": "Error: {{message}}",
   "Give access to this property": "Give access to this property",
@@ -61,5 +60,6 @@
   "Select user": "Select user",
   "user": "user",
   "User": "User",
-  "Users": "Users"
+  "Users": "Users",
+  "Users at {{name}}": "Users at {{name}}"
 }

@@ -1,7 +1,13 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  List,
+  Paragraph,
+  ValidationMessage,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -199,15 +205,15 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   return (
     <section>
       {lastError && (
-        <p role="alert">
+        <ValidationMessage role="alert">
           {t("Error: {{message}}", { message: lastError.message })}
-        </p>
+        </ValidationMessage>
       )}
 
-      <ul className={styles.groupList}>
+      <List.Unordered className={styles.groupList}>
         {canEdit && (
           <Card asChild>
-            <li>
+            <List.Item>
               <Card.Block>
                 {openForm?.kind === "create" ? (
                   <CreateGroupForm
@@ -231,12 +237,12 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
                   </Button>
                 )}
               </Card.Block>
-            </li>
+            </List.Item>
           </Card>
         )}
 
         {groups.length === 0 && !canEdit ? (
-          <p>{t("No groups yet.")}</p>
+          <Paragraph>{t("No groups yet.")}</Paragraph>
         ) : (
           groups.map(g => {
             const memberIds = new Set(g.members.map(m => m.user_id))
@@ -299,7 +305,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
             )
           })
         )}
-      </ul>
+      </List.Unordered>
     </section>
   )
 }

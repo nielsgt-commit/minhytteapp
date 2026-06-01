@@ -4,9 +4,13 @@ import {
   Button,
   Card,
   Checkbox,
-  Heading,
+  Label,
+  List,
+  Paragraph,
   Select,
+  Tag,
   Textfield,
+  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -101,21 +105,20 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
     <Card asChild>
       <section>
         <Card.Block>
-          <Heading level={3}>{t("Invites")}</Heading>
-          <p>
+          <Paragraph>
             {t("People with these emails can request a sign-in link.")}
-          </p>
+          </Paragraph>
 
           {lastError && (
-            <p role="alert">
+            <ValidationMessage role="alert">
               {t("Error: {{message}}", { message: lastError.message })}
-            </p>
+            </ValidationMessage>
           )}
 
           {entries.length === 0 ? (
-            <p>{t("No invites yet.")}</p>
+            <Paragraph>{t("No invites yet.")}</Paragraph>
           ) : (
-            <ul>
+            <List.Unordered>
               {entries.map(entry => {
                 const group = groupName(entry.user_group_id)
                 const accepted = entry.used_at != null
@@ -125,15 +128,15 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                   ? t("Revoke access for {{email}}", { email: entry.email })
                   : t("Remove invite {{email}}", { email: entry.email })
                 return (
-                  <li key={entry.id}>
-                    <strong>{entry.email}</strong>
+                  <List.Item key={entry.id}>
+                    <Paragraph data-weight="medium">{entry.email}</Paragraph>
                     {group ? <span> – {group}</span> : null}
                     {entry.ownership_pct != null ? (
                       <span> – {entry.ownership_pct}%</span>
                     ) : null}
                     <span>
                       {" "}
-                      – <em>{status}</em>
+                      – <Tag>{status}</Tag>
                     </span>
                     {entry.added_by_name ? (
                       <span>
@@ -157,10 +160,10 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                         </Button>
                       </div>
                     )}
-                  </li>
+                  </List.Item>
                 )
               })}
-            </ul>
+            </List.Unordered>
           )}
 
           {canEdit && (
@@ -202,7 +205,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                 {attachToProperty && (
                   <>
                     <div>
-                      <label>
+                      <Label>
                         {t("Group")}
                         <Select name="user_group_id" defaultValue={GROUP_NONE}>
                           <Select.Option value={GROUP_NONE}>
@@ -214,7 +217,7 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
                             </Select.Option>
                           ))}
                         </Select>
-                      </label>
+                      </Label>
                     </div>
                     <div>
                       <Textfield

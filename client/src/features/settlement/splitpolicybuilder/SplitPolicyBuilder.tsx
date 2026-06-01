@@ -14,6 +14,7 @@ import {
   Select,
   Switch,
   Textfield,
+  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { ExceptPicker } from "./ExceptPicker"
@@ -105,9 +106,6 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
     return (
       <Card asChild>
         <section>
-          <Heading level={3} data-size="xs">
-            {t("Split policy builder")}
-          </Heading>
           <Paragraph>
             {t("Select a property to design custom split policies.")}
           </Paragraph>
@@ -306,9 +304,6 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
   return (
     <Card asChild>
       <section>
-        <Heading level={3} data-size="xs">
-          {t("Split policy builder")}
-        </Heading>
         <Paragraph data-size="sm">
           <Trans
             ns="settlement"
@@ -379,7 +374,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
             </Button>
 
             <Card asChild>
-              <article>
+              <div>
                 <Card.Block data-size="sm">
                   <Heading level={5} data-size="2xs">
                     {t("Default (applies to the rest)")}
@@ -503,7 +498,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
                     }}
                   />
                 </Card.Block>
-              </article>
+              </div>
             </Card>
 
             <div>
@@ -538,14 +533,14 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
         </form>
 
         {saveMutation.error && (
-          <p role="alert">
+          <ValidationMessage role="alert">
             {t("Error: {{message}}", { message: saveMutation.error.message })}
-          </p>
+          </ValidationMessage>
         )}
         {deleteMutation.error && (
-          <p role="alert">
+          <ValidationMessage role="alert">
             {t("Error: {{message}}", { message: deleteMutation.error.message })}
-          </p>
+          </ValidationMessage>
         )}
 
         <SavedPolicies

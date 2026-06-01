@@ -4,8 +4,10 @@ import {
   Button,
   Card,
   Fieldset,
-  Heading,
+  List,
+  Paragraph,
   Textfield,
+  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -16,6 +18,7 @@ import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import section from "@/features/property/managePropertySection.module.css"
 import styles from "./EquipmentPanel.module.css"
 
 type Props = {
@@ -41,7 +44,7 @@ function fdYear(fd: FormData, key: string): number | null {
   return Number.isInteger(n) && n >= 1500 && n <= 2100 ? n : null
 }
 
-export function EquipmentPanel({ propertyId, propertyName }: Props) {
+export function EquipmentPanel({ propertyId }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const canEdit = useCanEdit()
@@ -209,21 +212,17 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
   )
 
   return (
-    <section>
-      <Heading level={3}>
-        {t("Equipment at {{name}}", { name: propertyName })}
-      </Heading>
-
+    <div className={section.column}>
       {lastError && (
-        <p role="alert">
+        <ValidationMessage>
           {t("Error: {{message}}", { message: lastError.message })}
-        </p>
+        </ValidationMessage>
       )}
 
-      <ul className={styles.list}>
+      <List.Unordered className={styles.list}>
         {equipment.map(item => (
           <Card asChild key={item.id}>
-            <li>
+            <List.Item>
               <Card.Block className={styles.row}>
                 <InlineEditRow
                   editing={editingId === item.id}
@@ -237,9 +236,9 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                     <>
                       <span className={styles.rowName}>{item.name}</span>
                       {item.acquired_year != null && (
-                        <small title={t("Acquired")}>
+                        <Paragraph data-size="sm" title={t("Acquired")}>
                           {t("Acquired {{year}}", { year: item.acquired_year })}
-                        </small>
+                        </Paragraph>
                       )}
                     </>
                   }
@@ -262,17 +261,19 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                   }
                 />
               </Card.Block>
-            </li>
+            </List.Item>
           </Card>
         ))}
 
         {canEdit && (
           <Card asChild key="__add">
-            <li>
+            <List.Item>
               <Card.Block className={styles.addBlock}>
                 {adding.value ? (
                   <>
-                    <strong>{t("Add equipment")}</strong>
+                    <Paragraph data-weight="medium">
+                      {t("Add equipment")}
+                    </Paragraph>
                     <form action={handleAdd} className={styles.addForm}>
                       <Fieldset>
                         <Fieldset.Legend>{t("New equipment")}</Fieldset.Legend>
@@ -343,10 +344,10 @@ export function EquipmentPanel({ propertyId, propertyName }: Props) {
                   </Button>
                 )}
               </Card.Block>
-            </li>
+            </List.Item>
           </Card>
         )}
-      </ul>
-    </section>
+      </List.Unordered>
+    </div>
   )
 }

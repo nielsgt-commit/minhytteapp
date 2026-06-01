@@ -31,7 +31,6 @@
   "Edit mode": "Redigeringsmodus",
   "Edit user": "Rediger bruker",
   "Edit user {{userName}}": "Rediger brukeren {{userName}}",
-  "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.": "Rediger brukerdetaljer eller fjern en bruker. Sletting blokkeres så lenge brukeren er knyttet til en gruppe, et eierskap, en booking eller en utgift.",
   "Email": "E-post",
   "Error: {{message}}": "Feil: {{message}}",
   "Give access to this property": "Gi tilgang til denne eiendommen",
@@ -66,5 +65,6 @@
   "Select user": "Velg bruker",
   "user": "bruker",
   "User": "Bruker",
-  "Users": "Brukere"
+  "Users": "Brukere",
+  "Users at {{name}}": "Brukere på {{name}}"
 }

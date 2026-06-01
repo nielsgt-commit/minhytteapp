@@ -9,9 +9,9 @@ import {
   Button,
   Card,
   Fieldset,
-  Heading,
   Paragraph,
   Textfield,
+  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -81,8 +81,9 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          <Heading level={2}>{t("Property Info")}</Heading>
-          <p>{t("No property selected. Pick one from the header.")}</p>
+          <Paragraph>
+            {t("No property selected. Pick one from the header.")}
+          </Paragraph>
         </Card.Block>
       </Card>
     )
@@ -137,13 +138,12 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          <Heading level={2}>{t("Property Info")}</Heading>
           {updateProperty.error && (
-            <p role="alert">
+            <ValidationMessage>
               {t("Error: {{message}}", {
                 message: updateProperty.error.message,
               })}
-            </p>
+            </ValidationMessage>
           )}
           <form onSubmit={handleSavePropertyInfo}>
             <Fieldset>
@@ -225,9 +225,8 @@ export default function PropertyInfo() {
   return (
     <Card>
       <Card.Block>
-        <Heading level={2}>{t("Property Info")}</Heading>
-        <p>{selectedProperty.name}</p>
-        <p>
+        <Paragraph>{selectedProperty.name}</Paragraph>
+        <Paragraph>
           {selectedProperty.address}{" "}
           {hasMatrikkel && (
             <Button
@@ -241,7 +240,7 @@ export default function PropertyInfo() {
               {showRegister ? t("Hide register") : t("Show register")}
             </Button>
           )}
-        </p>
+        </Paragraph>
         {showRegister && hasMatrikkel && (
           <Card data-color="neutral">
             <Card.Block className={styles.register}>
@@ -263,15 +262,15 @@ export default function PropertyInfo() {
             </Card.Block>
           </Card>
         )}
-        <p>
+        <Paragraph>
           {t("This property has been in the family since:")}{" "}
           {selectedProperty.in_family_since ?? <em>{t("not set")}</em>}
-        </p>
-        <p>
+        </Paragraph>
+        <Paragraph>
           {t("Parking spots: {{count}}", {
             count: selectedProperty.parking_spots,
           })}
-        </p>
+        </Paragraph>
 
         <Button
           type="button"
@@ -291,7 +290,7 @@ export default function PropertyInfo() {
           {showHistory ? t("Hide history") : t("Show history")}
         </Button>
         {showHistory && (
-          <Suspense fallback={<p>{t("Loading…")}</p>}>
+          <Suspense fallback={<Paragraph>{t("Loading…")}</Paragraph>}>
             <PropertyEvents />
           </Suspense>
         )}

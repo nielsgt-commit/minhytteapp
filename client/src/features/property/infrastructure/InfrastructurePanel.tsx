@@ -1,6 +1,13 @@
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Heading, Textfield } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  List,
+  Paragraph,
+  Textfield,
+  ValidationMessage,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
@@ -9,6 +16,7 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import section from "@/features/property/managePropertySection.module.css"
 import styles from "./InfrastructurePanel.module.css"
 
 type Props = {
@@ -31,7 +39,7 @@ function fdYear(fd: FormData, key: string): number | null {
   return Number.isInteger(n) && n >= 1500 && n <= 2100 ? n : null
 }
 
-export function InfrastructurePanel({ propertyId, propertyName }: Props) {
+export function InfrastructurePanel({ propertyId }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const canEdit = useCanEdit()
@@ -168,21 +176,17 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
   )
 
   return (
-    <section>
-      <Heading level={3}>
-        {t("Infrastructure at {{name}}", { name: propertyName })}
-      </Heading>
-
+    <div className={section.column}>
       {lastError && (
-        <p role="alert">
+        <ValidationMessage>
           {t("Error: {{message}}", { message: lastError.message })}
-        </p>
+        </ValidationMessage>
       )}
 
-      <ul className={styles.list}>
+      <List.Unordered className={styles.list}>
         {infrastructure.map(p => (
           <Card asChild key={p.id}>
-            <li>
+            <List.Item>
               <Card.Block>
                 <InlineEditRow
                   editing={editingId === p.id}
@@ -198,9 +202,9 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                     <>
                       <span className={styles.rowName}>{p.name}</span>
                       {p.since_year != null && (
-                        <small title={t("Since")}>
+                        <Paragraph data-size="sm" title={t("Since")}>
                           {t("Since {{year}}", { year: p.since_year })}
-                        </small>
+                        </Paragraph>
                       )}
                     </>
                   }
@@ -223,17 +227,19 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                   }
                 />
               </Card.Block>
-            </li>
+            </List.Item>
           </Card>
         ))}
 
         {canEdit && (
           <Card asChild key="__add">
-            <li>
+            <List.Item>
               <Card.Block className={styles.addBlock}>
                 {adding.value ? (
                   <>
-                    <strong>{t("Add infrastructure")}</strong>
+                    <Paragraph data-weight="medium">
+                      {t("Add infrastructure")}
+                    </Paragraph>
                     <form action={handleAdd} className={styles.addForm}>
                       <Textfield
                         label={t("Name")}
@@ -279,10 +285,10 @@ export function InfrastructurePanel({ propertyId, propertyName }: Props) {
                   </Button>
                 )}
               </Card.Block>
-            </li>
+            </List.Item>
           </Card>
         )}
-      </ul>
-    </section>
+      </List.Unordered>
+    </div>
   )
 }

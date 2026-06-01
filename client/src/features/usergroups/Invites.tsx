@@ -1,7 +1,9 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InvitesPanel } from "./invites/InvitesPanel.tsx"
+import section from "@/features/property/managePropertySection.module.css"
 
 export function Invites() {
   const { t } = useTranslation("usergroups")
@@ -9,12 +11,12 @@ export function Invites() {
   const canEdit = useCanEdit()
 
   if (selectedPropertyId == null) {
-    return <p>{t("Select a property to manage its invites.")}</p>
+    return <Paragraph>{t("Select a property to manage its invites.")}</Paragraph>
   }
 
   return (
-    <section>
+    <div className={section.column}>
       <InvitesPanel canEdit={canEdit} />
-    </section>
+    </div>
   )
 }

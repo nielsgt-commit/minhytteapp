@@ -6,7 +6,10 @@ import {
   Card,
   Checkbox,
   Heading,
+  List,
+  Paragraph,
   Textfield,
+  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { ExclamationmarkTriangleFillIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
@@ -16,9 +19,11 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { isSyntheticEmail } from "@/utils/syntheticEmail.ts"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import styles from "./ListUsers.module.css"
 
 type ListUsersProps = {
   canEdit: boolean
+  propertyName: string
 }
 
 export function ListUsers({ canEdit }: ListUsersProps) {
@@ -141,96 +146,84 @@ export function ListUsers({ canEdit }: ListUsersProps) {
   )
 
   return (
-    <Card asChild>
-      <section>
-        <Heading level={2}>{t("Users")}</Heading>
-        <p>
-          {t(
-            "Edit user details or remove a user. Deletion is blocked while the user is referenced by any group, ownership, booking, or expense.",
-          )}
-        </p>
+    <section>
+      {lastError && (
+        <ValidationMessage role="alert">
+          {t("Error: {{message}}", { message: lastError.message })}
+        </ValidationMessage>
+      )}
 
-        {lastError && (
-          <p role="alert">
-            {t("Error: {{message}}", { message: lastError.message })}
-          </p>
-        )}
-
-        {users.length === 0 ? (
-          <p>{t("No users yet.")}</p>
-        ) : (
-          <ul>
-            {users.map(u => {
-              const roles =
-                [u.is_admin ? t("admin") : null, u.is_child ? t("child") : null]
-                  .filter(Boolean)
-                  .join(", ") || t("user")
-              return (
-                <Card asChild key={u.id}>
-                  <li>
-                    <Card.Block>
-                      <InlineEditRow
-                        editing={editingId === u.id}
-                        canEdit={canEdit}
-                        pending={pending}
-                        editLabel={t("Edit user {{userName}}", {
-                          userName: u.name,
-                        })}
-                        onStartEdit={() => {
-                          setEditingId(u.id)
-                        }}
-                        view={
-                          <>
-                            <Heading level={4}>{u.name}</Heading>
-                            <p>
-                              {u.email}
-                              {isSyntheticEmail(u.email) && (
-                                <ExclamationmarkTriangleFillIcon
-                                  title={t(
-                                    "Placeholder email — this user can't sign in until it is replaced with a real address.",
-                                  )}
-                                  fontSize="1.25em"
-                                  style={{
-                                    color:
-                                      "var(--ds-color-warning-text-default)",
-                                    marginInlineStart: "var(--ds-size-2)",
-                                    verticalAlign: "text-bottom",
-                                  }}
-                                />
-                              )}
-                            </p>
-                            <p>
-                              <small>{roles}</small>
-                            </p>
-                          </>
-                        }
-                        form={renderEditForm(u)}
-                        actions={
-                          <Button
-                            type="button"
-                            variant="tertiary"
-                            data-color="danger"
-                            data-size="sm"
-                            disabled={pending}
-                            aria-label={t("Delete user {{userName}}", {
-                              userName: u.name,
-                            })}
-                            onClick={() => {
-                              handleDelete(u.id, u.name)
-                            }}
-                          >
-                            {t("Delete")}
-                          </Button>
-                        }
-                      />
-                    </Card.Block>
-                  </li>
-                </Card>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-    </Card>
+      {users.length === 0 ? (
+        <Paragraph>{t("No users yet.")}</Paragraph>
+      ) : (
+        <List.Unordered className={styles.list}>
+          {users.map(u => {
+            const roles =
+              [u.is_admin ? t("admin") : null, u.is_child ? t("child") : null]
+                .filter(Boolean)
+                .join(", ") || t("user")
+            return (
+              <Card asChild key={u.id}>
+                <List.Item>
+                  <Card.Block>
+                    <InlineEditRow
+                      editing={editingId === u.id}
+                      canEdit={canEdit}
+                      pending={pending}
+                      editLabel={t("Edit user {{userName}}", {
+                        userName: u.name,
+                      })}
+                      onStartEdit={() => {
+                        setEditingId(u.id)
+                      }}
+                      view={
+                        <>
+                          <Heading level={4}>{u.name}</Heading>
+                          <Paragraph>
+                            {u.email}
+                            {isSyntheticEmail(u.email) && (
+                              <ExclamationmarkTriangleFillIcon
+                                title={t(
+                                  "Placeholder email — this user can't sign in until it is replaced with a real address.",
+                                )}
+                                fontSize="1.25em"
+                                style={{
+                                  color: "var(--ds-color-warning-text-default)",
+                                  marginInlineStart: "var(--ds-size-2)",
+                                  verticalAlign: "text-bottom",
+                                }}
+                              />
+                            )}
+                          </Paragraph>
+                          <Paragraph data-size="sm">{roles}</Paragraph>
+                        </>
+                      }
+                      form={renderEditForm(u)}
+                      actions={
+                        <Button
+                          type="button"
+                          variant="tertiary"
+                          data-color="danger"
+                          data-size="sm"
+                          disabled={pending}
+                          aria-label={t("Delete user {{userName}}", {
+                            userName: u.name,
+                          })}
+                          onClick={() => {
+                            handleDelete(u.id, u.name)
+                          }}
+                        >
+                          {t("Delete")}
+                        </Button>
+                      }
+                    />
+                  </Card.Block>
+                </List.Item>
+              </Card>
+            )
+          })}
+        </List.Unordered>
+      )}
+    </section>
   )
 }
