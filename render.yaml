@@ -36,8 +36,15 @@ services:
     # /ready runs SELECT 1 against Postgres so DB outages pull the service
     # out of rotation. /health stays as the cheap liveness probe.
     healthCheckPath: /ready
+    # Order matters: Render makes the FIRST-listed domain of an apex/www pair
+    # the canonical (served) host and auto-redirects the other to it. Apex is
+    # listed first so www.minhytte.app 301s to minhytte.app — matching
+    # BETTER_AUTH_URL/CORS_ORIGIN. Reversing the order (or adding www first via
+    # the dashboard) makes www canonical while the app still forces apex,
+    # producing an apex<->www redirect loop (ERR_TOO_MANY_REDIRECTS).
     domains:
       - minhytte.app
+      - www.minhytte.app
     envVars:
       - fromGroup: minhytteapp
       - key: DATABASE_URL
