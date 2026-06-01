@@ -76,6 +76,7 @@ export const bookingOccupantsTable = pgTable(
       .references(() => usersTable.id),
     room_id: integer("room_id").references(() => roomTable.id),
     queued: boolean("queued").notNull().default(false),
+    sleeps_separately: boolean("sleeps_separately").notNull().default(false),
   },
   t => [primaryKey({ columns: [t.booking_id, t.user_id] })],
 )

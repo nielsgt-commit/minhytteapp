@@ -31,6 +31,7 @@ export type BookingDraftAction =
       room_id: number | null
     }
   | { type: "MARK_OCCUPANT_QUEUED"; user_id: number; queued: boolean }
+  | { type: "SET_OCCUPANT_SEPARATE"; user_id: number; separate: boolean }
   | { type: "LOAD_FOR_EDIT"; record: BookingDraftRecord }
   | { type: "RESET" }
 
@@ -50,6 +51,7 @@ export type BookingDraftRecord = {
     user_id: number
     room_id: number | null
     queued: boolean
+    sleeps_separately?: boolean
   }[]
 }
 
@@ -95,6 +97,11 @@ export const markOccupantQueued = (
   queued: boolean,
 ): BookingDraftAction => ({ type: "MARK_OCCUPANT_QUEUED", user_id, queued })
 
+export const setOccupantSeparate = (
+  user_id: number,
+  separate: boolean,
+): BookingDraftAction => ({ type: "SET_OCCUPANT_SEPARATE", user_id, separate })
+
 export const loadForEdit = (
   record: BookingDraftRecord,
 ): BookingDraftAction => ({ type: "LOAD_FOR_EDIT", record })
@@ -129,7 +136,12 @@ export function bookingDraftReducer(
       const occupants = alreadyIn
         ? state.occupants
         : [
-            { user_id: action.booker_id, room_id: null, queued: false },
+            {
+              user_id: action.booker_id,
+              room_id: null,
+              queued: false,
+              sleeps_separately: false,
+            },
             ...state.occupants,
           ]
       return {
@@ -147,6 +159,7 @@ export function bookingDraftReducer(
         user_id: action.user_id,
         room_id: action.room_id ?? null,
         queued: false,
+        sleeps_separately: false,
       }
       return { ...state, occupants: [...state.occupants, newOccupant] }
     }
@@ -161,7 +174,9 @@ export function bookingDraftReducer(
       return {
         ...state,
         occupants: state.occupants.map(o =>
-          o.user_id === action.user_id ? { ...o, room_id: action.room_id } : o,
+          o.user_id === action.user_id
+            ? { ...o, room_id: action.room_id, sleeps_separately: false }
+            : o,
         ),
       }
 
@@ -170,6 +185,23 @@ export function bookingDraftReducer(
         ...state,
         occupants: state.occupants.map(o =>
           o.user_id === action.user_id ? { ...o, queued: action.queued } : o,
+        ),
+      }
+
+    case "SET_OCCUPANT_SEPARATE":
+      return {
+        ...state,
+        occupants: state.occupants.map(o =>
+          o.user_id === action.user_id
+            ? action.separate
+              ? {
+                  ...o,
+                  sleeps_separately: true,
+                  room_id: null,
+                  queued: false,
+                }
+              : { ...o, sleeps_separately: false }
+            : o,
         ),
       }
 
@@ -185,6 +217,7 @@ export function bookingDraftReducer(
           user_id: o.user_id,
           room_id: o.room_id,
           queued: o.queued,
+          sleeps_separately: o.sleeps_separately ?? false,
         })),
       }
 

@@ -7,7 +7,11 @@ type PreviewInput = {
   property_id: number
   start_date: string
   end_date: string
-  occupants: { user_id: number; room_id?: number | null }[]
+  occupants: {
+    user_id: number
+    room_id?: number | null
+    sleeps_separately?: boolean
+  }[]
   exclude_booking_id?: number
 }
 
@@ -30,6 +34,7 @@ function extractInput(
     occupants: draft.occupants.map(o => ({
       user_id: o.user_id,
       room_id: o.room_id,
+      sleeps_separately: o.sleeps_separately,
     })),
     ...(excludeBookingId != null
       ? { exclude_booking_id: excludeBookingId }

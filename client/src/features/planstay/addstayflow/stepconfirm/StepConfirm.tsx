@@ -106,6 +106,14 @@ export function StepConfirm({
       ? `${u.name}${u.is_child ? t(" (child)") : ""}`
       : `#${String(o.user_id)}`
   })
+  const tentNames = draft.occupants
+    .filter(o => o.sleeps_separately)
+    .map(o => {
+      const u = users.find(x => x.id === o.user_id)
+      return u
+        ? `${u.name}${u.is_child ? t(" (child)") : ""}`
+        : `#${String(o.user_id)}`
+    })
 
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
@@ -135,6 +143,7 @@ export function StepConfirm({
           <dd className={styles.item}>
             {roomEntries.length === 0 &&
               unassignedNames.length === 0 &&
+              tentNames.length === 0 &&
               t("No occupants yet")}
             {roomEntries.length > 0 && (
               <ul className={styles.subList}>
@@ -151,6 +160,17 @@ export function StepConfirm({
                   names: unassignedNames.join(", "),
                 })}
               </div>
+            )}
+            {tentNames.length > 0 && (
+              <ul className={styles.subList}>
+                {tentNames.map(name => (
+                  <li key={name}>
+                    {t("{{name}} has a separate sleeping arrangement", {
+                      name,
+                    })}
+                  </li>
+                ))}
+              </ul>
             )}
           </dd>
 

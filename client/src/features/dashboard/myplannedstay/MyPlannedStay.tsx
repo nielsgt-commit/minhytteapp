@@ -38,6 +38,7 @@ type BookingShape = {
     user_id: number
     room_id: number | null
     queued: boolean
+    sleeps_separately: boolean
     user_name: string | null
   }[]
 }
@@ -55,6 +56,7 @@ function bookingToRecord(b: BookingShape): BookingDraftRecord {
       user_id: o.user_id,
       room_id: o.room_id,
       queued: o.queued,
+      sleeps_separately: o.sleeps_separately,
     })),
   }
 }
@@ -199,6 +201,7 @@ export function MyPlannedStay() {
                                   user_id: o.user_id,
                                   room_id: o.room_id,
                                   queued: o.queued,
+                                  sleeps_separately: o.sleeps_separately,
                                 })),
                             })
                           }}

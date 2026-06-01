@@ -205,6 +205,7 @@ export function EditStayFlow({
           existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
           adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
           unassigned={occupancy.unassigned}
+          tent={occupancy.tent}
           draft={draft}
           dispatch={dispatch}
           selectedUserId={initialRecord.booker_id}

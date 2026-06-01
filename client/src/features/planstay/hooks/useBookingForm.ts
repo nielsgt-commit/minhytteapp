@@ -55,6 +55,7 @@ function recordToDraft(r: BookingDraftRecord): BookingDraft {
       user_id: o.user_id,
       room_id: o.room_id,
       queued: o.queued,
+      sleeps_separately: o.sleeps_separately ?? false,
     })),
   }
 }
@@ -107,6 +108,7 @@ export function useBookingForm(
           user_id: o.user_id,
           room_id: o.room_id,
           queued: o.queued,
+          sleeps_separately: o.sleeps_separately,
         })),
       }
       if (mode.kind === "edit") {

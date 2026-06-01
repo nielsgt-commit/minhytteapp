@@ -196,6 +196,7 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
           existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
           adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
           unassigned={occupancy.unassigned}
+          tent={occupancy.tent}
           draft={draft}
           dispatch={dispatch}
           selectedUserId={selectedUserId}

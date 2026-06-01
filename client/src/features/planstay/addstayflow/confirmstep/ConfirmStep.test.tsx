@@ -18,7 +18,9 @@ function makeDraft(overrides: Partial<BookingDraft> = {}): BookingDraft {
     end_date: "2026-07-03",
     status: "confirmed",
     notes: "",
-    occupants: [{ user_id: 1, room_id: null, queued: false }],
+    occupants: [
+      { user_id: 1, room_id: null, queued: false, sleeps_separately: false },
+    ],
     ...overrides,
   }
 }
@@ -69,9 +71,9 @@ describe("ConfirmStep", () => {
     const onConfirm = vi.fn()
     const draft = makeDraft({
       occupants: [
-        { user_id: 1, room_id: 5, queued: false },
-        { user_id: 2, room_id: null, queued: false },
-        { user_id: 3, room_id: null, queued: false },
+        { user_id: 1, room_id: 5, queued: false, sleeps_separately: false },
+        { user_id: 2, room_id: null, queued: false, sleeps_separately: false },
+        { user_id: 3, room_id: null, queued: false, sleeps_separately: false },
       ],
     })
     render(

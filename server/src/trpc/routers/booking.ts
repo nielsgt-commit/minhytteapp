@@ -27,6 +27,7 @@ const bookingOccupantInput = z.object({
   user_id: z.number().int().positive(),
   room_id: z.number().int().positive().nullable().optional(),
   queued: z.boolean().optional().default(false),
+  sleeps_separately: z.boolean().optional().default(false),
 })
 
 const bookingFields = {
@@ -412,6 +413,7 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
         user_name: usersTable.name,
         room_id: bookingOccupantsTable.room_id,
         queued: bookingOccupantsTable.queued,
+        sleeps_separately: bookingOccupantsTable.sleeps_separately,
       })
       .from(bookingOccupantsTable)
       .leftJoin(usersTable, eq(usersTable.id, bookingOccupantsTable.user_id))
@@ -442,6 +444,7 @@ export const bookingRouter = router({
           z.object({
             user_id: z.number().int().positive(),
             room_id: z.number().int().positive().nullable().optional(),
+            sleeps_separately: z.boolean().optional(),
           }),
         ),
         exclude_booking_id: z.number().int().positive().optional(),
@@ -499,6 +502,7 @@ export const bookingRouter = router({
                 user_id: bookingOccupantsTable.user_id,
                 user_name: usersTable.name,
                 room_id: bookingOccupantsTable.room_id,
+                sleeps_separately: bookingOccupantsTable.sleeps_separately,
               })
               .from(bookingOccupantsTable)
               .leftJoin(
@@ -729,10 +733,14 @@ export const bookingRouter = router({
         })
       }
 
-      // Total placed = draft occupants + all occupants in overlapping bookings (unique per person)
+      // Total placed = draft occupants + all occupants in overlapping bookings
+      // (unique per person).  Occupants who sleep separately (e.g. own tent)
+      // don't consume property bed capacity.
       const allPlacedUserIds = new Set([
-        ...occupants.map(o => o.user_id),
-        ...existingOccupants.map(o => o.user_id),
+        ...occupants.filter(o => !o.sleeps_separately).map(o => o.user_id),
+        ...existingOccupants
+          .filter(o => !o.sleeps_separately)
+          .map(o => o.user_id),
       ])
       const totalPlaced = allPlacedUserIds.size
 
@@ -803,8 +811,11 @@ export const bookingRouter = router({
           occupants.map(o => ({
             booking_id: created.id,
             user_id: o.user_id,
-            room_id: o.room_id ?? null,
-            queued: occupantQueued.get(o.user_id) ?? false,
+            room_id: o.sleeps_separately ? null : (o.room_id ?? null),
+            queued: o.sleeps_separately
+              ? false
+              : (occupantQueued.get(o.user_id) ?? false),
+            sleeps_separately: o.sleeps_separately,
           })),
         )
 
@@ -869,6 +880,7 @@ export const bookingRouter = router({
             user_id: bookingOccupantsTable.user_id,
             room_id: bookingOccupantsTable.room_id,
             queued: bookingOccupantsTable.queued,
+            sleeps_separately: bookingOccupantsTable.sleeps_separately,
           })
           .from(bookingOccupantsTable)
           .where(eq(bookingOccupantsTable.booking_id, input.id))
@@ -902,7 +914,8 @@ export const bookingRouter = router({
           if (
             !m ||
             (m.room_id ?? null) !== (e.room_id ?? null) ||
-            m.queued !== e.queued
+            m.queued !== e.queued ||
+            m.sleeps_separately !== e.sleeps_separately
           ) {
             forbid("non-booker may only remove themselves from this booking")
           }
@@ -956,8 +969,11 @@ export const bookingRouter = router({
           occupants.map(o => ({
             booking_id: input.id,
             user_id: o.user_id,
-            room_id: o.room_id ?? null,
-            queued: occupantQueued.get(o.user_id) ?? false,
+            room_id: o.sleeps_separately ? null : (o.room_id ?? null),
+            queued: o.sleeps_separately
+              ? false
+              : (occupantQueued.get(o.user_id) ?? false),
+            sleeps_separately: o.sleeps_separately,
           })),
         )
 

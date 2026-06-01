@@ -9,6 +9,7 @@ export type OccupantDraft = {
   user_id: number
   room_id: number | null
   queued: boolean
+  sleeps_separately: boolean
 }
 
 export type BookingDraft = {

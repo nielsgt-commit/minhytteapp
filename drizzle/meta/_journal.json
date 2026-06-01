@@ -498,6 +498,13 @@
       "when": 1780228455901,
       "tag": "0070_rename_is_main_to_is_family",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1780341221594,
+      "tag": "0071_perfect_oracle",
+      "breakpoints": true
     }
   ]
 }

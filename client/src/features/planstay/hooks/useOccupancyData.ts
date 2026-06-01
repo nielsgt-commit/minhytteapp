@@ -19,6 +19,7 @@ type Booking = {
     user_id: number
     room_id: number | null
     queued: boolean
+    sleeps_separately?: boolean
     user_name: string | null
   }[]
 }
@@ -51,7 +52,9 @@ export function useOccupancyData({
       for (const b of bookings) {
         if (b.status === "cancelled") continue
         if (b.start_date > d || b.end_date < d) continue
-        dayCount += b.occupants.filter(o => !o.queued).length
+        dayCount += b.occupants.filter(
+          o => !o.queued && o.sleeps_separately !== true,
+        ).length
       }
       if (dayCount > peak) peak = dayCount
       cur.setUTCDate(cur.getUTCDate() + 1)
@@ -63,7 +66,12 @@ export function useOccupancyData({
     number | null,
     { user_id: number; queued: boolean }[]
   >()
+  const tent: { user_id: number; queued: boolean }[] = []
   for (const o of draft.occupants) {
+    if (o.sleeps_separately) {
+      tent.push(o)
+      continue
+    }
     const key = o.room_id ?? null
     const list = occupantsByRoom.get(key) ?? []
     list.push(o)
@@ -150,6 +158,7 @@ export function useOccupancyData({
     occupiedBeds,
     occupantsByRoom,
     unassigned,
+    tent,
     adultInKidOnlyByRoom,
     overlappingBookings,
     existingOccupantsByRoom,

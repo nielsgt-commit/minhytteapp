@@ -44,7 +44,7 @@ describe("setBooker", () => {
     expect(next.booker_id).toBe(7)
     expect(next.property_id).toBe(42)
     expect(next.occupants).toEqual([
-      { user_id: 7, room_id: null, queued: false },
+      { user_id: 7, room_id: null, queued: false, sleeps_separately: false },
     ])
   })
 
@@ -60,7 +60,7 @@ describe("addOccupant / removeOccupant", () => {
   test("addOccupant appends with default null room", () => {
     const next = bookingDraftReducer(initialBookingDraft, addOccupant(9))
     expect(next.occupants).toEqual([
-      { user_id: 9, room_id: null, queued: false },
+      { user_id: 9, room_id: null, queued: false, sleeps_separately: false },
     ])
   })
 
@@ -113,7 +113,9 @@ describe("loadForEdit / resetDraft", () => {
     expect(next.property_id).toBe(11)
     expect(next.booker_id).toBe(22)
     expect(next.notes).toBe("")
-    expect(next.occupants).toEqual([{ user_id: 22, room_id: 4, queued: false }])
+    expect(next.occupants).toEqual([
+      { user_id: 22, room_id: 4, queued: false, sleeps_separately: false },
+    ])
   })
 
   test("RESET returns the initial draft", () => {

@@ -62,7 +62,7 @@ export default function AtPropertyNow() {
         role="button"
         tabIndex={0}
         aria-expanded={false}
-        className={styles.stack}
+        className={`${styles.stack} ${styles.clickable}`}
       >
         {guests.slice(0, VISIBLE_LIMIT).map(g => (
           <Avatar
@@ -103,7 +103,11 @@ export default function AtPropertyNow() {
   }
 
   return (
-    <AvatarStack aria-label={t("At property now")} overlap={8}>
+    <AvatarStack
+      aria-label={t("At property now")}
+      overlap={8}
+      className={styles.stack}
+    >
       {guests.map(g => (
         <Avatar
           key={g.user_id}

@@ -223,7 +223,7 @@ export function EquipmentPanel({ propertyId }: Props) {
         {equipment.map(item => (
           <Card asChild key={item.id}>
             <List.Item>
-              <Card.Block className={styles.row}>
+              <Card.Block>
                 <InlineEditRow
                   editing={editingId === item.id}
                   canEdit={canEdit}

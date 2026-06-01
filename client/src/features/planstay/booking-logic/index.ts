@@ -13,6 +13,7 @@
 //   bookingDraftReducer, initialBookingDraft
 //   setDates, setStatus, setNotes, setBooker
 //   addOccupant, removeOccupant, assignOccupantToRoom, markOccupantQueued
+//   setOccupantSeparate
 //   loadForEdit, resetDraft
 //   BookingDraftAction, BookingDraftRecord
 //
@@ -55,6 +56,7 @@ export {
   setBooker,
   setDates,
   setNotes,
+  setOccupantSeparate,
   setStatus,
 } from "./bookingDraftReducer.ts"
 

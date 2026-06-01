@@ -1,5 +1,5 @@
 import { type SyntheticEvent, useState } from "react"
-import { Card, Heading, Textfield } from "@digdir/designsystemet-react"
+import { Card, Divider, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 import { useExpenseEditor } from "./useExpenseEditor"
@@ -61,16 +61,18 @@ export function AddNewExpenseFlow({
       <form onSubmit={handleSubmit}>
         <Card.Block>
           <div className={styles.container}>
-            <Heading level={2} data-size="sm">
-              {t("Add expense")}
-            </Heading>
-
             <DraftList
               drafts={drafts.drafts}
               total={drafts.total}
               pending={pending}
               onRemove={drafts.remove}
             />
+
+            {drafts.drafts.length > 0 && <Divider />}
+
+            <Heading level={2} data-size="sm">
+              {t("Add expense")}
+            </Heading>
 
             <CategoryPicker
               categories={categories}
