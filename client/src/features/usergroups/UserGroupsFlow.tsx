@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -34,6 +34,14 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   const { data: users } = useSuspenseQuery(
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
   )
+  // Pending invites (people invited but not yet signed up) for this property,
+  // shown in the member picker so a head can attach them to a group up-front.
+  // allowedEmail.list is head/admin-only, so only fetch when the caller can edit.
+  const { data: invitesData } = useQuery({
+    ...trpc.allowedEmail.list.queryOptions({ property_id: propertyId }),
+    enabled: canEdit,
+  })
+  const pendingInvites = (invitesData ?? []).filter(e => e.used_at == null)
 
   const groupKeys = [trpc.userGroup.pathKey()]
 
@@ -61,6 +69,10 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     trpc.user.create.mutationOptions(),
     [trpc.user.pathKey()],
   )
+  const assignInvite = useMutationWithInvalidation(
+    trpc.allowedEmail.assignGroup.mutationOptions(),
+    [trpc.userGroup.pathKey(), trpc.allowedEmail.pathKey()],
+  )
 
   const [openForm, setOpenForm] = useState<OpenForm>(null)
   const [addingUserForGroup, setAddingUserForGroup] = useState<number | null>(
@@ -74,6 +86,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     addMember,
     removeMember,
     createUser,
+    assignInvite,
   )
 
   const handleCreate = (
@@ -92,7 +105,8 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
   }
 
   const handleRename =
-    (groupId: number) => async (input: { name: string; is_family: boolean }) => {
+    (groupId: number) =>
+    async (input: { name: string; is_family: boolean }) => {
       await updateGroup.mutateAsync({
         id: groupId,
         ...input,
@@ -118,6 +132,19 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     (groupId: number) => (user_id: number, reset: () => void) => {
       addMember.mutate(
         { user_group_id: groupId, user_id, property_id: propertyId },
+        {
+          onSuccess: () => {
+            reset()
+            setOpenForm(null)
+          },
+        },
+      )
+    }
+
+  const handleAddInvite =
+    (groupId: number) => (inviteId: number, reset: () => void) => {
+      assignInvite.mutate(
+        { id: inviteId, user_group_id: groupId, property_id: propertyId },
         {
           onSuccess: () => {
             reset()
@@ -214,6 +241,10 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
           groups.map(g => {
             const memberIds = new Set(g.members.map(m => m.user_id))
             const availableUsers = users.filter(u => !memberIds.has(u.id))
+            // Unclaimed invites not already pointed at this group.
+            const availableInvites = pendingInvites
+              .filter(e => e.user_group_id !== g.id)
+              .map(e => ({ id: e.id, email: e.email }))
             const isRenaming =
               openForm?.kind === "rename" && openForm.groupId === g.id
             const isAddingMember =
@@ -223,6 +254,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
                 key={g.id}
                 group={g}
                 availableUsers={availableUsers}
+                availableInvites={availableInvites}
                 canEdit={canEdit}
                 isRenaming={isRenaming}
                 isAddingMember={isAddingMember}
@@ -246,6 +278,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
                 }}
                 onRenameSubmit={handleRename(g.id)}
                 onAddMember={handleAddMember(g.id)}
+                onAddInvite={handleAddInvite(g.id)}
                 onCreateAndAddMember={handleCreateAndAddMember(g.id)}
                 onSwitchToCreateUser={() => {
                   setAddingUserForGroup(g.id)

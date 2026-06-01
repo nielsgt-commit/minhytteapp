@@ -3,6 +3,7 @@
   "(none)": "(none)",
   "{{count}} member_one": "{{count}} member",
   "{{count}} member_other": "{{count}} members",
+  "{{email}} (invited)": "{{email}} (invited)",
   "+ Add group": "+ Add group",
   "+ Add user": "+ Add user",
   "Accepted": "Accepted",

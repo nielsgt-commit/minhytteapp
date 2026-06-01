@@ -1,8 +1,9 @@
 import { TRPCError } from "@trpc/server"
-import { and, asc, eq, inArray } from "drizzle-orm"
+import { and, asc, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { propertyTable } from "../../db/schema/property.schema.ts"
 import {
+  allowedEmailsTable,
   userGroupMembersTable,
   userGroupsTable,
   usersTable,
@@ -14,7 +15,7 @@ import {
   router,
 } from "../init.ts"
 import { userIdsForProperty } from "./userGroup.ts"
-import { normalizeEmail } from "../../auth/email.ts"
+import { isSyntheticEmail, normalizeEmail } from "../../auth/email.ts"
 
 const birthdayString = z
   .string()
@@ -180,10 +181,7 @@ export const userRouter = router({
         .where(
           and(
             eq(userGroupMembersTable.user_id, ctx.user.id),
-            eq(
-              userGroupMembersTable.user_group_id,
-              membership.user_group_id,
-            ),
+            eq(userGroupMembersTable.user_group_id, membership.user_group_id),
           ),
         )
         .returning()
@@ -332,15 +330,75 @@ export const userRouter = router({
       // grant admin or change child status — that would be privilege
       // escalation. Role flags are only applied when the caller is an admin.
       const roleFields = ctx.user.is_admin ? { is_admin, is_child } : {}
-      const [updated] = await ctx.db
-        .update(usersTable)
-        // Normalize the email so it matches the lowercase invariant the auth
-        // allowlist and magic-link lookup assume (see auth.ts). Without this a
-        // mixed-case email would never resolve to this user at sign-in.
-        .set({ ...rest, email: normalizeEmail(email), ...roleFields })
-        .where(eq(usersTable.id, id))
-        .returning()
-      return updated
+      // Normalize the email so it matches the lowercase invariant the auth
+      // allowlist and magic-link lookup assume (see auth.ts). Without this a
+      // mixed-case email would never resolve to this user at sign-in.
+      const newEmail = normalizeEmail(email)
+      return ctx.db.transaction(async tx => {
+        const existing = (
+          await tx
+            .select({ email: usersTable.email })
+            .from(usersTable)
+            .where(eq(usersTable.id, id))
+            .limit(1)
+        ).at(0)
+        const [updated] = await tx
+          .update(usersTable)
+          .set({ ...rest, email: newEmail, ...roleFields })
+          .where(eq(usersTable.id, id))
+          .returning()
+
+        // Replacing a placeholder (synthetic) email with a real one "activates"
+        // a quick-added user. Login already works off the users row, but record
+        // a claimed invite so the person also shows up in the Invites panel
+        // alongside formally-invited users — keeping the two admin views
+        // consistent. Skip if an invite for this email+property already exists.
+        if (
+          existing &&
+          isSyntheticEmail(existing.email) &&
+          !isSyntheticEmail(newEmail)
+        ) {
+          const already = (
+            await tx
+              .select({ id: allowedEmailsTable.id })
+              .from(allowedEmailsTable)
+              .where(
+                and(
+                  eq(sql`lower(${allowedEmailsTable.email})`, newEmail),
+                  eq(allowedEmailsTable.property_id, input.property_id),
+                ),
+              )
+              .limit(1)
+          ).at(0)
+          if (!already) {
+            // Attribute it to the user's family group for this property when
+            // that's unambiguous (exactly one); otherwise leave it null.
+            const famGroups = await tx
+              .select({ id: userGroupsTable.id })
+              .from(userGroupMembersTable)
+              .innerJoin(
+                userGroupsTable,
+                eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+              )
+              .where(
+                and(
+                  eq(userGroupMembersTable.user_id, id),
+                  eq(userGroupsTable.property_id, input.property_id),
+                  eq(userGroupsTable.is_family, true),
+                ),
+              )
+            await tx.insert(allowedEmailsTable).values({
+              email: newEmail,
+              property_id: input.property_id,
+              user_group_id: famGroups.length === 1 ? famGroups[0].id : null,
+              added_by_user_id: ctx.user.id,
+              used_at: new Date(),
+              used_by_user_id: id,
+            })
+          }
+        }
+        return updated
+      })
     }),
 
   delete: adminProcedure

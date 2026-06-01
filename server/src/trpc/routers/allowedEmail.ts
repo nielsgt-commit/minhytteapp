@@ -262,6 +262,81 @@ export const allowedEmailRouter = router({
       })
     }),
 
+  // Tie an existing (unaccepted) property invite to a group, so the invitee is
+  // auto-added to that group when they sign up (via applyInvitesForNewUser).
+  // Lets a head pick a not-yet-signed-up invitee straight from the group's
+  // member picker instead of creating a placeholder user.
+  assignGroup: headOrAdminProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        user_group_id: z.number().int().positive(),
+        property_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+      return ctx.db.transaction(async tx => {
+        const invite = (
+          await tx
+            .select()
+            .from(allowedEmailsTable)
+            .where(eq(allowedEmailsTable.id, input.id))
+            .limit(1)
+        ).at(0)
+        if (!invite) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "invite not found",
+          })
+        }
+        if (invite.property_id !== input.property_id) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "invite is not for this property",
+          })
+        }
+        if (invite.used_at != null) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "invite has already been accepted",
+          })
+        }
+
+        const group = (
+          await tx
+            .select({ property_id: userGroupsTable.property_id })
+            .from(userGroupsTable)
+            .where(eq(userGroupsTable.id, input.user_group_id))
+            .limit(1)
+        ).at(0)
+        if (!group) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "user group not found",
+          })
+        }
+        if (group.property_id == null) {
+          await tx
+            .update(userGroupsTable)
+            .set({ property_id: input.property_id })
+            .where(eq(userGroupsTable.id, input.user_group_id))
+        } else if (group.property_id !== input.property_id) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "selected group is linked to a different property",
+          })
+        }
+
+        const [updated] = await tx
+          .update(allowedEmailsTable)
+          .set({ user_group_id: input.user_group_id })
+          .where(eq(allowedEmailsTable.id, input.id))
+          .returning()
+        return updated
+      })
+    }),
+
   remove: headOrAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {

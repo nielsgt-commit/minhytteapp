@@ -24,10 +24,12 @@ type Group = {
 }
 
 type AvailableUser = { id: number; name: string }
+type AvailableInvite = { id: number; email: string }
 
 type GroupCardProps = {
   group: Group
   availableUsers: AvailableUser[]
+  availableInvites: AvailableInvite[]
   canEdit: boolean
   isRenaming: boolean
   isAddingMember: boolean
@@ -41,6 +43,7 @@ type GroupCardProps = {
   onDelete: () => void
   onRenameSubmit: (input: { name: string; is_family: boolean }) => Promise<void>
   onAddMember: (userId: number, reset: () => void) => void
+  onAddInvite: (inviteId: number, reset: () => void) => void
   onCreateAndAddMember: (name: string, reset: () => void) => void
   onSwitchToCreateUser: () => void
   onBackFromCreateUser: () => void
@@ -52,6 +55,7 @@ type GroupCardProps = {
 export function GroupCard({
   group,
   availableUsers,
+  availableInvites,
   canEdit,
   isRenaming,
   isAddingMember,
@@ -65,6 +69,7 @@ export function GroupCard({
   onDelete,
   onRenameSubmit,
   onAddMember,
+  onAddInvite,
   onCreateAndAddMember,
   onSwitchToCreateUser,
   onBackFromCreateUser,
@@ -207,8 +212,10 @@ export function GroupCard({
               key={`add-member-${String(group.id)}`}
               groupName={group.name}
               availableUsers={availableUsers}
+              availableInvites={availableInvites}
               pending={addMemberPending}
               onSubmit={onAddMember}
+              onAddInvite={onAddInvite}
               onSwitchToCreateUser={onSwitchToCreateUser}
               onCancel={onCancelAddMember}
             />

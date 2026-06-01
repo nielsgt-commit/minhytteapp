@@ -4,7 +4,10 @@ import { describe, expect, test, vi } from "vitest"
 import { AddMemberForm } from "./AddMemberForm"
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, vars?: Record<string, unknown>) =>
+      vars ? key.replace(/{{(\w+)}}/g, (_, k: string) => String(vars[k])) : key,
+  }),
 }))
 
 const users = [
@@ -12,18 +15,23 @@ const users = [
   { id: 2, name: "Bob" },
 ]
 
+type Props = React.ComponentProps<typeof AddMemberForm>
+const baseProps: Props = {
+  groupName: "Owners",
+  availableUsers: users,
+  availableInvites: [],
+  pending: false,
+  onSubmit: () => {},
+  onAddInvite: () => {},
+  onSwitchToCreateUser: () => {},
+  onCancel: () => {},
+}
+const renderForm = (overrides: Partial<Props> = {}) =>
+  render(<AddMemberForm {...baseProps} {...overrides} />)
+
 describe("AddMemberForm", () => {
   test("renders user options and action buttons", () => {
-    render(
-      <AddMemberForm
-        groupName="Owners"
-        availableUsers={users}
-        pending={false}
-        onSubmit={() => {}}
-        onSwitchToCreateUser={() => {}}
-        onCancel={() => {}}
-      />,
-    )
+    renderForm()
     expect(screen.getByLabelText("User")).toBeInTheDocument()
     expect(screen.getByRole("option", { name: "Alice" })).toBeInTheDocument()
     expect(screen.getByRole("option", { name: "Bob" })).toBeInTheDocument()
@@ -37,16 +45,7 @@ describe("AddMemberForm", () => {
   test("submits the selected user id as a number", async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
-    render(
-      <AddMemberForm
-        groupName="Owners"
-        availableUsers={users}
-        pending={false}
-        onSubmit={onSubmit}
-        onSwitchToCreateUser={() => {}}
-        onCancel={() => {}}
-      />,
-    )
+    renderForm({ onSubmit })
 
     await user.selectOptions(screen.getByLabelText("User"), "2")
     await user.click(screen.getByRole("button", { name: "Save" }))
@@ -56,51 +55,47 @@ describe("AddMemberForm", () => {
     expect(typeof onSubmit.mock.calls[0][1]).toBe("function")
   })
 
+  test("renders pending invites and submits the invite id", async () => {
+    const onAddInvite = vi.fn()
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+    renderForm({
+      onAddInvite,
+      onSubmit,
+      availableInvites: [{ id: 7, email: "mari@example.com" }],
+    })
+
+    const option = screen.getByRole("option", {
+      name: "mari@example.com (invited)",
+    })
+    expect(option).toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText("User"), option)
+    await user.click(screen.getByRole("button", { name: "Save" }))
+
+    expect(onAddInvite).toHaveBeenCalledTimes(1)
+    expect(onAddInvite.mock.calls[0][0]).toBe(7)
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
   test("selecting the +Add user sentinel calls onSwitchToCreateUser and does not submit", async () => {
     const onSubmit = vi.fn()
     const onSwitchToCreateUser = vi.fn()
     const user = userEvent.setup()
-    render(
-      <AddMemberForm
-        groupName="Owners"
-        availableUsers={users}
-        pending={false}
-        onSubmit={onSubmit}
-        onSwitchToCreateUser={onSwitchToCreateUser}
-        onCancel={() => {}}
-      />,
-    )
+    renderForm({ onSubmit, onSwitchToCreateUser })
 
     await user.selectOptions(screen.getByLabelText("User"), "+ Add user")
     expect(onSwitchToCreateUser).toHaveBeenCalledTimes(1)
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
-  test("Save button is disabled when no users are available", () => {
-    render(
-      <AddMemberForm
-        groupName="Owners"
-        availableUsers={[]}
-        pending={false}
-        onSubmit={() => {}}
-        onSwitchToCreateUser={() => {}}
-        onCancel={() => {}}
-      />,
-    )
+  test("Save button is disabled when no users or invites are available", () => {
+    renderForm({ availableUsers: [], availableInvites: [] })
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
   })
 
   test("both buttons are disabled while pending", () => {
-    render(
-      <AddMemberForm
-        groupName="Owners"
-        availableUsers={users}
-        pending={true}
-        onSubmit={() => {}}
-        onSwitchToCreateUser={() => {}}
-        onCancel={() => {}}
-      />,
-    )
+    renderForm({ pending: true })
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
   })
@@ -108,16 +103,7 @@ describe("AddMemberForm", () => {
   test("Cancel button calls onCancel", async () => {
     const onCancel = vi.fn()
     const user = userEvent.setup()
-    render(
-      <AddMemberForm
-        groupName="Owners"
-        availableUsers={users}
-        pending={false}
-        onSubmit={() => {}}
-        onSwitchToCreateUser={() => {}}
-        onCancel={onCancel}
-      />,
-    )
+    renderForm({ onCancel })
     await user.click(screen.getByRole("button", { name: "Cancel" }))
     expect(onCancel).toHaveBeenCalledTimes(1)
   })

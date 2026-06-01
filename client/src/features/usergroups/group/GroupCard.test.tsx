@@ -28,6 +28,7 @@ function makeProps(
   return {
     group: baseGroup,
     availableUsers,
+    availableInvites: [],
     canEdit: true,
     isRenaming: false,
     isAddingMember: false,
@@ -41,6 +42,7 @@ function makeProps(
     onDelete: vi.fn(),
     onRenameSubmit: vi.fn(),
     onAddMember: vi.fn(),
+    onAddInvite: vi.fn(),
     onCreateAndAddMember: vi.fn(),
     onSwitchToCreateUser: vi.fn(),
     onBackFromCreateUser: vi.fn(),
