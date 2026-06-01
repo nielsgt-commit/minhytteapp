@@ -76,7 +76,7 @@ export default function BottomNavBar() {
 
   const labels: Record<NavLabel, string> = {
     Dashboard: t("Dashboard"),
-    Plan: t("Plan"),
+    Plan: t("Plan stay"),
     Expenses: t("Expenses"),
     Maintenance: t("Maintenance"),
     Settlement: t("Settlement"),

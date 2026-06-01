@@ -139,7 +139,7 @@ export function StepDates({
                 overlappingBookings.length === 0 &&
                 occupiedBeds !== null && (
                   <Paragraph data-size="sm" className={styles.subtleText}>
-                    {t("No other bookings in this period.")}
+                    {t("No other planned stays in this period.")}
                   </Paragraph>
                 )}
             </Card.Block>

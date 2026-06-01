@@ -3,7 +3,6 @@ import {
   Field,
   Heading,
   Label,
-  Paragraph,
   Tag,
   EXPERIMENTAL_Suggestion as Suggestion,
 } from "@digdir/designsystemet-react"
@@ -52,13 +51,6 @@ export function StepGuests({
           )}
         </div>
 
-        <Paragraph data-size="sm" className={styles.bookerLabel}>
-          {t("Booker: {{name}}", {
-            name:
-              users.find(u => u.id === selectedUserId)?.name ??
-              t("(select user)"),
-          })}
-        </Paragraph>
         <Field>
           <Label>{t("Add guests")}</Label>
           <Suggestion

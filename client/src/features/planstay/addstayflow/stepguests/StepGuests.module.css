@@ -6,10 +6,6 @@
   background-color: var(--ds-color-accent-surface-default);
 }
 
-.bookerLabel {
-  margin-bottom: 0.5rem;
-}
-
 .headingRow {
   display: flex;
   align-items: center;
