@@ -2,7 +2,7 @@ import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 
-import enCalendar from "./locales/en/calendar.json"
+import enPlanstay from "./locales/en/planstay.json"
 import enCheckin from "./locales/en/checkin.json"
 import enCommon from "./locales/en/common.json"
 import enCore from "./locales/en/core.json"
@@ -20,7 +20,7 @@ import enUser from "./locales/en/user.json"
 import enUsergroups from "./locales/en/usergroups.json"
 import enUsersettings from "./locales/en/usersettings.json"
 
-import nbCalendar from "./locales/nb/calendar.json"
+import nbPlanstay from "./locales/nb/planstay.json"
 import nbCheckin from "./locales/nb/checkin.json"
 import nbCommon from "./locales/nb/common.json"
 import nbCore from "./locales/nb/core.json"
@@ -42,7 +42,7 @@ export const defaultNS = "common"
 
 export const resources = {
   en: {
-    calendar: enCalendar,
+    planstay: enPlanstay,
     checkin: enCheckin,
     common: enCommon,
     core: enCore,
@@ -61,7 +61,7 @@ export const resources = {
     usersettings: enUsersettings,
   },
   nb: {
-    calendar: nbCalendar,
+    planstay: nbPlanstay,
     checkin: nbCheckin,
     common: nbCommon,
     core: nbCore,
@@ -90,7 +90,7 @@ void i18n
     supportedLngs: ["en", "nb"],
     defaultNS,
     ns: [
-      "calendar",
+      "planstay",
       "checkin",
       "common",
       "core",

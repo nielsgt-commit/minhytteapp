@@ -5,15 +5,15 @@ import {
   assignOccupantToRoom,
   markOccupantQueued,
   removeOccupant,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   BookingDraftAction,
   PreviewConflicts,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import { RoomCapacityMeter } from "../roomcapacitymeter/RoomCapacityMeter.tsx"
 import { UnassignedPanel } from "../unassignedpanel/UnassignedPanel.tsx"
-import type { ExistingOccupant, RoomShape } from "@/features/calendar/types.ts"
+import type { ExistingOccupant, RoomShape } from "@/features/planstay/types.ts"
 import styles from "./StepRooms.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
@@ -57,7 +57,7 @@ export function StepRooms({
   stepClass: string
   stepActiveClass: string
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div className={styles.card}>

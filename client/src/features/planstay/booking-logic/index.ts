@@ -2,7 +2,7 @@
 // booking-logic — shared module for the Calendar booking flow.
 //
 // Import surface:
-//   import { ... } from "@/features/calendar/booking-logic"
+//   import { ... } from "@/features/planstay/booking-logic"
 //
 // Types:
 //   OccupantDraft, BookingDraft, BookingStatus

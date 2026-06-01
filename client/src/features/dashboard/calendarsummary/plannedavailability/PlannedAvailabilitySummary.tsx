@@ -92,6 +92,8 @@ export default function PlannedAvailabilitySummary({
     setSelectedDay(firstWithGuests ?? null)
   }, [weekStart, bookings])
 
+  const hasForecast = (weather?.days?.length ?? 0) > 0
+
   const propertyBookings = bookings.filter(b => b.status !== "cancelled")
 
   const guestsOnDay = (iso: string) => {
@@ -194,7 +196,9 @@ export default function PlannedAvailabilitySummary({
       <div className="calendar-week-chips"></div>
 
       <ul className={styles.dayList}>
-        {isMobile && days.every(d => guestsOnDay(toIso(d)) === 0) ? (
+        {isMobile &&
+        !hasForecast &&
+        days.every(d => guestsOnDay(toIso(d)) === 0) ? (
           <Card asChild>
             <li>
               <Card.Block

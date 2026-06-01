@@ -43,6 +43,10 @@
   cursor: default;
 }
 
+.dayCardToday {
+  border-color: var(--ds-color-accent-border-strong);
+}
+
 .dayRow {
   display: flex;
   align-items: center;

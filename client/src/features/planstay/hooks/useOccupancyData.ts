@@ -1,11 +1,11 @@
 import {
   bedCapacity,
   propertyCapacity,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   PreviewConflicts,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import type { RoomShape, ExistingOccupant } from "../types"
 
 type Booking = {

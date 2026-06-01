@@ -5,8 +5,8 @@ import { Button, Card, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
-import type { BookingDraftRecord } from "@/features/calendar/booking-logic"
-import { EditStayFlow } from "@/features/calendar/editstayflow/EditStayFlow.tsx"
+import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
+import { EditStayFlow } from "@/features/planstay/editstayflow/EditStayFlow.tsx"
 import styles from "./MyPlannedStay.module.css"
 
 function rangesOverlap(

@@ -3,7 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
-import type { BookingDraftRecord } from "@/features/calendar/booking-logic"
+import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
 import { useBookingForm } from "../hooks/useBookingForm.ts"
 import { useFlatpickr } from "../hooks/useFlatpickr.ts"
 import { useOccupancyData } from "../hooks/useOccupancyData.ts"
@@ -38,7 +38,7 @@ export function EditStayFlow({
   initialRecord: BookingDraftRecord
   onClose: () => void
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const trpc = useTRPC()
 
   const { data: users } = useSuspenseQuery(

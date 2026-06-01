@@ -8,7 +8,7 @@ await i18n.changeLanguage("en")
 import type {
   BookingDraft,
   PreviewConflicts,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 
 function makeDraft(overrides: Partial<BookingDraft> = {}): BookingDraft {
   return {

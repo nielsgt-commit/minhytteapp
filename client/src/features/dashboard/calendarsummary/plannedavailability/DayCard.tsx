@@ -49,7 +49,7 @@ export default function DayCard({
   } satisfies Record<WeekdayLabel, string>
   const isClickable = count > 0
   return (
-    <Card asChild>
+    <Card asChild className={isToday ? styles.dayCardToday : undefined}>
       <li>
         <Card.Block
           role={isClickable ? "button" : undefined}

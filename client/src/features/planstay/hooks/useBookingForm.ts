@@ -7,11 +7,11 @@ import {
   initialBookingDraft,
   setBooker,
   usePreviewConflicts,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   BookingDraftRecord,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 
 export type SubmitState = { error: string | null; confirming: boolean }
 
@@ -65,7 +65,7 @@ export function useBookingForm(
   mode: BookingFormMode,
   onSuccess?: () => void,
 ) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const [draft, dispatch] = useReducer(

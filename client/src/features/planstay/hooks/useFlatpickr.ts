@@ -6,11 +6,11 @@ import "flatpickr/dist/flatpickr.min.css"
 import "../flatpickr-digdir.css"
 import { useTranslation } from "react-i18next"
 import { SEASON_MIN, SEASON_MAX } from "../constants"
-import { setDates, toIso } from "@/features/calendar/booking-logic"
+import { setDates, toIso } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   BookingDraftAction,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 
 const WIDE_QUERY = "(min-width: 640px)"
 

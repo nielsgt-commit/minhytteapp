@@ -29,7 +29,7 @@ function isoWeekMonday(year: number, week: number): Date {
 }
 
 export function AddStayFlow({ propertyId }: { propertyId: number }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const trpc = useTRPC()
   const selectedUserId = useAppSelector(selectSelectedUserId)
 

@@ -6,7 +6,7 @@ import styles from "./NavTabs.module.css"
 
 const navLinks = linkOptions([
   { to: "/oversikt", label: "Dashboard" },
-  { to: "/kalender", label: "Calendar" },
+  { to: "/planleggopphold", label: "Plan stay" },
   { to: "/vedlikehold", label: "Maintenance" },
   { to: "/utlegg", label: "Expenses" },
   { to: "/oppgjor", label: "Settlement" },
@@ -18,7 +18,7 @@ export default function NavTabs({ children }: { children: ReactNode }) {
 
   const labels: Record<(typeof navLinks)[number]["label"], string> = {
     Dashboard: t("Dashboard"),
-    Calendar: t("Calendar"),
+    "Plan stay": t("Plan stay"),
     Maintenance: t("Maintenance"),
     Expenses: t("Expenses"),
     Settlement: t("Settlement"),

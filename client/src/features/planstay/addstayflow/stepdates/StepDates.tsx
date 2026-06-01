@@ -43,7 +43,7 @@ export function StepDates({
   stepClass: string
   stepActiveClass: string
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const availability = useMemo<Availability | null>(() => {
     if (occupiedBeds === null) return null
     const ratio = totalBeds > 0 ? (totalBeds - occupiedBeds) / totalBeds : 1

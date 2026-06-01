@@ -1,8 +1,8 @@
 export const ROUTE_EQUIVALENTS: Record<string, { en: string; nb: string }> = {
   '/oversikt':       { en: '/dashboard',     nb: '/oversikt' },
   '/dashboard':      { en: '/dashboard',     nb: '/oversikt' },
-  '/kalender':       { en: '/calendar',      nb: '/kalender' },
-  '/calendar':       { en: '/calendar',      nb: '/kalender' },
+  '/planleggopphold': { en: '/planstay',     nb: '/planleggopphold' },
+  '/planstay':        { en: '/planstay',     nb: '/planleggopphold' },
   '/utlegg':         { en: '/expenses',      nb: '/utlegg' },
   '/expenses':       { en: '/expenses',      nb: '/utlegg' },
   '/vedlikehold':    { en: '/maintenance',   nb: '/vedlikehold' },

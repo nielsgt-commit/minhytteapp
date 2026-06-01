@@ -1,10 +1,10 @@
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { groupConsecutive } from "@/features/calendar/booking-logic"
+import { groupConsecutive } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   PreviewConflicts,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import styles from "./ConfirmStep.module.css"
 
 function formatDateRanges(isos: string[]): string {
@@ -28,7 +28,7 @@ export function ConfirmStep({
   isMutating: boolean
   roomOverCapacityDays: Map<number, string[]>
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const overflowIds = new Set<number>()
   for (const r of conflicts.perRoom) {
     for (const uid of r.adultInKidOnlyUserIds) overflowIds.add(uid)

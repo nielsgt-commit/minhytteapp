@@ -9,11 +9,11 @@ import {
 } from "@digdir/designsystemet-react"
 import type { SuggestionItem } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { addOccupant, removeOccupant } from "@/features/calendar/booking-logic"
+import { addOccupant, removeOccupant } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   BookingDraftAction,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import styles from "./StepGuests.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
@@ -39,7 +39,7 @@ export function StepGuests({
   stepClass: string
   stepActiveClass: string
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <div className={styles.card}>

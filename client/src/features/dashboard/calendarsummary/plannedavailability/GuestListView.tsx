@@ -1,5 +1,4 @@
-import { Paragraph, Tag } from "@digdir/designsystemet-react"
-import { useTranslation } from "react-i18next"
+import { Tag } from "@digdir/designsystemet-react"
 import styles from "./PlannedAvailabilitySummary.module.css"
 
 type Props = {
@@ -7,18 +6,14 @@ type Props = {
 }
 
 export default function GuestListView({ names }: Props) {
-  const { t } = useTranslation("dashboard")
+  if (names.length === 0) return null
   return (
     <div className={styles.guestList}>
-      {names.length > 0 ? (
-        names.map(n => (
-          <Tag key={n} data-color="info">
-            {n}
-          </Tag>
-        ))
-      ) : (
-        <Paragraph>{t("No guests")}</Paragraph>
-      )}
+      {names.map(n => (
+        <Tag key={n} data-color="info">
+          {n}
+        </Tag>
+      ))}
     </div>
   )
 }

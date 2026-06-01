@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { Calendar } from "@/features/calendar/Calendar"
+import { PlanStay } from "@/features/planstay/PlanStay"
 import { trpc } from "@/trpc/client"
 
-export const Route = createFileRoute("/_authed/calendar")({
+export const Route = createFileRoute("/_authed/planleggopphold")({
   loader: ({ context }) => {
     const tasks: Promise<unknown>[] = [
       context.queryClient.ensureQueryData(trpc.user.me.queryOptions()),
@@ -19,5 +19,5 @@ export const Route = createFileRoute("/_authed/calendar")({
     }
     return Promise.all(tasks)
   },
-  component: Calendar,
+  component: PlanStay,
 })

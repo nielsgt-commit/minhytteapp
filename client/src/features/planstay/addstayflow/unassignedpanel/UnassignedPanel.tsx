@@ -1,6 +1,6 @@
 import { Card, Checkbox, Label, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import type { PreviewConflicts } from "@/features/calendar/booking-logic"
+import type { PreviewConflicts } from "@/features/planstay/booking-logic"
 import styles from "./UnassignedPanel.module.css"
 
 export function UnassignedPanel({
@@ -12,7 +12,7 @@ export function UnassignedPanel({
   conflicts: PreviewConflicts | undefined
   onQueue: (userId: number, queued: boolean) => void
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const isOverCap = (conflicts?.property.overCapacityBy ?? 0) > 0
   const allQueued = occupants.length > 0 && occupants.every(o => o.queued)
 

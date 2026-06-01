@@ -9,15 +9,15 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { setNotes, setStatus } from "@/features/calendar/booking-logic"
+import { setNotes, setStatus } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   BookingDraftAction,
   PreviewConflicts,
-} from "@/features/calendar/booking-logic"
+} from "@/features/planstay/booking-logic"
 import { ConfirmStep } from "../confirmstep/ConfirmStep.tsx"
 import type { SubmitAction, SubmitState } from "../../hooks/useBookingForm.ts"
-import type { RoomShape } from "@/features/calendar/types.ts"
+import type { RoomShape } from "@/features/planstay/types.ts"
 import styles from "./StepConfirm.module.css"
 
 type User = { id: number; name: string; is_child: boolean | null }
@@ -69,7 +69,7 @@ export function StepConfirm({
   submitPendingLabel?: string
   extraActions?: ReactNode
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
   const nights =
     draft.start_date && draft.end_date

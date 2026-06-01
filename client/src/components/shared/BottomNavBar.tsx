@@ -20,7 +20,7 @@ import styles from "./BottomNavBar.module.css"
 type IconComp = ComponentType<SVGProps<SVGSVGElement> & { fontSize?: string }>
 type NavLabel =
   | "Dashboard"
-  | "Calendar"
+  | "Plan"
   | "Expenses"
   | "Maintenance"
   | "Settlement"
@@ -43,8 +43,8 @@ const navItems: {
     IconActive: asIcon(HouseFillIcon),
   },
   {
-    to: "/kalender",
-    label: "Calendar",
+    to: "/planleggopphold",
+    label: "Plan",
     Icon: asIcon(CalendarIcon),
     IconActive: asIcon(CalendarFillIcon),
   },
@@ -76,7 +76,7 @@ export default function BottomNavBar() {
 
   const labels: Record<NavLabel, string> = {
     Dashboard: t("Dashboard"),
-    Calendar: t("Calendar"),
+    Plan: t("Plan"),
     Expenses: t("Expenses"),
     Maintenance: t("Maintenance"),
     Settlement: t("Settlement"),

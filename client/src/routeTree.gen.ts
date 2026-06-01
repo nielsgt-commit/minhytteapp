@@ -18,15 +18,15 @@ import { Route as AuthedVedlikeholdRouteImport } from './routes/_authed/vedlikeh
 import { Route as AuthedUtleggRouteImport } from './routes/_authed/utlegg'
 import { Route as AuthedUsersettingsRouteImport } from './routes/_authed/usersettings'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
+import { Route as AuthedPlanstayRouteImport } from './routes/_authed/planstay'
+import { Route as AuthedPlanleggoppholdRouteImport } from './routes/_authed/planleggopphold'
 import { Route as AuthedOversiktRouteImport } from './routes/_authed/oversikt'
 import { Route as AuthedOppgjorRouteImport } from './routes/_authed/oppgjor'
 import { Route as AuthedManagepropertyRouteImport } from './routes/_authed/manageproperty'
 import { Route as AuthedMaintenanceRouteImport } from './routes/_authed/maintenance'
-import { Route as AuthedKalenderRouteImport } from './routes/_authed/kalender'
 import { Route as AuthedInnstillingerRouteImport } from './routes/_authed/innstillinger'
 import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
-import { Route as AuthedCalendarRouteImport } from './routes/_authed/calendar'
 import { Route as AuthedAdministrerRouteImport } from './routes/_authed/administrer'
 import { Route as AuthedManagepropertyIndexRouteImport } from './routes/_authed/manageproperty/index'
 import { Route as AuthedAdministrerIndexRouteImport } from './routes/_authed/administrer/index'
@@ -98,6 +98,16 @@ const AuthedSettlementRoute = AuthedSettlementRouteImport.update({
   path: '/settlement',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedPlanstayRoute = AuthedPlanstayRouteImport.update({
+  id: '/planstay',
+  path: '/planstay',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedPlanleggoppholdRoute = AuthedPlanleggoppholdRouteImport.update({
+  id: '/planleggopphold',
+  path: '/planleggopphold',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedOversiktRoute = AuthedOversiktRouteImport.update({
   id: '/oversikt',
   path: '/oversikt',
@@ -118,11 +128,6 @@ const AuthedMaintenanceRoute = AuthedMaintenanceRouteImport.update({
   path: '/maintenance',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedKalenderRoute = AuthedKalenderRouteImport.update({
-  id: '/kalender',
-  path: '/kalender',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedInnstillingerRoute = AuthedInnstillingerRouteImport.update({
   id: '/innstillinger',
   path: '/innstillinger',
@@ -136,11 +141,6 @@ const AuthedExpensesRoute = AuthedExpensesRouteImport.update({
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedCalendarRoute = AuthedCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedAdministrerRoute = AuthedAdministrerRouteImport.update({
@@ -311,15 +311,15 @@ const AuthedAdministrerBrukereRoute =
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
   '/administrer': typeof AuthedAdministrerRouteWithChildren
-  '/calendar': typeof AuthedCalendarRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
   '/innstillinger': typeof AuthedInnstillingerRoute
-  '/kalender': typeof AuthedKalenderRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/manageproperty': typeof AuthedManagepropertyRouteWithChildren
   '/oppgjor': typeof AuthedOppgjorRoute
   '/oversikt': typeof AuthedOversiktRoute
+  '/planleggopphold': typeof AuthedPlanleggoppholdRoute
+  '/planstay': typeof AuthedPlanstayRoute
   '/settlement': typeof AuthedSettlementRoute
   '/usersettings': typeof AuthedUsersettingsRoute
   '/utlegg': typeof AuthedUtleggRoute
@@ -355,14 +355,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
-  '/calendar': typeof AuthedCalendarRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
   '/innstillinger': typeof AuthedInnstillingerRoute
-  '/kalender': typeof AuthedKalenderRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/oppgjor': typeof AuthedOppgjorRoute
   '/oversikt': typeof AuthedOversiktRoute
+  '/planleggopphold': typeof AuthedPlanleggoppholdRoute
+  '/planstay': typeof AuthedPlanstayRoute
   '/settlement': typeof AuthedSettlementRoute
   '/usersettings': typeof AuthedUsersettingsRoute
   '/utlegg': typeof AuthedUtleggRoute
@@ -402,15 +402,15 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/_onboarding': typeof OnboardingRouteWithChildren
   '/_authed/administrer': typeof AuthedAdministrerRouteWithChildren
-  '/_authed/calendar': typeof AuthedCalendarRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/expenses': typeof AuthedExpensesRoute
   '/_authed/innstillinger': typeof AuthedInnstillingerRoute
-  '/_authed/kalender': typeof AuthedKalenderRoute
   '/_authed/maintenance': typeof AuthedMaintenanceRoute
   '/_authed/manageproperty': typeof AuthedManagepropertyRouteWithChildren
   '/_authed/oppgjor': typeof AuthedOppgjorRoute
   '/_authed/oversikt': typeof AuthedOversiktRoute
+  '/_authed/planleggopphold': typeof AuthedPlanleggoppholdRoute
+  '/_authed/planstay': typeof AuthedPlanstayRoute
   '/_authed/settlement': typeof AuthedSettlementRoute
   '/_authed/usersettings': typeof AuthedUsersettingsRoute
   '/_authed/utlegg': typeof AuthedUtleggRoute
@@ -450,15 +450,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/administrer'
-    | '/calendar'
     | '/dashboard'
     | '/expenses'
     | '/innstillinger'
-    | '/kalender'
     | '/maintenance'
     | '/manageproperty'
     | '/oppgjor'
     | '/oversikt'
+    | '/planleggopphold'
+    | '/planstay'
     | '/settlement'
     | '/usersettings'
     | '/utlegg'
@@ -494,14 +494,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/calendar'
     | '/dashboard'
     | '/expenses'
     | '/innstillinger'
-    | '/kalender'
     | '/maintenance'
     | '/oppgjor'
     | '/oversikt'
+    | '/planleggopphold'
+    | '/planstay'
     | '/settlement'
     | '/usersettings'
     | '/utlegg'
@@ -540,15 +540,15 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/_onboarding'
     | '/_authed/administrer'
-    | '/_authed/calendar'
     | '/_authed/dashboard'
     | '/_authed/expenses'
     | '/_authed/innstillinger'
-    | '/_authed/kalender'
     | '/_authed/maintenance'
     | '/_authed/manageproperty'
     | '/_authed/oppgjor'
     | '/_authed/oversikt'
+    | '/_authed/planleggopphold'
+    | '/_authed/planstay'
     | '/_authed/settlement'
     | '/_authed/usersettings'
     | '/_authed/utlegg'
@@ -655,6 +655,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettlementRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/planstay': {
+      id: '/_authed/planstay'
+      path: '/planstay'
+      fullPath: '/planstay'
+      preLoaderRoute: typeof AuthedPlanstayRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/planleggopphold': {
+      id: '/_authed/planleggopphold'
+      path: '/planleggopphold'
+      fullPath: '/planleggopphold'
+      preLoaderRoute: typeof AuthedPlanleggoppholdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/oversikt': {
       id: '/_authed/oversikt'
       path: '/oversikt'
@@ -683,13 +697,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedMaintenanceRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/kalender': {
-      id: '/_authed/kalender'
-      path: '/kalender'
-      fullPath: '/kalender'
-      preLoaderRoute: typeof AuthedKalenderRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/innstillinger': {
       id: '/_authed/innstillinger'
       path: '/innstillinger'
@@ -709,13 +716,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthedDashboardRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/calendar': {
-      id: '/_authed/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof AuthedCalendarRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/administrer': {
@@ -994,15 +994,15 @@ const AuthedManagepropertyRouteWithChildren =
 
 interface AuthedRouteChildren {
   AuthedAdministrerRoute: typeof AuthedAdministrerRouteWithChildren
-  AuthedCalendarRoute: typeof AuthedCalendarRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedExpensesRoute: typeof AuthedExpensesRoute
   AuthedInnstillingerRoute: typeof AuthedInnstillingerRoute
-  AuthedKalenderRoute: typeof AuthedKalenderRoute
   AuthedMaintenanceRoute: typeof AuthedMaintenanceRoute
   AuthedManagepropertyRoute: typeof AuthedManagepropertyRouteWithChildren
   AuthedOppgjorRoute: typeof AuthedOppgjorRoute
   AuthedOversiktRoute: typeof AuthedOversiktRoute
+  AuthedPlanleggoppholdRoute: typeof AuthedPlanleggoppholdRoute
+  AuthedPlanstayRoute: typeof AuthedPlanstayRoute
   AuthedSettlementRoute: typeof AuthedSettlementRoute
   AuthedUsersettingsRoute: typeof AuthedUsersettingsRoute
   AuthedUtleggRoute: typeof AuthedUtleggRoute
@@ -1011,15 +1011,15 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdministrerRoute: AuthedAdministrerRouteWithChildren,
-  AuthedCalendarRoute: AuthedCalendarRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedExpensesRoute: AuthedExpensesRoute,
   AuthedInnstillingerRoute: AuthedInnstillingerRoute,
-  AuthedKalenderRoute: AuthedKalenderRoute,
   AuthedMaintenanceRoute: AuthedMaintenanceRoute,
   AuthedManagepropertyRoute: AuthedManagepropertyRouteWithChildren,
   AuthedOppgjorRoute: AuthedOppgjorRoute,
   AuthedOversiktRoute: AuthedOversiktRoute,
+  AuthedPlanleggoppholdRoute: AuthedPlanleggoppholdRoute,
+  AuthedPlanstayRoute: AuthedPlanstayRoute,
   AuthedSettlementRoute: AuthedSettlementRoute,
   AuthedUsersettingsRoute: AuthedUsersettingsRoute,
   AuthedUtleggRoute: AuthedUtleggRoute,

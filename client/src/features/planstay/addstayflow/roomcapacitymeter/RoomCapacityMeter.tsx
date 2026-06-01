@@ -7,7 +7,7 @@ import {
   Tag,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { bedCapacity } from "@/features/calendar/booking-logic"
+import { bedCapacity } from "@/features/planstay/booking-logic"
 import { BED_LABELS } from "../../constants.ts"
 import { BedIconRow } from "../bedicons/BedIcons.tsx"
 import type { RoomShape, ExistingOccupant } from "../../types.ts"
@@ -49,7 +49,7 @@ export function RoomCapacityMeter({
   isExpanded: boolean
   onToggle: () => void
 }) {
-  const { t } = useTranslation("calendar")
+  const { t } = useTranslation("planstay")
   const td = t as (key: string) => string
   const total = bedCapacity(room)
   const placed = occupantsInRoom.length + existingOccupantsInRoom.length
