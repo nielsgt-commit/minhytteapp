@@ -1,6 +1,7 @@
 import type { Dispatch, ReactNode } from "react"
 import {
   Button,
+  Card,
   Field,
   Heading,
   Label,
@@ -117,100 +118,108 @@ export function StepConfirm({
 
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
-      <div className={styles.card}>
-        <Heading level={4}>{t("Review request")}</Heading>
-        <dl className={styles.list}>
-          <dt>
-            <strong>{t("When")}</strong>
-          </dt>
-          <dd className={styles.item}>
-            {draft.start_date && draft.end_date && nights != null
-              ? `${draft.start_date} → ${draft.end_date} (${t("{{count}} night", { count: nights })})`
-              : t("Dates not selected")}
-          </dd>
+      <Card className={styles.card}>
+        <Card.Block>
+          <Heading level={4}>{t("Review request")}</Heading>
+          <dl className={styles.list}>
+            <dt>
+              <strong>{t("When")}</strong>
+            </dt>
+            <dd className={styles.item}>
+              {draft.start_date && draft.end_date && nights != null
+                ? `${draft.start_date} → ${draft.end_date} (${t("{{count}} night", { count: nights })})`
+                : t("Dates not selected")}
+            </dd>
 
-          <dt>
-            <strong>{t("Who")}</strong>
-          </dt>
-          <dd className={styles.item}>
-            {bookerName} {t("(booker)")}
-            {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
-          </dd>
+            <dt>
+              <strong>{t("Who")}</strong>
+            </dt>
+            <dd className={styles.item}>
+              {bookerName} {t("(booker)")}
+              {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
+            </dd>
 
-          <dt>
-            <strong>{t("Where")}</strong>
-          </dt>
-          <dd className={styles.item}>
-            {roomEntries.length === 0 &&
-              unassignedNames.length === 0 &&
-              tentNames.length === 0 &&
-              t("No occupants yet")}
-            {roomEntries.length > 0 && (
-              <ul className={styles.subList}>
-                {roomEntries.map(e => (
-                  <li key={`${e.structureName}-${e.roomName}`}>
-                    {e.structureName} · {e.roomName}: {e.occupants.join(", ")}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {unassignedNames.length > 0 && (
-              <div>
-                {t("Unassigned: {{names}}", {
-                  names: unassignedNames.join(", "),
-                })}
-              </div>
-            )}
-            {tentNames.length > 0 && (
-              <ul className={styles.subList}>
-                {tentNames.map(name => (
-                  <li key={name}>
-                    {t("{{name}} has a separate sleeping arrangement", {
-                      name,
-                    })}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </dd>
+            <dt>
+              <strong>{t("Where")}</strong>
+            </dt>
+            <dd className={styles.item}>
+              {roomEntries.length === 0 &&
+                unassignedNames.length === 0 &&
+                tentNames.length === 0 &&
+                t("No occupants yet")}
+              {roomEntries.length > 0 && (
+                <ul className={styles.subList}>
+                  {roomEntries.map(e => (
+                    <li key={`${e.structureName}-${e.roomName}`}>
+                      {e.structureName} · {e.roomName}: {e.occupants.join(", ")}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {unassignedNames.length > 0 && (
+                <div>
+                  {t("Unassigned: {{names}}", {
+                    names: unassignedNames.join(", "),
+                  })}
+                </div>
+              )}
+              {tentNames.length > 0 && (
+                <ul className={styles.subList}>
+                  {tentNames.map(name => (
+                    <li key={name}>
+                      {t("{{name}} has a separate sleeping arrangement", {
+                        name,
+                      })}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </dd>
 
-          <dt>
-            <strong>{t("Status")}</strong>
-          </dt>
-          <dd className={styles.itemLast}>{draft.status}</dd>
-        </dl>
-      </div>
+            <dt>
+              <strong>{t("Status")}</strong>
+            </dt>
+            <dd className={styles.itemLast}>{draft.status}</dd>
+          </dl>
+        </Card.Block>
+      </Card>
 
-      <div className={styles.card}>
-        <Heading level={4}>{t("Details")}</Heading>
-        <div className={styles.fields}>
-          <Field>
-            <Label>{t("Status")}</Label>
-            <Select
-              value={draft.status}
+      <Card className={styles.card}>
+        <Card.Block>
+          <Heading level={4}>{t("Details")}</Heading>
+          <div className={styles.fields}>
+            <Field>
+              <Label>{t("Status")}</Label>
+              <Select
+                value={draft.status}
+                onChange={e => {
+                  dispatch(
+                    setStatus(
+                      e.target.value as "pending" | "confirmed" | "cancelled",
+                    ),
+                  )
+                }}
+              >
+                <Select.Option value="pending">{t("Pending")}</Select.Option>
+                <Select.Option value="confirmed">
+                  {t("Confirmed")}
+                </Select.Option>
+                <Select.Option value="cancelled">
+                  {t("Cancelled")}
+                </Select.Option>
+              </Select>
+            </Field>
+            <Textfield
+              label={t("Notes")}
+              value={draft.notes}
               onChange={e => {
-                dispatch(
-                  setStatus(
-                    e.target.value as "pending" | "confirmed" | "cancelled",
-                  ),
-                )
+                dispatch(setNotes(e.target.value))
               }}
-            >
-              <Select.Option value="pending">{t("Pending")}</Select.Option>
-              <Select.Option value="confirmed">{t("Confirmed")}</Select.Option>
-              <Select.Option value="cancelled">{t("Cancelled")}</Select.Option>
-            </Select>
-          </Field>
-          <Textfield
-            label={t("Notes")}
-            value={draft.notes}
-            onChange={e => {
-              dispatch(setNotes(e.target.value))
-            }}
-            className={styles.fullWidth}
-          />
-        </div>
-      </div>
+              className={styles.fullWidth}
+            />
+          </div>
+        </Card.Block>
+      </Card>
 
       {!submitState.confirming && (
         <div className={styles.actions}>

@@ -1,0 +1,1 @@
+ALTER TABLE "booking_occupants" ADD COLUMN "sleeps_separately" boolean DEFAULT false NOT NULL;
