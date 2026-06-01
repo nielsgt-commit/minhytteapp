@@ -214,6 +214,20 @@ export const allowedEmailRouter = router({
               await ensureGroupLinkedToProperty(property_id, user_group_id)
             }
 
+            // They're joining an existing property, so there's nothing to set
+            // up — clear the onboarding gate (mirrors applyInvitesForNewUser
+            // for brand-new invitees). Guarding on NULL avoids pulling someone
+            // out of their own in-progress onboarding wizard.
+            await tx
+              .update(usersTable)
+              .set({ onboarding_step: "done" })
+              .where(
+                and(
+                  eq(usersTable.id, userId),
+                  isNull(usersTable.onboarding_step),
+                ),
+              )
+
             const [created] = await tx
               .insert(allowedEmailsTable)
               .values({

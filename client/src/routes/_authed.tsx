@@ -22,7 +22,13 @@ export const Route = createFileRoute("/_authed")({
     if (
       me &&
       me.onboarding_step !== "done" &&
-      me.onboarding_dismissed_at == null
+      me.onboarding_dismissed_at == null &&
+      // A user who already belongs to a property (e.g. invited into it) has
+      // nothing to set up. Self-onboarding always advances the step off null
+      // before a membership is created, so a null step + an existing main
+      // membership is an invitee whose onboarding flag was never cleared —
+      // let them in rather than trapping them in the setup wizard.
+      !(me.onboarding_step == null && me.my_main_memberships.length > 0)
     ) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: "/onboarding" })
