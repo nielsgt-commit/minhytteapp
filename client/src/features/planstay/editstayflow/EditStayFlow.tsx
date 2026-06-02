@@ -13,9 +13,9 @@ import { StepRooms } from "../addstayflow/steprooms/StepRooms.tsx"
 import { StepConfirm } from "../addstayflow/stepconfirm/StepConfirm.tsx"
 import styles from "../addstayflow/AddStayFlow.module.css"
 
-const STEP_LABELS = ["Dates", "Guests", "Rooms", "Confirm"] as const
-type StepLabel = (typeof STEP_LABELS)[number]
-const TOTAL_STEPS = STEP_LABELS.length
+const TOTAL_STEPS = 4
+// Label each "Next" button with the step it leads to.
+const NEXT_STEP_LABELS = ["Add guests", "Add rooms", "Review"] as const
 
 function isoWeekMonday(year: number, week: number): Date {
   const jan4 = new Date(Date.UTC(year, 0, 4))
@@ -143,28 +143,6 @@ export function EditStayFlow({
           submit({ kind: "submit" })
         }}
       >
-        <nav className={styles.stepper} aria-label={t("Booking steps")}>
-          {STEP_LABELS.map((label: StepLabel, i) => {
-            const stepNum = i + 1
-            const isActive = stepNum === currentStep
-            return (
-              <Button
-                key={label}
-                type="button"
-                variant="tertiary"
-                className={`${styles.stepperItem} ${isActive ? styles.stepperItemActive : ""}`}
-                onClick={() => {
-                  goToStep(stepNum)
-                }}
-                aria-current={isActive ? "step" : undefined}
-              >
-                <span className={styles.stepperBadge}>{stepNum}</span>
-                <span>{t(label)}</span>
-              </Button>
-            )
-          })}
-        </nav>
-
         {draft.status === "cancelled" && (
           <Paragraph role="alert">{t("This stay is cancelled.")}</Paragraph>
         )}
@@ -236,6 +214,22 @@ export function EditStayFlow({
           submitLabel={t("Save changes")}
           submitWarningsLabel={t("Save changes (warnings present)")}
           submitPendingLabel={t("Saving…")}
+          navActions={
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  goToStep(currentStep - 1)
+                }}
+              >
+                {t("Back")}
+              </Button>
+              <Button type="button" variant="tertiary" onClick={onClose}>
+                {t("Close")}
+              </Button>
+            </>
+          }
           extraActions={
             draft.status !== "cancelled" && (
               <Button
@@ -253,33 +247,33 @@ export function EditStayFlow({
           }
         />
 
-        <div className={styles.navButtons}>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={currentStep === 1}
-            onClick={() => {
-              goToStep(currentStep - 1)
-            }}
-          >
-            {t("Back")}
-          </Button>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button type="button" variant="tertiary" onClick={onClose}>
-              {t("Close")}
+        {currentStep < TOTAL_STEPS && (
+          <div className={styles.navButtons}>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={currentStep === 1}
+              onClick={() => {
+                goToStep(currentStep - 1)
+              }}
+            >
+              {t("Back")}
             </Button>
-            {currentStep < TOTAL_STEPS && (
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <Button type="button" variant="tertiary" onClick={onClose}>
+                {t("Close")}
+              </Button>
               <Button
                 type="button"
                 onClick={() => {
                   goToStep(currentStep + 1)
                 }}
               >
-                {t("Next")}
+                {t(NEXT_STEP_LABELS[currentStep - 1])}
               </Button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </form>
     </section>
   )

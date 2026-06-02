@@ -46,6 +46,7 @@ export function StepConfirm({
   submitLabel,
   submitWarningsLabel,
   submitPendingLabel,
+  navActions,
   extraActions,
 }: {
   isActive: boolean
@@ -68,6 +69,7 @@ export function StepConfirm({
   submitLabel?: string
   submitWarningsLabel?: string
   submitPendingLabel?: string
+  navActions?: ReactNode
   extraActions?: ReactNode
 }) {
   const { t } = useTranslation("planstay")
@@ -223,12 +225,13 @@ export function StepConfirm({
 
       {!submitState.confirming && (
         <div className={styles.actions}>
+          {navActions}
           <Button type="submit" disabled={!canSubmit}>
             {isPending
               ? (submitPendingLabel ?? t("Saving…"))
               : hasWarnings
-                ? (submitWarningsLabel ?? t("Request stay (warnings present)"))
-                : (submitLabel ?? t("Request stay"))}
+                ? (submitWarningsLabel ?? t("Submit stay (warnings present)"))
+                : (submitLabel ?? t("Submit stay"))}
           </Button>
           {extraActions}
         </div>

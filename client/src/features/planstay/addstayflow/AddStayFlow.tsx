@@ -14,9 +14,9 @@ import { StepRooms } from "./steprooms/StepRooms.tsx"
 import { StepConfirm } from "./stepconfirm/StepConfirm.tsx"
 import styles from "./AddStayFlow.module.css"
 
-const STEP_LABELS = ["Dates", "Guests", "Rooms", "Confirm"] as const
-type StepLabel = (typeof STEP_LABELS)[number]
-const TOTAL_STEPS = STEP_LABELS.length
+const TOTAL_STEPS = 4
+// Label each "Next" button with the step it leads to.
+const NEXT_STEP_LABELS = ["Add guests", "Add rooms", "Review"] as const
 
 function isoWeekMonday(year: number, week: number): Date {
   const jan4 = new Date(Date.UTC(year, 0, 4))
@@ -132,28 +132,6 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
           submit({ kind: "submit" })
         }}
       >
-        <nav className={styles.stepper} aria-label={t("Booking steps")}>
-          {STEP_LABELS.map((label: StepLabel, i) => {
-            const stepNum = i + 1
-            const isActive = stepNum === currentStep
-            return (
-              <Button
-                key={label}
-                type="button"
-                variant="tertiary"
-                className={`${styles.stepperItem} ${isActive ? styles.stepperItemActive : ""}`}
-                onClick={() => {
-                  goToStep(stepNum)
-                }}
-                aria-current={isActive ? "step" : undefined}
-              >
-                <span className={styles.stepperBadge}>{stepNum}</span>
-                <span>{t(label)}</span>
-              </Button>
-            )
-          })}
-        </nav>
-
         {selectedUserId == null && (
           <Paragraph role="alert">
             {t("No user selected — pick one from the header.")}
@@ -224,30 +202,41 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
           roomOverCapacityDays={occupancy.roomOverCapacityDays}
           stepClass={styles.step}
           stepActiveClass={styles.stepActive}
+          navActions={
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                goToStep(currentStep - 1)
+              }}
+            >
+              {t("Back")}
+            </Button>
+          }
         />
 
-        <div className={styles.navButtons}>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={currentStep === 1}
-            onClick={() => {
-              goToStep(currentStep - 1)
-            }}
-          >
-            {t("Back")}
-          </Button>
-          {currentStep < TOTAL_STEPS && (
+        {currentStep < TOTAL_STEPS && (
+          <div className={styles.navButtons}>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={currentStep === 1}
+              onClick={() => {
+                goToStep(currentStep - 1)
+              }}
+            >
+              {t("Back")}
+            </Button>
             <Button
               type="button"
               onClick={() => {
                 goToStep(currentStep + 1)
               }}
             >
-              {t("Next")}
+              {t(NEXT_STEP_LABELS[currentStep - 1])}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </form>
     </section>
   )
