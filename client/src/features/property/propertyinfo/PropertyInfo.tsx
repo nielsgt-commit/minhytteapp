@@ -226,7 +226,8 @@ export default function PropertyInfo() {
     <Card>
       <Card.Block>
         <Paragraph>
-          { t("Property adress: ")}{selectedProperty.address}{" "}
+          {t("Property adress: ")}
+          {selectedProperty.address}{" "}
           {hasMatrikkel && (
             <Button
               type="button"
