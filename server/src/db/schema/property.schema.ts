@@ -85,7 +85,7 @@ export const roomTable = pgTable("rooms", {
   name: varchar("name", { length: 255 }).notNull(),
   structure_id: integer("structure_id")
     .notNull()
-    .references(() => structuresTable.id),
+    .references(() => structuresTable.id, { onDelete: "cascade" }),
 
   beds_sm: integer("beds_sm").notNull().default(0),
   beds_lg: integer("beds_lg").notNull().default(0),

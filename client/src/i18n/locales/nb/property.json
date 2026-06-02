@@ -193,6 +193,8 @@
   "Buildings on the property and the rooms inside them. A building can be habitable or not, and you can add rooms where applicable. Rooms and beds count against capacity, and structures can have maintenance tasks assigned to them.": "Bygg på eiendommen og rommene inni dem. Et bygg kan være beboelig eller ikke, og du kan legge til rom der det er aktuelt. Rom og senger teller mot kapasiteten, og bygg kan ha vedlikeholdsoppgaver tilordnet seg.",
   "Structures for {{name}}": "Bygg for {{name}}",
   "Structures Test Form": "Testskjema for bygg",
+  "This will also permanently delete any maintenance tasks and inspections linked to it.": "Dette sletter også alle vedlikeholdsoppgaver og inspeksjoner som er knyttet til den, permanent.",
+  "This will also permanently delete its rooms and any maintenance tasks and inspections linked to it.": "Dette sletter også alle rom i bygget og alle vedlikeholdsoppgaver og inspeksjoner som er knyttet til det, permanent.",
   "Total: <1>{{total}}%</1> ": "Totalt: <1>{{total}}%</1> ",
   "Travel cot": "Reiseseng",
   "travel_cot": "travel_cot",

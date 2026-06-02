@@ -117,7 +117,13 @@ export function InfrastructurePanel({ propertyId }: Props) {
 
   const handleDelete = (p: Infrastructure) => {
     if (
-      !window.confirm(t('Delete infrastructure "{{name}}"?', { name: p.name }))
+      !window.confirm(
+        t('Delete infrastructure "{{name}}"?', { name: p.name }) +
+          "\n\n" +
+          t(
+            "This will also permanently delete any maintenance tasks and inspections linked to it.",
+          ),
+      )
     )
       return
     deleteInfrastructure.mutate(

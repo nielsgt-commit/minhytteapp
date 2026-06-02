@@ -117,6 +117,8 @@
   "Snr": "Snr",
   "Structures": "Structures",
   "Structures for {{name}}": "Structures for {{name}}",
+  "This will also permanently delete any maintenance tasks and inspections linked to it.": "This will also permanently delete any maintenance tasks and inspections linked to it.",
+  "This will also permanently delete its rooms and any maintenance tasks and inspections linked to it.": "This will also permanently delete its rooms and any maintenance tasks and inspections linked to it.",
   "Total: <1>{{total}}%</1> ": "Total: <1>{{total}}%</1> ",
   "Type <1>{{name}}</1> to confirm": "Type <1>{{name}}</1> to confirm",
   "User": "User",

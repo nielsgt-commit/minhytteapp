@@ -162,7 +162,11 @@ export function ListPropertyStructures() {
   ) => {
     if (
       !window.confirm(
-        t('Delete structure "{{name}}"?', { name: structureName }),
+        t('Delete structure "{{name}}"?', { name: structureName }) +
+          "\n\n" +
+          t(
+            "This will also permanently delete its rooms and any maintenance tasks and inspections linked to it.",
+          ),
       )
     )
       return

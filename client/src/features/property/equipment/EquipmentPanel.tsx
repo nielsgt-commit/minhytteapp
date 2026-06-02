@@ -128,7 +128,15 @@ export function EquipmentPanel({ propertyId }: Props) {
   }
 
   const handleDelete = (item: Equipment) => {
-    if (!window.confirm(t('Delete equipment "{{name}}"?', { name: item.name })))
+    if (
+      !window.confirm(
+        t('Delete equipment "{{name}}"?', { name: item.name }) +
+          "\n\n" +
+          t(
+            "This will also permanently delete any maintenance tasks and inspections linked to it.",
+          ),
+      )
+    )
       return
     deleteEquipment.mutate(
       { id: item.id },

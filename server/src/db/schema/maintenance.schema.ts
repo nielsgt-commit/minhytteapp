@@ -51,9 +51,12 @@ export const maintenanceTable = pgTable(
       .notNull()
       .references(() => usersTable.id),
     assigned_to_id: integer("assigned_to_id").references(() => usersTable.id),
-    structure_id: integer("structure_id").references(() => structuresTable.id),
+    structure_id: integer("structure_id").references(() => structuresTable.id, {
+      onDelete: "cascade",
+    }),
     infrastructure_id: integer("infrastructure_id").references(
       () => infrastructureTable.id,
+      { onDelete: "cascade" },
     ),
     category: varchar("category", {
       length: 11,
@@ -71,14 +74,18 @@ export const maintenanceTable = pgTable(
       length: 6,
       enum: ["once", "yearly", "5year", "spring", "fall"],
     }).notNull(),
-    equipment_id: integer("equipment_id").references(() => equipmentTable.id),
+    equipment_id: integer("equipment_id").references(() => equipmentTable.id, {
+      onDelete: "cascade",
+    }),
     is_pinned: boolean("is_pinned").notNull().default(false),
     procedure_position: integer("procedure_position"),
     parent_maintenance_id: integer("parent_maintenance_id").references(
       (): AnyPgColumn => maintenanceTable.id,
+      { onDelete: "set null" },
     ),
     inspection_id: integer("inspection_id").references(
       (): AnyPgColumn => inspectionsTable.id,
+      { onDelete: "set null" },
     ),
     due_at: timestamp("due_at"),
     created_at: timestamp("created_at").notNull().defaultNow(),
@@ -104,11 +111,16 @@ export const inspectionsTable = pgTable(
   "inspections",
   {
     id: serial("id").primaryKey(),
-    structure_id: integer("structure_id").references(() => structuresTable.id),
+    structure_id: integer("structure_id").references(() => structuresTable.id, {
+      onDelete: "cascade",
+    }),
     infrastructure_id: integer("infrastructure_id").references(
       () => infrastructureTable.id,
+      { onDelete: "cascade" },
     ),
-    equipment_id: integer("equipment_id").references(() => equipmentTable.id),
+    equipment_id: integer("equipment_id").references(() => equipmentTable.id, {
+      onDelete: "cascade",
+    }),
     started_by_user_id: integer("started_by_user_id")
       .notNull()
       .references(() => usersTable.id),

@@ -505,6 +505,20 @@
       "when": 1780341221594,
       "tag": "0071_perfect_oracle",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1780372154189,
+      "tag": "0072_great_barracuda",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1780372891350,
+      "tag": "0073_cultured_sally_floyd",
+      "breakpoints": true
     }
   ]
 }
