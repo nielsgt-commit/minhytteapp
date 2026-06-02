@@ -16,6 +16,15 @@
   top: 0;
 }
 
+/* On Safari/iOS, flatpickr runs positionCalendar() even for inline calendars,
+   which toggles on the `arrowTop` class and renders its pointer arrow — a
+   hard-coded white ::after triangle above the calendar that's glaring against
+   the dark-mode background. Inline calendars have no input to point at, so kill it. */
+.flatpickr-calendar.inline::before,
+.flatpickr-calendar.inline::after {
+  display: none;
+}
+
 /* Horizontal scroll without coercing overflow-y to auto */
 .fp-container {
   overflow-x: auto;
