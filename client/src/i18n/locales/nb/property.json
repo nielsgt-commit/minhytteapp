@@ -220,8 +220,8 @@
   "Rules for how shared costs are split across owners and users.": "Regler for hvordan delte kostnader fordeles mellom eiere og brukere.",
   "Settings": "Innstillinger",
   "Split policy": "Fordelingsregler",
-  "Tools, appliances, and gear kept at the property.": "Verktøy, apparater og utstyr som oppbevares på eiendommen.",
   "User groups": "Brukergrupper",
+  "Vehicles, boats, sports gear, tools, and appliances that need maintenance — anything that doesn't fit under structures or infrastructure.": "Kjøretøy, båter, sportsutstyr, verktøy og apparater som trenger vedlikehold — alt som ikke passer under bygninger eller infrastruktur.",
   "Water, power, heating, network, and other systems serving the property.": "Vann, strøm, varme, nettverk og andre systemer som betjener eiendommen.",
   "Who owns what share of the property. These values don't affect any functionality — they can be used in a split policy if necessary.": "Hvem eier hvilken andel av eiendommen. Disse verdiene påvirker ingen funksjonalitet – de kan brukes i en fordelingspolicy om nødvendig."
 }

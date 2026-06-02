@@ -228,51 +228,6 @@ export function EquipmentPanel({ propertyId }: Props) {
       )}
 
       <List.Unordered className={styles.list}>
-        {equipment.map(item => (
-          <Card asChild key={item.id}>
-            <List.Item>
-              <Card.Block>
-                <InlineEditRow
-                  editing={editingId === item.id}
-                  canEdit={canEdit}
-                  pending={pending}
-                  editLabel={t("Edit equipment {{name}}", { name: item.name })}
-                  onStartEdit={() => {
-                    setEditingId(item.id)
-                  }}
-                  view={
-                    <>
-                      <span className={styles.rowName}>{item.name}</span>
-                      {item.acquired_year != null && (
-                        <Paragraph data-size="sm" title={t("Acquired")}>
-                          {t("Acquired {{year}}", { year: item.acquired_year })}
-                        </Paragraph>
-                      )}
-                    </>
-                  }
-                  form={renderEditForm(item)}
-                  actions={
-                    <Button
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      disabled={pending}
-                      aria-label={t('Delete equipment "{{name}}"?', {
-                        name: item.name,
-                      })}
-                      onClick={() => {
-                        handleDelete(item)
-                      }}
-                    >
-                      {t("Delete")}
-                    </Button>
-                  }
-                />
-              </Card.Block>
-            </List.Item>
-          </Card>
-        ))}
-
         {canEdit && (
           <Card asChild key="__add">
             <List.Item>
@@ -355,6 +310,51 @@ export function EquipmentPanel({ propertyId }: Props) {
             </List.Item>
           </Card>
         )}
+
+        {equipment.map(item => (
+          <Card asChild key={item.id}>
+            <List.Item>
+              <Card.Block>
+                <InlineEditRow
+                  editing={editingId === item.id}
+                  canEdit={canEdit}
+                  pending={pending}
+                  editLabel={t("Edit equipment {{name}}", { name: item.name })}
+                  onStartEdit={() => {
+                    setEditingId(item.id)
+                  }}
+                  view={
+                    <>
+                      <span className={styles.rowName}>{item.name}</span>
+                      {item.acquired_year != null && (
+                        <Paragraph data-size="sm" title={t("Acquired")}>
+                          {t("Acquired {{year}}", { year: item.acquired_year })}
+                        </Paragraph>
+                      )}
+                    </>
+                  }
+                  form={renderEditForm(item)}
+                  actions={
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      aria-label={t('Delete equipment "{{name}}"?', {
+                        name: item.name,
+                      })}
+                      onClick={() => {
+                        handleDelete(item)
+                      }}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  }
+                />
+              </Card.Block>
+            </List.Item>
+          </Card>
+        ))}
       </List.Unordered>
     </div>
   )

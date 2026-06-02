@@ -77,7 +77,8 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     "/administrer/utstyr",
     {
       title: "Equipment",
-      description: "Tools, appliances, and gear kept at the property.",
+      description:
+        "Vehicles, boats, sports gear, tools, and appliances that need maintenance — anything that doesn't fit under structures or infrastructure.",
     },
   ],
   [

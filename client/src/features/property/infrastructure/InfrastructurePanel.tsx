@@ -190,53 +190,6 @@ export function InfrastructurePanel({ propertyId }: Props) {
       )}
 
       <List.Unordered className={styles.list}>
-        {infrastructure.map(p => (
-          <Card asChild key={p.id}>
-            <List.Item>
-              <Card.Block>
-                <InlineEditRow
-                  editing={editingId === p.id}
-                  canEdit={canEdit}
-                  pending={pending}
-                  editLabel={t("Edit infrastructure {{name}}", {
-                    name: p.name,
-                  })}
-                  onStartEdit={() => {
-                    setEditingId(p.id)
-                  }}
-                  view={
-                    <>
-                      <span className={styles.rowName}>{p.name}</span>
-                      {p.since_year != null && (
-                        <Paragraph data-size="sm" title={t("Since")}>
-                          {t("Since {{year}}", { year: p.since_year })}
-                        </Paragraph>
-                      )}
-                    </>
-                  }
-                  form={renderEditForm(p)}
-                  actions={
-                    <Button
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      disabled={pending}
-                      aria-label={t('Delete infrastructure "{{name}}"?', {
-                        name: p.name,
-                      })}
-                      onClick={() => {
-                        handleDelete(p)
-                      }}
-                    >
-                      {t("Delete")}
-                    </Button>
-                  }
-                />
-              </Card.Block>
-            </List.Item>
-          </Card>
-        ))}
-
         {canEdit && (
           <Card asChild key="__add">
             <List.Item>
@@ -294,6 +247,53 @@ export function InfrastructurePanel({ propertyId }: Props) {
             </List.Item>
           </Card>
         )}
+
+        {infrastructure.map(p => (
+          <Card asChild key={p.id}>
+            <List.Item>
+              <Card.Block>
+                <InlineEditRow
+                  editing={editingId === p.id}
+                  canEdit={canEdit}
+                  pending={pending}
+                  editLabel={t("Edit infrastructure {{name}}", {
+                    name: p.name,
+                  })}
+                  onStartEdit={() => {
+                    setEditingId(p.id)
+                  }}
+                  view={
+                    <>
+                      <span className={styles.rowName}>{p.name}</span>
+                      {p.since_year != null && (
+                        <Paragraph data-size="sm" title={t("Since")}>
+                          {t("Since {{year}}", { year: p.since_year })}
+                        </Paragraph>
+                      )}
+                    </>
+                  }
+                  form={renderEditForm(p)}
+                  actions={
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      disabled={pending}
+                      aria-label={t('Delete infrastructure "{{name}}"?', {
+                        name: p.name,
+                      })}
+                      onClick={() => {
+                        handleDelete(p)
+                      }}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  }
+                />
+              </Card.Block>
+            </List.Item>
+          </Card>
+        ))}
       </List.Unordered>
     </div>
   )

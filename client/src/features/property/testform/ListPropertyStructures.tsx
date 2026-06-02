@@ -269,6 +269,40 @@ export function ListPropertyStructures() {
       )}
 
       <List.Unordered className={styles.list}>
+        {canEdit && (
+          <Card asChild key="__add">
+            <List.Item className={styles.cardItem}>
+              <Card.Block className={styles.cardBlock}>
+                {isAdding ? (
+                  <>
+                    <Paragraph data-weight="medium">
+                      {t("Add structure")}
+                    </Paragraph>
+                    <AddStructureFlow
+                      onAdded={() => {
+                        setIsAdding(false)
+                      }}
+                      onCancel={() => {
+                        setIsAdding(false)
+                      }}
+                    />
+                  </>
+                ) : (
+                  <Button
+                    variant="tertiary"
+                    className={styles.addButton}
+                    onClick={() => {
+                      setIsAdding(true)
+                    }}
+                  >
+                    {t("+ Add structure")}
+                  </Button>
+                )}
+              </Card.Block>
+            </List.Item>
+          </Card>
+        )}
+
         {propertyStructures.map(b => {
           const structureRooms = roomsByStructure.get(b.id) ?? []
           const isExpanded = expandedId === b.id
@@ -451,40 +485,6 @@ export function ListPropertyStructures() {
             </Card>
           )
         })}
-
-        {canEdit && (
-          <Card asChild key="__add">
-            <List.Item className={styles.cardItem}>
-              <Card.Block className={styles.cardBlock}>
-                {isAdding ? (
-                  <>
-                    <Paragraph data-weight="medium">
-                      {t("Add structure")}
-                    </Paragraph>
-                    <AddStructureFlow
-                      onAdded={() => {
-                        setIsAdding(false)
-                      }}
-                      onCancel={() => {
-                        setIsAdding(false)
-                      }}
-                    />
-                  </>
-                ) : (
-                  <Button
-                    variant="tertiary"
-                    className={styles.addButton}
-                    onClick={() => {
-                      setIsAdding(true)
-                    }}
-                  >
-                    {t("+ Add structure")}
-                  </Button>
-                )}
-              </Card.Block>
-            </List.Item>
-          </Card>
-        )}
       </List.Unordered>
     </div>
   )
