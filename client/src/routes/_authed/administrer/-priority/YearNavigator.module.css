@@ -1,0 +1,11 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+}
+
+.year {
+  min-width: 4ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

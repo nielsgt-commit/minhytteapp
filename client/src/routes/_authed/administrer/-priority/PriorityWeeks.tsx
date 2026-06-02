@@ -1,7 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Paragraph } from "@digdir/designsystemet-react"
+import { Card, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import section from "@/features/property/managePropertySection.module.css"
@@ -117,14 +117,6 @@ export function PriorityWeeks() {
 
   return (
     <div className={section.column}>
-      <Paragraph>
-        {t(
-          "Each main owner group picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
-        )}
-      </Paragraph>
-
-      <YearNavigator year={year} onChange={setYear} />
-
       {myGroupId == null && !isAdmin && (
         <Paragraph>
           {t(
@@ -140,31 +132,35 @@ export function PriorityWeeks() {
           )}
         </Paragraph>
       ) : (
-        <>
-          {unassigned.length > 0 && (
-            <Paragraph role="status">
-              {t(
-                "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).",
-                {
-                  count: unassigned.length,
-                  total: PEAK_WEEKS.length,
-                  weeks: unassigned.join(", W"),
-                },
-              )}
-            </Paragraph>
-          )}
+        <Card>
+          <Card.Block className={section.column}>
+            <YearNavigator year={year} onChange={setYear} />
 
-          <PriorityWeeksTable
-            year={year}
-            eligibleOwners={eligibleOwners}
-            lookups={lookups}
-            myGroupId={myGroupId}
-            isAdmin={isAdmin}
-            pending={pending}
-            onAssign={handleAssign}
-            onClear={handleClear}
-          />
-        </>
+            {unassigned.length > 0 && (
+              <Paragraph role="status">
+                {t(
+                  "{{count}} of {{total}} peak weeks still unassigned (W{{weeks}}).",
+                  {
+                    count: unassigned.length,
+                    total: PEAK_WEEKS.length,
+                    weeks: unassigned.join(", W"),
+                  },
+                )}
+              </Paragraph>
+            )}
+
+            <PriorityWeeksTable
+              year={year}
+              eligibleOwners={eligibleOwners}
+              lookups={lookups}
+              myGroupId={myGroupId}
+              isAdmin={isAdmin}
+              pending={pending}
+              onAssign={handleAssign}
+              onClear={handleClear}
+            />
+          </Card.Block>
+        </Card>
       )}
 
       {lastError && (

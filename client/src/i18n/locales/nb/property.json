@@ -147,7 +147,7 @@
   "Permanently delete <1>{{name}}</1> and all data associated with it.": "Slett <1>{{name}}</1> permanent, sammen med alle tilknyttede data.",
   "Phone": "Telefon",
   "Priority weeks": "Prioritetsuker",
-  "Each household head claims one peak summer week.": "Hvert husstandsoverhode tar én toppuke om sommeren.",
+  "Each main owner group picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.": "Hver hovedeiergruppe velger én toppuke. Du kan bare redigere din egen kolonne; de andres valg er synlige, men skrivebeskyttet.",
   "Expense categories": "Utgiftskategorier",
   "Categories used to label shared expenses across the property. Add or remove the categories available when recording an expense.": "Kategorier som brukes til å merke delte utgifter på eiendommen. Legg til eller fjern kategoriene som er tilgjengelige når du registrerer en utgift.",
   "People": "Folk",

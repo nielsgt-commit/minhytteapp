@@ -92,7 +92,8 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     "/administrer/prioritet",
     {
       title: "Priority weeks",
-      description: "Each household head claims one peak summer week.",
+      description:
+        "Each main owner group picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
     },
   ],
   [

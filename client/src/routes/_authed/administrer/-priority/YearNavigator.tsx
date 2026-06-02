@@ -1,5 +1,7 @@
-import { Button, Fieldset } from "@digdir/designsystemet-react"
+import { Button, Paragraph } from "@digdir/designsystemet-react"
+import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
+import styles from "./YearNavigator.module.css"
 
 type YearNavigatorProps = {
   year: number
@@ -9,29 +11,34 @@ type YearNavigatorProps = {
 export function YearNavigator({ year, onChange }: YearNavigatorProps) {
   const { t } = useTranslation("priority")
   return (
-    <Fieldset>
-      <Fieldset.Legend>{t("Year")}</Fieldset.Legend>
+    <div className={styles.nav}>
       <Button
         type="button"
         variant="tertiary"
+        icon
         data-size="sm"
+        aria-label={t("Previous year")}
         onClick={() => {
           onChange(year - 1)
         }}
       >
-        {t("Prev")}
+        <ChevronLeftIcon aria-hidden />
       </Button>
-      <output> {year} </output>
+      <Paragraph asChild>
+        <output className={styles.year}>{year}</output>
+      </Paragraph>
       <Button
         type="button"
         variant="tertiary"
+        icon
         data-size="sm"
+        aria-label={t("Next year")}
         onClick={() => {
           onChange(year + 1)
         }}
       >
-        {t("Next")}
+        <ChevronRightIcon aria-hidden />
       </Button>
-    </Fieldset>
+    </div>
   )
 }
