@@ -2,8 +2,9 @@ import { Badge, Card } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { pad2 } from "@/utils/dateUtils"
 import styles from "./PlannedAvailabilitySummary.module.css"
-import GuestListView from "./GuestListView"
+import DaySummary from "./DaySummary"
 import WeatherSymbol from "../../weather/WeatherSymbol"
+import type { RoomGroup } from "./daySummaryUtils"
 
 type Forecast = {
   min_c: number
@@ -21,7 +22,8 @@ type Props = {
   isToday: boolean
   hasBirthday: boolean
   count: number
-  names: string[]
+  groups: RoomGroup[]
+  expandInline: boolean
   forecast?: Forecast
   onToggle: () => void
 }
@@ -33,7 +35,8 @@ export default function DayCard({
   isToday,
   hasBirthday,
   count,
-  names,
+  groups,
+  expandInline,
   forecast,
   onToggle,
 }: Props) {
@@ -49,7 +52,14 @@ export default function DayCard({
   } satisfies Record<WeekdayLabel, string>
   const isClickable = count > 0
   return (
-    <Card asChild className={isToday ? styles.dayCardToday : undefined}>
+    <Card
+      asChild
+      className={
+        [isToday && styles.dayCardToday, isSelected && styles.dayCardSelected]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
+    >
       <li>
         <Card.Block
           role={isClickable ? "button" : undefined}
@@ -66,7 +76,11 @@ export default function DayCard({
                 }
               : undefined
           }
-          className={styles.dayCardBlock}
+          className={
+            isClickable
+              ? `${styles.dayCardBlock} ${styles.dayCardClickable}`
+              : styles.dayCardBlock
+          }
           style={isClickable ? undefined : { cursor: "default" }}
         >
           <div className={styles.dayRow}>
@@ -104,7 +118,7 @@ export default function DayCard({
               </span>
             </div>
           )}
-          {isSelected && <GuestListView names={names} />}
+          {isSelected && expandInline && <DaySummary groups={groups} />}
         </Card.Block>
       </li>
     </Card>

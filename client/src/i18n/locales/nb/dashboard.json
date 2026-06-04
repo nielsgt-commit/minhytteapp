@@ -24,6 +24,7 @@
   "Beds (large)": "Senger (stor)",
   "Beds (single)": "Senger (enkel)",
   "Boat": "Båt",
+  "Building": "Bygg",
   "Contacts": "Kontakter",
   "Current weather": "Været nå",
   "Dashboard": "Oversikt",
@@ -60,6 +61,7 @@
   "SUN": "Søn",
   "Select a property to see your stays.": "Velg en eiendom for å se oppholdene dine.",
   "Solo stay": "Alene-opphold",
+  "Sort stays": "Sorter opphold",
   "Spot {{slot}} — free": "Plass {{slot}} — ledig",
   "Spot {{slot}} — taken by {{userName}}": "Plass {{slot}} — tatt av {{userName}}",
   "Structure #{{id}}": "Bygning #{{id}}",
@@ -77,6 +79,7 @@
   "WED": "Ons",
   "Weather now": "Været nå",
   "Week {{weekNumber}}": "Uke {{weekNumber}}",
+  "Weekday": "Ukedag",
   "{{vehicle}} — free": "{{vehicle}} — ledig",
   "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}"
 }

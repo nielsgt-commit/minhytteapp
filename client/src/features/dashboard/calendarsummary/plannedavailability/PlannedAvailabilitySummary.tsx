@@ -6,6 +6,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import DayCard from "./DayCard"
+import DaySummary from "./DaySummary"
+import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { addDays, isoWeekNumber, isoWeekYear, toIso } from "@/utils/dateUtils"
@@ -38,6 +40,9 @@ export default function PlannedAvailabilitySummary({
   )
   const { data: users } = useSuspenseQuery(
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: atProperty } = useSuspenseQuery(
     trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
@@ -106,19 +111,13 @@ export default function PlannedAvailabilitySummary({
     return count
   }
 
-  const guestNamesOnDay = (iso: string) => {
-    const seen = new Map<number, string>()
-    for (const b of propertyBookings) {
-      if (iso >= b.start_date && iso <= b.end_date) {
-        for (const o of b.occupants) {
-          if (!seen.has(o.user_id) && o.user_name) {
-            seen.set(o.user_id, o.user_name)
-          }
-        }
-      }
-    }
-    return Array.from(seen.values())
-  }
+  const roomById = new Map(rooms.map(r => [r.id, r]))
+
+  const roomGroupsOnDay = (iso: string) =>
+    roomGroupsForDay(propertyBookings, roomById, iso, t("Unassigned room"))
+
+  const selectedGroups =
+    !isMobile && selectedDay ? roomGroupsOnDay(selectedDay) : []
 
   const userById = new Map(users.map(u => [u.id, u]))
 
@@ -231,7 +230,8 @@ export default function PlannedAvailabilitySummary({
                 isToday={iso === todayIso}
                 hasBirthday={birthdayGuestsOnDay(iso).length > 0}
                 count={count}
-                names={guestNamesOnDay(iso)}
+                groups={roomGroupsOnDay(iso)}
+                expandInline={isMobile}
                 forecast={forecastByIso.get(iso)}
                 onToggle={toggle}
               />
@@ -239,6 +239,15 @@ export default function PlannedAvailabilitySummary({
           })
         )}
       </ul>
+      {!isMobile && selectedDay && selectedGroups.length > 0 && (
+        <Card asChild>
+          <section className={styles.dayPanel}>
+            <Card.Block>
+              <DaySummary groups={selectedGroups} />
+            </Card.Block>
+          </section>
+        </Card>
+      )}
     </div>
   )
 }

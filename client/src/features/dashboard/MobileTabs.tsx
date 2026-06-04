@@ -11,18 +11,21 @@ import AvailableParking from "@/features/dashboard/capacitysummary/availablepark
 import RoomAvailabilityIndicator from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import NowWeather from "@/features/dashboard/weather/NowWeather.tsx"
 import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
+// import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { startOfSunday } from "@/utils/dateUtils"
+
+type Tab = "now" | "week" | "summer" | "year"
 
 export default function MobileTabs({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
-  const [tab, setTab] = useState<"now" | "week" | "summer">("now")
+  const [tab, setTab] = useState<Tab>("now")
 
   return (
     <Tabs
       className={styles.mobileTabs}
       value={tab}
       onChange={v => {
-        setTab(v as "now" | "week" | "summer")
+        setTab(v as Tab)
       }}
     >
       <Tabs.List>
@@ -32,7 +35,11 @@ export default function MobileTabs({ propertyId }: { propertyId: number }) {
         <Tabs.Tab value="week" aria-label={t("This week")}>
           <Paragraph>{t("This week")}</Paragraph>
         </Tabs.Tab>
-        <Tabs.Tab value="summer" aria-label={t("This year")}>
+        {/* Summer tab unmounted for now */}
+        {/* <Tabs.Tab value="summer" aria-label={t("Summer")}>
+          <Paragraph>{t("Summer")}</Paragraph>
+        </Tabs.Tab> */}
+        <Tabs.Tab value="year" aria-label={t("This year")}>
           <Paragraph>{t("This year")}</Paragraph>
         </Tabs.Tab>
       </Tabs.List>
@@ -47,7 +54,12 @@ export default function MobileTabs({ propertyId }: { propertyId: number }) {
             <MobileWeekPanel />
           </Suspense>
         )}
-        {tab === "summer" && (
+        {/* {tab === "summer" && (
+          <Suspense fallback={<p>{t("Loading…")}</p>}>
+            <MobileSummerPanel propertyId={propertyId} />
+          </Suspense>
+        )} */}
+        {tab === "year" && (
           <Suspense fallback={<p>{t("Loading…")}</p>}>
             <MobileYearPanel />
           </Suspense>
@@ -56,6 +68,14 @@ export default function MobileTabs({ propertyId }: { propertyId: number }) {
     </Tabs>
   )
 }
+
+// function MobileSummerPanel({ propertyId }: { propertyId: number }) {
+//   return (
+//     <div className={styles.stackedPanels}>
+//       <SummerSummary propertyId={propertyId} />
+//     </div>
+//   )
+// }
 
 function MobileNowPanel({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")

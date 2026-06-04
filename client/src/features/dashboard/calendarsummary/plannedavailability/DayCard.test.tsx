@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import i18next from "i18next"
 import { initReactI18next } from "react-i18next"
 import DayCard from "./DayCard"
+import type { RoomGroup } from "./daySummaryUtils"
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -28,7 +29,8 @@ const baseProps = {
   isToday: false,
   hasBirthday: false,
   count: 0,
-  names: [] as string[],
+  groups: [] as RoomGroup[],
+  expandInline: true,
   onToggle: () => {},
 }
 
@@ -68,15 +70,25 @@ describe("DayCard", () => {
     expect(screen.getByText(/Today/)).toBeInTheDocument()
   })
 
-  test("renders the GuestListView only when selected", () => {
+  test("renders the DaySummary only when selected", () => {
+    const groups: RoomGroup[] = [
+      {
+        roomId: 1,
+        roomName: "Loft",
+        buildingName: "Main cabin",
+        guests: ["Alice"],
+      },
+    ]
     const { rerender } = render(
-      <DayCard {...baseProps} count={1} names={["Alice"]} isSelected={false} />,
+      <DayCard {...baseProps} count={1} groups={groups} isSelected={false} />,
     )
     expect(screen.queryByText("Alice")).toBeNull()
     rerender(
-      <DayCard {...baseProps} count={1} names={["Alice"]} isSelected={true} />,
+      <DayCard {...baseProps} count={1} groups={groups} isSelected={true} />,
     )
     expect(screen.getByText("Alice")).toBeInTheDocument()
+    expect(screen.getByText("Loft")).toBeInTheDocument()
+    expect(screen.getByText("Main cabin")).toBeInTheDocument()
   })
 
   test("renders the forecast temperatures when forecast provided", () => {

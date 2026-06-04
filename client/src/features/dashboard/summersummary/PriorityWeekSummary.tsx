@@ -1,0 +1,176 @@
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { Card, Heading, Tag } from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
+import { useTRPC } from "@/trpc/trpc"
+import { pad2 } from "@/utils/dateUtils"
+import {
+  formatRange,
+  peakWeekRange,
+} from "@/routes/_authed/manageproperty/-priority/priorityUtils"
+import type { PeakWeek } from "@/routes/_authed/manageproperty/-priority/priorityUtils"
+import type { SortMode } from "./SummerSummary"
+import styles from "./SummerSummary.module.css"
+
+function isoUTC(d: Date) {
+  return `${String(d.getUTCFullYear())}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`
+}
+
+type WeekDay = { iso: string; index: number; name: string }
+
+// The seven days (Mon–Sun) of a priority week, with localized short names.
+function weekDays(weekStart: Date): WeekDay[] {
+  const days: WeekDay[] = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart)
+    d.setUTCDate(weekStart.getUTCDate() + i)
+    days.push({
+      iso: isoUTC(d),
+      index: i,
+      name: d.toLocaleDateString(undefined, {
+        weekday: "short",
+        timeZone: "UTC",
+      }),
+    })
+  }
+  return days
+}
+
+// Collapse consecutive day names into ranges: [Mon, Tue] -> "Mon–Tue",
+// [Mon, Thu, Fri] -> "Mon, Thu–Fri".
+function formatDays(days: WeekDay[]): string {
+  const sorted = [...days].sort((a, b) => a.index - b.index)
+  const groups: string[] = []
+  let runStart: WeekDay | null = null
+  let runEnd: WeekDay | null = null
+  const flush = () => {
+    if (!runStart || !runEnd) return
+    groups.push(
+      runStart.index === runEnd.index
+        ? runStart.name
+        : `${runStart.name}–${runEnd.name}`,
+    )
+  }
+  for (const day of sorted) {
+    if (runEnd && day.index === runEnd.index + 1) {
+      runEnd = day
+    } else {
+      flush()
+      runStart = day
+      runEnd = day
+    }
+  }
+  flush()
+  return groups.join(", ")
+}
+
+type StayRow = {
+  key: string
+  roomName: string
+  buildingName: string | null
+  guests: string[]
+  days: WeekDay[]
+  firstDay: number
+}
+
+export default function PriorityWeekSummary({
+  propertyId,
+  year,
+  week,
+  sort,
+}: {
+  propertyId: number
+  year: number
+  week: PeakWeek
+  sort: SortMode
+}) {
+  const { t } = useTranslation("dashboard")
+  const trpc = useTRPC()
+
+  const range = peakWeekRange(year, week)
+  const days = weekDays(range.start)
+  const weekStart = days[0].iso
+  const weekEnd = days[6].iso
+
+  const { data: bookings } = useSuspenseQuery(
+    trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+
+  const roomById = new Map(rooms.map(r => [r.id, r]))
+
+  const stays: StayRow[] = []
+  for (const b of bookings) {
+    if (b.status === "cancelled") continue
+    // end_date is inclusive, so the booking occupies [start_date, end_date].
+    if (b.start_date > weekEnd || b.end_date < weekStart) continue
+
+    const stayDays = days.filter(
+      d => d.iso >= b.start_date && d.iso <= b.end_date,
+    )
+    if (stayDays.length === 0) continue
+
+    const guestsByRoom = new Map<number | null, string[]>()
+    for (const o of b.occupants) {
+      const list = guestsByRoom.get(o.room_id) ?? []
+      list.push(o.user_name ?? `#${String(o.user_id)}`)
+      guestsByRoom.set(o.room_id, list)
+    }
+
+    for (const [roomId, guests] of guestsByRoom) {
+      const room = roomId == null ? undefined : roomById.get(roomId)
+      stays.push({
+        key: `${String(b.id)}-${roomId == null ? "none" : String(roomId)}`,
+        roomName: room ? room.name : t("Unassigned room"),
+        buildingName: room ? room.structure_name : null,
+        guests,
+        days: stayDays,
+        firstDay: stayDays[0].index,
+      })
+    }
+  }
+
+  stays.sort((a, b) => {
+    if (sort === "weekday") {
+      if (a.firstDay !== b.firstDay) return a.firstDay - b.firstDay
+    }
+    const buildingCompare = (a.buildingName ?? "").localeCompare(
+      b.buildingName ?? "",
+    )
+    if (buildingCompare !== 0) return buildingCompare
+    return a.roomName.localeCompare(b.roomName)
+  })
+
+  return (
+    <div className={styles.week}>
+      <Heading level={3} data-size="xs">
+        {t("Week {{weekNumber}}", { weekNumber: week })} · {formatRange(range)}
+      </Heading>
+      {stays.length === 0 ? (
+        <p>{t("No stays this week.")}</p>
+      ) : (
+        <ul className={styles.cards}>
+          {stays.map(s => (
+            <Card asChild key={s.key}>
+              <li>
+                <Card.Block className={styles.row}>
+                  <div className={styles.where}>
+                    <span className={styles.room}>{s.roomName}</span>
+                    {s.buildingName && (
+                      <Tag data-size="sm" data-color="neutral">
+                        {s.buildingName}
+                      </Tag>
+                    )}
+                  </div>
+                  <span className={styles.guests}>{s.guests.join(", ")}</span>
+                  <span className={styles.days}>{formatDays(s.days)}</span>
+                </Card.Block>
+              </li>
+            </Card>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
