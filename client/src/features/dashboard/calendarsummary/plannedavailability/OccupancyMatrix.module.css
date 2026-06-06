@@ -1,0 +1,65 @@
+.scroll {
+  overflow-x: auto;
+  margin-top: var(--ds-size-2);
+}
+
+.matrix {
+  width: 100%;
+  min-width: 44rem;
+}
+
+/* Light vertical separators so day columns stay legible even in empty cells. */
+.matrix td,
+.matrix th {
+  border-left: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.matrix td:first-child,
+.matrix th:first-child {
+  border-left: none;
+}
+
+.dayHead {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dayHeadDate {
+  display: block;
+  font-weight: normal;
+  font-size: var(--ds-body-xs-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.dayHeadToday {
+  color: var(--ds-color-accent-text-default);
+}
+
+.buildingName {
+  white-space: nowrap;
+}
+
+.roomLabel {
+  vertical-align: top;
+  font-weight: normal;
+  white-space: nowrap;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* Bars sit edge-to-edge in their colSpan cell so a multi-night stay reads as one run. */
+.barCell {
+  padding: 2px !important;
+}
+
+.bar {
+  display: block;
+  padding: 0 var(--ds-size-1);
+  background: var(--ds-color-accent-surface-default);
+  border: 1px solid var(--ds-color-accent-border-default);
+  border-radius: var(--ds-border-radius-sm);
+  color: var(--ds-color-accent-text-default);
+  font-size: var(--ds-body-xs-font-size);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

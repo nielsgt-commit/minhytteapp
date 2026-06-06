@@ -1,16 +1,29 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Paragraph, Tag } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Paragraph,
+  Tag,
+  ToggleGroup,
+} from "@digdir/designsystemet-react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import DayCard from "./DayCard"
 import DaySummary from "./DaySummary"
+import OccupancyMatrix from "./OccupancyMatrix"
 import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
-import { addDays, isoWeekNumber, isoWeekYear, toIso } from "@/utils/dateUtils"
+import {
+  addDays,
+  isoWeekNumber,
+  isoWeekYear,
+  pad2,
+  toIso,
+} from "@/utils/dateUtils"
 
 const WEEKDAY_LABELS = [
   "SUN",
@@ -79,6 +92,17 @@ export default function PlannedAvailabilitySummary({
     toIso(new Date()),
   )
 
+  // Desktop view mode. "grid" = week columns + inline row drawer,
+  // "rows" = vertical list reusing the mobile inline-expand, "popover" = per-card
+  // popover, "matrix" = room×day occupancy grid.
+  const [view, setView] = useState<"grid" | "rows" | "popover" | "matrix">(
+    "grid",
+  )
+  const usePopover = !isMobile && view === "popover"
+  const useRows = !isMobile && view === "rows"
+  const useMatrix = !isMobile && view === "matrix"
+  const expandInline = isMobile || useRows
+
   useEffect(() => {
     const todayIso = toIso(new Date())
     const visible = Array.from({ length: 7 }, (_, i) =>
@@ -118,6 +142,11 @@ export default function PlannedAvailabilitySummary({
 
   const selectedGroups =
     !isMobile && selectedDay ? roomGroupsOnDay(selectedDay) : []
+
+  const selectedIndex = selectedDay
+    ? days.findIndex(d => toIso(d) === selectedDay)
+    : -1
+  const selectedDate = selectedIndex >= 0 ? days[selectedIndex] : null
 
   const userById = new Map(users.map(u => [u.id, u]))
 
@@ -184,6 +213,23 @@ export default function PlannedAvailabilitySummary({
           </Button>
         </div>
         <div className={styles.weekNavRight}>
+          {!isMobile && (
+            <ToggleGroup
+              value={view}
+              onChange={value => {
+                setView(value as "grid" | "rows" | "popover" | "matrix")
+              }}
+              data-size="sm"
+              data-toggle-group={t("Day view")}
+            >
+              <ToggleGroup.Item value="grid">{t("Grid")}</ToggleGroup.Item>
+              <ToggleGroup.Item value="rows">{t("Rows")}</ToggleGroup.Item>
+              <ToggleGroup.Item value="popover">
+                {t("Popover")}
+              </ToggleGroup.Item>
+              <ToggleGroup.Item value="matrix">{t("Matrix")}</ToggleGroup.Item>
+            </ToggleGroup>
+          )}
           {weekBirthdayGuests.map(g => (
             <Tag key={g.id} data-color="warning">
               {t("{{name}} birthday", { name: g.name })}
@@ -194,59 +240,90 @@ export default function PlannedAvailabilitySummary({
       </div>
       <div className="calendar-week-chips"></div>
 
-      <ul className={styles.dayList}>
-        {isMobile &&
-        !hasForecast &&
-        days.every(d => guestsOnDay(toIso(d)) === 0) ? (
-          <Card asChild>
-            <li>
-              <Card.Block
-                className={`${styles.dayCardBlock} ${styles.dayCardBlockEmpty}`}
-              >
-                <div className={styles.dayRow}>
-                  <div className={styles.dayCount}>
-                    <span>{t("No guests")}</span>
-                  </div>
-                </div>
-              </Card.Block>
-            </li>
-          </Card>
-        ) : (
-          days.map((d, i) => {
-            const iso = toIso(d)
-            const isSelected = selectedDay === iso
-            const count = guestsOnDay(iso)
-            const toggle = () => {
-              if (count === 0) return
-              setSelectedDay(isSelected ? null : iso)
-            }
-            return (
-              <DayCard
-                key={iso}
-                date={d}
-                weekdayLabel={WEEKDAY_LABELS[i]}
-                iso={iso}
-                isSelected={isSelected}
-                isToday={iso === todayIso}
-                hasBirthday={birthdayGuestsOnDay(iso).length > 0}
-                count={count}
-                groups={roomGroupsOnDay(iso)}
-                expandInline={isMobile}
-                forecast={forecastByIso.get(iso)}
-                onToggle={toggle}
-              />
-            )
-          })
-        )}
-      </ul>
-      {!isMobile && selectedDay && selectedGroups.length > 0 && (
-        <Card asChild>
-          <section className={styles.dayPanel}>
-            <Card.Block>
-              <DaySummary groups={selectedGroups} />
-            </Card.Block>
-          </section>
-        </Card>
+      {useMatrix ? (
+        <OccupancyMatrix
+          days={days}
+          bookings={propertyBookings}
+          rooms={rooms}
+        />
+      ) : (
+        <>
+          <ul
+            className={`${styles.dayList}${useRows ? ` ${styles.rowsView}` : ""}`}
+          >
+            {isMobile &&
+            !hasForecast &&
+            days.every(d => guestsOnDay(toIso(d)) === 0) ? (
+              <Card asChild>
+                <li>
+                  <Card.Block
+                    className={`${styles.dayCardBlock} ${styles.dayCardBlockEmpty}`}
+                  >
+                    <div className={styles.dayRow}>
+                      <div className={styles.dayCount}>
+                        <span>{t("No guests")}</span>
+                      </div>
+                    </div>
+                  </Card.Block>
+                </li>
+              </Card>
+            ) : (
+              days.map((d, i) => {
+                const iso = toIso(d)
+                const isSelected = selectedDay === iso
+                const count = guestsOnDay(iso)
+                const toggle = () => {
+                  if (count === 0) return
+                  setSelectedDay(isSelected ? null : iso)
+                }
+                return (
+                  <DayCard
+                    key={iso}
+                    date={d}
+                    weekdayLabel={WEEKDAY_LABELS[i]}
+                    iso={iso}
+                    isSelected={isSelected}
+                    isToday={iso === todayIso}
+                    hasBirthday={birthdayGuestsOnDay(iso).length > 0}
+                    count={count}
+                    groups={roomGroupsOnDay(iso)}
+                    expandInline={expandInline}
+                    popover={usePopover}
+                    buildingDividers={useRows}
+                    forecast={forecastByIso.get(iso)}
+                    onToggle={toggle}
+                  />
+                )
+              })
+            )}
+          </ul>
+          {!isMobile &&
+            view === "grid" &&
+            selectedDate &&
+            selectedIndex >= 0 &&
+            selectedGroups.length > 0 && (
+              <Card asChild>
+                <section
+                  className={styles.dayPanel}
+                  style={{ "--col": selectedIndex } as CSSProperties}
+                >
+                  <span className={styles.dayPanelArrow} aria-hidden />
+                  <Card.Block>
+                    <Paragraph
+                      data-size="sm"
+                      className={styles.dayPanelHeader}
+                      aria-live="polite"
+                    >
+                      <strong>{t(WEEKDAY_LABELS[selectedIndex])}</strong>{" "}
+                      {pad2(selectedDate.getDate())}/
+                      {pad2(selectedDate.getMonth() + 1)}
+                    </Paragraph>
+                    <DaySummary groups={selectedGroups} buildingDividers />
+                  </Card.Block>
+                </section>
+              </Card>
+            )}
+        </>
       )}
     </div>
   )

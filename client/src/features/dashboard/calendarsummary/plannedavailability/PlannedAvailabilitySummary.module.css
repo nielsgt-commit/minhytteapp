@@ -115,17 +115,45 @@
 }
 
 .dayPanel {
-  margin-top: var(--ds-size-2);
+  position: relative;
+  margin-top: var(--ds-size-3);
+  border-color: var(--ds-color-accent-base-default);
+}
+
+.dayPanelHeader {
+  margin: 0 0 var(--ds-size-2) 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.dayPopover {
+  max-width: min(22rem, 90vw);
+}
+
+/* Upward caret bridging the grid gap, centred on the selected day column. */
+.dayPanelArrow {
+  position: absolute;
+  top: calc(-1 * var(--ds-size-2));
+  --col-width: calc((100% - 6 * var(--ds-size-2)) / 7);
+  left: calc(
+    var(--col) * (var(--col-width) + var(--ds-size-2)) + var(--col-width) / 2
+  );
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: var(--ds-size-2) solid transparent;
+  border-right: var(--ds-size-2) solid transparent;
+  border-bottom: var(--ds-size-2) solid var(--ds-color-accent-base-default);
 }
 
 @media (min-width: 641px) {
-  .dayList {
+  /* Week-grid layout. The "rows" view opts out and keeps the mobile column list. */
+  .dayList:not(.rowsView) {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     align-items: start;
   }
 
-  .dayRow {
+  .dayList:not(.rowsView) .dayRow {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--ds-size-1);

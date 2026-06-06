@@ -1,4 +1,4 @@
-import { Badge, Card } from "@digdir/designsystemet-react"
+import { Badge, Card, Popover } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { pad2 } from "@/utils/dateUtils"
 import styles from "./PlannedAvailabilitySummary.module.css"
@@ -24,6 +24,8 @@ type Props = {
   count: number
   groups: RoomGroup[]
   expandInline: boolean
+  popover?: boolean
+  buildingDividers?: boolean
   forecast?: Forecast
   onToggle: () => void
 }
@@ -37,6 +39,8 @@ export default function DayCard({
   count,
   groups,
   expandInline,
+  popover = false,
+  buildingDividers = false,
   forecast,
   onToggle,
 }: Props) {
@@ -51,15 +55,89 @@ export default function DayCard({
     SAT: t("SAT"),
   } satisfies Record<WeekdayLabel, string>
   const isClickable = count > 0
+  const usePopover = popover && isClickable
+  // In the narrow grid columns the accent "today" border is feedback enough, so the
+  // "· Today" text is only shown in the wide row/inline layout (mobile and Rows view).
+  const showTodayLabel = isToday && expandInline
+
+  const cardClassName =
+    [isToday && styles.dayCardToday, isSelected && styles.dayCardSelected]
+      .filter(Boolean)
+      .join(" ") || undefined
+
+  const inner = (
+    <>
+      <div className={styles.dayRow}>
+        <div className={styles.dayLabel}>
+          {hasBirthday ? (
+            <Badge.Position placement="top-right">
+              <Badge data-color="warning" />
+              <span>
+                <strong>{weekdayT[weekdayLabel]}</strong>{" "}
+                {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
+                {showTodayLabel && ` · ${t("Today")}`}
+              </span>
+            </Badge.Position>
+          ) : (
+            <span>
+              <strong>{weekdayT[weekdayLabel]}</strong> {pad2(date.getDate())}/
+              {pad2(date.getMonth() + 1)}
+              {showTodayLabel && ` · ${t("Today")}`}
+            </span>
+          )}
+        </div>
+        <div className={styles.dayCount}>
+          {count > 0 ? (
+            <strong>{t("{{count}} guest", { count })}</strong>
+          ) : (
+            <span>{t("No guests")}</span>
+          )}
+        </div>
+      </div>
+      {forecast && (
+        <div className={styles.dayWeather}>
+          <WeatherSymbol code={forecast.symbol_code} size={18} />
+          <span>
+            {Math.round(forecast.min_c)}° / {Math.round(forecast.max_c)}°
+          </span>
+        </div>
+      )}
+      {isSelected && expandInline && (
+        <DaySummary groups={groups} buildingDividers={buildingDividers} />
+      )}
+    </>
+  )
+
+  // Popover mode: the card itself is the trigger; Popover.Trigger injects the
+  // button role, focus and keyboard handling, so we only style the block here.
+  if (usePopover) {
+    return (
+      <Popover.TriggerContext>
+        <Card asChild className={cardClassName}>
+          <li>
+            <Popover.Trigger asChild>
+              <Card.Block
+                className={`${styles.dayCardBlock} ${styles.dayCardClickable}`}
+              >
+                {inner}
+              </Card.Block>
+            </Popover.Trigger>
+            <Popover
+              placement="bottom"
+              data-color="neutral"
+              data-overscroll="contain"
+              className={styles.dayPopover}
+            >
+              <DaySummary groups={groups} buildingDividers={buildingDividers} />
+            </Popover>
+          </li>
+        </Card>
+      </Popover.TriggerContext>
+    )
+  }
+
   return (
-    <Card
-      asChild
-      className={
-        [isToday && styles.dayCardToday, isSelected && styles.dayCardSelected]
-          .filter(Boolean)
-          .join(" ") || undefined
-      }
-    >
+    <Card asChild className={cardClassName}>
       <li>
         <Card.Block
           role={isClickable ? "button" : undefined}
@@ -83,42 +161,7 @@ export default function DayCard({
           }
           style={isClickable ? undefined : { cursor: "default" }}
         >
-          <div className={styles.dayRow}>
-            <div className={styles.dayLabel}>
-              {hasBirthday ? (
-                <Badge.Position placement="top-right">
-                  <Badge data-color="warning" />
-                  <span>
-                    <strong>{weekdayT[weekdayLabel]}</strong>{" "}
-                    {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
-                    {isToday && ` · ${t("Today")}`}
-                  </span>
-                </Badge.Position>
-              ) : (
-                <span>
-                  <strong>{weekdayT[weekdayLabel]}</strong>{" "}
-                  {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
-                  {isToday && ` · ${t("Today")}`}
-                </span>
-              )}
-            </div>
-            <div className={styles.dayCount}>
-              {count > 0 ? (
-                <strong>{t("{{count}} guest", { count })}</strong>
-              ) : (
-                <span>{t("No guests")}</span>
-              )}
-            </div>
-          </div>
-          {forecast && (
-            <div className={styles.dayWeather}>
-              <WeatherSymbol code={forecast.symbol_code} size={18} />
-              <span>
-                {Math.round(forecast.min_c)}° / {Math.round(forecast.max_c)}°
-              </span>
-            </div>
-          )}
-          {isSelected && expandInline && <DaySummary groups={groups} />}
+          {inner}
         </Card.Block>
       </li>
     </Card>
