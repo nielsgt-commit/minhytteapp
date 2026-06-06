@@ -16,7 +16,7 @@ import {
   propertyTable,
   structuresTable,
 } from "./property.schema.ts"
-import { usersTable } from "./users.schema.ts"
+import { userGroupsTable, usersTable } from "./users.schema.ts"
 
 export const equipmentTable = pgTable(
   "equipment",
@@ -40,6 +40,20 @@ export const equipmentTable = pgTable(
     ),
   ],
 )
+
+// Single source of truth for maintenance due kinds. KEEP IN SYNC with the
+// maintenance_due_shape CHECK below (its `IN (...)` list is raw SQL and cannot
+// import this) and with the client-side `DueKind` in
+// client/src/features/maintenance/due/maintenanceDue.ts (can't import server code).
+export const dueKindValues = [
+  "not_decided",
+  "dugnad",
+  "opening",
+  "closing",
+  "priority_week",
+  "date",
+] as const
+export type DueKind = (typeof dueKindValues)[number]
 
 export const maintenanceTable = pgTable(
   "maintenance",
@@ -87,6 +101,16 @@ export const maintenanceTable = pgTable(
       (): AnyPgColumn => inspectionsTable.id,
       { onDelete: "set null" },
     ),
+    due_kind: varchar("due_kind", {
+      length: 13,
+      enum: dueKindValues,
+    })
+      .notNull()
+      .default("not_decided"),
+    due_priority_group_id: integer("due_priority_group_id").references(
+      () => userGroupsTable.id,
+      { onDelete: "set null" },
+    ),
     due_at: timestamp("due_at"),
     created_at: timestamp("created_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),
@@ -103,6 +127,15 @@ export const maintenanceTable = pgTable(
     check(
       "maintenance_done_has_timestamp",
       sql`(${t.status} = 'done') = (${t.completed_at} IS NOT NULL)`,
+    ),
+    check(
+      // The IN (...) lists below are raw SQL — KEEP IN SYNC with dueKindValues above.
+      "maintenance_due_shape",
+      sql`(
+        (${t.due_kind} = 'date' AND ${t.due_at} IS NOT NULL AND ${t.due_priority_group_id} IS NULL)
+        OR (${t.due_kind} = 'priority_week' AND ${t.due_priority_group_id} IS NOT NULL AND ${t.due_at} IS NULL)
+        OR (${t.due_kind} IN ('not_decided', 'dugnad', 'opening', 'closing') AND ${t.due_at} IS NULL AND ${t.due_priority_group_id} IS NULL)
+      )`,
     ),
   ],
 )

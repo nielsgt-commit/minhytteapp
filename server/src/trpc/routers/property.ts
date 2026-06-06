@@ -312,6 +312,13 @@ export const propertyRouter = router({
           await tx
             .delete(userGroupMembersTable)
             .where(inArray(userGroupMembersTable.user_group_id, groupIds))
+          // A plain FK SET NULL would leave due_kind='priority_week' with a null
+          // group, violating the maintenance_due_shape CHECK and aborting the
+          // delete. Reset referencing rows to 'not_decided' first.
+          await tx
+            .update(maintenanceTable)
+            .set({ due_kind: "not_decided", due_priority_group_id: null })
+            .where(inArray(maintenanceTable.due_priority_group_id, groupIds))
           await tx
             .delete(userGroupsTable)
             .where(eq(userGroupsTable.property_id, id))

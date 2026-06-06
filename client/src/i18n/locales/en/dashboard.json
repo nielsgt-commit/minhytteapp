@@ -1,4 +1,12 @@
 {
+  "Dugnad": "Dugnad",
+  "Opening": "Opening",
+  "Closing": "Closing",
+  "Not decided": "Not decided",
+  "Scheduled": "Scheduled",
+  "Unknown group": "Unknown group",
+  "week {{week}}": "week {{week}}",
+  "{{name}} week": "{{name}} week",
   "{{count}} guest_one": "{{count}} guest",
   "{{count}} guest_other": "{{count}} guests",
   "{{count}} member_one": "{{count}} member",

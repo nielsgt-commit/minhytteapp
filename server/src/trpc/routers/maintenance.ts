@@ -3,6 +3,8 @@ import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import type { PortableTextBlock } from "@portabletext/types"
 import {
+  type DueKind,
+  dueKindValues,
   equipmentTable,
   maintenanceTable,
 } from "../../db/schema/maintenance.schema.ts"
@@ -15,6 +17,7 @@ import {
   resolvePropertyIdFromMaintenance,
   resolvePropertyIdFromMaintenanceParent,
 } from "../util/propertyAccess.ts"
+import { ensureMainGroupOfProperty } from "./priority.ts"
 
 const maintenanceFields = {
   description: z.string().min(1),
@@ -29,7 +32,49 @@ const maintenanceFields = {
   severity: z.enum(["major", "minor", "patch"]),
   status: z.enum(["todo", "doing", "done"]),
   recurrence: z.enum(["once", "yearly", "5year", "spring", "fall"]),
+  due_kind: z.enum(dueKindValues).default("not_decided"),
+  due_priority_group_id: z.number().int().positive().optional(),
+  due_at: z.coerce.date().optional(),
   completed_at: z.coerce.date().optional(),
+}
+
+type DueInput = {
+  due_kind: DueKind
+  due_priority_group_id?: number
+  due_at?: Date
+}
+
+const dueShape = {
+  // Only assert what normalizeDue() can't supply on its own: 'date' needs a
+  // due_at, 'priority_week' needs a group. The "and the other field must be
+  // null" clauses are intentionally dropped — normalizeDue() nulls irrelevant
+  // columns before insert/update, so a stray due_at on a non-date kind is
+  // sanitized rather than 400-ing. The DB CHECK maintenance_due_shape remains
+  // the hard backstop.
+  check: (v: DueInput) => {
+    switch (v.due_kind) {
+      case "date":
+        return v.due_at != null
+      case "priority_week":
+        return v.due_priority_group_id != null
+      default:
+        return true
+    }
+  },
+  error:
+    "due_at is required for kind 'date'; due_priority_group_id is required for 'priority_week'",
+  path: ["due_kind"] as const,
+}
+
+function normalizeDue(input: DueInput) {
+  return {
+    due_kind: input.due_kind,
+    due_at: input.due_kind === "date" ? (input.due_at ?? null) : null,
+    due_priority_group_id:
+      input.due_kind === "priority_week"
+        ? (input.due_priority_group_id ?? null)
+        : null,
+  }
 }
 
 const locationXor = {
@@ -45,10 +90,13 @@ const locationXor = {
   path: ["equipment_id"] as const,
 }
 
-const createInput = z.object(maintenanceFields).refine(locationXor.check, {
-  error: locationXor.error,
-  path: [...locationXor.path],
-})
+const createInput = z
+  .object(maintenanceFields)
+  .refine(locationXor.check, {
+    error: locationXor.error,
+    path: [...locationXor.path],
+  })
+  .refine(dueShape.check, { error: dueShape.error, path: [...dueShape.path] })
 
 const updateInput = z
   .object({ id: z.number().int().positive(), ...maintenanceFields })
@@ -56,6 +104,7 @@ const updateInput = z
     error: locationXor.error,
     path: [...locationXor.path],
   })
+  .refine(dueShape.check, { error: dueShape.error, path: [...dueShape.path] })
 
 export const maintenanceRouter = router({
   listForProperty: protectedProcedure
@@ -95,10 +144,21 @@ export const maintenanceRouter = router({
         input,
       )
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      // A priority_week due must reference a family group of THIS property —
+      // the FK alone allows any existing group (cross-property) or 500s on a
+      // non-existent id.
+      if (input.due_kind === "priority_week" && input.due_priority_group_id) {
+        await ensureMainGroupOfProperty(
+          ctx.db,
+          input.due_priority_group_id,
+          propertyId,
+        )
+      }
       const [created] = await ctx.db
         .insert(maintenanceTable)
         .values({
           ...input,
+          ...normalizeDue(input),
           added_by: ctx.user.id,
           completed_at:
             input.status === "done" ? (input.completed_at ?? new Date()) : null,
@@ -113,6 +173,13 @@ export const maintenanceRouter = router({
       const { id, ...rest } = input
       const propertyId = await resolvePropertyIdFromMaintenance(ctx.db, id)
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      if (rest.due_kind === "priority_week" && rest.due_priority_group_id) {
+        await ensureMainGroupOfProperty(
+          ctx.db,
+          rest.due_priority_group_id,
+          propertyId,
+        )
+      }
       const existing = (
         await ctx.db
           .select({ completed_at: maintenanceTable.completed_at })
@@ -132,7 +199,7 @@ export const maintenanceRouter = router({
           : null
       const [updated] = await ctx.db
         .update(maintenanceTable)
-        .set({ ...rest, completed_at })
+        .set({ ...rest, ...normalizeDue(rest), completed_at })
         .where(eq(maintenanceTable.id, id))
         .returning()
       return updated

@@ -1,5 +1,13 @@
 {
   " (pinned)": " (festet)",
+  "Due": "Frist",
+  "Due date": "Fristdato",
+  "Dugnad": "Dugnad",
+  "Opening": "Åpning",
+  "Closing": "Stenging",
+  "Not decided": "Ikke bestemt",
+  "Specific date": "Bestemt dato",
+  "{{name}} week": "{{name}}-uka",
   "(select location)": "(velg plassering)",
   "(select)": "(velg)",
   "(unassigned)": "(ikke tildelt)",

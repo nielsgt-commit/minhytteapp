@@ -9,6 +9,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import type { PortableTextBlock } from "@portabletext/types"
+import { toDateInputValue } from "@/utils/dateUtils"
 import { MaintenanceInstructionsPTEditor } from "./MaintenanceInstructionsPTEditor.tsx"
 import styles from "./MaintenanceHistory.module.css"
 
@@ -23,16 +24,6 @@ export type MaintenanceHistoryEditValues = {
   description: string
   instructions_pt: PortableTextBlock[] | null
   completed_at?: Date
-}
-
-function toDateInputValue(value: string | Date | null): string {
-  if (value == null) return ""
-  const d = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(d.getTime())) return ""
-  const yyyy = String(d.getFullYear()).padStart(4, "0")
-  const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
-  return `${yyyy}-${mm}-${dd}`
 }
 
 export function MaintenanceHistoryEditForm(props: {

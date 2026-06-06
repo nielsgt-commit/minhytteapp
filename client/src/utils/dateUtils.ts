@@ -6,6 +6,18 @@ export function toIso(d: Date): string {
   return `${String(d.getFullYear())}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
+// Format a date (or parseable string) as the local-day `YYYY-MM-DD` value an
+// <input type="date"> expects. Local-time on purpose: a calendar due date is a
+// human "which day", not a UTC instant. Returns "" for null/invalid input.
+export function toDateInputValue(
+  value: string | Date | null | undefined,
+): string {
+  if (value == null) return ""
+  const d = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(d.getTime())) return ""
+  return toIso(d)
+}
+
 export function startOfSunday(d: Date): Date {
   const out = new Date(d)
   out.setHours(0, 0, 0, 0)

@@ -283,6 +283,11 @@ export const maintenanceRelations = relations(
       fields: [maintenanceTable.inspection_id],
       references: [inspectionsTable.id],
     }),
+    duePriorityGroup: one(userGroupsTable, {
+      fields: [maintenanceTable.due_priority_group_id],
+      references: [userGroupsTable.id],
+      relationName: "maintenance_due_priority_group",
+    }),
     expenses: many(expensesTable),
   }),
 )

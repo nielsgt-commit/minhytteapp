@@ -1,5 +1,13 @@
 {
   " (pinned)": " (pinned)",
+  "Due": "Due",
+  "Due date": "Due date",
+  "Dugnad": "Dugnad",
+  "Opening": "Opening",
+  "Closing": "Closing",
+  "Not decided": "Not decided",
+  "Specific date": "Specific date",
+  "{{name}} week": "{{name}} week",
   "+ Photo": "+ Photo",
   "Acquired {{year}}": "Acquired {{year}}",
   "Add": "Add",

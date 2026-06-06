@@ -1,4 +1,12 @@
 {
+  "Dugnad": "Dugnad",
+  "Opening": "Åpning",
+  "Closing": "Stenging",
+  "Not decided": "Ikke bestemt",
+  "Scheduled": "Planlagt",
+  "Unknown group": "Ukjent gruppe",
+  "week {{week}}": "uke {{week}}",
+  "{{name}} week": "{{name}}-uka",
   "{{count}} guest_one": "{{count}} gjest",
   "{{count}} guest_other": "{{count}} gjester",
   "{{count}} member_one": "{{count}} medlem",

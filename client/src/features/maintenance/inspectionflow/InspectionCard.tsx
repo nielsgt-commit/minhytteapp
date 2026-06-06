@@ -76,10 +76,14 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
       assigned_to_id: f.assigned_to_id ?? undefined,
       structure_id: f.structure_id ?? undefined,
       infrastructure_id: f.infrastructure_id ?? undefined,
+      equipment_id: f.equipment_id ?? undefined,
       category: f.category,
       severity: cycleSeverity(f.severity),
       status: f.status,
       recurrence: f.recurrence,
+      due_kind: f.due_kind,
+      due_priority_group_id: f.due_priority_group_id ?? undefined,
+      due_at: f.due_at ? new Date(f.due_at) : undefined,
     })
   }
 

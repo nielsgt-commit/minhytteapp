@@ -44,6 +44,9 @@ export type PriorityAssignment = {
 export type OwnerLookups = {
   ownersByWeek: Map<PeakWeek, number[]>
   ownerNameById: Map<number, string>
+  // group id → its assigned ISO week (inverse of ownersByWeek). Used by readers
+  // that bucket items by group, e.g. PlannedMaintenanceSummary.
+  weekByGroup: Map<number, number>
 }
 
 export function buildOwnerLookups(
@@ -51,7 +54,9 @@ export function buildOwnerLookups(
   assignments: readonly PriorityAssignment[],
 ): OwnerLookups {
   const ownersByWeek = new Map<PeakWeek, number[]>()
+  const weekByGroup = new Map<number, number>()
   for (const a of assignments) {
+    weekByGroup.set(a.user_group_id, a.iso_week)
     if (a.iso_week === 28 || a.iso_week === 29 || a.iso_week === 30) {
       const list = ownersByWeek.get(a.iso_week) ?? []
       list.push(a.user_group_id)
@@ -64,5 +69,5 @@ export function buildOwnerLookups(
     ownerNameById.set(o.user_group_id, o.user_group_name)
   }
 
-  return { ownersByWeek, ownerNameById }
+  return { ownersByWeek, ownerNameById, weekByGroup }
 }

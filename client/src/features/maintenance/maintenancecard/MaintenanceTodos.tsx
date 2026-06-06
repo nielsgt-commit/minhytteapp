@@ -14,12 +14,15 @@ import styles from "./MaintenanceTodos.module.css"
 import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { addDays, isoWeekYear, startOfSunday } from "@/utils/dateUtils"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
 import {
   SeverityTag,
   cycleSeverity,
 } from "@/features/maintenance/severity/SeverityTag.tsx"
+import { MaintenanceDueSelect } from "@/features/maintenance/due/MaintenanceDueSelect.tsx"
+import type { DueSelection } from "@/features/maintenance/due/maintenanceDue.ts"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   const { t } = useTranslation("maintenance")
@@ -33,6 +36,22 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       { enabled: selectedPropertyId != null },
     ),
   )
+
+  // Mirror PlannedMaintenanceSummary's current-week refYear (isoWeekYear of the
+  // week's midpoint) so this query shares its cache key and the two agree at the
+  // ISO-week/year boundary in late December. Only eligibleOwners is consumed
+  // here (year-independent); the year just drives the shared cache key.
+  const priorityYear = isoWeekYear(addDays(startOfSunday(new Date()), 3))
+  const { data: priority } = useQuery(
+    trpc.priority.list.queryOptions(
+      {
+        property_id: selectedPropertyId ?? 0,
+        year: priorityYear,
+      },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
+  const owners = priority?.eligibleOwners ?? []
 
   const maintenanceKeys = [trpc.maintenance.pathKey()]
   const createMutation = useMutationWithInvalidation(
@@ -49,6 +68,9 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   )
 
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
+  const [addDue, setAddDue] = useState<DueSelection>({
+    due_kind: "not_decided",
+  })
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -71,10 +93,12 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
         severity: "patch",
         status: "todo",
         recurrence: "once",
+        ...addDue,
       },
       {
         onSuccess: () => {
           form.reset()
+          setAddDue({ due_kind: "not_decided" })
         },
       },
     )
@@ -99,35 +123,43 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       return b.id - a.id
     })
 
+  const baseUpdate = (item: (typeof todos)[number]) => ({
+    id: item.id,
+    description: item.description,
+    instructions_pt: item.instructions_pt,
+    assigned_to_id: item.assigned_to_id ?? undefined,
+    structure_id: item.structure_id ?? undefined,
+    infrastructure_id: item.infrastructure_id ?? undefined,
+    equipment_id: item.equipment_id ?? undefined,
+    category: item.category,
+    severity: item.severity,
+    status: item.status,
+    recurrence: item.recurrence,
+    due_kind: item.due_kind,
+    due_priority_group_id: item.due_priority_group_id ?? undefined,
+    due_at: item.due_at ? new Date(item.due_at) : undefined,
+  })
+
   const markDone = (item: (typeof todos)[number]) => {
-    updateMutation.mutate({
-      id: item.id,
-      description: item.description,
-      instructions_pt: item.instructions_pt,
-      assigned_to_id: item.assigned_to_id ?? undefined,
-      structure_id: item.structure_id ?? undefined,
-      infrastructure_id: item.infrastructure_id ?? undefined,
-      equipment_id: item.equipment_id ?? undefined,
-      category: item.category,
-      severity: item.severity,
-      status: "done",
-      recurrence: item.recurrence,
-    })
+    updateMutation.mutate({ ...baseUpdate(item), status: "done" })
   }
 
   const cycleItemSeverity = (item: (typeof todos)[number]) => {
     updateMutation.mutate({
-      id: item.id,
-      description: item.description,
-      instructions_pt: item.instructions_pt,
-      assigned_to_id: item.assigned_to_id ?? undefined,
-      structure_id: item.structure_id ?? undefined,
-      infrastructure_id: item.infrastructure_id ?? undefined,
-      equipment_id: item.equipment_id ?? undefined,
-      category: item.category,
+      ...baseUpdate(item),
       severity: cycleSeverity(item.severity),
-      status: item.status,
-      recurrence: item.recurrence,
+    })
+  }
+
+  const setItemDue = (
+    item: (typeof todos)[number],
+    selection: DueSelection,
+  ) => {
+    updateMutation.mutate({
+      ...baseUpdate(item),
+      due_kind: selection.due_kind,
+      due_priority_group_id: selection.due_priority_group_id,
+      due_at: selection.due_at,
     })
   }
 
@@ -150,19 +182,27 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   return (
     <div className={styles.wrap}>
       <form onSubmit={handleAdd} className={styles.add}>
-        <Textfield
-          aria-label={t("New task")}
-          name="description"
-          placeholder={t("Add task...")}
+        <div className={styles.addRow}>
+          <Textfield
+            aria-label={t("New task")}
+            name="description"
+            placeholder={t("Add task...")}
+            disabled={createMutation.isPending || selectedUserId == null}
+          />
+          <Button
+            type="submit"
+            data-size="sm"
+            disabled={createMutation.isPending || selectedUserId == null}
+          >
+            {t("Add")}
+          </Button>
+        </div>
+        <MaintenanceDueSelect
+          value={addDue}
+          owners={owners}
           disabled={createMutation.isPending || selectedUserId == null}
+          onChange={setAddDue}
         />
-        <Button
-          type="submit"
-          data-size="sm"
-          disabled={createMutation.isPending || selectedUserId == null}
-        >
-          {t("Add")}
-        </Button>
       </form>
       {lastError && (
         <p role="alert">
@@ -192,6 +232,18 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                       {todo.description}
                     </Paragraph>
                     <div className={styles.actions}>
+                      <MaintenanceDueSelect
+                        value={{
+                          due_kind: todo.due_kind,
+                          due_priority_group_id: todo.due_priority_group_id,
+                          due_at: todo.due_at,
+                        }}
+                        owners={owners}
+                        disabled={pending}
+                        onChange={selection => {
+                          setItemDue(todo, selection)
+                        }}
+                      />
                       {hasInstructions && (
                         <Chip.Button
                           type="button"

@@ -106,6 +106,9 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
       severity: cycleSeverity(item.severity),
       status: item.status,
       recurrence: item.recurrence,
+      due_kind: item.due_kind,
+      due_priority_group_id: item.due_priority_group_id ?? undefined,
+      due_at: item.due_at ? new Date(item.due_at) : undefined,
     })
   }
 
@@ -125,6 +128,9 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
           severity: item.severity,
           status: item.status,
           recurrence: item.recurrence,
+          due_kind: item.due_kind,
+          due_priority_group_id: item.due_priority_group_id ?? undefined,
+          due_at: item.due_at ? new Date(item.due_at) : undefined,
           completed_at: values.completed_at,
         },
         {

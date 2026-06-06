@@ -21,7 +21,7 @@ async function ensureCanEdit(db: Db, user: AuthUser, propertyId: number) {
   }
 }
 
-async function ensureMainGroupOfProperty(
+export async function ensureMainGroupOfProperty(
   db: Db,
   userGroupId: number,
   propertyId: number,

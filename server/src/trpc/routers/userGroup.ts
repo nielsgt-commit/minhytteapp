@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server"
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm"
 import { z } from "zod"
+import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
 import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
 import {
   userGroupMembersTable,
@@ -215,11 +216,20 @@ export const userGroupRouter = router({
   delete: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(userGroupsTable)
-        .where(eq(userGroupsTable.id, input.id))
-        .returning()
-      return deleted
+      return ctx.db.transaction(async tx => {
+        // A plain FK SET NULL would leave due_kind='priority_week' with a null
+        // group, violating the maintenance_due_shape CHECK and aborting the
+        // delete. Reset referencing rows to 'not_decided' first.
+        await tx
+          .update(maintenanceTable)
+          .set({ due_kind: "not_decided", due_priority_group_id: null })
+          .where(eq(maintenanceTable.due_priority_group_id, input.id))
+        const [deleted] = await tx
+          .delete(userGroupsTable)
+          .where(eq(userGroupsTable.id, input.id))
+          .returning()
+        return deleted
+      })
     }),
 
   addMember: propertyAdminProcedure
