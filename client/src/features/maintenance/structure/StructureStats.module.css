@@ -20,8 +20,15 @@
 .filter {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+  overflow-x: auto;
+  /* Keep chips on a single row; let them keep their intrinsic width. */
+  scrollbar-width: thin;
+}
+
+.filter > * {
+  flex: 0 0 auto;
 }
 
 .cards {
