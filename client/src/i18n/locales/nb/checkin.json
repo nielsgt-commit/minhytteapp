@@ -1,4 +1,6 @@
 {
   "At property now": "På hytta nå",
-  "At property?": "På hytta?"
+  "At property?": "På hytta?",
+  "Welcome to {{property}} {{name}}": "Velkommen til {{property}} {{name}},",
+  "you sleep in {{room}} in {{building}}": "du sover på {{room}} i {{building}}"
 }

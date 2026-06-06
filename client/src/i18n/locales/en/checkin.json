@@ -1,4 +1,6 @@
 {
   "At property now": "At property now",
-  "At property?": "At property?"
+  "At property?": "At property?",
+  "Welcome to {{property}} {{name}}": "Welcome to {{property}} {{name}},",
+  "you sleep in {{room}} in {{building}}": "you sleep in {{room}} in {{building}}"
 }

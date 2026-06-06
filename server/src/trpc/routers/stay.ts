@@ -5,6 +5,11 @@ import {
   bookingOccupantsTable,
   bookingTable,
 } from "../../db/schema/booking.schema.ts"
+import {
+  propertyTable,
+  roomTable,
+  structuresTable,
+} from "../../db/schema/property.schema.ts"
 import { stayTable } from "../../db/schema/stay.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import { propertyAdminProcedure, protectedProcedure, router } from "../init.ts"
@@ -128,11 +133,18 @@ export const stayRouter = router({
             .select({
               id: bookingTable.id,
               status: bookingTable.status,
+              room_name: roomTable.name,
+              building_name: structuresTable.name,
             })
             .from(bookingTable)
             .innerJoin(
               bookingOccupantsTable,
               eq(bookingOccupantsTable.booking_id, bookingTable.id),
+            )
+            .leftJoin(roomTable, eq(roomTable.id, bookingOccupantsTable.room_id))
+            .leftJoin(
+              structuresTable,
+              eq(structuresTable.id, roomTable.structure_id),
             )
             .where(
               and(
@@ -147,13 +159,36 @@ export const stayRouter = router({
         ).at(0)
 
         if (coveringBooking) {
-          if (coveringBooking.status !== "confirmed") {
+          const wasConfirmed = coveringBooking.status === "confirmed"
+          if (!wasConfirmed) {
             await tx
               .update(bookingTable)
               .set({ status: "confirmed", updated_at: new Date() })
               .where(eq(bookingTable.id, coveringBooking.id))
           }
-          return { kind: "booking" as const, booking_id: coveringBooking.id }
+
+          const property = (
+            await tx
+              .select({ name: propertyTable.name })
+              .from(propertyTable)
+              .where(eq(propertyTable.id, input.property_id))
+              .limit(1)
+          ).at(0)
+
+          // firstCheckIn: this call actually transitioned the booking into
+          // the checked-in state (was pending), so the guest hasn't been
+          // greeted yet. Already-confirmed = a re-toggle, no greeting.
+          // The greeting fields travel on the mutation result so the welcome
+          // dialog never depends on whether the background status query has
+          // finished loading.
+          return {
+            kind: "booking" as const,
+            booking_id: coveringBooking.id,
+            firstCheckIn: !wasConfirmed,
+            propertyName: property?.name ?? null,
+            room_name: coveringBooking.room_name,
+            building_name: coveringBooking.building_name,
+          }
         }
 
         const existingOpen = (
@@ -171,7 +206,14 @@ export const stayRouter = router({
         ).at(0)
 
         if (existingOpen) {
-          return { kind: "stay" as const, stay_id: existingOpen.id }
+          return {
+            kind: "stay" as const,
+            stay_id: existingOpen.id,
+            firstCheckIn: false,
+            propertyName: null,
+            room_name: null,
+            building_name: null,
+          }
         }
 
         const created = (
@@ -192,7 +234,16 @@ export const stayRouter = router({
           })
         }
 
-        return { kind: "stay" as const, stay_id: created.id }
+        // A brand-new stay with no covering booking: nothing to greet with
+        // (no room/building), so the dialog stays closed on the client.
+        return {
+          kind: "stay" as const,
+          stay_id: created.id,
+          firstCheckIn: true,
+          propertyName: null,
+          room_name: null,
+          building_name: null,
+        }
       })
     }),
 
