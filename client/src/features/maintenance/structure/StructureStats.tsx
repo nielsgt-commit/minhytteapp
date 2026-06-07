@@ -94,6 +94,7 @@ export function StructureStats() {
                       kind: "structure",
                       id: b.id,
                       name: b.name,
+                      builtYear: b.built_year,
                     }
                     return <MaintenanceCard key={b.id} scope={scope} />
                   })}
@@ -136,6 +137,7 @@ export function StructureStats() {
                       kind: "infrastructure",
                       id: p.id,
                       name: p.name,
+                      builtYear: p.since_year,
                     }
                     return <MaintenanceCard key={p.id} scope={scope} />
                   })}

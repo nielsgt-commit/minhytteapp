@@ -109,16 +109,33 @@ export const userRouter = router({
           eq(userGroupsTable.is_family, true),
         ),
       )
-    const my_main_memberships = mainMembershipRows
-      .filter(
-        (r): r is typeof r & { property_id: number } => r.property_id != null,
-      )
-      .map(r => ({
-        property_id: r.property_id,
-        property_name: r.property_name,
-        user_group_id: r.user_group_id,
-        is_head: r.is_head,
-      }))
+    // Collapse to one entry per property: a user may belong to multiple
+    // family groups for the same property, but "head" is a property-level
+    // flag (see updateMyHeadForProperty). is_head is OR'd across groups.
+    const byProperty = new Map<
+      number,
+      {
+        property_id: number
+        property_name: string
+        user_group_id: number
+        is_head: boolean
+      }
+    >()
+    for (const r of mainMembershipRows) {
+      if (r.property_id == null) continue
+      const existing = byProperty.get(r.property_id)
+      if (existing) {
+        existing.is_head = existing.is_head || r.is_head
+      } else {
+        byProperty.set(r.property_id, {
+          property_id: r.property_id,
+          property_name: r.property_name,
+          user_group_id: r.user_group_id,
+          is_head: r.is_head,
+        })
+      }
+    }
+    const my_main_memberships = [...byProperty.values()]
     // is_head kept = is_head_anywhere for transitional client compat.
     return { ...ctx.user, head_property_ids, my_main_memberships }
   }),

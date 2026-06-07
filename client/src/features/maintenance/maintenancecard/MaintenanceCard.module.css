@@ -27,6 +27,46 @@
   flex-wrap: wrap;
 }
 
+/* Mobile layout (rendered via useIsMobile, see MaintenanceCard.tsx) */
+.mobileTopRow,
+.mobileTodosRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nameTag {
+  /* Keep a long structure name from pushing the history toggle off-row. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lastFinished,
+.lastFinishedEmpty {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lastFinishedEmpty {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.mobileInspectRow {
+  display: flex;
+}
+
+.mobileInspectRow .inspect {
+  width: 100%;
+}
+
 @media (max-width: 640px) {
   .row {
     grid-template-columns: 1fr auto;

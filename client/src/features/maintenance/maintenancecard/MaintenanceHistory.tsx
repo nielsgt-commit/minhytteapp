@@ -1,6 +1,7 @@
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { Card, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -76,6 +77,11 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
         t: number
         item: (typeof scopedInspections)[number]
       }
+    | { kind: "built"; t: number; year: number }
+
+  // The build/since year is the structure's first completed milestone, so it
+  // anchors the bottom of the timeline.
+  const builtYear = scope.builtYear ?? null
 
   const entries: HistoryEntry[] = [
     ...doneItems.map(item => ({
@@ -88,6 +94,15 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
       t: item.completed_at ? new Date(item.completed_at).getTime() : 0,
       item,
     })),
+    ...(builtYear != null
+      ? [
+          {
+            kind: "built" as const,
+            t: new Date(builtYear, 0, 1).getTime(),
+            year: builtYear,
+          },
+        ]
+      : []),
   ].sort((a, b) => b.t - a.t)
 
   const pending = updateMutation.isPending || deleteMutation.isPending
@@ -162,6 +177,24 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
               key={`i-${String(entry.item.id)}`}
               inspection={entry.item}
             />
+          )
+        }
+        if (entry.kind === "built") {
+          return (
+            <Card key="built" asChild>
+              <article>
+                <Card.Block className={styles.row} data-size="sm">
+                  <Tag data-size="sm" className={styles.date}>
+                    {String(entry.year)}
+                  </Tag>
+                  <Paragraph className={styles.description} data-size="sm">
+                    {scope.kind === "infrastructure"
+                      ? t("Established")
+                      : t("Built")}
+                  </Paragraph>
+                </Card.Block>
+              </article>
+            </Card>
           )
         }
         const item = entry.item
