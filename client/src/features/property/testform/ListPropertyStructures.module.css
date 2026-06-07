@@ -37,6 +37,17 @@
   user-select: none;
 }
 
+.builtYearForm {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.builtYearInput {
+  flex: 1;
+  min-width: 0;
+}
+
 .roomList {
   list-style: none;
   padding: 0;

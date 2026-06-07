@@ -13,6 +13,7 @@ import {
   Heading,
   List,
   Paragraph,
+  Textfield,
   ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
@@ -20,6 +21,7 @@ import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditField } from "@/components/shared/InlineEditField"
+import { fdNumber } from "@/utils/formData"
 import section from "@/features/property/managePropertySection.module.css"
 import { AddStructureFlow } from "@/features/property/testform/AddStructureFlow.tsx"
 import {
@@ -153,6 +155,26 @@ export function ListPropertyStructures() {
       name: trimmed,
       property_id: b.property_id,
       category: b.category,
+    })
+  }
+
+  const handleBuiltYearSave = (
+    b: {
+      id: number
+      property_id: number
+      name: string
+      category: StructureCategory
+      built_year: number | null
+    },
+    nextYear: number | null,
+  ) => {
+    if (nextYear === (b.built_year ?? null)) return
+    updateStructure.mutate({
+      id: b.id,
+      name: b.name,
+      property_id: b.property_id,
+      category: b.category,
+      built_year: nextYear,
     })
   }
 
@@ -357,6 +379,45 @@ export function ListPropertyStructures() {
 
                   {isExpanded && (
                     <>
+                      <Divider />
+
+                      <form
+                        key={`built-year-${String(b.id)}-${String(
+                          b.built_year ?? "",
+                        )}`}
+                        className={styles.builtYearForm}
+                        onSubmit={e => {
+                          e.preventDefault()
+                          const fd = new FormData(e.currentTarget)
+                          const raw = fdNumber(fd, "built_year")
+                          handleBuiltYearSave(
+                            b,
+                            Number.isFinite(raw) ? raw : null,
+                          )
+                        }}
+                      >
+                        <Textfield
+                          label={t("Built year")}
+                          name="built_year"
+                          type="number"
+                          min={1500}
+                          max={2100}
+                          step={1}
+                          inputMode="numeric"
+                          defaultValue={b.built_year ?? ""}
+                          disabled={pending}
+                          className={styles.builtYearInput}
+                        />
+                        <Button
+                          type="submit"
+                          variant="secondary"
+                          data-size="sm"
+                          disabled={pending}
+                        >
+                          {t("Save")}
+                        </Button>
+                      </form>
+
                       <Divider />
 
                       {editingRoom ? (
