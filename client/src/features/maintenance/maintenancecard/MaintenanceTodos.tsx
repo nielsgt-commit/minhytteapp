@@ -68,9 +68,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   )
 
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
-  const [addDue, setAddDue] = useState<DueSelection>({
-    due_kind: "not_decided",
-  })
 
   const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -93,12 +90,12 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
         severity: "patch",
         status: "todo",
         recurrence: "once",
-        ...addDue,
+        // Created as 'not_decided' (server default); the due — including the
+        // date picker — is set afterward on the task's own card.
       },
       {
         onSuccess: () => {
           form.reset()
-          setAddDue({ due_kind: "not_decided" })
         },
       },
     )
@@ -181,28 +178,20 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
 
   return (
     <div className={styles.wrap}>
-      <form onSubmit={handleAdd} className={styles.add}>
-        <div className={styles.addRow}>
-          <Textfield
-            aria-label={t("New task")}
-            name="description"
-            placeholder={t("Add task...")}
-            disabled={createMutation.isPending || selectedUserId == null}
-          />
-          <Button
-            type="submit"
-            data-size="sm"
-            disabled={createMutation.isPending || selectedUserId == null}
-          >
-            {t("Add")}
-          </Button>
-        </div>
-        <MaintenanceDueSelect
-          value={addDue}
-          owners={owners}
+      <form onSubmit={handleAdd} className={styles.addRow}>
+        <Textfield
+          aria-label={t("New task")}
+          name="description"
+          placeholder={t("Add task...")}
           disabled={createMutation.isPending || selectedUserId == null}
-          onChange={setAddDue}
         />
+        <Button
+          type="submit"
+          data-size="sm"
+          disabled={createMutation.isPending || selectedUserId == null}
+        >
+          {t("Add")}
+        </Button>
       </form>
       {lastError && (
         <p role="alert">
