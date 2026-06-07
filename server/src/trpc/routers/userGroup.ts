@@ -2,8 +2,12 @@ import { TRPCError } from "@trpc/server"
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm"
 import { z } from "zod"
 import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
-import { propertyOwnersTable } from "../../db/schema/property.schema.ts"
 import {
+  propertyOwnersTable,
+  propertyPriorityWeeksTable,
+} from "../../db/schema/property.schema.ts"
+import {
+  allowedEmailsTable,
   userGroupMembersTable,
   userGroupsTable,
   usersTable,
@@ -217,6 +221,13 @@ export const userGroupRouter = router({
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.transaction(async tx => {
+        // None of the tables referencing user_groups declare an ON DELETE
+        // action, so they default to RESTRICT — every referencing row must be
+        // cleared in-transaction or the delete aborts. user_group_members
+        // alone makes this fire for *every* group, since create() auto-adds the
+        // creator as a member (an "empty" group only exists after a manual
+        // purge). Owner/priority-week rows make owning groups fail too.
+
         // A plain FK SET NULL would leave due_kind='priority_week' with a null
         // group, violating the maintenance_due_shape CHECK and aborting the
         // delete. Reset referencing rows to 'not_decided' first.
@@ -224,6 +235,21 @@ export const userGroupRouter = router({
           .update(maintenanceTable)
           .set({ due_kind: "not_decided", due_priority_group_id: null })
           .where(eq(maintenanceTable.due_priority_group_id, input.id))
+        await tx
+          .delete(userGroupMembersTable)
+          .where(eq(userGroupMembersTable.user_group_id, input.id))
+        await tx
+          .delete(propertyOwnersTable)
+          .where(eq(propertyOwnersTable.user_group_id, input.id))
+        await tx
+          .delete(propertyPriorityWeeksTable)
+          .where(eq(propertyPriorityWeeksTable.user_group_id, input.id))
+        // allowed_emails.user_group_id is nullable — just detach the invite so
+        // the pending invitee survives the group deletion (re-assignable later).
+        await tx
+          .update(allowedEmailsTable)
+          .set({ user_group_id: null })
+          .where(eq(allowedEmailsTable.user_group_id, input.id))
         const [deleted] = await tx
           .delete(userGroupsTable)
           .where(eq(userGroupsTable.id, input.id))
