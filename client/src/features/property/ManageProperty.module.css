@@ -17,6 +17,11 @@
   margin: 0;
 }
 
+/* Drop the card's surface fill on route info banners; keep the solid outline. */
+.banner {
+  background: transparent;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);

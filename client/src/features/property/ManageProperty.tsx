@@ -120,7 +120,7 @@ function RouteBanner({ pathname }: { pathname: string }) {
   const banner = BANNERS.get(pathname)
   if (!banner) return null
   return (
-    <Card asChild>
+    <Card asChild className={styles.banner}>
       <header>
         <Heading level={2}>{td(banner.title)}</Heading>
         <Paragraph>{td(banner.description)}</Paragraph>
