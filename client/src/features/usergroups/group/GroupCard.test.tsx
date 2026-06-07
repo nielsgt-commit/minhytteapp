@@ -12,8 +12,8 @@ const baseGroup = {
   name: "Owners",
   is_family: false,
   members: [
-    { user_id: 10, user_name: "Alice" },
-    { user_id: 11, user_name: "Bob" },
+    { user_id: 10, user_name: "Alice", is_head: true },
+    { user_id: 11, user_name: "Bob", is_head: false },
   ],
 }
 

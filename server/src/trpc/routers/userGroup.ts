@@ -115,16 +115,24 @@ async function fetchGroupsWithMembers(ctx: Context, groupIds: number[]) {
       user_group_id: userGroupMembersTable.user_group_id,
       user_id: userGroupMembersTable.user_id,
       user_name: usersTable.name,
+      is_head: userGroupMembersTable.is_head,
     })
     .from(userGroupMembersTable)
     .innerJoin(usersTable, eq(usersTable.id, userGroupMembersTable.user_id))
     .where(inArray(userGroupMembersTable.user_group_id, groupIds))
     .orderBy(asc(usersTable.id))
 
-  const byGroup = new Map<number, { user_id: number; user_name: string }[]>()
+  const byGroup = new Map<
+    number,
+    { user_id: number; user_name: string; is_head: boolean }[]
+  >()
   for (const m of members) {
     const list = byGroup.get(m.user_group_id) ?? []
-    list.push({ user_id: m.user_id, user_name: m.user_name })
+    list.push({
+      user_id: m.user_id,
+      user_name: m.user_name,
+      is_head: m.is_head,
+    })
     byGroup.set(m.user_group_id, list)
   }
 

@@ -6,6 +6,7 @@ import {
   Heading,
   List,
   Paragraph,
+  Tag,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -16,7 +17,7 @@ import { AddMemberForm } from "../AddMemberForm.tsx"
 import { CreateUserForm } from "../users/CreateUserForm.tsx"
 import styles from "./GroupCard.module.css"
 
-type Member = { user_id: number; user_name: string }
+type Member = { user_id: number; user_name: string; is_head: boolean }
 
 type Group = {
   id: number
@@ -177,7 +178,14 @@ export function GroupCard({
             <List.Unordered className={styles.memberList}>
               {group.members.map(m => (
                 <List.Item key={m.user_id} className={styles.memberRow}>
-                  <span className={styles.memberName}>{m.user_name}</span>
+                  <span className={styles.memberInfo}>
+                    <span className={styles.memberName}>{m.user_name}</span>
+                    {m.is_head && (
+                      <Tag data-size="sm" data-color="neutral">
+                        {t("Household head")}
+                      </Tag>
+                    )}
+                  </span>
                   {canEdit && (
                     <Button
                       type="button"
