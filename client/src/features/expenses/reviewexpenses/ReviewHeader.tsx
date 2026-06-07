@@ -20,7 +20,7 @@ export function ReviewHeader({
     <>
       <div className={styles.header}>
         <Heading level={4} data-size="sm">
-          {t("Review expenses")}
+          1. {t("Review expenses")}
         </Heading>
         <Switch
           label={t("Accept new expenses")}

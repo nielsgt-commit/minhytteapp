@@ -1,0 +1,11 @@
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-2);
+  align-items: flex-start;
+}
+
+/* Drop the card's surface fill; keep the solid outline. */
+.card {
+  background: transparent;
+}

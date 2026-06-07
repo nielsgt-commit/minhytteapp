@@ -115,7 +115,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
     <>
       <div className={styles.header}>
         <Heading level={4} data-size="sm">
-          {t("Review settlement")}
+          3. {t("Review settlement")}
         </Heading>
         <Switch
           label={t("Still reviewing")}

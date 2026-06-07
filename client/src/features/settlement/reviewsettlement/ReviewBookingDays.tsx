@@ -104,7 +104,7 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
     <>
       <div className={styles.header}>
         <Heading level={4} data-size="sm">
-          {t("Review bookings")}
+          2. {t("Review bookings")}
         </Heading>
         <Switch
           label={t("Accept new bookings")}

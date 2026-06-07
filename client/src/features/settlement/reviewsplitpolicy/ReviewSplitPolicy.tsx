@@ -52,7 +52,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
         <article>
           <Card.Block data-size="sm">
             <Heading level={3} data-size="xs">
-              {t("Review split policy")}
+              4. {t("Review split policy")}
             </Heading>
           </Card.Block>
           <Card.Block data-size="sm">
@@ -83,7 +83,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
       <article>
         <Card.Block data-size="sm">
           <Heading level={3} data-size="xs">
-            {t("Review split policy")}
+            4. {t("Review split policy")}
           </Heading>
           <Paragraph data-size="sm">
             {t("Policy:")} <strong>{policy}</strong>
