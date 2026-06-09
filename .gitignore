@@ -34,3 +34,10 @@ server/.env
 
 .yalc/
 yalc.lock
+
+# Claude Code local state — don't track personal settings or worktrees
+.claude/settings.local.json
+.claude/worktrees/
+
+# Stray crash dumps
+*.stackdump
