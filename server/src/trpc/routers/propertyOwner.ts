@@ -80,6 +80,22 @@ export const propertyOwnerRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // The group must belong to this property (like addUser, which only
+      // resolves family groups scoped to input.property_id). Without this a
+      // member could attach an arbitrary group as an owner of their property.
+      const group = (
+        await ctx.db
+          .select({ property_id: userGroupsTable.property_id })
+          .from(userGroupsTable)
+          .where(eq(userGroupsTable.id, input.user_group_id))
+          .limit(1)
+      ).at(0)
+      if (!group || group.property_id !== input.property_id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "group does not belong to this property",
+        })
+      }
       const [created] = await ctx.db
         .insert(propertyOwnersTable)
         .values({

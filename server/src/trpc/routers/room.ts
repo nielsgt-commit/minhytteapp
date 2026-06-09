@@ -30,6 +30,7 @@ export const roomRouter = router({
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       return ctx.db
         .select({
           id: roomTable.id,

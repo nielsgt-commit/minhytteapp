@@ -142,6 +142,85 @@ async function fetchGroupsWithMembers(ctx: Context, groupIds: number[]) {
   }))
 }
 
+// Group ids a non-admin user is allowed to see: the relevant groups of every
+// property they belong to (property membership mirrors property.mine). Used to
+// scope listWithMembers so a user can't read every group/member in the system.
+async function visibleGroupIdsForUser(
+  ctx: Context,
+  userId: number,
+): Promise<Set<number>> {
+  const viaOwners = await ctx.db
+    .selectDistinct({ id: propertyOwnersTable.property_id })
+    .from(propertyOwnersTable)
+    .innerJoin(
+      userGroupMembersTable,
+      eq(
+        userGroupMembersTable.user_group_id,
+        propertyOwnersTable.user_group_id,
+      ),
+    )
+    .where(eq(userGroupMembersTable.user_id, userId))
+
+  const viaGroupLink = await ctx.db
+    .selectDistinct({ id: userGroupsTable.property_id })
+    .from(userGroupsTable)
+    .innerJoin(
+      userGroupMembersTable,
+      eq(userGroupMembersTable.user_group_id, userGroupsTable.id),
+    )
+    .where(
+      and(
+        eq(userGroupMembersTable.user_id, userId),
+        isNotNull(userGroupsTable.property_id),
+      ),
+    )
+
+  const propertyIds = new Set<number>()
+  for (const r of viaOwners) if (r.id != null) propertyIds.add(r.id)
+  for (const r of viaGroupLink) if (r.id != null) propertyIds.add(r.id)
+
+  const groupIds = new Set<number>()
+  for (const propertyId of propertyIds) {
+    const { relevantGroupIds } = await relevantGroupIdsForProperty(
+      ctx,
+      propertyId,
+      userId,
+    )
+    for (const gid of relevantGroupIds) groupIds.add(gid)
+  }
+  return groupIds
+}
+
+// A property's groups may only be mutated through that same property.
+// propertyAdminProcedure proves the caller is a member of input.property_id,
+// but NOT that the target group belongs to it — without this a member of
+// property A could edit/delete a group owned by property B by passing their
+// own property_id. Orphaned groups (NULL property_id, legacy) pass through so
+// update() can heal them. Returns the group's current property_id.
+export async function assertGroupBelongsToProperty(
+  ctx: Context,
+  groupId: number,
+  propertyId: number,
+): Promise<number | null> {
+  const existing = (
+    await ctx.db
+      .select({ property_id: userGroupsTable.property_id })
+      .from(userGroupsTable)
+      .where(eq(userGroupsTable.id, groupId))
+      .limit(1)
+  ).at(0)
+  if (!existing) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "group not found" })
+  }
+  if (existing.property_id != null && existing.property_id !== propertyId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "group does not belong to this property",
+    })
+  }
+  return existing.property_id
+}
+
 export const userGroupRouter = router({
   listWithMembersForProperty: propertyAdminProcedure.query(
     async ({ ctx, input }) => {
@@ -155,9 +234,23 @@ export const userGroupRouter = router({
   ),
 
   listWithMembers: protectedProcedure.query(async ({ ctx }) => {
+    // Non-admins may only see groups belonging to properties they are a member
+    // of. Admins keep the global view used by the admin ownership screens.
+    let visibleGroupIds: number[] | null = null
+    if (!ctx.user.is_admin) {
+      const ids = await visibleGroupIdsForUser(ctx, ctx.user.id)
+      if (ids.size === 0) return []
+      visibleGroupIds = Array.from(ids)
+    }
+
     const groups = await ctx.db
       .select()
       .from(userGroupsTable)
+      .where(
+        visibleGroupIds
+          ? inArray(userGroupsTable.id, visibleGroupIds)
+          : undefined,
+      )
       .orderBy(asc(userGroupsTable.id))
 
     const members = await ctx.db
@@ -168,6 +261,11 @@ export const userGroupRouter = router({
       })
       .from(userGroupMembersTable)
       .innerJoin(usersTable, eq(usersTable.id, userGroupMembersTable.user_id))
+      .where(
+        visibleGroupIds
+          ? inArray(userGroupMembersTable.user_group_id, visibleGroupIds)
+          : undefined,
+      )
       .orderBy(asc(usersTable.id))
 
     const byGroup = new Map<number, { user_id: number; user_name: string }[]>()
@@ -207,19 +305,14 @@ export const userGroupRouter = router({
       // instead of forcing an admin to delete + recreate the group. A group
       // already linked to a property is left untouched.
       const { id, property_id, ...rest } = input
-      const existing = (
-        await ctx.db
-          .select({ property_id: userGroupsTable.property_id })
-          .from(userGroupsTable)
-          .where(eq(userGroupsTable.id, id))
-          .limit(1)
-      ).at(0)
-      if (!existing) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "group not found" })
-      }
+      const existingPropertyId = await assertGroupBelongsToProperty(
+        ctx,
+        id,
+        property_id,
+      )
       const [updated] = await ctx.db
         .update(userGroupsTable)
-        .set(existing.property_id == null ? { ...rest, property_id } : rest)
+        .set(existingPropertyId == null ? { ...rest, property_id } : rest)
         .where(eq(userGroupsTable.id, id))
         .returning()
       return updated
@@ -228,6 +321,7 @@ export const userGroupRouter = router({
   delete: propertyAdminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      await assertGroupBelongsToProperty(ctx, input.id, input.property_id)
       return ctx.db.transaction(async tx => {
         // None of the tables referencing user_groups declare an ON DELETE
         // action, so they default to RESTRICT — every referencing row must be
@@ -274,6 +368,7 @@ export const userGroupRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertGroupBelongsToProperty(ctx, input.user_group_id, input.property_id)
       const [created] = await ctx.db
         .insert(userGroupMembersTable)
         .values({
@@ -292,6 +387,7 @@ export const userGroupRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertGroupBelongsToProperty(ctx, input.user_group_id, input.property_id)
       const [deleted] = await ctx.db
         .delete(userGroupMembersTable)
         .where(

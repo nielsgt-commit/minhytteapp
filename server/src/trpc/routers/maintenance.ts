@@ -110,6 +110,7 @@ export const maintenanceRouter = router({
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       const rows = await ctx.db
         .select({ m: maintenanceTable })
         .from(maintenanceTable)

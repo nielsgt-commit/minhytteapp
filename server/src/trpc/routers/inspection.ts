@@ -76,6 +76,7 @@ export const inspectionRouter = router({
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       const rows = await ctx.db
         .select({ i: inspectionsTable })
         .from(inspectionsTable)
@@ -105,6 +106,11 @@ export const inspectionRouter = router({
   listFindings: protectedProcedure
     .input(z.object({ inspection_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromInspection(
+        ctx.db,
+        input.inspection_id,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       return ctx.db
         .select()
         .from(maintenanceTable)

@@ -143,9 +143,15 @@ export const userRouter = router({
   create: protectedProcedure
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
+      const { is_admin, is_child, email, ...rest } = input
+      // Role flags may only be set by an admin. Without this gate any logged-in
+      // user could self-grant admin by creating a user row (e.g. with their own
+      // email) carrying is_admin: true — a privilege-escalation hole. Mirrors
+      // the same handling in `update`.
+      const roleFields = ctx.user.is_admin ? { is_admin, is_child } : {}
       const [created] = await ctx.db
         .insert(usersTable)
-        .values(input)
+        .values({ ...rest, email: normalizeEmail(email), ...roleFields })
         .returning()
       return created
     }),

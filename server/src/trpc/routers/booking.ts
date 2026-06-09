@@ -430,9 +430,10 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
 export const bookingRouter = router({
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) =>
-      loadBookings(ctx.db, { property_id: input.property_id }),
-    ),
+    .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
+      return loadBookings(ctx.db, { property_id: input.property_id })
+    }),
 
   previewConflicts: protectedProcedure
     .input(
@@ -458,6 +459,8 @@ export const bookingRouter = router({
         occupants,
         exclude_booking_id,
       } = input
+
+      await assertPropertyMember(ctx.db, ctx.user, property_id)
 
       // 1. Find all overlapping non-cancelled bookings for this property
       const overlappingBookingsRaw = await ctx.db

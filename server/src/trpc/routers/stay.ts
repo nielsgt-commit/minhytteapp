@@ -12,7 +12,12 @@ import {
 } from "../../db/schema/property.schema.ts"
 import { stayTable } from "../../db/schema/stay.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { propertyAdminProcedure, protectedProcedure, router } from "../init.ts"
+import {
+  assertPropertyMember,
+  propertyAdminProcedure,
+  protectedProcedure,
+  router,
+} from "../init.ts"
 
 const propertyInput = z.object({ property_id: z.number().int().positive() })
 
@@ -190,6 +195,12 @@ export const stayRouter = router({
             building_name: coveringBooking.building_name,
           }
         }
+
+        // No covering booking: a spontaneous check-in. Only members of the
+        // property may self-insert a stay here — otherwise any logged-in user
+        // could create stay rows at an arbitrary property they have no relation
+        // to. (Booking occupants, incl. guests, returned above and are exempt.)
+        await assertPropertyMember(ctx.db, ctx.user, input.property_id)
 
         const existingOpen = (
           await tx

@@ -25,6 +25,7 @@ export const eventRouter = router({
   list: protectedProcedure
     .input(propertyInput)
     .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       return ctx.db
         .select({
           id: eventTable.id,

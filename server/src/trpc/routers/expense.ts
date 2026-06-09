@@ -94,6 +94,7 @@ export const expenseRouter = router({
   listForProperty: protectedProcedure
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       return ctx.db
         .select(expenseColumns)
         .from(expensesTable)

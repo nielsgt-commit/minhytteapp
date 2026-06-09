@@ -24,6 +24,13 @@ export const allowedEmailRouter = router({
     .query(async ({ ctx, input }) => {
       if (input?.property_id != null) {
         await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+      } else if (!ctx.user.is_admin) {
+        // Without a property_id this returns every invitation in the system;
+        // only admins may do that. A property head must scope to a property.
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "admin role required to list all invitations",
+        })
       }
       return ctx.db
         .select({
