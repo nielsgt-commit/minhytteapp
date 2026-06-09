@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next"
 import styles from "./ManageProperty.module.css"
 import { SideNav } from "@/components/shared/SideNav"
 import { GroupTabs } from "@/components/shared/GroupTabs"
+import { PageHeader } from "@/components/shared/PageHeader"
+import type { PageHelpContent } from "@/components/shared/PageHelp"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 const BANNERS = new Map<string, { title: string; description: string }>([
@@ -213,12 +215,39 @@ export function ManageProperty() {
       items: g.items.map(i => ({ to: i.to, label: td(i.label) })),
     }))
 
+  const help: PageHelpContent = {
+    intro: t(
+      "Manage Property is the admin hub for the cabin picked at the top. Here you set up and edit everything about this one place — its details, the people who can use it, and the rules the rest of the app relies on.",
+    ),
+    steps: [
+      {
+        title: t("The property itself"),
+        body: t(
+          "Info, Contacts, and Ownership cover the basic facts and who owns what. Structures, Infrastructure, and Equipment list the buildings, systems, and gear at the cabin.",
+        ),
+      },
+      {
+        title: t("People & access"),
+        body: t(
+          "Users are everyone with access, User groups bundle people together to share access and costs, and Invites let you add new people by email.",
+        ),
+      },
+      {
+        title: t("Rules & money"),
+        body: t(
+          "Split policy sets how shared costs are divided, Priority weeks let each main owner group claim one of the peak summer weeks (28–30), Expense categories label spending, and Settings holds per-cabin preferences.",
+        ),
+      },
+    ],
+    connections: t(
+      "What you set up here powers the rest of the app: Structures and Equipment feed Maintenance and the bed and parking capacity on Plan stay; Expense categories appear when logging Expenses; Split policy and Priority weeks drive Settlement and Plan stay; and Users, groups, and invites decide who can see and use the cabin at all.",
+    ),
+  }
+
   if (selectedPropertyId == null) {
     return (
       <section className={styles.page}>
-        <Heading level={2} className={styles.title}>
-          {t("Manage Property")}
-        </Heading>
+        <PageHeader title={t("Manage Property")} help={help} />
         <Paragraph>
           {t(
             "Add or select a property to edit its details, structures, owners, and invites.",
@@ -230,9 +259,7 @@ export function ManageProperty() {
 
   return (
     <section className={styles.page}>
-      <Heading level={2} className={styles.title}>
-        {t("Manage Property")}
-      </Heading>
+      <PageHeader title={t("Manage Property")} help={help} />
 
       <div className={styles.layout}>
         <div className={styles.desktopNav}>

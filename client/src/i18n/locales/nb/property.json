@@ -1,4 +1,12 @@
 {
+  "Manage Property is the admin hub for the cabin picked at the top. Here you set up and edit everything about this one place — its details, the people who can use it, and the rules the rest of the app relies on.": "Administrer eiendom er administrasjonssenteret for hytta som er valgt øverst. Her setter du opp og redigerer alt om dette ene stedet — detaljene, personene som kan bruke det, og reglene resten av appen bygger på.",
+  "The property itself": "Selve eiendommen",
+  "Info, Contacts, and Ownership cover the basic facts and who owns what. Structures, Infrastructure, and Equipment list the buildings, systems, and gear at the cabin.": "Info, Kontakter og Eierskap dekker de grunnleggende fakta og hvem som eier hva. Bygninger, Infrastruktur og Utstyr lister opp byggene, systemene og utstyret på hytta.",
+  "People & access": "Personer og tilgang",
+  "Users are everyone with access, User groups bundle people together to share access and costs, and Invites let you add new people by email.": "Brukere er alle med tilgang, Brukergrupper samler personer for å dele tilgang og kostnader, og Invitasjoner lar deg legge til nye personer via e-post.",
+  "Rules & money": "Regler og penger",
+  "Split policy sets how shared costs are divided, Priority weeks let each main owner group claim one of the peak summer weeks (28–30), Expense categories label spending, and Settings holds per-cabin preferences.": "Fordelingspolicy bestemmer hvordan felleskostnader deles, Prioritetsuker lar hver hovedeiergruppe velge en av høysesongukene (28–30), Utgiftskategorier merker forbruk, og Innstillinger inneholder valg for hver enkelt hytte.",
+  "What you set up here powers the rest of the app: Structures and Equipment feed Maintenance and the bed and parking capacity on Plan stay; Expense categories appear when logging Expenses; Split policy and Priority weeks drive Settlement and Plan stay; and Users, groups, and invites decide who can see and use the cabin at all.": "Det du setter opp her driver resten av appen: Bygninger og Utstyr mater Vedlikehold og kapasiteten for senger og parkering i Ferie; Utgiftskategorier dukker opp når du fører Utlegg; Fordelingspolicy og Prioritetsuker styrer Oppgjør og Ferie; og Brukere, grupper og invitasjoner avgjør hvem som i det hele tatt kan se og bruke hytta.",
   "(does not sum to 100%)": "(summerer ikke til 100 %)",
   "(select property)": "(velg eiendom)",
   "(select structure)": "(velg bygg)",

@@ -1,4 +1,12 @@
 {
+  "Manage Property is the admin hub for the cabin picked at the top. Here you set up and edit everything about this one place — its details, the people who can use it, and the rules the rest of the app relies on.": "Manage Property is the admin hub for the cabin picked at the top. Here you set up and edit everything about this one place — its details, the people who can use it, and the rules the rest of the app relies on.",
+  "The property itself": "The property itself",
+  "Info, Contacts, and Ownership cover the basic facts and who owns what. Structures, Infrastructure, and Equipment list the buildings, systems, and gear at the cabin.": "Info, Contacts, and Ownership cover the basic facts and who owns what. Structures, Infrastructure, and Equipment list the buildings, systems, and gear at the cabin.",
+  "People & access": "People & access",
+  "Users are everyone with access, User groups bundle people together to share access and costs, and Invites let you add new people by email.": "Users are everyone with access, User groups bundle people together to share access and costs, and Invites let you add new people by email.",
+  "Rules & money": "Rules & money",
+  "Split policy sets how shared costs are divided, Priority weeks let each main owner group claim one of the peak summer weeks (28–30), Expense categories label spending, and Settings holds per-cabin preferences.": "Split policy sets how shared costs are divided, Priority weeks let each main owner group claim one of the peak summer weeks (28–30), Expense categories label spending, and Settings holds per-cabin preferences.",
+  "What you set up here powers the rest of the app: Structures and Equipment feed Maintenance and the bed and parking capacity on Plan stay; Expense categories appear when logging Expenses; Split policy and Priority weeks drive Settlement and Plan stay; and Users, groups, and invites decide who can see and use the cabin at all.": "What you set up here powers the rest of the app: Structures and Equipment feed Maintenance and the bed and parking capacity on Plan stay; Expense categories appear when logging Expenses; Split policy and Priority weeks drive Settlement and Plan stay; and Users, groups, and invites decide who can see and use the cabin at all.",
   "(does not sum to 100%)": "(does not sum to 100%)",
   "{{name}} ({{count}} member)_one": "{{name}} ({{count}} member)",
   "{{name}} ({{count}} member)_other": "{{name}} ({{count}} members)",

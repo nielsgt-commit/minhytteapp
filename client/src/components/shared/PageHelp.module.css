@@ -1,0 +1,54 @@
+.trigger {
+  flex-shrink: 0;
+}
+
+.dialog {
+  max-width: 34rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-4);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-4);
+}
+
+.step {
+  display: flex;
+  gap: var(--ds-size-3);
+  align-items: flex-start;
+}
+
+.stepNumber {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--ds-color-accent-background-default);
+  border: 1px solid var(--ds-color-accent-border-default);
+  color: var(--ds-color-accent-text-default);
+  font-weight: 600;
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-1);
+}
+
+.connections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-1);
+}
