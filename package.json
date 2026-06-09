@@ -29,6 +29,7 @@
     "start": "tsx server/src/index.ts",
     "test": "vitest --run --config client/vite.config.ts",
     "test:e2e": "vitest --run --config client/vite.config.e2e.ts",
+    "test:server": "vitest --run --config server/vitest.config.ts",
     "type-check": "tsc -b --noEmit"
   },
   "dependencies": {
