@@ -1,6 +1,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react"
 import type React from "react"
 import flatpickr from "flatpickr"
+import type { DayElement } from "flatpickr/dist/types/instance"
 import { Norwegian } from "flatpickr/dist/l10n/no.js"
 import "flatpickr/dist/flatpickr.min.css"
 import "../flatpickr-digdir.css"
@@ -11,8 +12,19 @@ import type {
   BookingDraft,
   BookingDraftAction,
 } from "@/features/planstay/booking-logic"
+import { groupColor } from "@/features/usergroups/groupColors"
 
 const WIDE_QUERY = "(min-width: 640px)"
+
+// Up to this many people render as individual dots; 5+ collapse into a single
+// rounded bar segmented by family group.
+const MAX_DOTS = 4
+
+function localIso(date: Date): string {
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${String(date.getFullYear())}-${m}-${d}`
+}
 
 function subscribeWide(callback: () => void) {
   const mq = window.matchMedia(WIDE_QUERY)
@@ -29,17 +41,30 @@ function getShowMonthsSnapshot() {
 export function useFlatpickr(
   draft: Pick<BookingDraft, "start_date" | "end_date">,
   dispatch: React.Dispatch<BookingDraftAction>,
+  // ISO date ("YYYY-MM-DD") → family-group id per person staying that night.
+  // One entry per occupant; same person twice if two of their nights overlap.
+  dotsByDay?: Map<string, number[]>,
 ) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const fpRef = useRef<{ destroy: () => void; clear: () => void } | null>(null)
+  const fpRef = useRef<{
+    destroy: () => void
+    clear: () => void
+    redraw: () => void
+  } | null>(null)
   const rowRef = useRef<HTMLDivElement>(null)
   const guestInputRef = useRef<HTMLInputElement>(null)
   const draftRef = useRef(draft)
   draftRef.current = draft
+  // Read inside onDayCreate via ref so dot data can change without tearing down
+  // and rebuilding the whole flatpickr instance.
+  const dotsRef = useRef(dotsByDay)
+  dotsRef.current = dotsByDay
 
   const showMonths = useSyncExternalStore(subscribeWide, getShowMonthsSnapshot)
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation("planstay")
   const language = i18n.resolvedLanguage
+  const tRef = useRef(t)
+  tRef.current = t
 
   useEffect(() => {
     if (!inputRef.current) return
@@ -63,6 +88,49 @@ export function useFlatpickr(
           dispatch(setDates(s, s))
         }
       },
+      onDayCreate(_dates, _str, _instance, dayElem: DayElement) {
+        const iso = localIso(dayElem.dateObj)
+        const groups = dotsRef.current?.get(iso)
+        if (!groups || groups.length === 0) return
+        // Cluster same-family dots together for an at-a-glance read.
+        const sorted = [...groups].sort((a, b) => a - b)
+        const wrap = document.createElement("span")
+        wrap.className = "fp-occupant-dots"
+        wrap.title = tRef.current("{{count}} staying", { count: groups.length })
+        // gid 0 = occupant with no family group → neutral.
+        const colorFor = (gid: number) =>
+          gid > 0 ? groupColor(gid) : "var(--ds-color-neutral-base-default)"
+
+        if (sorted.length <= MAX_DOTS) {
+          for (const gid of sorted) {
+            const dot = document.createElement("span")
+            dot.className = "fp-occupant-dot"
+            dot.style.backgroundColor = colorFor(gid)
+            wrap.appendChild(dot)
+          }
+        } else {
+          // 5+ people: one rounded bar, segmented by family group with each
+          // segment sized to that group's headcount. `sorted` is ascending, so
+          // equal ids are already adjacent.
+          const bar = document.createElement("span")
+          bar.className = "fp-occupant-bar"
+          for (let i = 0; i < sorted.length; ) {
+            const gid = sorted[i]
+            let n = 0
+            while (i < sorted.length && sorted[i] === gid) {
+              n++
+              i++
+            }
+            const seg = document.createElement("span")
+            seg.className = "fp-occupant-bar-seg"
+            seg.style.backgroundColor = colorFor(gid)
+            seg.style.flexGrow = String(n)
+            bar.appendChild(seg)
+          }
+          wrap.appendChild(bar)
+        }
+        dayElem.appendChild(wrap)
+      },
       onReady(_dates, _str, instance) {
         ro = new ResizeObserver(() => {
           const h = instance.calendarContainer.offsetHeight
@@ -73,12 +141,22 @@ export function useFlatpickr(
       },
     })
     // flatpickr(Element, …) always returns a single Instance, not an array
-    fpRef.current = fp as unknown as { destroy: () => void; clear: () => void }
+    fpRef.current = fp as unknown as {
+      destroy: () => void
+      clear: () => void
+      redraw: () => void
+    }
     return () => {
       ro?.disconnect()
       fpRef.current?.destroy()
     }
   }, [showMonths, dispatch, language])
+
+  // Re-run onDayCreate when the occupant dots change (e.g. after a stay is
+  // saved) without rebuilding the calendar.
+  useEffect(() => {
+    fpRef.current?.redraw()
+  }, [dotsByDay])
 
   useEffect(() => {
     if (draft.start_date == null && draft.end_date == null) {

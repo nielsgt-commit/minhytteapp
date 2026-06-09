@@ -11,6 +11,7 @@ import { StepDates } from "../addstayflow/stepdates/StepDates.tsx"
 import { StepGuests } from "../addstayflow/stepguests/StepGuests.tsx"
 import { StepRooms } from "../addstayflow/steprooms/StepRooms.tsx"
 import { StepConfirm } from "../addstayflow/stepconfirm/StepConfirm.tsx"
+import { buildOccupantDots } from "../occupantDots.ts"
 import styles from "../addstayflow/AddStayFlow.module.css"
 
 const TOTAL_STEPS = 4
@@ -53,6 +54,11 @@ export function EditStayFlow({
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
+  const { data: userGroups } = useSuspenseQuery(
+    trpc.userGroup.listWithMembersForProperty.queryOptions({
+      property_id: propertyId,
+    }),
+  )
 
   const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
@@ -74,7 +80,19 @@ export function EditStayFlow({
     onClose,
   )
 
-  const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
+  // Calendar dots show who else is around; exclude the stay being edited so
+  // its own (possibly changing) dates don't double-count.
+  const dotsByDay = useMemo(
+    () =>
+      buildOccupantDots(bookings, userGroups, { excludeBookingId: bookingId }),
+    [bookings, userGroups, bookingId],
+  )
+
+  const { inputRef, rowRef, guestInputRef } = useFlatpickr(
+    draft,
+    dispatch,
+    dotsByDay,
+  )
 
   const propertyStructures = structures.filter(
     b => b.property_id === propertyId,

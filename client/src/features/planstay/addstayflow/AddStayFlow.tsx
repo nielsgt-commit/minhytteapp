@@ -12,6 +12,7 @@ import { StepDates } from "./stepdates/StepDates.tsx"
 import { StepGuests } from "./stepguests/StepGuests.tsx"
 import { StepRooms } from "./steprooms/StepRooms.tsx"
 import { StepConfirm } from "./stepconfirm/StepConfirm.tsx"
+import { buildOccupantDots } from "../occupantDots.ts"
 import styles from "./AddStayFlow.module.css"
 
 const TOTAL_STEPS = 4
@@ -45,6 +46,11 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
+  const { data: userGroups } = useSuspenseQuery(
+    trpc.userGroup.listWithMembersForProperty.queryOptions({
+      property_id: propertyId,
+    }),
+  )
 
   const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
@@ -63,7 +69,17 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
     setCurrentStep(1)
   })
 
-  const { inputRef, rowRef, guestInputRef } = useFlatpickr(draft, dispatch)
+  // Per-day occupant dots for the calendar, colored by family group.
+  const dotsByDay = useMemo(
+    () => buildOccupantDots(bookings, userGroups),
+    [bookings, userGroups],
+  )
+
+  const { inputRef, rowRef, guestInputRef } = useFlatpickr(
+    draft,
+    dispatch,
+    dotsByDay,
+  )
 
   const propertyStructures = structures.filter(
     b => b.property_id === propertyId,

@@ -5,8 +5,8 @@ import {
   Button,
   Card,
   Divider,
+  Heading,
   Paragraph,
-  Tag,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { ClockDashedIcon } from "@navikt/aksel-icons"
@@ -129,9 +129,13 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
       <Card asChild>
         <article>
           <Card.Block className={styles.mobileTopRow} data-size="sm">
-            <Tag variant="outline" data-size="md" className={styles.nameTag}>
+            <Heading
+              level={3}
+              data-size="xs"
+              className={styles.nameTag}
+            >
               {scope.name}
-            </Tag>
+            </Heading>
             {!inspecting && (
               <Button variant="tertiary" data-size="sm" onClick={toggleHistory}>
                 <ClockDashedIcon aria-hidden fontSize="1.25rem" />
@@ -181,9 +185,9 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
     <Card asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
-          <Paragraph className={styles.name} data-size="sm">
+          <Heading level={3} data-size="xs" className={styles.name}>
             {scope.name}
-          </Paragraph>
+          </Heading>
           {!inspecting && (
             <Button
               className={styles.inspect}

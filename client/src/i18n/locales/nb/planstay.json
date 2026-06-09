@@ -9,6 +9,8 @@
   "Review and confirm": "Se over og bekreft",
   "Check the summary, then confirm to save your stay. You can come back and edit or cancel it later if your plans change.": "Sjekk oppsummeringen, og bekreft for å lagre oppholdet. Du kan komme tilbake og endre eller avlyse det senere hvis planene endrer seg.",
   "Stays you plan here show up on the Dashboard calendar and in the lists of who's coming. The rooms and beds you can choose from come from the buildings set up under Manage Property → Structures. Priority weeks, when shown, are the reserved weeks managed under Manage Property.": "Opphold du planlegger her, vises i kalenderen på Oversikt og i listene over hvem som kommer. Rommene og sengene du kan velge mellom, kommer fra bygningene som er satt opp under Administrer eiendom → Bygninger. Prioritetsuker, når de vises, er de reserverte ukene som styres under Administrer eiendom.",
+  "{{count}} staying_one": "{{count}} på besøk",
+  "{{count}} staying_other": "{{count}} på besøk",
   " (child)": " (barn)",
   " (kid)": " (barn)",
   " (queued)": " (i kø)",

@@ -9,6 +9,8 @@
   "Review and confirm": "Review and confirm",
   "Check the summary, then confirm to save your stay. You can come back and edit or cancel it later if your plans change.": "Check the summary, then confirm to save your stay. You can come back and edit or cancel it later if your plans change.",
   "Stays you plan here show up on the Dashboard calendar and in the lists of who's coming. The rooms and beds you can choose from come from the buildings set up under Manage Property → Structures. Priority weeks, when shown, are the reserved weeks managed under Manage Property.": "Stays you plan here show up on the Dashboard calendar and in the lists of who's coming. The rooms and beds you can choose from come from the buildings set up under Manage Property → Structures. Priority weeks, when shown, are the reserved weeks managed under Manage Property.",
+  "{{count}} staying_one": "{{count}} staying",
+  "{{count}} staying_other": "{{count}} staying",
   " (child)": " (child)",
   " (kid)": " (kid)",
   " (queued)": " (queued)",
