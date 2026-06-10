@@ -24,6 +24,8 @@ export function UnauthenticatedView() {
   )
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
+  // Kept as a controlled onSubmit form: the sent/error state machine swaps
+  // the whole view, which a form action's reset semantics would fight.
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setStatus("sending")
