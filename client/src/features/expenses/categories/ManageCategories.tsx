@@ -9,7 +9,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useCategoryMutations } from "@/features/expenses/testform/useCategoryMutations.ts"
+import { useCategoryMutations } from "@/features/expenses/expenseform/useCategoryMutations.ts"
 
 export function ManageCategories() {
   const { t } = useTranslation("expenses")

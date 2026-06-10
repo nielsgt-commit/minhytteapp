@@ -6,7 +6,7 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import {
   AddNewExpenseFlow,
   type ExpenseDraft,
-} from "@/features/expenses/testform/AddNewExpenseFlow.tsx"
+} from "@/features/expenses/expenseform/AddNewExpenseFlow.tsx"
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
 

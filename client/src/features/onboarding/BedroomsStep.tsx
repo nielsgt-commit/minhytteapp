@@ -9,7 +9,7 @@ import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import {
   AddBedsFlow,
   type RoomData,
-} from "@/features/property/testform/AddBedsFlow"
+} from "@/features/property/structures/AddBedsFlow"
 import listStyles from "./StepList.module.css"
 
 type Props = {

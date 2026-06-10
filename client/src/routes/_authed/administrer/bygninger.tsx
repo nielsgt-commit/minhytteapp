@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { ListPropertyStructures } from "@/features/property/testform/ListPropertyStructures"
+import { ListPropertyStructures } from "@/features/property/structures/ListPropertyStructures"
 import { trpc } from "@/trpc/client"
 
 export const Route = createFileRoute("/_authed/administrer/bygninger")({

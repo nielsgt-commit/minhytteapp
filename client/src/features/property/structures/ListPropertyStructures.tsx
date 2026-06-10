@@ -23,11 +23,11 @@ import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditField } from "@/components/shared/InlineEditField"
 import { fdNumber } from "@/utils/formData"
 import section from "@/features/property/managePropertySection.module.css"
-import { AddStructureFlow } from "@/features/property/testform/AddStructureFlow.tsx"
+import { AddStructureFlow } from "@/features/property/structures/AddStructureFlow.tsx"
 import {
   AddBedsFlow,
   type RoomData,
-} from "@/features/property/testform/AddBedsFlow.tsx"
+} from "@/features/property/structures/AddBedsFlow.tsx"
 import styles from "./ListPropertyStructures.module.css"
 
 type StructureCategory = "habitable" | "non_habitable"
