@@ -1,6 +1,7 @@
 import { Fragment } from "react"
 import { useTranslation } from "react-i18next"
-import { Paragraph, Table } from "@digdir/designsystemet-react"
+import { Table } from "@digdir/designsystemet-react"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { pad2, toIso } from "@/utils/dateUtils"
 import styles from "./OccupancyMatrix.module.css"
 
@@ -99,7 +100,7 @@ function densityStyle(ratio: number): { backgroundColor?: string } {
   }
 }
 
-export default function OccupancyMatrix({ days, bookings, rooms }: Props) {
+export function OccupancyMatrix({ days, bookings, rooms }: Props) {
   const { t } = useTranslation("dashboard")
   const weekIsos = days.map(toIso)
   const wStart = weekIsos[0]
@@ -194,7 +195,7 @@ export default function OccupancyMatrix({ days, bookings, rooms }: Props) {
   }
 
   if (barsByRoom.size === 0) {
-    return <Paragraph data-size="sm">{t("No stays this week.")}</Paragraph>
+    return <EmptyState title={t("No stays this week.")} />
   }
 
   // Tile a lane's 7 day columns: a bar becomes one colSpan cell, gaps are empties.

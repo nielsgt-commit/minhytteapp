@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Heading, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./PropertyEvents.module.css"
 
@@ -12,7 +13,7 @@ type EventItem = {
   key: string
 }
 
-export default function PropertyEvents() {
+export function PropertyEvents() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
@@ -58,7 +59,7 @@ export default function PropertyEvents() {
             {t("Property events")}
           </Heading>
           {events.length === 0 ? (
-            <p>{t("No events.")}</p>
+            <EmptyState title={t("No events.")} />
           ) : (
             <ul className={styles.list}>
               {events.map(ev => (

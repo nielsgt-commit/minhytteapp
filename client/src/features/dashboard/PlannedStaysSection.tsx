@@ -1,16 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
 import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
-import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
+import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import styles from "./PlannedStaysSection.module.css"
 
-export default function PlannedStaysSection({
-  propertyId,
-}: {
-  propertyId: number
-}) {
+export function PlannedStaysSection({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const { data: properties } = useSuspenseQuery(
@@ -28,14 +25,18 @@ export default function PlannedStaysSection({
             <Heading level={2} data-size="xs">
               {t("My planned stays")}
             </Heading>
-            <MyPlannedStay />
+            <QueryBoundary>
+              <MyPlannedStay />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
       <Card asChild>
         <section>
           <Card.Block>
-            <PlannedMaintenanceSummary mode="rest" />
+            <QueryBoundary>
+              <PlannedMaintenanceSummary mode="rest" />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>

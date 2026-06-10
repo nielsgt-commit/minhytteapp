@@ -36,11 +36,7 @@ function availabilityColor(
   return "success"
 }
 
-export default function RoomAvailabilityIndicator({
-  rooms,
-}: {
-  rooms: Room[]
-}) {
+export function RoomAvailabilityIndicator({ rooms }: { rooms: Room[] }) {
   const { t } = useTranslation("dashboard")
   return (
     <ul className={styles.list}>

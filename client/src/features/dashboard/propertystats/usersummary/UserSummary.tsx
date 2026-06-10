@@ -1,13 +1,14 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { Button, List, Paragraph } from "@digdir/designsystemet-react"
+import { Button, List } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
-import StatCard from "@/features/dashboard/propertystats/StatCard"
+import { StatCard } from "@/features/dashboard/propertystats/StatCard"
 import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
-export default function UserSummary() {
+export function UserSummary() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
@@ -23,7 +24,7 @@ export default function UserSummary() {
       count={userGroups.length}
       content={
         userGroups.length === 0 ? (
-          <Paragraph>{t("No user groups yet.")}</Paragraph>
+          <EmptyState title={t("No user groups yet.")} />
         ) : (
           <List.Unordered className={styles.list}>
             {userGroups.map(g => (

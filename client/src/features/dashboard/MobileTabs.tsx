@@ -1,22 +1,24 @@
-import { Suspense, useState } from "react"
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Heading, Paragraph, Tabs } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import styles from "./Dashboard.module.css"
 import { useTRPC } from "@/trpc/trpc"
-import PlannedAvailabilitySummary from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
-import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
-import AtPropertyNow from "@/features/dashboard/capacitysummary/userscheckedin/AtPropertyNow.tsx"
-import AvailableParking from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
-import RoomAvailabilityIndicator from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
-import NowWeather from "@/features/dashboard/weather/NowWeather.tsx"
+import { PlannedAvailabilitySummary } from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
+import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
+import { AtPropertyNow } from "@/features/dashboard/capacitysummary/userscheckedin/AtPropertyNow.tsx"
+import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
+import { RoomAvailabilityIndicator } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
+import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
 import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { startOfSunday } from "@/utils/dateUtils"
 
 type Tab = "now" | "week" | "summer" | "year"
 
-export default function MobileTabs({ propertyId }: { propertyId: number }) {
+export function MobileTabs({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
   const [tab, setTab] = useState<Tab>("now")
 
@@ -45,24 +47,24 @@ export default function MobileTabs({ propertyId }: { propertyId: number }) {
       </Tabs.List>
       <Tabs.Panel value={tab}>
         {tab === "now" && (
-          <Suspense fallback={<p>{t("Loading…")}</p>}>
+          <QueryBoundary>
             <MobileNowPanel propertyId={propertyId} />
-          </Suspense>
+          </QueryBoundary>
         )}
         {tab === "week" && (
-          <Suspense fallback={<p>{t("Loading…")}</p>}>
+          <QueryBoundary>
             <MobileWeekPanel />
-          </Suspense>
+          </QueryBoundary>
         )}
         {/* {tab === "summer" && (
-          <Suspense fallback={<p>{t("Loading…")}</p>}>
+          <QueryBoundary>
             <MobileSummerPanel propertyId={propertyId} />
-          </Suspense>
+          </QueryBoundary>
         )} */}
         {tab === "year" && (
-          <Suspense fallback={<p>{t("Loading…")}</p>}>
+          <QueryBoundary>
             <MobileYearPanel />
-          </Suspense>
+          </QueryBoundary>
         )}
       </Tabs.Panel>
     </Tabs>
@@ -97,7 +99,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
             <Heading level={2} data-size="xs">
               {t("Weather now")}
             </Heading>
-            <NowWeather />
+            <QueryBoundary fallback={<CardSkeleton lines={1} />}>
+              <NowWeather />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
@@ -107,7 +111,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
             <Heading level={2} data-size="xs">
               {t("At {{propertyName}} now", { propertyName })}
             </Heading>
-            <AtPropertyNow />
+            <QueryBoundary fallback={<CardSkeleton lines={1} />}>
+              <AtPropertyNow />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
@@ -117,7 +123,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
             <Heading level={2} data-size="xs">
               {t("Available parking")}
             </Heading>
-            <AvailableParking />
+            <QueryBoundary fallback={<CardSkeleton lines={1} />}>
+              <AvailableParking />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
@@ -146,14 +154,18 @@ function MobileYearPanel() {
             <Heading level={2} data-size="xs">
               {t("My planned stays")}
             </Heading>
-            <MyPlannedStay />
+            <QueryBoundary>
+              <MyPlannedStay />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
       <Card asChild>
         <section>
           <Card.Block>
-            <PlannedMaintenanceSummary mode="rest" />
+            <QueryBoundary>
+              <PlannedMaintenanceSummary mode="rest" />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
@@ -169,17 +181,24 @@ function MobileWeekPanel() {
       <Card asChild>
         <section>
           <Card.Block>
-            <PlannedAvailabilitySummary
-              weekStart={weekStart}
-              onWeekStartChange={setWeekStart}
-            />
+            <QueryBoundary>
+              <PlannedAvailabilitySummary
+                weekStart={weekStart}
+                onWeekStartChange={setWeekStart}
+              />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>
       <Card asChild>
         <section>
           <Card.Block>
-            <PlannedMaintenanceSummary mode="this-week" weekStart={weekStart} />
+            <QueryBoundary>
+              <PlannedMaintenanceSummary
+                mode="this-week"
+                weekStart={weekStart}
+              />
+            </QueryBoundary>
           </Card.Block>
         </section>
       </Card>

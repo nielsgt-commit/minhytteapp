@@ -1,15 +1,16 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { Button, List, Paragraph } from "@digdir/designsystemet-react"
+import { Button, List } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
-import StatCard from "@/features/dashboard/propertystats/StatCard"
+import { StatCard } from "@/features/dashboard/propertystats/StatCard"
 import styles from "@/features/dashboard/propertystats/PropertyStats.module.css"
 
 const CATEGORIES = ["Boat", "Appliance", "Tool"] as const
 
-export default function EquipmentSummary() {
+export function EquipmentSummary() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
@@ -32,7 +33,7 @@ export default function EquipmentSummary() {
       count={CATEGORIES.length}
       content={
         equipment.length === 0 ? (
-          <Paragraph>{t("No equipment yet.")}</Paragraph>
+          <EmptyState title={t("No equipment yet.")} />
         ) : (
           <List.Unordered className={styles.list}>
             {CATEGORIES.map(cat => {

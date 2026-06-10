@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import i18next from "i18next"
 import { initReactI18next } from "react-i18next"
-import DayCard from "./DayCard"
+import { DayCard } from "./DayCard"
 import type { RoomGroup } from "./daySummaryUtils"
 
 beforeAll(async () => {

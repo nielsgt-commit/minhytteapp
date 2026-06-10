@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button } from "@digdir/designsystemet-react"
 import {
   CarFillIcon,
@@ -8,6 +8,9 @@ import {
   MotorcycleIcon,
 } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import styles from "./AvailableParking.module.css"
 import { useParking } from "./useParking"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -37,36 +40,33 @@ const EXTRAS: readonly ExtraVehicle[] = [
   },
 ]
 
-export default function AvailableParking() {
+export function AvailableParking() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
-  const propertyId = useSelectedPropertyId()
+  const propertyId = useSelectedPropertyId() ?? 0
 
-  const { data: me } = useQuery(trpc.user.me.queryOptions())
-  const { data: properties } = useQuery(
-    trpc.property.mine.queryOptions(undefined, { enabled: propertyId != null }),
+  const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
+  const { data: properties } = useSuspenseQuery(
+    trpc.property.mine.queryOptions(),
   )
-  const { data: claims } = useQuery(
-    trpc.parking.listForProperty.queryOptions(
-      { property_id: propertyId ?? 0 },
-      { enabled: propertyId != null },
-    ),
+  const { data: claims } = useSuspenseQuery(
+    trpc.parking.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const { toggle, pendingSlot } = useParking(propertyId ?? 0, me)
+  const { toggle, pendingSlot, claim, release } = useParking(propertyId, me)
+  const { error: mutationError } = useMutationsStatus(claim, release)
 
-  if (propertyId == null) return null
-
-  const property = properties?.find(p => p.id === propertyId)
+  const property = properties.find(p => p.id === propertyId)
   const total = property?.parking_spots ?? 0
 
-  const claimedBySlot = new Map((claims ?? []).map(c => [c.slot_index, c]))
+  const claimedBySlot = new Map(claims.map(c => [c.slot_index, c]))
 
   return (
     <div className={styles.wrap}>
+      <ErrorAlert error={mutationError} />
       <div className={styles.slots}>
         {total === 0 ? (
-          <p>{t("No parking spots configured.")}</p>
+          <EmptyState title={t("No parking spots configured.")} />
         ) : (
           Array.from({ length: total }, (_, slot) => {
             const occupant = claimedBySlot.get(slot)

@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Heading, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc"
 import { pad2 } from "@/utils/dateUtils"
 import {
@@ -18,7 +19,7 @@ function isoUTC(d: Date) {
 type WeekDay = { iso: string; index: number; name: string }
 
 // The seven days (Mon–Sun) of a priority week, with localized short names.
-function weekDays(weekStart: Date): WeekDay[] {
+function weekDays(weekStart: Date, locale: string): WeekDay[] {
   const days: WeekDay[] = []
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart)
@@ -26,7 +27,7 @@ function weekDays(weekStart: Date): WeekDay[] {
     days.push({
       iso: isoUTC(d),
       index: i,
-      name: d.toLocaleDateString(undefined, {
+      name: d.toLocaleDateString(locale, {
         weekday: "short",
         timeZone: "UTC",
       }),
@@ -72,7 +73,7 @@ type StayRow = {
   firstDay: number
 }
 
-export default function PriorityWeekSummary({
+export function PriorityWeekSummary({
   propertyId,
   year,
   week,
@@ -83,11 +84,11 @@ export default function PriorityWeekSummary({
   week: PeakWeek
   sort: SortMode
 }) {
-  const { t } = useTranslation("dashboard")
+  const { t, i18n } = useTranslation("dashboard")
   const trpc = useTRPC()
 
   const range = peakWeekRange(year, week)
-  const days = weekDays(range.start)
+  const days = weekDays(range.start, i18n.language)
   const weekStart = days[0].iso
   const weekEnd = days[6].iso
 
@@ -148,7 +149,7 @@ export default function PriorityWeekSummary({
         {t("Week {{weekNumber}}", { weekNumber: week })} · {formatRange(range)}
       </Heading>
       {stays.length === 0 ? (
-        <p>{t("No stays this week.")}</p>
+        <EmptyState title={t("No stays this week.")} />
       ) : (
         <ul className={styles.cards}>
           {stays.map(s => (

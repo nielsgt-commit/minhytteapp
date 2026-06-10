@@ -1,21 +1,24 @@
 import { Paragraph } from "@digdir/designsystemet-react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { startOfSunday, toIso } from "@/utils/dateUtils"
-import WeatherSymbol from "./WeatherSymbol"
+import { WeatherSymbol } from "./WeatherSymbol"
 import styles from "./NowWeather.module.css"
 
-export default function NowWeather() {
+export function NowWeather() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
   const weekStart = toIso(startOfSunday(new Date()))
 
-  const { data: properties } = useQuery(trpc.property.mine.queryOptions())
-  const property = properties?.find(p => p.id === propertyId)
+  // Preloaded by the dashboard route loader.
+  const { data: properties } = useSuspenseQuery(
+    trpc.property.mine.queryOptions(),
+  )
+  const property = properties.find(p => p.id === propertyId)
   const hasCoords = property?.latitude != null && property.longitude != null
 
   const { data } = useQuery(

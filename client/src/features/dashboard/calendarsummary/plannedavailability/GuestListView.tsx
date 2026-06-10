@@ -5,7 +5,7 @@ type Props = {
   names: string[]
 }
 
-export default function GuestListView({ names }: Props) {
+export function GuestListView({ names }: Props) {
   if (names.length === 0) return null
   return (
     <div className={styles.guestList}>

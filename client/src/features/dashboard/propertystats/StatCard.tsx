@@ -9,7 +9,7 @@ type Props = {
   footer: ReactNode
 }
 
-export default function StatCard({ title, count, content, footer }: Props) {
+export function StatCard({ title, count, content, footer }: Props) {
   return (
     <Card asChild>
       <section className={styles.card}>

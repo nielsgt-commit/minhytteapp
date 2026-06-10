@@ -81,5 +81,5 @@ export function useParking(propertyId: number, me: Me) {
     else claim.mutate({ property_id: propertyId, slot_index: slot })
   }
 
-  return { toggle, pendingSlot }
+  return { toggle, pendingSlot, claim, release }
 }

@@ -1,11 +1,12 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import styles from "./Dashboard.module.css"
-import MobileTabs from "./MobileTabs"
-import PlannedStaysSection from "./PlannedStaysSection"
+import { MobileTabs } from "./MobileTabs"
+import { PlannedStaysSection } from "./PlannedStaysSection"
 import { CapacitySummary } from "@/features/dashboard/capacitysummary/CapacitySummary.tsx"
-import CalendarSummary from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
+import { CalendarSummary } from "@/features/dashboard/calendarsummary/CalendarSummary.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { PageHeader } from "@/components/shared/PageHeader"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
@@ -28,7 +29,9 @@ export function Dashboard() {
     return (
       <section className={styles.page}>
         <PageHeader title={t("Dashboard")} help={help} />
-        <p>{t("No property selected. Add or pick one from the header.")}</p>
+        <EmptyState
+          title={t("No property selected. Add or pick one from the header.")}
+        />
       </section>
     )
   }
@@ -46,12 +49,12 @@ export function Dashboard() {
     <section className={styles.page}>
       <PageHeader title={t("Dashboard")} help={help} />
       <CapacitySummary />
-      <Suspense fallback={<p>{t("Loading…")}</p>}>
+      <QueryBoundary>
         <CalendarSummary />
-      </Suspense>
-      <Suspense fallback={<p>{t("Loading…")}</p>}>
+      </QueryBoundary>
+      <QueryBoundary>
         <PlannedStaysSection propertyId={selectedPropertyId} />
-      </Suspense>
+      </QueryBoundary>
     </section>
   )
 }

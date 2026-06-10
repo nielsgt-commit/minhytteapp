@@ -16,6 +16,7 @@ import {
   staticDueKindLabel,
 } from "@/features/maintenance/due/maintenanceDue.ts"
 import { buildOwnerLookups } from "@/routes/_authed/administrer/-priority/priorityUtils.ts"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import styles from "./PlannedMaintenanceSummary.module.css"
 
 type Severity = "major" | "minor" | "patch"
@@ -33,7 +34,7 @@ type Props = {
   weekStart?: Date
 }
 
-export default function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
+export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
@@ -133,7 +134,7 @@ function renderThisWeek<Item>(
   t: TFunction,
 ) {
   const tags = renderStructureTags(filtered)
-  if (tags == null) return <p>{t("No planned maintenance.")}</p>
+  if (tags == null) return <EmptyState title={t("No planned maintenance.")} />
   return tags
 }
 
@@ -192,7 +193,8 @@ function renderRest<Item extends DueItem>(
     ([, a], [, b]) => a.order - b.order,
   )
 
-  if (ordered.length === 0) return <p>{t("No planned maintenance.")}</p>
+  if (ordered.length === 0)
+    return <EmptyState title={t("No planned maintenance.")} />
 
   return (
     <div className={styles.buckets}>

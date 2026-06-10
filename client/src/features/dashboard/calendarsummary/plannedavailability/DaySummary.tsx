@@ -1,7 +1,7 @@
 import { Divider, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { Fragment } from "react"
 import styles from "./PlannedAvailabilitySummary.module.css"
-import GuestListView from "./GuestListView"
+import { GuestListView } from "./GuestListView"
 import type { RoomGroup } from "./daySummaryUtils"
 
 type Props = {
@@ -12,10 +12,7 @@ type Props = {
 }
 
 // Who sleeps where on a single day, grouped by building and room.
-export default function DaySummary({
-  groups,
-  buildingDividers = false,
-}: Props) {
+export function DaySummary({ groups, buildingDividers = false }: Props) {
   if (groups.length === 0) return null
   return (
     <div className={styles.daySummary}>

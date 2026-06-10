@@ -2,8 +2,8 @@ import { Badge, Card, Popover } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { pad2 } from "@/utils/dateUtils"
 import styles from "./PlannedAvailabilitySummary.module.css"
-import DaySummary from "./DaySummary"
-import WeatherSymbol from "../../weather/WeatherSymbol"
+import { DaySummary } from "./DaySummary"
+import { WeatherSymbol } from "../../weather/WeatherSymbol"
 import type { RoomGroup } from "./daySummaryUtils"
 
 type Forecast = {
@@ -30,7 +30,7 @@ type Props = {
   onToggle: () => void
 }
 
-export default function DayCard({
+export function DayCard({
   date,
   weekdayLabel,
   isSelected,

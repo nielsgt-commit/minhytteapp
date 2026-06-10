@@ -1,11 +1,12 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Avatar,
   EXPERIMENTAL_AvatarStack as AvatarStack,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./AtPropertyNow.module.css"
 
@@ -20,24 +21,17 @@ function initials(name: string) {
     .join("")
 }
 
-export default function AtPropertyNow() {
+export function AtPropertyNow() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
-  const propertyId = useSelectedPropertyId()
-  const { data, isLoading } = useQuery(
-    trpc.stay.atProperty.queryOptions(
-      { property_id: propertyId ?? 0 },
-      { enabled: propertyId != null },
-    ),
+  const propertyId = useSelectedPropertyId() ?? 0
+  const { data: guests } = useSuspenseQuery(
+    trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
   )
   const [expanded, setExpanded] = useState(false)
 
-  if (propertyId == null) return null
-  if (isLoading) return <p>{t("Loading…")}</p>
-
-  const guests = data ?? []
   if (guests.length === 0)
-    return <p>{t("No one at the property right now.")}</p>
+    return <EmptyState title={t("No one at the property right now.")} />
 
   const canTruncate = guests.length > VISIBLE_LIMIT
   const collapsed = canTruncate && !expanded

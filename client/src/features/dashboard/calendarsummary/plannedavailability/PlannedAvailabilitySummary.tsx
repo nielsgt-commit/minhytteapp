@@ -11,9 +11,9 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./PlannedAvailabilitySummary.module.css"
-import DayCard from "./DayCard"
-import DaySummary from "./DaySummary"
-import OccupancyMatrix from "./OccupancyMatrix"
+import { DayCard } from "./DayCard"
+import { DaySummary } from "./DaySummary"
+import { OccupancyMatrix } from "./OccupancyMatrix"
 import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
@@ -40,7 +40,7 @@ type Props = {
   onWeekStartChange: (d: Date) => void
 }
 
-export default function PlannedAvailabilitySummary({
+export function PlannedAvailabilitySummary({
   weekStart,
   onWeekStartChange,
 }: Props) {

@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest"
 import { render, screen } from "@testing-library/react"
 import i18next from "i18next"
 import { initReactI18next } from "react-i18next"
-import GuestListView from "./GuestListView"
+import { GuestListView } from "./GuestListView"
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {

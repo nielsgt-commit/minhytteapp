@@ -43,7 +43,7 @@ function symbolToEmoji(code: string): string {
   return "🌤️"
 }
 
-export default function WeatherSymbol({ code, size = 20 }: Props) {
+export function WeatherSymbol({ code, size = 20 }: Props) {
   const { t } = useTranslation("dashboard")
   if (!code) return null
   const td = t as (key: string, opts: { defaultValue: string }) => string

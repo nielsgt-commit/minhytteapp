@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest"
 import { render } from "@testing-library/react"
 import i18next from "i18next"
 import { initReactI18next } from "react-i18next"
-import WeatherSymbol from "./WeatherSymbol"
+import { WeatherSymbol } from "./WeatherSymbol"
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {

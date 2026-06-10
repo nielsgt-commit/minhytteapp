@@ -1,11 +1,13 @@
-import { Suspense, useState } from "react"
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { ToggleGroup } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
 import { defaultYear } from "@/routes/_authed/manageproperty/-priority/priorityUtils"
 import type { PeakWeek } from "@/routes/_authed/manageproperty/-priority/priorityUtils"
-import PriorityWeekSummary from "./PriorityWeekSummary"
+import { PriorityWeekSummary } from "./PriorityWeekSummary"
 import styles from "./SummerSummary.module.css"
 
 export type SortMode = "building" | "weekday"
@@ -29,7 +31,7 @@ export function SummerSummary({ propertyId }: { propertyId: number }) {
   ).sort((a, b) => a - b)
 
   if (weeks.length === 0) {
-    return <p>{t("No priority weeks set.")}</p>
+    return <EmptyState title={t("No priority weeks set.")} />
   }
 
   return (
@@ -47,14 +49,14 @@ export function SummerSummary({ propertyId }: { propertyId: number }) {
         <ToggleGroup.Item value="weekday">{t("Weekday")}</ToggleGroup.Item>
       </ToggleGroup>
       {weeks.map(week => (
-        <Suspense key={week} fallback={<p>{t("Loading…")}</p>}>
+        <QueryBoundary key={week}>
           <PriorityWeekSummary
             propertyId={propertyId}
             year={year}
             week={week}
             sort={sort}
           />
-        </Suspense>
+        </QueryBoundary>
       ))}
     </div>
   )

@@ -1,30 +1,28 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Details, Heading, Link, Paragraph } from "@digdir/designsystemet-react"
 import { EnvelopeClosedIcon, PhoneIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import styles from "./ContactsSummary.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 
-export default function ContactsSummary() {
+export function ContactsSummary() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
-  const propertyId = useSelectedPropertyId()
-  const { data: contacts } = useQuery(
-    trpc.propertyContact.listForProperty.queryOptions(
-      { property_id: propertyId ?? 0 },
-      { enabled: propertyId != null },
-    ),
+  const propertyId = useSelectedPropertyId() ?? 0
+  const { data: contacts } = useSuspenseQuery(
+    trpc.propertyContact.listForProperty.queryOptions({
+      property_id: propertyId,
+    }),
   )
-
-  if (propertyId == null || !contacts) return null
 
   return (
     <Details>
       <Details.Summary>{t("Contacts")}</Details.Summary>
       <Details.Content>
         {contacts.length === 0 ? (
-          <Paragraph>{t("No contacts.")}</Paragraph>
+          <EmptyState title={t("No contacts.")} />
         ) : (
           <ul className={styles.list}>
             {contacts.map(c => (
