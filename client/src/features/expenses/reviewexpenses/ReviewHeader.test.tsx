@@ -17,7 +17,9 @@ describe("ReviewHeader", () => {
         onSwitchChange={() => {}}
       />,
     )
-    expect(screen.getByText("Review expenses")).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "1. Review expenses" }),
+    ).toBeInTheDocument()
     expect(screen.getByRole("switch")).toBeChecked()
   })
 

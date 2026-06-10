@@ -1,10 +1,11 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./Expenses.module.css"
-import { ExpensesTestForm } from "@/features/expenses/expenseform/ExpensesTestForm.tsx"
+import { ExpenseForm } from "@/features/expenses/expenseform/ExpenseForm.tsx"
 import { MyExpenses } from "@/features/expenses/myexpenses/MyExpenses.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 
 export function Expenses() {
@@ -52,11 +53,11 @@ export function Expenses() {
     return (
       <section className={styles.page}>
         <PageHeader title={t("Expenses")} help={help} />
-        <p>
-          {t(
+        <EmptyState
+          title={t(
             "Add or select a property to track shared costs and keep receipts in one place.",
           )}
-        </p>
+        />
       </section>
     )
   }
@@ -64,10 +65,10 @@ export function Expenses() {
   return (
     <section className={styles.page}>
       <PageHeader title={t("Expenses")} help={help} />
-      <Suspense fallback={<p>{t("Loading…")}</p>}>
-        <ExpensesTestForm />
+      <QueryBoundary>
+        <ExpenseForm />
         <MyExpenses />
-      </Suspense>
+      </QueryBoundary>
     </section>
   )
 }

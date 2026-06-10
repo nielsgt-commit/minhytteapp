@@ -1,5 +1,7 @@
 import { Button, Card, Paragraph } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import type { SettlementPhase } from "@/features/settlement/phase.ts"
 
 type Props = {
@@ -21,7 +23,7 @@ export function EmptyReviewState({
 }: Props) {
   const { t } = useTranslation("expenses")
   if (phase !== "collecting_expenses") {
-    return <p>{t("(nothing to review)")}</p>
+    return <EmptyState title={t("(nothing to review)")} />
   }
   return (
     <>
@@ -43,11 +45,7 @@ export function EmptyReviewState({
           {t("Continue to booking days")}
         </Button>
       )}
-      {advanceError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: advanceError.message })}
-        </p>
-      )}
+      <ErrorAlert error={advanceError} />
     </>
   )
 }

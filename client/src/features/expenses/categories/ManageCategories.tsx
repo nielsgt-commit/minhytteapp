@@ -4,14 +4,23 @@ import {
   Card,
   EXPERIMENTAL_Suggestion as Suggestion,
   Paragraph,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useCategoryMutations } from "@/features/expenses/expenseform/useCategoryMutations.ts"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 
 export function ManageCategories() {
+  return (
+    <QueryBoundary>
+      <ManageCategoriesContent />
+    </QueryBoundary>
+  )
+}
+
+function ManageCategoriesContent() {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
@@ -24,8 +33,11 @@ export function ManageCategories() {
     trpc.expenseCategory.list.queryOptions({ property_id: propertyId ?? 0 }),
   )
   const suggestionInputRef = useRef<HTMLInputElement>(null)
-  const { selectedCats, handleCategoriesChange, createError, archiveError } =
-    useCategoryMutations(categories, suggestionInputRef, propertyId)
+  const { selectedCats, handleCategoriesChange, status } = useCategoryMutations(
+    categories,
+    suggestionInputRef,
+    propertyId,
+  )
 
   if (!canManageCategories) {
     return (
@@ -60,16 +72,7 @@ export function ManageCategories() {
             ))}
           </Suggestion.List>
         </Suggestion>
-        {createError && (
-          <ValidationMessage>
-            {t("Error: {{message}}", { message: createError.message })}
-          </ValidationMessage>
-        )}
-        {archiveError && (
-          <ValidationMessage>
-            {t("Error: {{message}}", { message: archiveError.message })}
-          </ValidationMessage>
-        )}
+        <ErrorAlert error={status.error} />
       </section>
     </Card>
   )

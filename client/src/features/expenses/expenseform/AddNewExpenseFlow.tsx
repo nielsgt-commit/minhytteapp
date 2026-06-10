@@ -1,4 +1,3 @@
-import { type SyntheticEvent, useState } from "react"
 import { Card, Divider, Heading, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
@@ -8,6 +7,7 @@ import { DraftList } from "./DraftList.tsx"
 import { CategoryPicker } from "./CategoryPicker.tsx"
 import { AmountEditor } from "./AmountEditor.tsx"
 import { SubmitRow } from "./SubmitRow.tsx"
+import { fdString } from "@/utils/formData"
 
 export type { ExpenseDraft } from "./useExpenseDrafts.ts"
 
@@ -28,7 +28,6 @@ export function AddNewExpenseFlow({
 
   const drafts = useExpenseDrafts()
   const editor = useExpenseEditor()
-  const [description, setDescription] = useState("")
 
   const parsedAmount = Number(editor.amount)
 
@@ -43,22 +42,16 @@ export function AddNewExpenseFlow({
     editor.close()
   }
 
-  const resetForm = () => {
+  const submitDrafts = (fd: FormData) => {
+    if (drafts.drafts.length === 0) return
+    onSubmit(drafts.drafts, fdString(fd, "description").trim())
     drafts.reset()
     editor.close()
-    setDescription("")
-  }
-
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (drafts.drafts.length === 0) return
-    onSubmit(drafts.drafts, description.trim())
-    resetForm()
   }
 
   return (
     <Card asChild>
-      <form onSubmit={handleSubmit}>
+      <form action={submitDrafts}>
         <Card.Block>
           <div className={styles.container}>
             <DraftList
@@ -96,10 +89,7 @@ export function AddNewExpenseFlow({
               <Textfield
                 label={t("Description")}
                 description={t("Optional")}
-                value={description}
-                onChange={e => {
-                  setDescription(e.target.value)
-                }}
+                name="description"
               />
             )}
 

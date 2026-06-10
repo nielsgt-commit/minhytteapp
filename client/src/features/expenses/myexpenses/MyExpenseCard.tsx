@@ -8,7 +8,6 @@ import { useToggleState } from "@/hooks/useToggleState"
 type Props = {
   expense: ExpenseRow
   propertyId: number
-  onSaved: () => void
   onDelete: () => void
   deletePending: boolean
 }
@@ -16,7 +15,6 @@ type Props = {
 export function MyExpenseCard({
   expense,
   propertyId,
-  onSaved,
   onDelete,
   deletePending,
 }: Props) {
@@ -31,12 +29,10 @@ export function MyExpenseCard({
         >
           {editing.value ? (
             <MyExpenseEditForm
+              key={expense.id}
               expense={expense}
               propertyId={propertyId}
-              onSaved={() => {
-                editing.close()
-                onSaved()
-              }}
+              onSaved={editing.close}
               onCancel={editing.close}
             />
           ) : (

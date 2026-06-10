@@ -6,9 +6,9 @@ import styles from "./MyExpenses.module.css"
 import { MyExpenseCard } from "./MyExpenseCard.tsx"
 import type { ExpenseRow } from "../types.ts"
 import { selectMyExpenses } from "../selectors.ts"
-import { useInvalidateExpenses } from "../useInvalidateExpenses.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 
 export function MyExpenses() {
   const { t } = useTranslation("expenses")
@@ -20,8 +20,6 @@ export function MyExpenses() {
       property_id: selectedPropertyId ?? 0,
     }),
   )
-
-  const invalidate = useInvalidateExpenses()
 
   const deleteExpense = useMutationWithInvalidation(
     trpc.expense.delete.mutationOptions(),
@@ -40,20 +38,13 @@ export function MyExpenses() {
         {t("My expenses ({{count}})", { count: mine.length })}
       </Details.Summary>
       <Details.Content className={styles.content}>
-        {deleteExpense.error && (
-          <p role="alert">
-            {t("Error: {{message}}", { message: deleteExpense.error.message })}
-          </p>
-        )}
+        <ErrorAlert error={deleteExpense.error} />
         <ul className={styles.list}>
           {mine.map(e => (
             <li key={e.id}>
               <MyExpenseCard
                 expense={e}
                 propertyId={selectedPropertyId}
-                onSaved={() => {
-                  void invalidate()
-                }}
                 onDelete={() => {
                   deleteExpense.mutate({ id: e.id })
                 }}

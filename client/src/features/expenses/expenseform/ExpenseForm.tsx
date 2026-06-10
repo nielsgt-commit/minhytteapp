@@ -3,14 +3,15 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { toIso } from "@/utils/dateUtils"
 import {
   AddNewExpenseFlow,
   type ExpenseDraft,
 } from "@/features/expenses/expenseform/AddNewExpenseFlow.tsx"
 
-const todayIso = () => new Date().toISOString().slice(0, 10)
-
-export function ExpensesTestForm() {
+export function ExpenseForm() {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
@@ -27,7 +28,7 @@ export function ExpensesTestForm() {
 
   const submitDrafts = (drafts: ExpenseDraft[], description: string) => {
     if (selectedPropertyId == null) return
-    const date = todayIso()
+    const date = toIso(new Date())
     for (const d of drafts) {
       createMutation.mutate({
         property_id: selectedPropertyId,
@@ -44,7 +45,7 @@ export function ExpensesTestForm() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <p>{t("Select a property to record expenses.")}</p>
+        <EmptyState title={t("Select a property to record expenses.")} />
       </section>
     )
   }
@@ -59,11 +60,7 @@ export function ExpensesTestForm() {
           createMutation.reset()
         }}
       />
-      {createMutation.error && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: createMutation.error.message })}
-        </p>
-      )}
+      <ErrorAlert error={createMutation.error} />
     </section>
   )
 }

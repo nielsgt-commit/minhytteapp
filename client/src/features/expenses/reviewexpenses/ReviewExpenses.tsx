@@ -1,8 +1,12 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { ReviewExpenseCard } from "./ReviewExpenseCard.tsx"
 import { ReviewHeader } from "./ReviewHeader.tsx"
 import { EmptyReviewState } from "./EmptyReviewState.tsx"
@@ -21,7 +25,15 @@ type Props = {
   phase: SettlementPhase
 }
 
-export function ReviewExpenses({ settlementId, phase }: Props) {
+export function ReviewExpenses(props: Props) {
+  return (
+    <QueryBoundary>
+      <ReviewExpensesContent {...props} />
+    </QueryBoundary>
+  )
+}
+
+function ReviewExpensesContent({ settlementId, phase }: Props) {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
@@ -57,18 +69,23 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
     toReview.length,
   )
 
-  const { reimburse, reject, pending, error } = useReviewMutations({
+  const review = useReviewMutations({
     settlementId,
     reviewerId: me.id,
     fallbackPropertyId: selectedPropertyId ?? 0,
   })
+  const status = useMutationsStatus(review, advancePhase)
 
   if (selectedPropertyId == null) return null
 
   const iAmHead =
     me.is_admin || me.head_property_ids.includes(selectedPropertyId)
   if (!iAmHead) {
-    return <p>{t("Only the group head can review submitted expenses.")}</p>
+    return (
+      <Paragraph>
+        {t("Only the group head can review submitted expenses.")}
+      </Paragraph>
+    )
   }
 
   const next = NEXT_PHASE.collecting_expenses
@@ -109,18 +126,14 @@ export function ReviewExpenses({ settlementId, phase }: Props) {
     <>
       {header}
       <div className={styles.list}>
-        {error && (
-          <p role="alert">
-            {t("Error: {{message}}", { message: error.message })}
-          </p>
-        )}
+        <ErrorAlert error={status.error} />
         {toReview.map(e => (
           <ReviewExpenseCard
             key={e.id}
             expense={e}
-            pending={pending}
-            onReimburse={reimburse}
-            onReject={reject}
+            pending={status.pending}
+            onReimburse={review.reimburse}
+            onReject={review.reject}
           />
         ))}
       </div>

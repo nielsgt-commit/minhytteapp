@@ -42,7 +42,7 @@ export function useReviewMutations({
   return {
     reimburse,
     reject,
-    pending: updateExpense.isPending,
+    isPending: updateExpense.isPending,
     error: updateExpense.error,
   }
 }
