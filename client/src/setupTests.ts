@@ -12,3 +12,6 @@ window.matchMedia = vi.fn().mockImplementation((query: string) => ({
   removeListener: vi.fn(),
   dispatchEvent: vi.fn(),
 }))
+
+// jsdom does not implement getAnimations; designsystemet Skeleton calls it.
+document.getAnimations = () => []

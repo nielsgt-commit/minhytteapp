@@ -6,8 +6,11 @@
   "Plan stay": "Plan stay",
   "Dashboard": "Dashboard",
   "Expenses": "Expenses",
+  "Loading": "Loading",
   "Maintenance": "Maintenance",
   "Primary": "Primary",
   "Sections": "Sections",
-  "Settlement": "Settlement"
+  "Settlement": "Settlement",
+  "Something went wrong": "Something went wrong",
+  "Try again": "Try again"
 }

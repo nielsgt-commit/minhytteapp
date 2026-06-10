@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
   addDays,
+  currentYear,
+  formatDate,
+  formatDateRange,
   isoWeekMonday,
   isoWeekNumber,
   isoWeekYear,
@@ -71,6 +74,62 @@ describe("isoWeekNumber / isoWeekYear", () => {
     const d = new Date(2026, 6, 15) // 15 July 2026
     expect(isoWeekNumber(d)).toBe(29)
     expect(isoWeekYear(d)).toBe(2026)
+  })
+})
+
+describe("formatDate", () => {
+  test("formats a Date for the given locale", () => {
+    expect(formatDate(new Date(2026, 0, 5), "en-GB")).toBe("05/01/2026")
+  })
+
+  test("formats with Norwegian locale", () => {
+    expect(formatDate(new Date(2026, 0, 5), "nb-NO")).toBe("5.1.2026")
+  })
+
+  test("accepts a parseable string", () => {
+    expect(formatDate("2026-01-05T12:00:00", "en-GB")).toBe("05/01/2026")
+  })
+
+  test("returns empty string for null/undefined", () => {
+    expect(formatDate(null, "en-GB")).toBe("")
+    expect(formatDate(undefined, "en-GB")).toBe("")
+  })
+
+  test("returns empty string for invalid input", () => {
+    expect(formatDate("not a date", "en-GB")).toBe("")
+  })
+})
+
+describe("formatDateRange", () => {
+  const start = new Date(2026, 0, 5)
+  const end = new Date(2026, 0, 9)
+
+  test("joins both ends with an en dash", () => {
+    expect(formatDateRange(start, end, "en-GB")).toBe("05/01/2026 – 09/01/2026")
+  })
+
+  test("returns only start when end is missing", () => {
+    expect(formatDateRange(start, null, "en-GB")).toBe("05/01/2026")
+  })
+
+  test("returns only end when start is missing", () => {
+    expect(formatDateRange(null, end, "en-GB")).toBe("09/01/2026")
+  })
+
+  test("collapses identical ends to a single date", () => {
+    expect(formatDateRange(start, new Date(2026, 0, 5), "en-GB")).toBe(
+      "05/01/2026",
+    )
+  })
+
+  test("returns empty string when both ends are missing", () => {
+    expect(formatDateRange(null, undefined, "en-GB")).toBe("")
+  })
+})
+
+describe("currentYear", () => {
+  test("matches the system clock's year", () => {
+    expect(currentYear()).toBe(new Date().getFullYear())
   })
 })
 

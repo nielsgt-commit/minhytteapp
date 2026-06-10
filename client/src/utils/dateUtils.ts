@@ -18,6 +18,34 @@ export function toDateInputValue(
   return toIso(d)
 }
 
+// Locale-aware display of a date (or parseable string). Returns "" for
+// null/invalid input, mirroring toDateInputValue.
+export function formatDate(
+  value: string | Date | null | undefined,
+  locale: string,
+): string {
+  if (value == null) return ""
+  const d = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(d.getTime())) return ""
+  return d.toLocaleDateString(locale)
+}
+
+export function formatDateRange(
+  start: string | Date | null | undefined,
+  end: string | Date | null | undefined,
+  locale: string,
+): string {
+  const a = formatDate(start, locale)
+  const b = formatDate(end, locale)
+  if (!a) return b
+  if (!b || a === b) return a
+  return `${a} – ${b}`
+}
+
+export function currentYear(): number {
+  return new Date().getFullYear()
+}
+
 export function startOfSunday(d: Date): Date {
   const out = new Date(d)
   out.setHours(0, 0, 0, 0)

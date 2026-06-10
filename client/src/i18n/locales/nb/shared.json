@@ -6,11 +6,14 @@
   "Dashboard": "Oversikt",
   "Expenses": "Utlegg",
   "Home": "Hjem",
+  "Loading": "Laster",
   "Maintenance": "Vedlikehold",
   "Manage Property": "Administrer eiendom",
   "Onboarding": "Kom i gang",
   "Primary": "Primær",
   "Sections": "Seksjoner",
   "Settlement": "Oppgjør",
+  "Something went wrong": "Noe gikk galt",
+  "Try again": "Prøv igjen",
   "{{label}} sections": "{{label}}-seksjoner"
 }
