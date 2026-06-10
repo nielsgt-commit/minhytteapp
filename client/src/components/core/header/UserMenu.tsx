@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Avatar, Divider, Dropdown, Tag } from "@digdir/designsystemet-react"
@@ -10,9 +10,9 @@ import {
   useSetSelectedUserId,
 } from "@/selection/useSelection"
 import { signOut, useAuthSession } from "@/auth/auth-client"
-import CheckIn from "./CheckIn"
-import ColorSchemeToggle from "./ColorSchemeToggle"
-import LanguageSwitcher from "./LanguageSwitcher"
+import { CheckIn } from "./CheckIn"
+import { ColorSchemeToggle } from "./ColorSchemeToggle"
+import { LanguageSwitcher } from "./LanguageSwitcher"
 
 function initials(name: string) {
   return name
@@ -27,7 +27,7 @@ type Props = {
   showCheckIn?: boolean
 }
 
-export default function UserMenu({ showCheckIn = true }: Props) {
+export function UserMenu({ showCheckIn = true }: Props) {
   const { t } = useTranslation("core")
   const trpc = useTRPC()
   const auth = useAuthSession()
@@ -44,23 +44,17 @@ export default function UserMenu({ showCheckIn = true }: Props) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
 
-  const list = useMemo(
-    () => (me ? [{ ...me, name: me.name || me.email }] : []),
-    [me],
-  )
-
+  // The only selectable user is `me`; keep the URL selection pointing at it.
   useEffect(() => {
-    if (list.length === 0) return
-    const stillExists = list.some(u => u.id === selectedId)
-    if (!stillExists) {
-      void setSelectedUserId(list[0].id, { replace: true })
+    if (!me) return
+    if (selectedId !== me.id) {
+      void setSelectedUserId(me.id, { replace: true })
     }
-  }, [list, selectedId, setSelectedUserId])
+  }, [me, selectedId, setSelectedUserId])
 
   if (!auth.user) return null
 
-  const current = list.find(u => u.id === selectedId)
-  const name = current?.name ?? t("Select user")
+  const name = me?.id === selectedId ? me.name || me.email : t("Select user")
 
   const mainGroup =
     selectedId != null && groups

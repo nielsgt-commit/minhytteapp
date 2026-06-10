@@ -65,7 +65,7 @@ const navItems: {
 
 const links = linkOptions(navItems.map(({ to }) => ({ to })))
 
-export default function BottomNavBar() {
+export function BottomNavBar() {
   const { t } = useTranslation("shared")
   const { pathname } = useLocation()
 

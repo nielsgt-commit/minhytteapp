@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useEffect, useState } from "react"
+import { type SyntheticEvent, useState } from "react"
 import {
   Button,
   Divider,
@@ -28,7 +28,7 @@ type Props = {
   addError?: string | null
 }
 
-export default function PropertySwitcher({
+export function PropertySwitcher({
   properties,
   value,
   onChange,
@@ -43,16 +43,15 @@ export default function PropertySwitcher({
   const current = properties.find(p => p.id === value)
   const triggerLabel = current?.name ?? t("Select property")
 
-  const [name, setName] = useState("")
   const [isOpen, setIsOpen] = useState(false)
 
-  useEffect(() => {
-    if (!isAddOpen) setName("")
-  }, [isAddOpen])
-
+  // The name field is uncontrolled and read via FormData on submit. The form
+  // only renders while the add panel is open, so closing the panel discards
+  // the typed value without any state syncing.
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const trimmed = name.trim()
+    const raw = new FormData(e.currentTarget).get("name")
+    const trimmed = typeof raw === "string" ? raw.trim() : ""
     if (!trimmed) return
     onAdd(trimmed)
   }
@@ -104,10 +103,6 @@ export default function PropertySwitcher({
               <Textfield
                 label={t("New property name")}
                 name="name"
-                value={name}
-                onChange={e => {
-                  setName(e.target.value)
-                }}
                 autoFocus
                 required
               />

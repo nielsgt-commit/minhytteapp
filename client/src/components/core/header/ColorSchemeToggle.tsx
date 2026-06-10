@@ -3,7 +3,7 @@ import { MoonIcon, SunIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useColorScheme } from "@/hooks/useColorScheme"
 
-export default function ColorSchemeToggle() {
+export function ColorSchemeToggle() {
   const { t } = useTranslation("core")
   const { scheme, toggle } = useColorScheme()
   const isDark = scheme === "dark"

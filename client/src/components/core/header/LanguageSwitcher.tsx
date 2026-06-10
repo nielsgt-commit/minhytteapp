@@ -3,7 +3,7 @@ import { Button } from "@digdir/designsystemet-react"
 import { GlobeIcon } from "@navikt/aksel-icons"
 import { useSwitchLocale } from "@/hooks/useLocalizedNavigate"
 
-export default function LanguageSwitcher() {
+export function LanguageSwitcher() {
   const { t, i18n } = useTranslation("core")
   const switchLocale = useSwitchLocale()
   const current = i18n.resolvedLanguage === "nb" ? "nb" : "en"

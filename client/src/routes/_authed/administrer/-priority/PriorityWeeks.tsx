@@ -1,11 +1,14 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { Card, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import section from "@/features/property/managePropertySection.module.css"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import {
   PEAK_WEEKS,
   type PeakWeek,
@@ -18,7 +21,6 @@ import { PriorityWeeksTable } from "./PriorityWeeksTable"
 export function PriorityWeeks() {
   const { t } = useTranslation("priority")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const [year, setYear] = useState<number>(defaultYear())
 
@@ -39,29 +41,13 @@ export function PriorityWeeks() {
     enabled: selectedPropertyId != null,
   })
 
-  const invalidate = () => {
-    if (selectedPropertyId == null) return
-    void qc.invalidateQueries({
-      queryKey: trpc.priority.list.queryKey({
-        property_id: selectedPropertyId,
-        year,
-      }),
-    })
-  }
-
-  const setMutation = useMutation(
-    trpc.priority.set.mutationOptions({
-      onSuccess: () => {
-        invalidate()
-      },
-    }),
+  const setMutation = useMutationWithInvalidation(
+    trpc.priority.set.mutationOptions(),
+    [trpc.priority.pathKey()],
   )
-  const clearMutation = useMutation(
-    trpc.priority.clear.mutationOptions({
-      onSuccess: () => {
-        invalidate()
-      },
-    }),
+  const clearMutation = useMutationWithInvalidation(
+    trpc.priority.clear.mutationOptions(),
+    [trpc.priority.pathKey()],
   )
   const { pending, error: lastError } = useMutationsStatus(
     setMutation,
@@ -74,8 +60,10 @@ export function PriorityWeeks() {
     )
   }
 
+  if (priorityQuery.isError) return <ErrorAlert error={priorityQuery.error} />
+
   const data = priorityQuery.data
-  if (!data) return <Paragraph>{t("Loading priority weeks…")}</Paragraph>
+  if (!data) return <CardSkeleton />
 
   const { eligibleOwners, assignments } = data
   const lookups = buildOwnerLookups(eligibleOwners, assignments)
@@ -160,11 +148,7 @@ export function PriorityWeeks() {
         </Card>
       )}
 
-      {lastError && (
-        <Paragraph role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </Paragraph>
-      )}
+      <ErrorAlert error={lastError} />
     </div>
   )
 }

@@ -12,7 +12,7 @@ const navLinks = linkOptions([
   { to: "/oppgjor", label: "Settlement" },
 ])
 
-export default function NavTabs({ children }: { children: ReactNode }) {
+export function NavTabs({ children }: { children: ReactNode }) {
   const { t } = useTranslation("shared")
   const { pathname } = useLocation()
 

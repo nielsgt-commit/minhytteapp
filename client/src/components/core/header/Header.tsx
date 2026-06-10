@@ -1,15 +1,15 @@
 import { Paragraph } from "@digdir/designsystemet-react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import PropertyMenu from "./PropertyMenu.tsx"
-import UserMenu from "./UserMenu"
+import { PropertyMenu } from "./PropertyMenu"
+import { UserMenu } from "./UserMenu"
 import styles from "./Header.module.css"
-import CheckIn from "@/components/core/header/CheckIn.tsx"
+import { CheckIn } from "./CheckIn"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useAuthSession } from "@/auth/auth-client"
 import { useTRPC } from "@/trpc/trpc"
 
-export default function Header() {
+export function Header() {
   const trpc = useTRPC()
   const auth = useAuthSession()
   const selectedPropertyId = useSelectedPropertyId()

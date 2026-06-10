@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
 import {
@@ -7,12 +7,12 @@ import {
   useSetSelectedPropertyId,
 } from "@/selection/useSelection"
 import { useAuthSession } from "@/auth/auth-client"
-import PropertySwitcher from "./PropertySwitcher.tsx"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { PropertySwitcher } from "./PropertySwitcher"
 import styles from "./Header.module.css"
 
-export default function PropertyMenu() {
+export function PropertyMenu() {
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const auth = useAuthSession()
   const { data: properties } = useQuery(
     trpc.property.mine.queryOptions(undefined, {
@@ -23,26 +23,26 @@ export default function PropertyMenu() {
   const setSelectedPropertyId = useSetSelectedPropertyId()
   const navigate = useNavigate()
 
-  const list = useMemo(() => properties ?? [], [properties])
+  const list = properties ?? []
 
   useEffect(() => {
-    if (list.length === 0) return
-    const stillExists = list.some(p => p.id === selectedId)
+    if (!properties || properties.length === 0) return
+    const stillExists = properties.some(p => p.id === selectedId)
     if (!stillExists) {
-      void setSelectedPropertyId(list[0].id, { replace: true })
+      void setSelectedPropertyId(properties[0].id, { replace: true })
     }
-  }, [list, selectedId, setSelectedPropertyId])
+  }, [properties, selectedId, setSelectedPropertyId])
 
   const [isAddOpen, setIsAddOpen] = useState(false)
 
-  const createProperty = useMutation(
+  const createProperty = useMutationWithInvalidation(
     trpc.property.create.mutationOptions({
       onSuccess: created => {
-        void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
         void setSelectedPropertyId(created.id)
         setIsAddOpen(false)
       },
     }),
+    [trpc.property.mine.queryKey()],
   )
 
   if (!auth.isAuthenticated) {

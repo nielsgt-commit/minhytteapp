@@ -1,4 +1,10 @@
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type FocusEvent,
+  type KeyboardEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { Card, Heading } from "@digdir/designsystemet-react"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
@@ -32,19 +38,16 @@ export function SideNav({ groups, ariaLabel }: Props) {
     item => pathname === item.to || pathname.startsWith(item.to + "/"),
   )
 
-  const [focusedIndex, setFocusedIndex] = useState(
-    activeIndex === -1 ? 0 : activeIndex,
-  )
-
-  useEffect(() => {
-    if (activeIndex !== -1) setFocusedIndex(activeIndex)
-  }, [activeIndex])
+  // Roving tabindex: while the user moves focus inside the nav we track an
+  // override; otherwise the focused item is derived from the active route.
+  const [focusOverride, setFocusOverride] = useState<number | null>(null)
+  const focusedIndex = focusOverride ?? (activeIndex === -1 ? 0 : activeIndex)
 
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([])
 
   const moveFocus = (next: number) => {
     const clamped = Math.max(0, Math.min(flatItems.length - 1, next))
-    setFocusedIndex(clamped)
+    setFocusOverride(clamped)
     itemRefs.current[clamped]?.focus()
   }
 
@@ -64,9 +67,19 @@ export function SideNav({ groups, ariaLabel }: Props) {
     }
   }
 
+  // When focus leaves the nav entirely, drop the override so tabbing back in
+  // lands on the active route's item again (what the derived default gives).
+  const handleBlur = (e: FocusEvent<HTMLElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setFocusOverride(null)
+  }
+
   return (
     <Card asChild>
-      <nav aria-label={ariaLabel ?? t("Sections")} onKeyDown={handleKeyDown}>
+      <nav
+        aria-label={ariaLabel ?? t("Sections")}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+      >
         {groups.map(group => (
           <Card.Block key={group.label}>
             <Heading level={2} data-size="xs">
@@ -89,7 +102,7 @@ export function SideNav({ groups, ariaLabel }: Props) {
                         itemRefs.current[idx] = el
                       }}
                       onFocus={() => {
-                        setFocusedIndex(idx)
+                        setFocusOverride(idx)
                         void router.preloadRoute({ to: item.to })
                       }}
                     >
