@@ -1,6 +1,6 @@
-import { type SyntheticEvent } from "react"
 import { Button, Fieldset, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import styles from "./ContactEditForm.module.css"
 
 type Contact = {
@@ -16,7 +16,7 @@ type Props = {
   contact: Contact
   pending: boolean
   updatePending: boolean
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onSubmit: (fd: FormData) => Promise<void>
   onDelete: () => void
   onCancel: () => void
 }
@@ -32,7 +32,7 @@ export function ContactEditForm({
   const { t } = useTranslation("property")
   return (
     <form
-      onSubmit={onSubmit}
+      action={onSubmit}
       key={`edit-${String(contact.id)}`}
       className={styles.form}
     >
@@ -73,9 +73,7 @@ export function ContactEditForm({
           disabled={updatePending}
         />
         <div className={styles.actions}>
-          <Button type="submit" disabled={pending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton disabled={pending}>{t("Save")}</SubmitButton>
           <Button
             type="button"
             variant="secondary"

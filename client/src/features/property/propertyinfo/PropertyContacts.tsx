@@ -1,13 +1,14 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { type SyntheticEvent, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ValidationMessage } from "@digdir/designsystemet-react"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import section from "@/features/property/managePropertySection.module.css"
 import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { ContactListView } from "./ContactListView.tsx"
 import { ContactEditForm } from "./ContactEditForm.tsx"
 import { ContactAddForm } from "./ContactAddForm.tsx"
@@ -26,10 +27,9 @@ function nullable(value: string) {
   return trimmed.length === 0 ? null : trimmed
 }
 
-export default function PropertyContacts() {
+export function PropertyContacts() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const property_id = useSelectedPropertyId()
   const canEdit = useCanEdit()
 
@@ -40,31 +40,18 @@ export default function PropertyContacts() {
     ),
   )
 
-  const invalidate = () =>
-    qc.invalidateQueries({
-      queryKey: trpc.propertyContact.listForProperty.queryKey(),
-    })
-
-  const createMutation = useMutation(
-    trpc.propertyContact.create.mutationOptions({
-      onSuccess: () => {
-        void invalidate()
-      },
-    }),
+  const contactKeys = [trpc.propertyContact.listForProperty.queryKey()]
+  const createMutation = useMutationWithInvalidation(
+    trpc.propertyContact.create.mutationOptions(),
+    contactKeys,
   )
-  const updateMutation = useMutation(
-    trpc.propertyContact.update.mutationOptions({
-      onSuccess: () => {
-        void invalidate()
-      },
-    }),
+  const updateMutation = useMutationWithInvalidation(
+    trpc.propertyContact.update.mutationOptions(),
+    contactKeys,
   )
-  const deleteMutation = useMutation(
-    trpc.propertyContact.delete.mutationOptions({
-      onSuccess: () => {
-        void invalidate()
-      },
-    }),
+  const deleteMutation = useMutationWithInvalidation(
+    trpc.propertyContact.delete.mutationOptions(),
+    contactKeys,
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -78,49 +65,39 @@ export default function PropertyContacts() {
 
   if (property_id == null) return null
 
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
+  const handleAdd = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
     if (!name) return
-    createMutation.mutate(
-      {
+    try {
+      await createMutation.mutateAsync({
         property_id,
         name,
         phone: nullable(fdString(fd, "phone")),
         email: nullable(fdString(fd, "email")),
         info: nullable(fdString(fd, "info")),
-      },
-      {
-        onSuccess: () => {
-          form.reset()
-          setIsAdding(false)
-        },
-      },
-    )
+      })
+      setIsAdding(false)
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
+    }
   }
 
-  const handleSave = (c: Contact) => (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
+  const handleSave = (c: Contact) => async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
     if (!name) return
-    updateMutation.mutate(
-      {
+    try {
+      await updateMutation.mutateAsync({
         id: c.id,
         property_id,
         name,
         phone: nullable(fdString(fd, "phone")),
         email: nullable(fdString(fd, "email")),
         info: nullable(fdString(fd, "info")),
-      },
-      {
-        onSuccess: () => {
-          setEditingId(null)
-        },
-      },
-    )
+      })
+      setEditingId(null)
+    } catch {
+      /* surfaced via useMutationsStatus lastError */
+    }
   }
 
   const handleDelete = (c: Contact) => {
@@ -138,11 +115,7 @@ export default function PropertyContacts() {
 
   return (
     <div className={section.column}>
-      {lastError && (
-        <ValidationMessage role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       <ContactListView
         contacts={contacts}

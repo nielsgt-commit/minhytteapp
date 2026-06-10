@@ -1,5 +1,4 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { Suspense } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Outlet, useLocation } from "@tanstack/react-router"
 import { Card, Heading, Paragraph } from "@digdir/designsystemet-react"
@@ -8,6 +7,7 @@ import styles from "./ManageProperty.module.css"
 import { SideNav } from "@/components/shared/SideNav"
 import { GroupTabs } from "@/components/shared/GroupTabs"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 import { useTRPC } from "@/trpc/trpc.ts"
 
@@ -131,38 +131,7 @@ function RouteBanner({ pathname }: { pathname: string }) {
   )
 }
 
-const DESKTOP_GROUPS = [
-  {
-    label: "Property",
-    items: [
-      { to: "/administrer/info", label: "Info" },
-      { to: "/administrer/kontakter", label: "Contacts" },
-      { to: "/administrer/eierskap", label: "Ownership" },
-      { to: "/administrer/bygninger", label: "Structures" },
-      { to: "/administrer/infrastruktur", label: "Infrastructure" },
-      { to: "/administrer/utstyr", label: "Equipment" },
-    ],
-  },
-  {
-    label: "People",
-    items: [
-      { to: "/administrer/brukere", label: "Users" },
-      { to: "/administrer/brukergrupper", label: "User groups" },
-      { to: "/administrer/invitasjoner", label: "Invites" },
-    ],
-  },
-  {
-    label: "Policies",
-    items: [
-      { to: "/administrer/fordelingspolicy", label: "Split policy" },
-      { to: "/administrer/prioritet", label: "Priority weeks" },
-      { to: "/administrer/utgiftskategorier", label: "Expense categories" },
-      { to: "/administrer/innstillinger", label: "Settings" },
-    ],
-  },
-] as const
-
-const MOBILE_GROUPS = [
+const NAV_GROUPS = [
   {
     label: "Property",
     items: [
@@ -265,11 +234,11 @@ export function ManageProperty() {
         <div className={styles.desktopNav}>
           <SideNav
             ariaLabel={t("Property sections")}
-            groups={translateGroups(DESKTOP_GROUPS)}
+            groups={translateGroups(NAV_GROUPS)}
           />
         </div>
         <div className={styles.mobileNav}>
-          <GroupTabs groups={translateGroups(MOBILE_GROUPS)} />
+          <GroupTabs groups={translateGroups(NAV_GROUPS)} />
         </div>
         <div className={styles.content}>
           <RouteBanner pathname={pathname} />
@@ -278,9 +247,9 @@ export function ManageProperty() {
               {selectedProperty.name}
             </Heading>
           )}
-          <Suspense fallback={<Paragraph>{t("Loading…")}</Paragraph>}>
+          <QueryBoundary>
             <Outlet />
-          </Suspense>
+          </QueryBoundary>
         </div>
       </div>
     </section>

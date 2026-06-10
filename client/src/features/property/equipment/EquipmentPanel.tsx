@@ -7,7 +7,6 @@ import {
   List,
   Paragraph,
   Textfield,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -18,6 +17,7 @@ import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import section from "@/features/property/managePropertySection.module.css"
 import styles from "./EquipmentPanel.module.css"
 
@@ -221,11 +221,7 @@ export function EquipmentPanel({ propertyId }: Props) {
 
   return (
     <div className={section.column}>
-      {lastError && (
-        <ValidationMessage>
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       <List.Unordered className={styles.list}>
         {canEdit && (

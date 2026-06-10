@@ -12,7 +12,7 @@ describe("ContactAddForm", () => {
     render(
       <ContactAddForm
         createPending={false}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onCancel={() => {}}
       />,
     )
@@ -30,7 +30,7 @@ describe("ContactAddForm", () => {
     render(
       <ContactAddForm
         createPending={false}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onCancel={() => {}}
       />,
     )
@@ -42,7 +42,7 @@ describe("ContactAddForm", () => {
     render(
       <ContactAddForm
         createPending={true}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onCancel={() => {}}
       />,
     )
@@ -57,7 +57,7 @@ describe("ContactAddForm", () => {
     render(
       <ContactAddForm
         createPending={false}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onCancel={onCancel}
       />,
     )
@@ -65,10 +65,8 @@ describe("ContactAddForm", () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
-  test("submitting the form invokes onSubmit", async () => {
-    const onSubmit = vi.fn((e: React.SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-    })
+  test("submitting the form invokes onSubmit with the form data", async () => {
+    const onSubmit = vi.fn(async (_fd: FormData) => {})
     const user = userEvent.setup()
     render(
       <ContactAddForm
@@ -80,5 +78,7 @@ describe("ContactAddForm", () => {
     await user.type(screen.getByLabelText("Name"), "Caretaker")
     await user.click(screen.getByRole("button", { name: "Add contact" }))
     expect(onSubmit).toHaveBeenCalledTimes(1)
+    const fd = onSubmit.mock.calls[0]?.[0]
+    expect(fd.get("name")).toBe("Caretaker")
   })
 })

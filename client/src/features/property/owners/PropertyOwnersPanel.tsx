@@ -1,7 +1,7 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Paragraph, Tag, ValidationMessage } from "@digdir/designsystemet-react"
+import { Paragraph, Tag } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber } from "@/utils/formData"
@@ -9,6 +9,7 @@ import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import {
   ownerLabel,
   ownershipOffBy,
@@ -171,11 +172,7 @@ export function PropertyOwnersPanel() {
         )}
       </Paragraph>
 
-      {lastError && (
-        <ValidationMessage>
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       {adding.value ? (
         <OwnerAddForm

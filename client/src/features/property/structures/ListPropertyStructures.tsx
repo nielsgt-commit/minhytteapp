@@ -1,11 +1,6 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -14,13 +9,16 @@ import {
   List,
   Paragraph,
   Textfield,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { BedIcon, WrenchIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { InlineEditField } from "@/components/shared/InlineEditField"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdNumber } from "@/utils/formData"
 import section from "@/features/property/managePropertySection.module.css"
 import { AddStructureFlow } from "@/features/property/structures/AddStructureFlow.tsx"
@@ -45,7 +43,6 @@ type OpenForm =
 export function ListPropertyStructures() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const canEdit = useCanEdit()
 
   const selectedPropertyId = useSelectedPropertyId()
@@ -66,31 +63,28 @@ export function ListPropertyStructures() {
     ),
   )
 
-  const invalidateStructures = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.structure.listForProperty.queryKey(),
-    })
-  }
-  const invalidateRooms = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.room.listForProperty.queryKey(),
-    })
-  }
+  const structureKeys = [trpc.structure.listForProperty.queryKey()]
+  const roomKeys = [trpc.room.listForProperty.queryKey()]
 
-  const updateStructure = useMutation(
-    trpc.structure.update.mutationOptions({ onSuccess: invalidateStructures }),
+  const updateStructure = useMutationWithInvalidation(
+    trpc.structure.update.mutationOptions(),
+    structureKeys,
   )
-  const deleteStructure = useMutation(
-    trpc.structure.delete.mutationOptions({ onSuccess: invalidateStructures }),
+  const deleteStructure = useMutationWithInvalidation(
+    trpc.structure.delete.mutationOptions(),
+    structureKeys,
   )
-  const createRoom = useMutation(
-    trpc.room.create.mutationOptions({ onSuccess: invalidateRooms }),
+  const createRoom = useMutationWithInvalidation(
+    trpc.room.create.mutationOptions(),
+    roomKeys,
   )
-  const updateRoom = useMutation(
-    trpc.room.update.mutationOptions({ onSuccess: invalidateRooms }),
+  const updateRoom = useMutationWithInvalidation(
+    trpc.room.update.mutationOptions(),
+    roomKeys,
   )
-  const deleteRoom = useMutation(
-    trpc.room.delete.mutationOptions({ onSuccess: invalidateRooms }),
+  const deleteRoom = useMutationWithInvalidation(
+    trpc.room.delete.mutationOptions(),
+    roomKeys,
   )
 
   const [openForm, setOpenForm] = useState<OpenForm>(null)
@@ -110,18 +104,13 @@ export function ListPropertyStructures() {
     roomsByStructure.set(r.structure_id, list)
   }
 
-  const lastError =
-    updateStructure.error ??
-    deleteStructure.error ??
-    createRoom.error ??
-    updateRoom.error ??
-    deleteRoom.error
-  const pending =
-    updateStructure.isPending ||
-    deleteStructure.isPending ||
-    createRoom.isPending ||
-    updateRoom.isPending ||
-    deleteRoom.isPending
+  const { pending, error: lastError } = useMutationsStatus(
+    updateStructure,
+    deleteStructure,
+    createRoom,
+    updateRoom,
+    deleteRoom,
+  )
 
   const toggleAddRoom = (structureId: number) => {
     setOpenForm(v =>
@@ -284,11 +273,7 @@ export function ListPropertyStructures() {
 
   return (
     <div className={section.column}>
-      {lastError && (
-        <ValidationMessage>
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       <List.Unordered className={styles.list}>
         {canEdit && (
@@ -386,9 +371,7 @@ export function ListPropertyStructures() {
                           b.built_year ?? "",
                         )}`}
                         className={styles.builtYearForm}
-                        onSubmit={e => {
-                          e.preventDefault()
-                          const fd = new FormData(e.currentTarget)
+                        action={(fd: FormData) => {
                           const raw = fdNumber(fd, "built_year")
                           handleBuiltYearSave(
                             b,
@@ -408,14 +391,9 @@ export function ListPropertyStructures() {
                           disabled={pending}
                           className={styles.builtYearInput}
                         />
-                        <Button
-                          type="submit"
-                          variant="secondary"
-                          data-size="sm"
-                          disabled={pending}
-                        >
+                        <SubmitButton disabled={pending}>
                           {t("Save")}
-                        </Button>
+                        </SubmitButton>
                       </form>
 
                       <Divider />

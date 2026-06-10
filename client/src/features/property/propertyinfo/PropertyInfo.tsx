@@ -1,26 +1,25 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { Suspense, type SyntheticEvent, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useState } from "react"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
   Fieldset,
   Paragraph,
   Textfield,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import {
   AddressLookup,
   type GeonorgeAddress,
 } from "@/features/property/register/AddressLookup"
-import PropertyEvents from "@/features/dashboard/propertyevents/PropertyEvents.tsx"
+import { PropertyEvents } from "@/features/dashboard/propertyevents/PropertyEvents.tsx"
 import styles from "./PropertyInfo.module.css"
 
 type MatrikkelDraft = {
@@ -51,10 +50,9 @@ function draftFromAddress(a: GeonorgeAddress): MatrikkelDraft {
   }
 }
 
-export default function PropertyInfo() {
+export function PropertyInfo() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const selectedPropertyId = useSelectedPropertyId()
 
@@ -62,12 +60,9 @@ export default function PropertyInfo() {
     trpc.property.mine.queryOptions(),
   )
 
-  const updateProperty = useMutation(
-    trpc.property.update.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
-      },
-    }),
+  const updateProperty = useMutationWithInvalidation(
+    trpc.property.update.mutationOptions(),
+    [trpc.property.mine.queryKey()],
   )
 
   const [isEditing, setIsEditing] = useState(false)
@@ -89,10 +84,7 @@ export default function PropertyInfo() {
     )
   }
 
-  const handleSavePropertyInfo = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
+  const handleSavePropertyInfo = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
     if (!name) return
     const address = (draft?.address ?? selectedProperty.address).trim()
@@ -101,8 +93,8 @@ export default function PropertyInfo() {
     const familySinceNum = familySinceRaw === "" ? null : Number(familySinceRaw)
     const parkingRaw = fdString(fd, "parking_spots").trim()
     const parkingNum = parkingRaw === "" ? 0 : Number(parkingRaw)
-    updateProperty.mutate(
-      {
+    try {
+      await updateProperty.mutateAsync({
         id: selectedProperty.id,
         name,
         address,
@@ -117,14 +109,12 @@ export default function PropertyInfo() {
         bruksnummer: draft?.bruksnummer ?? selectedProperty.bruksnummer,
         festenummer: draft?.festenummer ?? selectedProperty.festenummer,
         undernummer: draft?.undernummer ?? selectedProperty.undernummer,
-      },
-      {
-        onSuccess: () => {
-          setIsEditing(false)
-          setDraft(null)
-        },
-      },
-    )
+      })
+      setIsEditing(false)
+      setDraft(null)
+    } catch {
+      /* surfaced via ErrorAlert below */
+    }
   }
 
   const hasMatrikkel =
@@ -138,14 +128,8 @@ export default function PropertyInfo() {
     return (
       <Card>
         <Card.Block>
-          {updateProperty.error && (
-            <ValidationMessage>
-              {t("Error: {{message}}", {
-                message: updateProperty.error.message,
-              })}
-            </ValidationMessage>
-          )}
-          <form onSubmit={handleSavePropertyInfo}>
+          <ErrorAlert error={updateProperty.error} />
+          <form action={handleSavePropertyInfo}>
             <Fieldset>
               <Fieldset.Legend>{t("Edit property")}</Fieldset.Legend>
               <div>
@@ -200,9 +184,7 @@ export default function PropertyInfo() {
                 />
               </div>
               <div>
-                <Button type="submit" disabled={updateProperty.isPending}>
-                  {t("Save")}
-                </Button>
+                <SubmitButton>{t("Save")}</SubmitButton>
                 <Button
                   type="button"
                   variant="secondary"
@@ -290,9 +272,9 @@ export default function PropertyInfo() {
           {showHistory ? t("Hide history") : t("Show history")}
         </Button>
         {showHistory && (
-          <Suspense fallback={<Paragraph>{t("Loading…")}</Paragraph>}>
+          <QueryBoundary>
             <PropertyEvents />
-          </Suspense>
+          </QueryBoundary>
         )}
       </Card.Block>
     </Card>

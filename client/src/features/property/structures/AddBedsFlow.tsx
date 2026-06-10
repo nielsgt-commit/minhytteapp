@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import {
   Button,
   Chip,
@@ -7,6 +7,7 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import styles from "./AddBedsFlow.module.css"
 
 type BedKey =
@@ -99,8 +100,10 @@ export function AddBedsFlow({
     setLastAddedKey(prev => (prev === key ? null : prev))
   }
 
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  // All fields stay controlled (the bed list is live-reactive, and the name
+  // must survive the action finishing while the parent's mutation is pending),
+  // so the action ignores its FormData.
+  const handleSubmit = () => {
     const trimmed = name.trim()
     if (!trimmed) return
     onSubmit({
@@ -115,7 +118,7 @@ export function AddBedsFlow({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={handleSubmit}>
       <Fieldset>
         <Fieldset.Legend>{legend}</Fieldset.Legend>
         <div className={styles.body}>
@@ -186,9 +189,7 @@ export function AddBedsFlow({
           )}
 
           <div className={styles.actions}>
-            <Button type="submit" disabled={pending}>
-              {submitLabel}
-            </Button>
+            <SubmitButton disabled={pending}>{submitLabel}</SubmitButton>
             <Button
               type="button"
               variant="tertiary"

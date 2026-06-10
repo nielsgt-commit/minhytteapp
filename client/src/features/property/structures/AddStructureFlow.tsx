@@ -1,14 +1,12 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { type SyntheticEvent } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdNumber, fdString } from "@/utils/formData"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import styles from "./AddStructureFlow.module.css"
 
 type Props = {
@@ -19,7 +17,6 @@ type Props = {
 export function AddStructureFlow({ onAdded, onCancel }: Props) {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const selectedPropertyId = useSelectedPropertyId()
 
@@ -27,36 +24,29 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
     trpc.property.mine.queryOptions(),
   )
 
-  const invalidateStructures = () => {
-    void qc.invalidateQueries({
-      queryKey: trpc.structure.listForProperty.queryKey(),
-    })
-  }
-
-  const createStructure = useMutation(
-    trpc.structure.create.mutationOptions({ onSuccess: invalidateStructures }),
+  const createStructure = useMutationWithInvalidation(
+    trpc.structure.create.mutationOptions(),
+    [trpc.structure.listForProperty.queryKey()],
   )
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId)
 
-  const handleAddStructure = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleAddStructure = async (fd: FormData) => {
     if (!selectedProperty) return
-    const form = e.currentTarget
-    const fd = new FormData(form)
     const name = fdString(fd, "name").trim()
     if (!name) return
     const yearRaw = fdNumber(fd, "built_year")
     const built_year = Number.isFinite(yearRaw) ? yearRaw : undefined
-    createStructure.mutate(
-      { name, property_id: selectedProperty.id, built_year },
-      {
-        onSuccess: () => {
-          form.reset()
-          onAdded?.()
-        },
-      },
-    )
+    try {
+      await createStructure.mutateAsync({
+        name,
+        property_id: selectedProperty.id,
+        built_year,
+      })
+      onAdded?.()
+    } catch {
+      /* surfaced via ErrorAlert below */
+    }
   }
 
   if (!selectedProperty) {
@@ -65,13 +55,9 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
 
   return (
     <>
-      {createStructure.error && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: createStructure.error.message })}
-        </p>
-      )}
+      <ErrorAlert error={createStructure.error} />
 
-      <form onSubmit={handleAddStructure} className={styles.form}>
+      <form action={handleAddStructure} className={styles.form}>
         <Textfield
           label={t("Name")}
           name="name"
@@ -90,9 +76,7 @@ export function AddStructureFlow({ onAdded, onCancel }: Props) {
           disabled={createStructure.isPending}
         />
         <div className={styles.actions}>
-          <Button type="submit" disabled={createStructure.isPending}>
-            {t("Add structure")}
-          </Button>
+          <SubmitButton>{t("Add structure")}</SubmitButton>
           {onCancel && (
             <Button
               type="button"

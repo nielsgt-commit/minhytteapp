@@ -6,16 +6,17 @@ import {
   List,
   Paragraph,
   Textfield,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import section from "@/features/property/managePropertySection.module.css"
 import styles from "./InfrastructurePanel.module.css"
 
@@ -69,14 +70,11 @@ export function InfrastructurePanel({ propertyId }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const adding = useToggleState()
 
-  const lastError =
-    createInfrastructure.error ??
-    updateInfrastructure.error ??
-    deleteInfrastructure.error
-  const pending =
-    createInfrastructure.isPending ||
-    updateInfrastructure.isPending ||
-    deleteInfrastructure.isPending
+  const { pending, error: lastError } = useMutationsStatus(
+    createInfrastructure,
+    updateInfrastructure,
+    deleteInfrastructure,
+  )
 
   const handleAdd = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
@@ -183,11 +181,7 @@ export function InfrastructurePanel({ propertyId }: Props) {
 
   return (
     <div className={section.column}>
-      {lastError && (
-        <ValidationMessage>
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       <List.Unordered className={styles.list}>
         {canEdit && (

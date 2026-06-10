@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import {
   useMutation,
   useQueryClient,
@@ -20,6 +20,8 @@ import {
   useSetSelectedPropertyId,
 } from "@/selection/useSelection"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 
 export function DeletePropertyFlow() {
   const { t } = useTranslation("property")
@@ -65,8 +67,9 @@ export function DeletePropertyFlow() {
     setCascade(false)
   }
 
-  const handleDelete = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  // Confirmation fields are controlled on purpose: the submit gate reacts
+  // live to the typed name and checkboxes.
+  const handleDelete = () => {
     if (!canDelete) return
     deleteProperty.mutate(
       { id: selectedProperty.id, cascade },
@@ -111,7 +114,7 @@ export function DeletePropertyFlow() {
         />
       </ValidationMessage>
 
-      <form onSubmit={handleDelete}>
+      <form action={handleDelete}>
         <Fieldset>
           <Fieldset.Legend>{t("Confirm deletion")}</Fieldset.Legend>
 
@@ -161,11 +164,11 @@ export function DeletePropertyFlow() {
           </div>
 
           <div>
-            <Button type="submit" disabled={!canDelete}>
+            <SubmitButton disabled={!canDelete}>
               {t("Permanently delete {{name}}", {
                 name: selectedProperty.name,
               })}
-            </Button>
+            </SubmitButton>
             <Button
               type="button"
               onClick={reset}
@@ -175,13 +178,7 @@ export function DeletePropertyFlow() {
             </Button>
           </div>
 
-          {deleteProperty.error && (
-            <ValidationMessage role="alert">
-              {t("Error: {{message}}", {
-                message: deleteProperty.error.message,
-              })}
-            </ValidationMessage>
-          )}
+          <ErrorAlert error={deleteProperty.error} />
         </Fieldset>
       </form>
     </div>

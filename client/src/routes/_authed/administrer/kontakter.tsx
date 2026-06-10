@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
-import PropertyContacts from "@/features/property/propertyinfo/PropertyContacts"
+import { PropertyContacts } from "@/features/property/propertyinfo/PropertyContacts"
 import { trpc } from "@/trpc/client"
 
 export const Route = createFileRoute("/_authed/administrer/kontakter")({

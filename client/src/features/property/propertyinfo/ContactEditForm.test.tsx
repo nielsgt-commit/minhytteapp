@@ -17,9 +17,7 @@ const contact = {
 }
 
 const noop = () => {}
-const preventDefault = (e: React.SyntheticEvent<HTMLFormElement>) => {
-  e.preventDefault()
-}
+const noopSubmit = async () => {}
 
 describe("ContactEditForm", () => {
   test("pre-fills inputs from the contact prop", () => {
@@ -28,7 +26,7 @@ describe("ContactEditForm", () => {
         contact={contact}
         pending={false}
         updatePending={false}
-        onSubmit={preventDefault}
+        onSubmit={noopSubmit}
         onDelete={noop}
         onCancel={noop}
       />,
@@ -45,7 +43,7 @@ describe("ContactEditForm", () => {
         contact={{ ...contact, phone: null, email: null, info: null }}
         pending={false}
         updatePending={false}
-        onSubmit={preventDefault}
+        onSubmit={noopSubmit}
         onDelete={noop}
         onCancel={noop}
       />,
@@ -63,7 +61,7 @@ describe("ContactEditForm", () => {
         contact={contact}
         pending={false}
         updatePending={false}
-        onSubmit={preventDefault}
+        onSubmit={noopSubmit}
         onDelete={onDelete}
         onCancel={onCancel}
       />,
@@ -80,7 +78,7 @@ describe("ContactEditForm", () => {
         contact={contact}
         pending={true}
         updatePending={false}
-        onSubmit={preventDefault}
+        onSubmit={noopSubmit}
         onDelete={noop}
         onCancel={noop}
       />,

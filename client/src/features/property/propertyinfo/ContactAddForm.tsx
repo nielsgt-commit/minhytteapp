@@ -1,4 +1,3 @@
-import { type SyntheticEvent } from "react"
 import {
   Button,
   Fieldset,
@@ -6,11 +5,12 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import styles from "./ContactAddForm.module.css"
 
 type Props = {
   createPending: boolean
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onSubmit: (fd: FormData) => Promise<void>
   onCancel: () => void
 }
 
@@ -19,7 +19,7 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
   return (
     <>
       <Paragraph data-weight="medium">{t("Add contact")}</Paragraph>
-      <form onSubmit={onSubmit} className={styles.form}>
+      <form action={onSubmit} className={styles.form}>
         <Fieldset>
           <Fieldset.Legend>{t("New contact")}</Fieldset.Legend>
           <Textfield
@@ -53,9 +53,9 @@ export function ContactAddForm({ createPending, onSubmit, onCancel }: Props) {
             disabled={createPending}
           />
           <div className={styles.actions}>
-            <Button type="submit" disabled={createPending}>
+            <SubmitButton disabled={createPending}>
               {t("Add contact")}
-            </Button>
+            </SubmitButton>
             <Button
               type="button"
               variant="tertiary"
