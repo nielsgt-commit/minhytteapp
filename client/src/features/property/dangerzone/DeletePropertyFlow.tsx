@@ -1,4 +1,3 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { type SyntheticEvent, useState } from "react"
 import {
   useMutation,
@@ -16,15 +15,17 @@ import {
   ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
-import { useAppDispatch } from "@/app/hooks.ts"
-import { setSelectedPropertyId } from "@/features/property/propertySlice.ts"
+import {
+  useSelectedPropertyId,
+  useSetSelectedPropertyId,
+} from "@/selection/useSelection"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export function DeletePropertyFlow() {
   const { t } = useTranslation("property")
   const trpc = useTRPC()
   const qc = useQueryClient()
-  const dispatch = useAppDispatch()
+  const setSelectedPropertyId = useSetSelectedPropertyId()
 
   const selectedPropertyId = useSelectedPropertyId()
 
@@ -34,9 +35,11 @@ export function DeletePropertyFlow() {
 
   const deleteProperty = useMutation(
     trpc.property.delete.mutationOptions({
-      onSuccess: () => {
-        dispatch(setSelectedPropertyId(null))
-        void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
+      onSuccess: async () => {
+        // Refresh the property list before clearing the selection so the
+        // navigation's beforeLoad re-defaults from the fresh list.
+        await qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
+        await setSelectedPropertyId(null, { replace: true })
       },
     }),
   )

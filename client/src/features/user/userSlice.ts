@@ -1,6 +1,5 @@
 import type { PayloadAction } from "@reduxjs/toolkit"
 import { createAppSlice } from "@/app/createAppSlice"
-import { useAppSelector } from "@/app/hooks"
 
 export type UserSliceState = {
   /** Current "acting as" identity chosen in the header user menu; used as booker/actor id for bookings, maintenance actions, and to scope property/group queries. */
@@ -27,8 +26,12 @@ export const userSlice = createAppSlice({
   },
 })
 
+// Action creators/selectors remain only so the store keeps compiling until
+// the Redux teardown wave; the URL search params are now authoritative.
 export const { reset: resetUser, setSelectedUserId } = userSlice.actions
 
 export const { selectSelectedUserId } = userSlice.selectors
 
-export const useSelectedUserId = () => useAppSelector(selectSelectedUserId)
+// The selected user id now lives in the URL (?user=). Re-exported here so
+// existing readers keep working until imports are migrated.
+export { useSelectedUserId } from "@/selection/useSelection"

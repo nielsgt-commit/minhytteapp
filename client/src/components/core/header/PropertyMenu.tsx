@@ -1,10 +1,11 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppDispatch } from "@/app/hooks"
-import { setSelectedPropertyId } from "@/features/property/propertySlice"
+import {
+  useSelectedPropertyId,
+  useSetSelectedPropertyId,
+} from "@/selection/useSelection"
 import { useAuthSession } from "@/auth/auth-client"
 import PropertySwitcher from "./PropertySwitcher.tsx"
 import styles from "./Header.module.css"
@@ -19,7 +20,7 @@ export default function PropertyMenu() {
     }),
   )
   const selectedId = useSelectedPropertyId()
-  const dispatch = useAppDispatch()
+  const setSelectedPropertyId = useSetSelectedPropertyId()
   const navigate = useNavigate()
 
   const list = useMemo(() => properties ?? [], [properties])
@@ -28,9 +29,9 @@ export default function PropertyMenu() {
     if (list.length === 0) return
     const stillExists = list.some(p => p.id === selectedId)
     if (!stillExists) {
-      dispatch(setSelectedPropertyId(list[0].id))
+      void setSelectedPropertyId(list[0].id, { replace: true })
     }
-  }, [list, selectedId, dispatch])
+  }, [list, selectedId, setSelectedPropertyId])
 
   const [isAddOpen, setIsAddOpen] = useState(false)
 
@@ -38,7 +39,7 @@ export default function PropertyMenu() {
     trpc.property.create.mutationOptions({
       onSuccess: created => {
         void qc.invalidateQueries({ queryKey: trpc.property.mine.queryKey() })
-        dispatch(setSelectedPropertyId(created.id))
+        void setSelectedPropertyId(created.id)
         setIsAddOpen(false)
       },
     }),
@@ -54,7 +55,7 @@ export default function PropertyMenu() {
         properties={list}
         value={selectedId}
         onChange={id => {
-          dispatch(setSelectedPropertyId(id))
+          void setSelectedPropertyId(id)
         }}
         isAddOpen={isAddOpen}
         onAddOpenChange={setIsAddOpen}

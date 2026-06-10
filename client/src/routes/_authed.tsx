@@ -4,9 +4,6 @@ import {
   redirect,
   retainSearchParams,
 } from "@tanstack/react-router"
-import { store } from "@/app/store"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
-import { selectSelectedUserId } from "@/features/user/userSlice"
 import { selectionSearchSchema } from "@/selection/searchSchema"
 import { getSession } from "@/auth/auth-client"
 import { trpc } from "@/trpc/client"
@@ -17,7 +14,7 @@ export const Route = createFileRoute("/_authed")({
   search: {
     middlewares: [retainSearchParams(["property", "user"])],
   },
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, search, location }) => {
     const session = await context.queryClient.ensureQueryData({
       queryKey: ["auth", "session"],
       queryFn: () => getSession().then(r => r.data),
@@ -43,10 +40,32 @@ export const Route = createFileRoute("/_authed")({
       // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw redirect({ to: "/onboarding" })
     }
-    const state = store.getState()
+    // Default MISSING selection params from the same sources the header
+    // menus select from (PropertyMenu → property.mine, UserMenu → user.me).
+    // Never override a param that is already present — overriding would race
+    // with e.g. create-property navigating to the new id.
+    if (search.property == null || search.user == null) {
+      let property = search.property
+      let user = search.user
+      if (property == null) {
+        const properties = await context.queryClient
+          .ensureQueryData(trpc.property.mine.queryOptions())
+          .catch(() => null)
+        property = properties?.[0]?.id
+      }
+      user ??= me?.id
+      if (property !== search.property || user !== search.user) {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw redirect({
+          to: location.pathname,
+          search: { ...search, property, user },
+          replace: true,
+        })
+      }
+    }
     return {
-      selectedUserId: selectSelectedUserId(state),
-      selectedPropertyId: selectSelectedPropertyId(state),
+      selectedUserId: search.user ?? null,
+      selectedPropertyId: search.property ?? null,
     }
   },
   component: AuthedShell,

@@ -3,8 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { useAppSelector } from "@/app/hooks.ts"
-import { selectSelectedUserId } from "@/features/user/userSlice.ts"
+import { useSelectedUserId } from "@/selection/useSelection"
 import { useFlatpickr } from "../hooks/useFlatpickr.ts"
 import { useBookingForm } from "../hooks/useBookingForm.ts"
 import { useOccupancyData } from "../hooks/useOccupancyData.ts"
@@ -32,7 +31,7 @@ function isoWeekMonday(year: number, week: number): Date {
 export function AddStayFlow({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("planstay")
   const trpc = useTRPC()
-  const selectedUserId = useAppSelector(selectSelectedUserId)
+  const selectedUserId = useSelectedUserId()
 
   const { data: users } = useSuspenseQuery(
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),

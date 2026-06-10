@@ -1,4 +1,3 @@
-import { useSelectedUserId } from "@/features/user/userSlice"
 import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -6,8 +5,10 @@ import { Avatar, Divider, Dropdown, Tag } from "@digdir/designsystemet-react"
 import { ChevronDownIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
-import { useAppDispatch } from "@/app/hooks"
-import { setSelectedUserId } from "@/features/user/userSlice"
+import {
+  useSelectedUserId,
+  useSetSelectedUserId,
+} from "@/selection/useSelection"
 import { signOut, useAuthSession } from "@/auth/auth-client"
 import CheckIn from "./CheckIn"
 import ColorSchemeToggle from "./ColorSchemeToggle"
@@ -37,7 +38,7 @@ export default function UserMenu({ showCheckIn = true }: Props) {
     trpc.userGroup.listWithMembers.queryOptions(),
   )
   const selectedId = useSelectedUserId()
-  const dispatch = useAppDispatch()
+  const setSelectedUserId = useSetSelectedUserId()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -52,9 +53,9 @@ export default function UserMenu({ showCheckIn = true }: Props) {
     if (list.length === 0) return
     const stillExists = list.some(u => u.id === selectedId)
     if (!stillExists) {
-      dispatch(setSelectedUserId(list[0].id))
+      void setSelectedUserId(list[0].id, { replace: true })
     }
-  }, [list, selectedId, dispatch])
+  }, [list, selectedId, setSelectedUserId])
 
   if (!auth.user) return null
 

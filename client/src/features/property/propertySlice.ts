@@ -1,6 +1,5 @@
 import type { PayloadAction } from "@reduxjs/toolkit"
 import { createAppSlice } from "@/app/createAppSlice"
-import { useAppSelector } from "@/app/hooks"
 
 export type PropertySliceState = {
   selectedPropertyId: number | null
@@ -26,10 +25,13 @@ export const propertySlice = createAppSlice({
   },
 })
 
+// Action creators/selectors remain only so the store keeps compiling until
+// the Redux teardown wave; the URL search params are now authoritative.
 export const { reset: resetProperty, setSelectedPropertyId } =
   propertySlice.actions
 
 export const { selectSelectedPropertyId } = propertySlice.selectors
 
-export const useSelectedPropertyId = () =>
-  useAppSelector(selectSelectedPropertyId)
+// The selected property id now lives in the URL (?property=). Re-exported
+// here so existing readers keep working until imports are migrated.
+export { useSelectedPropertyId } from "@/selection/useSelection"
