@@ -368,7 +368,11 @@ export const userGroupRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGroupBelongsToProperty(ctx, input.user_group_id, input.property_id)
+      await assertGroupBelongsToProperty(
+        ctx,
+        input.user_group_id,
+        input.property_id,
+      )
       const [created] = await ctx.db
         .insert(userGroupMembersTable)
         .values({
@@ -387,7 +391,11 @@ export const userGroupRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGroupBelongsToProperty(ctx, input.user_group_id, input.property_id)
+      await assertGroupBelongsToProperty(
+        ctx,
+        input.user_group_id,
+        input.property_id,
+      )
       const [deleted] = await ctx.db
         .delete(userGroupMembersTable)
         .where(

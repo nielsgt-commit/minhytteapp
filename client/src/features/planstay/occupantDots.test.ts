@@ -9,7 +9,9 @@ const groups = [
   { id: 99, is_family: false, members: [{ user_id: 4 }] },
 ]
 
-function booking(over: Partial<Parameters<typeof buildOccupantDots>[0][number]>) {
+function booking(
+  over: Partial<Parameters<typeof buildOccupantDots>[0][number]>,
+) {
   return {
     id: 1,
     status: "confirmed",
@@ -50,7 +52,11 @@ describe("buildOccupantDots", () => {
             { user_id: 2, queued: true },
           ],
         }),
-        booking({ id: 2, status: "cancelled", occupants: [{ user_id: 3, queued: false }] }),
+        booking({
+          id: 2,
+          status: "cancelled",
+          occupants: [{ user_id: 3, queued: false }],
+        }),
       ],
       groups,
     )

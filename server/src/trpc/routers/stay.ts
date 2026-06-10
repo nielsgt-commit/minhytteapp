@@ -146,7 +146,10 @@ export const stayRouter = router({
               bookingOccupantsTable,
               eq(bookingOccupantsTable.booking_id, bookingTable.id),
             )
-            .leftJoin(roomTable, eq(roomTable.id, bookingOccupantsTable.room_id))
+            .leftJoin(
+              roomTable,
+              eq(roomTable.id, bookingOccupantsTable.room_id),
+            )
             .leftJoin(
               structuresTable,
               eq(structuresTable.id, roomTable.structure_id),

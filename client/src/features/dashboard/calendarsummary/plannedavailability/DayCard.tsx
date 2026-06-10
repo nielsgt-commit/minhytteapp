@@ -73,8 +73,8 @@ export default function DayCard({
             <Badge.Position placement="top-right">
               <Badge data-color="warning" />
               <span>
-                <strong>{weekdayT[weekdayLabel]}</strong>{" "}
-                {pad2(date.getDate())}/{pad2(date.getMonth() + 1)}
+                <strong>{weekdayT[weekdayLabel]}</strong> {pad2(date.getDate())}
+                /{pad2(date.getMonth() + 1)}
                 {showTodayLabel && ` · ${t("Today")}`}
               </span>
             </Badge.Position>

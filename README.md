@@ -1,7 +1,7 @@
 # minhytteapp
 
 Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via Drizzle ORM.
-**Live on minhytte.app** 
+**Live on minhytte.app**
 
 ---
 

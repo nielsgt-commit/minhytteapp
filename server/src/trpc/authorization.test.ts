@@ -103,17 +103,44 @@ afterAll(async () => {
 describe("property-scoped read endpoints reject non-members (IDOR)", () => {
   const readEndpoints: [
     string,
-    (c: ReturnType<typeof createCaller>, propertyId: number) => Promise<unknown>,
+    (
+      c: ReturnType<typeof createCaller>,
+      propertyId: number,
+    ) => Promise<unknown>,
   ][] = [
-    ["expense.listForProperty", (c, id) => c.expense.listForProperty({ property_id: id })],
-    ["settlement.listForProperty", (c, id) => c.settlement.listForProperty({ property_id: id })],
-    ["propertySplitPolicy.listForProperty", (c, id) => c.propertySplitPolicy.listForProperty({ property_id: id })],
-    ["booking.listForProperty", (c, id) => c.booking.listForProperty({ property_id: id })],
+    [
+      "expense.listForProperty",
+      (c, id) => c.expense.listForProperty({ property_id: id }),
+    ],
+    [
+      "settlement.listForProperty",
+      (c, id) => c.settlement.listForProperty({ property_id: id }),
+    ],
+    [
+      "propertySplitPolicy.listForProperty",
+      (c, id) => c.propertySplitPolicy.listForProperty({ property_id: id }),
+    ],
+    [
+      "booking.listForProperty",
+      (c, id) => c.booking.listForProperty({ property_id: id }),
+    ],
     ["event.list", (c, id) => c.event.list({ property_id: id })],
-    ["maintenance.listForProperty", (c, id) => c.maintenance.listForProperty({ property_id: id })],
-    ["inspection.listForProperty", (c, id) => c.inspection.listForProperty({ property_id: id })],
-    ["room.listForProperty", (c, id) => c.room.listForProperty({ property_id: id })],
-    ["structure.listForProperty", (c, id) => c.structure.listForProperty({ property_id: id })],
+    [
+      "maintenance.listForProperty",
+      (c, id) => c.maintenance.listForProperty({ property_id: id }),
+    ],
+    [
+      "inspection.listForProperty",
+      (c, id) => c.inspection.listForProperty({ property_id: id }),
+    ],
+    [
+      "room.listForProperty",
+      (c, id) => c.room.listForProperty({ property_id: id }),
+    ],
+    [
+      "structure.listForProperty",
+      (c, id) => c.structure.listForProperty({ property_id: id }),
+    ],
   ]
 
   it.each(readEndpoints)(
