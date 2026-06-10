@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/selection/useSelection"
 import { Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { InvitesPanel } from "./invites/InvitesPanel.tsx"
 import section from "@/features/property/managePropertySection.module.css"
 
@@ -18,7 +19,9 @@ export function Invites() {
 
   return (
     <div className={section.column}>
-      <InvitesPanel canEdit={canEdit} />
+      <QueryBoundary>
+        <InvitesPanel canEdit={canEdit} />
+      </QueryBoundary>
     </div>
   )
 }

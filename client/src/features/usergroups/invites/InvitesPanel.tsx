@@ -10,7 +10,6 @@ import {
   Select,
   Tag,
   Textfield,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -19,6 +18,8 @@ import { useMutationsStatus } from "@/hooks/useMutationsStatus.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
 import { useToggleState } from "@/hooks/useToggleState.ts"
 import { SubmitButton } from "@/components/shared/SubmitButton"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData.ts"
 
 const GROUP_NONE = ""
@@ -109,14 +110,10 @@ export function InvitesPanel({ canEdit }: InvitesPanelProps) {
             {t("People with these emails can request a sign-in link.")}
           </Paragraph>
 
-          {lastError && (
-            <ValidationMessage role="alert">
-              {t("Error: {{message}}", { message: lastError.message })}
-            </ValidationMessage>
-          )}
+          <ErrorAlert error={lastError} />
 
           {entries.length === 0 ? (
-            <Paragraph>{t("No invites yet.")}</Paragraph>
+            <EmptyState title={t("No invites yet.")} />
           ) : (
             <List.Unordered>
               {entries.map(entry => {

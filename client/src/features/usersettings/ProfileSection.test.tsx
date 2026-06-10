@@ -219,6 +219,6 @@ describe("ProfileSection", () => {
   test("renders an alert when updateName has an error", () => {
     nameState.error = { message: "name oops" }
     render(<ProfileSection me={me} />)
-    expect(screen.getByRole("alert")).toHaveTextContent("Error: name oops")
+    expect(screen.getByRole("alert")).toHaveTextContent("name oops")
   })
 })

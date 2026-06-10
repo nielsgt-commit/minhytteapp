@@ -1,6 +1,6 @@
-import { type SyntheticEvent } from "react"
 import { Button, Label, Select } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { fdString } from "@/utils/formData"
 
 const ADD_USER_SENTINEL = "__add__"
@@ -14,8 +14,8 @@ type AddMemberFormProps = {
   availableUsers: AvailableUser[]
   availableInvites: AvailableInvite[]
   pending: boolean
-  onSubmit: (userId: number, reset: () => void) => void
-  onAddInvite: (inviteId: number, reset: () => void) => void
+  onSubmit: (userId: number) => Promise<void>
+  onAddInvite: (inviteId: number) => Promise<void>
   onSwitchToCreateUser: () => void
   onCancel: () => void
 }
@@ -31,29 +31,23 @@ export function AddMemberForm({
   onCancel,
 }: AddMemberFormProps) {
   const { t } = useTranslation("usergroups")
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
+  const handleSubmit = async (fd: FormData) => {
     const value = fdString(fd, "user_id")
-    const reset = () => {
-      form.reset()
-    }
     if (value === "" || value === ADD_USER_SENTINEL) return
     if (value.startsWith(INVITE_PREFIX)) {
       const inviteId = Number(value.slice(INVITE_PREFIX.length))
       if (!Number.isFinite(inviteId)) return
-      onAddInvite(inviteId, reset)
+      await onAddInvite(inviteId)
       return
     }
     const user_id = Number(value)
     if (!Number.isFinite(user_id)) return
-    onSubmit(user_id, reset)
+    await onSubmit(user_id)
   }
   const hasOptions = availableUsers.length > 0 || availableInvites.length > 0
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={handleSubmit}>
       <fieldset>
         <legend>{t("Add member to {{groupName}}", { groupName })}</legend>
         <div>
@@ -92,9 +86,9 @@ export function AddMemberForm({
           </Label>
         </div>
         <div>
-          <Button type="submit" disabled={pending || !hasOptions}>
+          <SubmitButton disabled={pending || !hasOptions}>
             {t("Save")}
-          </Button>
+          </SubmitButton>
           <Button
             type="button"
             variant="secondary"

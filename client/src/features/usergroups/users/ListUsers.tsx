@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
@@ -9,7 +9,6 @@ import {
   List,
   Paragraph,
   Textfield,
-  ValidationMessage,
 } from "@digdir/designsystemet-react"
 import { ExclamationmarkTriangleFillIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
@@ -19,11 +18,13 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { isSyntheticEmail } from "@/utils/syntheticEmail.ts"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import styles from "./ListUsers.module.css"
 
 type ListUsersProps = {
   canEdit: boolean
-  propertyName: string
 }
 
 export function ListUsers({ canEdit }: ListUsersProps) {
@@ -55,30 +56,24 @@ export function ListUsers({ canEdit }: ListUsersProps) {
     deleteUser,
   )
 
-  const handleSubmit =
-    (userId: number) => (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      const form = e.currentTarget
-      const fd = new FormData(form)
-      const name = fdString(fd, "name").trim()
-      const email = fdString(fd, "email").trim()
-      if (!name || !email) return
-      updateUser.mutate(
-        {
-          id: userId,
-          property_id: propertyId,
-          name,
-          email,
-          is_admin: fdBoolean(fd, "is_admin"),
-          is_child: fdBoolean(fd, "is_child"),
-        },
-        {
-          onSuccess: () => {
-            setEditingId(null)
-          },
-        },
-      )
+  const handleSubmit = (userId: number) => async (fd: FormData) => {
+    const name = fdString(fd, "name").trim()
+    const email = fdString(fd, "email").trim()
+    if (!name || !email) return
+    try {
+      await updateUser.mutateAsync({
+        id: userId,
+        property_id: propertyId,
+        name,
+        email,
+        is_admin: fdBoolean(fd, "is_admin"),
+        is_child: fdBoolean(fd, "is_child"),
+      })
+      setEditingId(null)
+    } catch {
+      /* surfaced via useMutationsStatus */
     }
+  }
 
   const handleDelete = (userId: number, userName: string) => {
     if (!window.confirm(t('Delete user "{{userName}}"?', { userName }))) return
@@ -86,7 +81,7 @@ export function ListUsers({ canEdit }: ListUsersProps) {
   }
 
   const renderEditForm = (u: (typeof users)[number]) => (
-    <form onSubmit={handleSubmit(u.id)} key={`edit-${String(u.id)}`}>
+    <form action={handleSubmit(u.id)} key={`edit-${String(u.id)}`}>
       <fieldset>
         <legend>{t("Edit user")}</legend>
         <div>
@@ -127,9 +122,7 @@ export function ListUsers({ canEdit }: ListUsersProps) {
           </>
         )}
         <div>
-          <Button type="submit" disabled={updateUser.isPending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton>{t("Save")}</SubmitButton>
           <Button
             type="button"
             variant="secondary"
@@ -147,14 +140,10 @@ export function ListUsers({ canEdit }: ListUsersProps) {
 
   return (
     <section>
-      {lastError && (
-        <ValidationMessage role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       {users.length === 0 ? (
-        <Paragraph>{t("No users yet.")}</Paragraph>
+        <EmptyState title={t("No users yet.")} />
       ) : (
         <List.Unordered className={styles.list}>
           {users.map(u => {

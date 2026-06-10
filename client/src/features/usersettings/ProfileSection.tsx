@@ -4,7 +4,7 @@ import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { SubmitButton } from "@/components/shared/SubmitButton"
-import { ErrorAlert } from "./ErrorAlert"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import styles from "./ProfileSection.module.css"
 
 type Me = {

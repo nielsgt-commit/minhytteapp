@@ -1,12 +1,12 @@
-import { type SyntheticEvent } from "react"
 import { Button, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { fdString } from "@/utils/formData.ts"
 
 type CreateUserFormProps = {
   groupName: string
   pending: boolean
-  onSubmit: (name: string, reset: () => void) => void
+  onSubmit: (name: string) => Promise<void>
   onBack: () => void
 }
 
@@ -17,19 +17,14 @@ export function CreateUserForm({
   onBack,
 }: CreateUserFormProps) {
   const { t } = useTranslation("usergroups")
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
+  const handleSubmit = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
     if (!name) return
-    onSubmit(name, () => {
-      form.reset()
-    })
+    await onSubmit(name)
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={handleSubmit}>
       <fieldset>
         <legend>
           {t("Create user and add to {{groupName}}", { groupName })}
@@ -44,9 +39,7 @@ export function CreateUserForm({
           />
         </div>
         <div>
-          <Button type="submit" disabled={pending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton disabled={pending}>{t("Save")}</SubmitButton>
           <Button
             type="button"
             variant="secondary"

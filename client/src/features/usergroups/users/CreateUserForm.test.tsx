@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
 import { CreateUserForm } from "./CreateUserForm"
@@ -13,7 +13,7 @@ describe("CreateUserForm", () => {
       <CreateUserForm
         groupName="Owners"
         pending={false}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onBack={() => {}}
       />,
     )
@@ -22,7 +22,7 @@ describe("CreateUserForm", () => {
     expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument()
   })
 
-  test("submits the typed name and provides a reset callback", async () => {
+  test("submits the typed name", async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
@@ -38,8 +38,7 @@ describe("CreateUserForm", () => {
     await user.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
-    expect(onSubmit.mock.calls[0][0]).toBe("Carol")
-    expect(typeof onSubmit.mock.calls[0][1]).toBe("function")
+    expect(onSubmit).toHaveBeenCalledWith("Carol")
   })
 
   test("trims surrounding whitespace from the submitted name", async () => {
@@ -57,7 +56,7 @@ describe("CreateUserForm", () => {
     await user.type(screen.getByLabelText("Name"), "  Dan  ")
     await user.click(screen.getByRole("button", { name: "Save" }))
 
-    expect(onSubmit.mock.calls[0][0]).toBe("Dan")
+    expect(onSubmit).toHaveBeenCalledWith("Dan")
   })
 
   test("does not submit when name is only whitespace", async () => {
@@ -101,7 +100,7 @@ describe("CreateUserForm", () => {
       <CreateUserForm
         groupName="Owners"
         pending={true}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onBack={() => {}}
       />,
     )
@@ -109,12 +108,9 @@ describe("CreateUserForm", () => {
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled()
   })
 
-  test("invoking the reset callback clears the input", async () => {
+  test("the input clears after a successful submit", async () => {
     const user = userEvent.setup()
-    let capturedReset: () => void = () => {}
-    const onSubmit = vi.fn((_name, reset: () => void) => {
-      capturedReset = reset
-    })
+    const onSubmit = vi.fn()
     render(
       <CreateUserForm
         groupName="Owners"
@@ -124,12 +120,13 @@ describe("CreateUserForm", () => {
       />,
     )
 
-    const field = screen.getByLabelText("Name") as HTMLInputElement
+    const field = screen.getByLabelText("Name")
     await user.type(field, "Eve")
     await user.click(screen.getByRole("button", { name: "Save" }))
 
-    expect(field.value).toBe("Eve")
-    capturedReset()
-    expect(field.value).toBe("")
+    // React form actions reset uncontrolled fields once the action completes.
+    await waitFor(() => {
+      expect(field).toHaveValue("")
+    })
   })
 })

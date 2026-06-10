@@ -1,14 +1,11 @@
-import { type SyntheticEvent } from "react"
 import { Button, Checkbox, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { fdBoolean, fdString } from "@/utils/formData"
 
 type CreateGroupFormProps = {
   pending: boolean
-  onSubmit: (
-    input: { name: string; is_family: boolean },
-    reset: () => void,
-  ) => void
+  onSubmit: (input: { name: string; is_family: boolean }) => Promise<void>
   onCancel: () => void
 }
 
@@ -18,19 +15,14 @@ export function CreateGroupForm({
   onCancel,
 }: CreateGroupFormProps) {
   const { t } = useTranslation("usergroups")
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
+  const handleSubmit = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
     if (!name) return
-    onSubmit({ name, is_family: fdBoolean(fd, "is_family") }, () => {
-      form.reset()
-    })
+    await onSubmit({ name, is_family: fdBoolean(fd, "is_family") })
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={handleSubmit}>
       <fieldset>
         <legend>{t("New group")}</legend>
         <div>
@@ -46,9 +38,7 @@ export function CreateGroupForm({
           <Checkbox label={t("Main")} name="is_family" />
         </div>
         <div>
-          <Button type="submit" disabled={pending}>
-            {t("Save")}
-          </Button>
+          <SubmitButton disabled={pending}>{t("Save")}</SubmitButton>
           <Button
             type="button"
             variant="secondary"

@@ -45,9 +45,9 @@ type GroupCardProps = {
   onToggleAddMember: () => void
   onDelete: () => void
   onRenameSubmit: (input: { name: string; is_family: boolean }) => Promise<void>
-  onAddMember: (userId: number, reset: () => void) => void
-  onAddInvite: (inviteId: number, reset: () => void) => void
-  onCreateAndAddMember: (name: string, reset: () => void) => void
+  onAddMember: (userId: number) => Promise<void>
+  onAddInvite: (inviteId: number) => Promise<void>
+  onCreateAndAddMember: (name: string) => Promise<void>
   onSwitchToCreateUser: () => void
   onBackFromCreateUser: () => void
   onCancelRename: () => void

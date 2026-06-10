@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/selection/useSelection"
 import { Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useCanEdit } from "@/hooks/useCanEdit"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { UserGroupsFlow } from "./UserGroupsFlow.tsx"
 import section from "@/features/property/managePropertySection.module.css"
 
@@ -20,7 +21,9 @@ export function UserGroups() {
 
   return (
     <div className={section.column}>
-      <UserGroupsFlow canEdit={canEdit} />
+      <QueryBoundary>
+        <UserGroupsFlow canEdit={canEdit} />
+      </QueryBoundary>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { type SyntheticEvent, useState } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Button,
@@ -9,8 +9,11 @@ import {
 import { useTranslation } from "react-i18next"
 import { fdString } from "@/utils/formData"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
-import { ErrorAlert } from "./ErrorAlert"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import styles from "./ChildrenSection.module.css"
 
 export function ChildrenSection() {
@@ -20,7 +23,6 @@ export function ChildrenSection() {
   const { data: children } = useQuery(trpc.user.listMyChildren.queryOptions())
 
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editDraft, setEditDraft] = useState("")
 
   const childrenKeys = [trpc.user.listMyChildren.queryKey()]
 
@@ -43,32 +45,29 @@ export function ChildrenSection() {
     childrenKeys,
   )
 
-  const handleAddChild = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const fd = new FormData(form)
+  const { pending: editPending, error: editError } = useMutationsStatus(
+    updateChild,
+    removeChild,
+  )
+
+  const handleAddChild = async (fd: FormData) => {
     const childName = fdString(fd, "name").trim()
     if (!childName) return
-    createChild.mutate(
-      { name: childName },
-      {
-        onSuccess: () => {
-          form.reset()
-        },
-      },
-    )
+    try {
+      await createChild.mutateAsync({ name: childName })
+    } catch {
+      /* surfaced via createChild.error */
+    }
   }
 
-  const startEdit = (id: number, currentName: string) => {
-    setEditingId(id)
-    setEditDraft(currentName)
-  }
-
-  const handleEditSubmit = (e: SyntheticEvent<HTMLFormElement>, id: number) => {
-    e.preventDefault()
-    const trimmed = editDraft.trim()
+  const handleEditSubmit = (id: number) => async (fd: FormData) => {
+    const trimmed = fdString(fd, "name").trim()
     if (!trimmed) return
-    updateChild.mutate({ id, name: trimmed })
+    try {
+      await updateChild.mutateAsync({ id, name: trimmed })
+    } catch {
+      /* surfaced via useMutationsStatus */
+    }
   }
 
   const handleRemove = (id: number, childName: string) => {
@@ -85,32 +84,29 @@ export function ChildrenSection() {
             <li key={c.id}>
               {editingId === c.id ? (
                 <form
+                  key={`edit-child-${String(c.id)}`}
                   className={styles.row}
-                  onSubmit={e => {
-                    handleEditSubmit(e, c.id)
-                  }}
+                  action={handleEditSubmit(c.id)}
                 >
                   <Textfield
                     className={styles.field}
                     label={t("Name")}
                     type="text"
-                    value={editDraft}
-                    onChange={e => {
-                      setEditDraft(e.target.value)
-                    }}
+                    name="name"
+                    defaultValue={c.name}
                     required
                     autoFocus
                   />
-                  <Button type="submit" disabled={updateChild.isPending}>
+                  <SubmitButton disabled={editPending}>
                     {t("Save")}
-                  </Button>
+                  </SubmitButton>
                   <Button
                     type="button"
                     variant="secondary"
                     onClick={() => {
                       setEditingId(null)
                     }}
-                    disabled={updateChild.isPending}
+                    disabled={editPending}
                   >
                     {t("Cancel")}
                   </Button>
@@ -121,7 +117,7 @@ export function ChildrenSection() {
                   <Button
                     type="button"
                     onClick={() => {
-                      startEdit(c.id, c.name)
+                      setEditingId(c.id)
                     }}
                   >
                     {t("Edit")}
@@ -132,7 +128,7 @@ export function ChildrenSection() {
                     onClick={() => {
                       handleRemove(c.id, c.name)
                     }}
-                    disabled={removeChild.isPending}
+                    disabled={editPending}
                   >
                     {t("Remove")}
                   </Button>
@@ -142,11 +138,11 @@ export function ChildrenSection() {
           ))}
         </ul>
       ) : (
-        <p>{t("No children yet.")}</p>
+        <EmptyState title={t("No children yet.")} />
       )}
-      <ErrorAlert error={updateChild.error ?? removeChild.error} />
+      <ErrorAlert error={editError} />
 
-      <form onSubmit={handleAddChild}>
+      <form action={handleAddChild}>
         <Fieldset>
           <Fieldset.Legend>{t("Add child (under 13)")}</Fieldset.Legend>
           <div className={styles.row}>
@@ -157,9 +153,9 @@ export function ChildrenSection() {
               name="name"
               required
             />
-            <Button type="submit" disabled={createChild.isPending}>
+            <SubmitButton disabled={createChild.isPending}>
               {t("Add")}
-            </Button>
+            </SubmitButton>
           </div>
           <ErrorAlert error={createChild.error} />
         </Fieldset>

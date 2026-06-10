@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
 import { CreateGroupForm } from "./CreateGroupForm"
@@ -12,7 +12,7 @@ describe("CreateGroupForm", () => {
     render(
       <CreateGroupForm
         pending={false}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onCancel={() => {}}
       />,
     )
@@ -22,7 +22,7 @@ describe("CreateGroupForm", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument()
   })
 
-  test("submits name and is_family=false by default and exposes a reset", async () => {
+  test("submits name and is_family=false by default", async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     render(
@@ -37,9 +37,7 @@ describe("CreateGroupForm", () => {
     await user.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
-    const [input, reset] = onSubmit.mock.calls[0]
-    expect(input).toEqual({ name: "Owners", is_family: false })
-    expect(typeof reset).toBe("function")
+    expect(onSubmit).toHaveBeenCalledWith({ name: "Owners", is_family: false })
   })
 
   test("submits is_family=true when checkbox is ticked and trims the name", async () => {
@@ -57,10 +55,7 @@ describe("CreateGroupForm", () => {
     await user.click(screen.getByLabelText("Main"))
     await user.click(screen.getByRole("button", { name: "Save" }))
 
-    expect(onSubmit.mock.calls[0][0]).toEqual({
-      name: "Family",
-      is_family: true,
-    })
+    expect(onSubmit).toHaveBeenCalledWith({ name: "Family", is_family: true })
   })
 
   test("does not call onSubmit when name is only whitespace", async () => {
@@ -103,7 +98,7 @@ describe("CreateGroupForm", () => {
     render(
       <CreateGroupForm
         pending={true}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         onCancel={() => {}}
       />,
     )
@@ -111,12 +106,9 @@ describe("CreateGroupForm", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
   })
 
-  test("invoking the reset callback clears the form", async () => {
+  test("the form clears after a successful submit", async () => {
     const user = userEvent.setup()
-    let capturedReset: () => void = () => {}
-    const onSubmit = vi.fn((_input, reset: () => void) => {
-      capturedReset = reset
-    })
+    const onSubmit = vi.fn()
     render(
       <CreateGroupForm
         pending={false}
@@ -125,12 +117,13 @@ describe("CreateGroupForm", () => {
       />,
     )
 
-    const nameField = screen.getByLabelText("Name") as HTMLInputElement
+    const nameField = screen.getByLabelText("Name")
     await user.type(nameField, "Temp")
     await user.click(screen.getByRole("button", { name: "Save" }))
 
-    expect(nameField.value).toBe("Temp")
-    capturedReset()
-    expect(nameField.value).toBe("")
+    // React form actions reset uncontrolled fields once the action completes.
+    await waitFor(() => {
+      expect(nameField).toHaveValue("")
+    })
   })
 })

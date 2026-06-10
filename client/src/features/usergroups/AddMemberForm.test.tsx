@@ -21,8 +21,8 @@ const baseProps: Props = {
   availableUsers: users,
   availableInvites: [],
   pending: false,
-  onSubmit: () => {},
-  onAddInvite: () => {},
+  onSubmit: async () => {},
+  onAddInvite: async () => {},
   onSwitchToCreateUser: () => {},
   onCancel: () => {},
 }
@@ -51,8 +51,7 @@ describe("AddMemberForm", () => {
     await user.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
-    expect(onSubmit.mock.calls[0][0]).toBe(2)
-    expect(typeof onSubmit.mock.calls[0][1]).toBe("function")
+    expect(onSubmit).toHaveBeenCalledWith(2)
   })
 
   test("renders pending invites and submits the invite id", async () => {
@@ -74,7 +73,7 @@ describe("AddMemberForm", () => {
     await user.click(screen.getByRole("button", { name: "Save" }))
 
     expect(onAddInvite).toHaveBeenCalledTimes(1)
-    expect(onAddInvite.mock.calls[0][0]).toBe(7)
+    expect(onAddInvite).toHaveBeenCalledWith(7)
     expect(onSubmit).not.toHaveBeenCalled()
   })
 

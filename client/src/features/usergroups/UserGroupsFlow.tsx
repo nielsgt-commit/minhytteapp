@@ -1,15 +1,11 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Card,
-  List,
-  Paragraph,
-  ValidationMessage,
-} from "@digdir/designsystemet-react"
+import { Button, Card, List } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { CreateGroupForm } from "./CreateGroupForm.tsx"
@@ -95,19 +91,13 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     assignInvite,
   )
 
-  const handleCreate = (
-    input: { name: string; is_family: boolean },
-    reset: () => void,
-  ) => {
-    createGroup.mutate(
-      { ...input, property_id: propertyId },
-      {
-        onSuccess: () => {
-          reset()
-          setOpenForm(null)
-        },
-      },
-    )
+  const handleCreate = async (input: { name: string; is_family: boolean }) => {
+    try {
+      await createGroup.mutateAsync({ ...input, property_id: propertyId })
+      setOpenForm(null)
+    } catch {
+      /* surfaced via useMutationsStatus */
+    }
   }
 
   const handleRename =
@@ -134,56 +124,47 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
     )
   }
 
-  const handleAddMember =
-    (groupId: number) => (user_id: number, reset: () => void) => {
-      addMember.mutate(
-        { user_group_id: groupId, user_id, property_id: propertyId },
-        {
-          onSuccess: () => {
-            reset()
-            setOpenForm(null)
-          },
-        },
-      )
+  const handleAddMember = (groupId: number) => async (user_id: number) => {
+    try {
+      await addMember.mutateAsync({
+        user_group_id: groupId,
+        user_id,
+        property_id: propertyId,
+      })
+      setOpenForm(null)
+    } catch {
+      /* surfaced via useMutationsStatus */
     }
+  }
 
-  const handleAddInvite =
-    (groupId: number) => (inviteId: number, reset: () => void) => {
-      assignInvite.mutate(
-        { id: inviteId, user_group_id: groupId, property_id: propertyId },
-        {
-          onSuccess: () => {
-            reset()
-            setOpenForm(null)
-          },
-        },
-      )
+  const handleAddInvite = (groupId: number) => async (inviteId: number) => {
+    try {
+      await assignInvite.mutateAsync({
+        id: inviteId,
+        user_group_id: groupId,
+        property_id: propertyId,
+      })
+      setOpenForm(null)
+    } catch {
+      /* surfaced via useMutationsStatus */
     }
+  }
 
   const handleCreateAndAddMember =
-    (groupId: number) => (name: string, reset: () => void) => {
+    (groupId: number) => async (name: string) => {
       const email = `pending-${String(Date.now())}@example.local`
-      createUser.mutate(
-        { name, email },
-        {
-          onSuccess: created => {
-            addMember.mutate(
-              {
-                user_group_id: groupId,
-                user_id: created.id,
-                property_id: propertyId,
-              },
-              {
-                onSuccess: () => {
-                  reset()
-                  setAddingUserForGroup(null)
-                  setOpenForm(null)
-                },
-              },
-            )
-          },
-        },
-      )
+      try {
+        const created = await createUser.mutateAsync({ name, email })
+        await addMember.mutateAsync({
+          user_group_id: groupId,
+          user_id: created.id,
+          property_id: propertyId,
+        })
+        setAddingUserForGroup(null)
+        setOpenForm(null)
+      } catch {
+        /* surfaced via useMutationsStatus */
+      }
     }
 
   const handleRemoveMember = (
@@ -204,11 +185,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
 
   return (
     <section>
-      {lastError && (
-        <ValidationMessage role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </ValidationMessage>
-      )}
+      <ErrorAlert error={lastError} />
 
       <List.Unordered className={styles.groupList}>
         {canEdit && (
@@ -242,7 +219,7 @@ export function UserGroupsFlow({ canEdit }: UserGroupsFlowProps) {
         )}
 
         {groups.length === 0 && !canEdit ? (
-          <Paragraph>{t("No groups yet.")}</Paragraph>
+          <EmptyState title={t("No groups yet.")} />
         ) : (
           groups.map(g => {
             const memberIds = new Set(g.members.map(m => m.user_id))

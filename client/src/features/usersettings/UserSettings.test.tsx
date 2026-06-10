@@ -1,6 +1,13 @@
 import { render, screen } from "@testing-library/react"
-import { beforeEach, describe, expect, test, vi } from "vitest"
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest"
 import { UserSettings } from "./UserSettings"
+
+// jsdom does not implement <dialog> methods; the PageHelp dialog calls them.
+beforeAll(() => {
+  HTMLDialogElement.prototype.show = vi.fn()
+  HTMLDialogElement.prototype.showModal = vi.fn()
+  HTMLDialogElement.prototype.close = vi.fn()
+})
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -66,9 +73,9 @@ beforeEach(() => {
 })
 
 describe("UserSettings", () => {
-  test("shows loading text when `me` is undefined", () => {
+  test("shows a loading skeleton when `me` is undefined", () => {
     render(<UserSettings />)
-    expect(screen.getByText("Loading…")).toBeInTheDocument()
+    expect(screen.getByLabelText("Loading")).toBeInTheDocument()
   })
 
   test("renders the user-settings heading once `me` loads", () => {
@@ -93,9 +100,9 @@ describe("UserSettings", () => {
     expect(screen.getByText("My children (under 13)")).toBeInTheDocument()
   })
 
-  test("does not render Loading text once data is present", () => {
+  test("does not render the loading skeleton once data is present", () => {
     meData = { id: 4, name: "Dan", birthday: null, my_main_memberships: [] }
     render(<UserSettings />)
-    expect(screen.queryByText("Loading…")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Loading")).not.toBeInTheDocument()
   })
 })

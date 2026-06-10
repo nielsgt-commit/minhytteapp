@@ -49,6 +49,7 @@ vi.mock("@tanstack/react-query", () => ({
     const stub = stubs[mutationCallIndex++ % stubs.length]
     return {
       mutate: stub.mutate,
+      mutateAsync: stub.mutate,
       isPending: stub.state.isPending,
       error: stub.state.error,
       _opts: opts,
@@ -171,13 +172,13 @@ describe("ChildrenSection", () => {
   test("renders an alert when createChild has an error", () => {
     createStub.state.error = { message: "create failed" }
     render(<ChildrenSection />)
-    expect(screen.getByRole("alert")).toHaveTextContent("Error: create failed")
+    expect(screen.getByRole("alert")).toHaveTextContent("create failed")
   })
 
   test("renders an alert for update/remove errors above the add form", () => {
     childrenData = [{ id: 1, name: "Lila" }]
     updateStub.state.error = { message: "update failed" }
     render(<ChildrenSection />)
-    expect(screen.getByRole("alert")).toHaveTextContent("Error: update failed")
+    expect(screen.getByRole("alert")).toHaveTextContent("update failed")
   })
 })

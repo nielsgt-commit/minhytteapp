@@ -4,6 +4,7 @@ import { useTRPC } from "@/trpc/trpc"
 import { ProfileSection } from "./ProfileSection"
 import { ChildrenSection } from "./ChildrenSection"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 
 export function UserSettings() {
@@ -21,7 +22,7 @@ export function UserSettings() {
     ),
   }
 
-  if (!me) return <p>{t("Loading…")}</p>
+  if (!me) return <CardSkeleton />
 
   return (
     <section>
