@@ -5,6 +5,7 @@ import { Chip, Tabs } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./StructureStats.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceCard } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { Equipment } from "@/features/maintenance/equipment/Equipment.tsx"
@@ -66,7 +67,7 @@ export function StructureStats() {
         {activeTab === "structures" && (
           <section className={styles.section}>
             {structures.length === 0 ? (
-              <p>{t("No Structures yet.")}</p>
+              <EmptyState title={t("No Structures yet.")} />
             ) : (
               <div className={styles.wrap}>
                 <div
@@ -109,7 +110,7 @@ export function StructureStats() {
         {activeTab === "infrastructure" && (
           <section className={styles.section}>
             {infrastructure.length === 0 ? (
-              <p>{t("No Infrastructure yet.")}</p>
+              <EmptyState title={t("No Infrastructure yet.")} />
             ) : (
               <div className={styles.wrap}>
                 <div

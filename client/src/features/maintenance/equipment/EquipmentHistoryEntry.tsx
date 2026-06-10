@@ -1,5 +1,7 @@
 import { Card, Paragraph } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
+import { useTranslation } from "react-i18next"
+import { formatDate } from "@/utils/dateUtils"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 
 type MaintenanceEntry = {
@@ -35,6 +37,7 @@ export function EquipmentHistoryEntry({
 }: {
   entry: EquipmentHistoryEntryData
 }) {
+  const { i18n } = useTranslation("maintenance")
   if (entry.kind === "inspection") {
     return <InspectionCard inspection={entry.i} />
   }
@@ -44,10 +47,7 @@ export function EquipmentHistoryEntry({
       <article>
         <Card.Block data-size="sm">
           <Paragraph data-size="sm">
-            {m.completed_at
-              ? new Date(m.completed_at).toLocaleDateString()
-              : ""}{" "}
-            — {m.description}
+            {formatDate(m.completed_at, i18n.language)} — {m.description}
           </Paragraph>
         </Card.Block>
       </article>

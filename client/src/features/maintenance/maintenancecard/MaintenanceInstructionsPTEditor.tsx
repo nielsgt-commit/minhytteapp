@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   defineSchema,
   EditorProvider,
@@ -230,18 +229,19 @@ export function MaintenanceInstructionsPTEditor({
   onChange: (value: PortableTextBlock[]) => void
 }) {
   const { t } = useTranslation("maintenance")
-  const [value, setValue] = useState<EditorPortableTextBlock[] | undefined>(
-    initialValue as EditorPortableTextBlock[] | undefined,
-  )
 
   return (
     <div className={styles.root} aria-label={t("Description")}>
-      <EditorProvider initialConfig={{ schemaDefinition, initialValue: value }}>
+      <EditorProvider
+        initialConfig={{
+          schemaDefinition,
+          initialValue: initialValue as EditorPortableTextBlock[] | undefined,
+        }}
+      >
         <EventListenerPlugin
           on={event => {
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- the deprecation on `event.type` is on sibling union members (e.g. "loading"); "mutation" is the supported case.
             if (event.type === "mutation") {
-              setValue(event.value)
               onChange((event.value ?? []) as unknown as PortableTextBlock[])
             }
           }}

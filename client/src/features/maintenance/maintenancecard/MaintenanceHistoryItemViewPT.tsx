@@ -9,6 +9,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import type { PortableTextBlock } from "@portabletext/types"
+import { formatDate } from "@/utils/dateUtils"
 import styles from "./MaintenanceHistory.module.css"
 import {
   SeverityTag,
@@ -36,7 +37,7 @@ export function MaintenanceHistoryItemViewPT(props: {
   onCancelDelete: () => void
   onCycleSeverity: () => void
 }) {
-  const { t } = useTranslation("maintenance")
+  const { t, i18n } = useTranslation("maintenance")
   const {
     item,
     pending,
@@ -52,9 +53,7 @@ export function MaintenanceHistoryItemViewPT(props: {
   const [expanded, setExpanded] = useState(false)
   const hasInstructions =
     item.instructions_pt != null && item.instructions_pt.length > 0
-  const completedLabel = item.completed_at
-    ? new Date(item.completed_at).toLocaleDateString()
-    : ""
+  const completedLabel = formatDate(item.completed_at, i18n.language)
 
   return (
     <Card key={item.id} asChild>

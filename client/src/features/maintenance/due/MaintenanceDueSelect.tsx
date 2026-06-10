@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Field, Select, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { toDateInputValue } from "@/utils/dateUtils"
@@ -31,14 +31,12 @@ export function MaintenanceDueSelect({
   const token = draftToken ?? dueToToken(value)
 
   // Local draft for the date input so the user can clear and retype freely
-  // (an empty string never fires onChange). Resynced whenever value.due_at
-  // changes externally — e.g. after a save/refetch — so it stays controlled.
+  // (an empty string never fires onChange). External changes to value.due_at
+  // — e.g. after a save/refetch — resync via the parent keying this component
+  // by entity id + due_at, which remounts it with a fresh draft.
   const [dateDraft, setDateDraft] = useState(() =>
     toDateInputValue(value.due_at),
   )
-  useEffect(() => {
-    setDateDraft(toDateInputValue(value.due_at))
-  }, [value.due_at])
 
   const handleSelect = (next: string) => {
     if (next === "date") {
@@ -89,8 +87,8 @@ export function MaintenanceDueSelect({
           type="date"
           data-size="sm"
           aria-label={t("Due date")}
-          // Controlled via dateDraft (synced to value.due_at) so external
-          // changes reflect without a remount and the field stays clearable.
+          // Controlled via dateDraft so the field stays clearable; external
+          // changes remount via the parent's key and re-init the draft.
           value={dateDraft}
           disabled={disabled}
           onChange={e => {

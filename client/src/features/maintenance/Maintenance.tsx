@@ -4,6 +4,8 @@ import styles from "./Maintenance.module.css"
 import { StructureStats } from "@/features/maintenance/structure/StructureStats.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 
 export function Maintenance() {
   const { t } = useTranslation("maintenance")
@@ -48,11 +50,11 @@ export function Maintenance() {
     return (
       <section className={styles.page}>
         <PageHeader title={t("Maintenance")} help={help} />
-        <p>
-          {t(
+        <EmptyState
+          title={t(
             "Add or select a property to log issues, plan upkeep, and track work across Structures.",
           )}
-        </p>
+        />
       </section>
     )
   }
@@ -60,7 +62,9 @@ export function Maintenance() {
   return (
     <section className={styles.page}>
       <PageHeader title={t("Maintenance")} help={help} />
-      <StructureStats />
+      <QueryBoundary>
+        <StructureStats />
+      </QueryBoundary>
     </section>
   )
 }

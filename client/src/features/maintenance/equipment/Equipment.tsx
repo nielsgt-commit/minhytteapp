@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import styles from "./Equipment.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import type { ModalState } from "@/features/maintenance/equipment/EquipmentCard.tsx"
 import { EquipmentCard } from "@/features/maintenance/equipment/EquipmentCard.tsx"
@@ -37,7 +38,7 @@ export function Equipment() {
   if (selectedPropertyId == null) {
     return (
       <section>
-        <p>{t("Select a property to see its equipment.")}</p>
+        <EmptyState title={t("Select a property to see its equipment.")} />
       </section>
     )
   }
@@ -50,7 +51,7 @@ export function Equipment() {
 
   const body =
     sortedEquipment.length === 0 ? (
-      <p>{t("No equipment registered for this property yet.")}</p>
+      <EmptyState title={t("No equipment registered for this property yet.")} />
     ) : (
       <div className={styles.list}>
         {sortedEquipment.map(item => {

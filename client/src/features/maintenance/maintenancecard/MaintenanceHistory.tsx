@@ -6,6 +6,9 @@ import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceHistory.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import {
@@ -36,7 +39,14 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   )
 
   const maintenanceKeys = [trpc.maintenance.pathKey()]
-  const updateMutation = useMutationWithInvalidation(
+  // Separate instances of the update mutation: edit-form errors render inside
+  // the form (via its action state); severity-cycle errors render in the
+  // panel-level alert below.
+  const editMutation = useMutationWithInvalidation(
+    trpc.maintenance.update.mutationOptions(),
+    maintenanceKeys,
+  )
+  const cycleMutation = useMutationWithInvalidation(
     trpc.maintenance.update.mutationOptions(),
     maintenanceKeys,
   )
@@ -105,11 +115,15 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
       : []),
   ].sort((a, b) => b.t - a.t)
 
-  const pending = updateMutation.isPending || deleteMutation.isPending
-  const lastError = updateMutation.error ?? deleteMutation.error
+  const { pending } = useMutationsStatus(
+    editMutation,
+    cycleMutation,
+    deleteMutation,
+  )
+  const { error } = useMutationsStatus(cycleMutation, deleteMutation)
 
   const cycleItemSeverity = (item: (typeof doneItems)[number]) => {
-    updateMutation.mutate({
+    cycleMutation.mutate({
       id: item.id,
       description: item.description,
       instructions_pt: item.instructions_pt,
@@ -129,47 +143,34 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
 
   const handleEditSubmit =
     (item: (typeof doneItems)[number]) =>
-    (values: MaintenanceHistoryEditValues) => {
-      updateMutation.mutate(
-        {
-          id: item.id,
-          description: values.description,
-          instructions_pt: values.instructions_pt,
-          assigned_to_id: item.assigned_to_id ?? undefined,
-          structure_id: item.structure_id ?? undefined,
-          infrastructure_id: item.infrastructure_id ?? undefined,
-          equipment_id: item.equipment_id ?? undefined,
-          category: item.category,
-          severity: item.severity,
-          status: item.status,
-          recurrence: item.recurrence,
-          due_kind: item.due_kind,
-          due_priority_group_id: item.due_priority_group_id ?? undefined,
-          due_at: item.due_at ? new Date(item.due_at) : undefined,
-          completed_at: values.completed_at,
-        },
-        {
-          onSuccess: () => {
-            setEditing(null)
-          },
-        },
-      )
+    async (values: MaintenanceHistoryEditValues) => {
+      await editMutation.mutateAsync({
+        id: item.id,
+        description: values.description,
+        instructions_pt: values.instructions_pt,
+        assigned_to_id: item.assigned_to_id ?? undefined,
+        structure_id: item.structure_id ?? undefined,
+        infrastructure_id: item.infrastructure_id ?? undefined,
+        equipment_id: item.equipment_id ?? undefined,
+        category: item.category,
+        severity: item.severity,
+        status: item.status,
+        recurrence: item.recurrence,
+        due_kind: item.due_kind,
+        due_priority_group_id: item.due_priority_group_id ?? undefined,
+        due_at: item.due_at ? new Date(item.due_at) : undefined,
+        completed_at: values.completed_at,
+      })
+      setEditing(null)
     }
 
-  if (lastError) {
-    return (
-      <p role="alert">
-        {t("Error: {{message}}", { message: lastError.message })}
-      </p>
-    )
-  }
-
   if (entries.length === 0) {
-    return <p>{t("No completed maintenance yet.")}</p>
+    return <EmptyState title={t("No completed maintenance yet.")} />
   }
 
   return (
     <div className={styles.list}>
+      <ErrorAlert error={error} />
       {entries.map(entry => {
         if (entry.kind === "inspection") {
           return (

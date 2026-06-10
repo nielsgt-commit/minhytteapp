@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import {
   Tag,
   Button,
@@ -10,6 +10,10 @@ import {
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { formatDate } from "@/utils/dateUtils"
 import styles from "./InspectionCard.module.css"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
 import {
@@ -30,7 +34,7 @@ type Inspection = {
 }
 
 export function InspectionCard({ inspection }: { inspection: Inspection }) {
-  const { t } = useTranslation("maintenance")
+  const { t, i18n } = useTranslation("maintenance")
   const cadenceLabel: Record<Inspection["recurrence"], string> = {
     yearly: t("Yearly"),
     "5year": t("Every 5 years"),
@@ -38,7 +42,6 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
     fall: t("Every fall"),
   }
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const [expanded, setExpanded] = useState(false)
   const [expandedFindings, setExpandedFindings] = useState<Set<number>>(
     new Set(),
@@ -59,14 +62,11 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
     ),
   )
 
-  const updateMutation = useMutation(
-    trpc.maintenance.update.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.maintenance.pathKey() })
-        void qc.invalidateQueries({ queryKey: trpc.inspection.pathKey() })
-      },
-    }),
+  const updateMutation = useMutationWithInvalidation(
+    trpc.maintenance.update.mutationOptions(),
+    [trpc.maintenance.pathKey(), trpc.inspection.pathKey()],
   )
+  const { error } = useMutationsStatus(updateMutation)
 
   const cycleFindingSeverity = (f: (typeof findings)[number]) => {
     updateMutation.mutate({
@@ -87,9 +87,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
     })
   }
 
-  const completedLabel = inspection.completed_at
-    ? new Date(inspection.completed_at).toLocaleDateString()
-    : ""
+  const completedLabel = formatDate(inspection.completed_at, i18n.language)
 
   const followups = findings.filter(f => f.parent_maintenance_id != null)
   const adHocs = findings.filter(f => f.parent_maintenance_id == null)
@@ -118,6 +116,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
         </Card.Block>
         {expanded && (
           <Card.Block>
+            <ErrorAlert error={error} />
             {inspection.notes_pt && inspection.notes_pt.length > 0 && (
               <MaintenanceInstructionsPT value={inspection.notes_pt} />
             )}

@@ -1,51 +1,49 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
-import { MetadataSection, type Recurrence } from "./MetadataSection.tsx"
+import { MetadataSection } from "./MetadataSection.tsx"
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
-function setup(overrides?: {
-  inspectedBy?: string
-  recurrence?: Recurrence
-  setInspectedBy?: (v: string) => void
-  setRecurrence?: (v: Recurrence) => void
-}) {
-  const setInspectedBy = overrides?.setInspectedBy ?? vi.fn()
-  const setRecurrence = overrides?.setRecurrence ?? vi.fn()
-  render(
-    <MetadataSection
-      inspectedBy={overrides?.inspectedBy ?? ""}
-      setInspectedBy={setInspectedBy}
-      recurrence={overrides?.recurrence ?? "yearly"}
-      setRecurrence={setRecurrence}
-    />,
-  )
-  return { setInspectedBy, setRecurrence }
+function setup(defaultInspectedBy = "") {
+  render(<MetadataSection defaultInspectedBy={defaultInspectedBy} />)
 }
 
 describe("MetadataSection", () => {
-  test("renders inspector textfield with current value", () => {
-    setup({ inspectedBy: "Alice" })
+  test("renders inspector textfield with the default value", () => {
+    setup("Alice")
     expect(screen.getByLabelText("Inspected by")).toHaveValue("Alice")
   })
 
-  test("propagates keystrokes through setInspectedBy", async () => {
-    const setInspectedBy = vi.fn()
+  test("inspector field is uncontrolled and editable", async () => {
     const user = userEvent.setup()
-    setup({ setInspectedBy })
-    await user.type(screen.getByLabelText("Inspected by"), "B")
-    expect(setInspectedBy).toHaveBeenCalledWith("B")
+    setup()
+    const field = screen.getByLabelText("Inspected by")
+    await user.type(field, "Bob")
+    expect(field).toHaveValue("Bob")
   })
 
-  test("calls setRecurrence when the cadence is changed", async () => {
-    const setRecurrence = vi.fn()
+  test("fields are named for FormData submission", () => {
+    setup()
+    expect(screen.getByLabelText("Inspected by")).toHaveAttribute(
+      "name",
+      "inspected_by",
+    )
+    expect(screen.getByLabelText("Cadence")).toHaveAttribute(
+      "name",
+      "recurrence",
+    )
+  })
+
+  test("cadence defaults to yearly and can be changed", async () => {
     const user = userEvent.setup()
-    setup({ setRecurrence })
-    await user.selectOptions(screen.getByLabelText("Cadence"), "5year")
-    expect(setRecurrence).toHaveBeenCalledWith("5year")
+    setup()
+    const select = screen.getByLabelText("Cadence")
+    expect(select).toHaveValue("yearly")
+    await user.selectOptions(select, "5year")
+    expect(select).toHaveValue("5year")
   })
 
   test("renders all four cadence options", () => {

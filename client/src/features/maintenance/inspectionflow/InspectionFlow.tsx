@@ -2,19 +2,18 @@ import {
   useSelectedPropertyId,
   useSelectedUserId,
 } from "@/selection/useSelection"
-import { type SyntheticEvent, useEffect, useState } from "react"
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import {
-  Button,
-  Field,
-  Heading,
-  Label,
-  Paragraph,
-} from "@digdir/designsystemet-react"
+import { Button, Field, Heading, Label } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import styles from "./InspectionFlow.module.css"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { fdString } from "@/utils/formData"
 import {
   FindingsSection,
   type AdHoc,
@@ -25,6 +24,7 @@ import {
 } from "@/features/maintenance/inspectionflow/MetadataSection.tsx"
 import {
   ProcedureSection,
+  type ProcedureItem,
   type ProcedureState,
 } from "@/features/maintenance/inspectionflow/ProcedureSection.tsx"
 import { MaintenanceInstructionsPTEditor } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPTEditor.tsx"
@@ -42,7 +42,6 @@ export function InspectionFlow(props: {
   open: boolean
   onClose: () => void
 }) {
-  const { t } = useTranslation("maintenance")
   const { scope, open, onClose } = props
   const trpc = useTRPC()
   const selectedUserId = useSelectedUserId()
@@ -63,7 +62,12 @@ export function InspectionFlow(props: {
 
   const currentUser = users?.find(u => u.id === selectedUserId)
 
-  const procedureItems = (maintenanceItems ?? [])
+  if (!open) return null
+  // Mount the form only once its data is in, so the inspector default can be
+  // plain initial state instead of an effect resyncing it later.
+  if (maintenanceItems == null || users == null) return <CardSkeleton />
+
+  const procedureItems = maintenanceItems
     .filter(m => {
       if (!m.is_pinned) return false
       if (scope.kind === "structure") {
@@ -83,22 +87,35 @@ export function InspectionFlow(props: {
       return aT - bT
     })
 
-  const [inspectedBy, setInspectedBy] = useState("")
-  const [recurrence, setRecurrence] = useState<Recurrence>("yearly")
+  return (
+    <InspectionFlowForm
+      scope={scope}
+      onClose={onClose}
+      procedureItems={procedureItems}
+      defaultInspectedBy={currentUser?.name ?? ""}
+    />
+  )
+}
+
+function InspectionFlowForm(props: {
+  scope: InspectionScope
+  onClose: () => void
+  procedureItems: readonly ProcedureItem[]
+  defaultInspectedBy: string
+}) {
+  const { t } = useTranslation("maintenance")
+  const { scope, onClose, procedureItems, defaultInspectedBy } = props
+  const trpc = useTRPC()
+  const selectedUserId = useSelectedUserId()
+
   const [notes, setNotes] = useState<PortableTextBlock[]>([])
   const [procState, setProcState] = useState<Record<number, ProcedureState>>({})
   const [adHocs, setAdHocs] = useState<AdHoc[]>([])
 
-  useEffect(() => {
-    if (open && !inspectedBy && currentUser?.name) {
-      setInspectedBy(currentUser.name)
-    }
-  }, [open, currentUser, inspectedBy])
-
   const recordMutation = useMutationWithInvalidation(
     trpc.inspection.record.mutationOptions({
       onSuccess: () => {
-        resetForm()
+        // The parent unmounts this form on close, so no manual reset needed.
         onClose()
       },
     }),
@@ -110,6 +127,8 @@ export function InspectionFlow(props: {
     [trpc.maintenance.pathKey()],
   )
 
+  const { pending, error } = useMutationsStatus(recordMutation, reorderMutation)
+
   const moveProcedureItem = (id: number, direction: -1 | 1) => {
     const ids = procedureItems.map(p => p.id)
     const idx = ids.indexOf(id)
@@ -119,17 +138,6 @@ export function InspectionFlow(props: {
     next[idx] = ids[target]
     next[target] = id
     reorderMutation.mutate({ ids: next })
-  }
-
-  const resetForm = () => {
-    setProcState({})
-    setAdHocs([])
-    setNotes([])
-  }
-
-  const handleCancel = () => {
-    resetForm()
-    onClose()
   }
 
   const getProc = (id: number, fallback: string): ProcedureState =>
@@ -179,10 +187,11 @@ export function InspectionFlow(props: {
     )
   }
 
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = async (fd: FormData) => {
     if (selectedUserId == null) return
-    if (!inspectedBy.trim()) return
+    const inspectedBy = fdString(fd, "inspected_by").trim()
+    if (!inspectedBy) return
+    const recurrence = fdString(fd, "recurrence") as Recurrence
 
     const procFindings = procedureItems.map(item => {
       const state = getProc(item.id, item.description)
@@ -202,35 +211,30 @@ export function InspectionFlow(props: {
         status: "followup" as const,
       }))
 
-    recordMutation.mutate({
-      ...(scope.kind === "structure" ? { structure_id: scope.id } : {}),
-      ...(scope.kind === "infrastructure"
-        ? { infrastructure_id: scope.id }
-        : {}),
-      ...(scope.kind === "equipment" ? { equipment_id: scope.id } : {}),
-      inspected_by: inspectedBy.trim(),
-      recurrence,
-      notes_pt: notes.length > 0 ? notes : undefined,
-      findings: [...procFindings, ...adHocFindings],
-    })
+    try {
+      await recordMutation.mutateAsync({
+        ...(scope.kind === "structure" ? { structure_id: scope.id } : {}),
+        ...(scope.kind === "infrastructure"
+          ? { infrastructure_id: scope.id }
+          : {}),
+        ...(scope.kind === "equipment" ? { equipment_id: scope.id } : {}),
+        inspected_by: inspectedBy,
+        recurrence,
+        notes_pt: notes.length > 0 ? notes : undefined,
+        findings: [...procFindings, ...adHocFindings],
+      })
+    } catch {
+      // Surfaced via the aggregated ErrorAlert below.
+    }
   }
 
-  const disabled = recordMutation.isPending || selectedUserId == null
-
-  if (!open) return null
-
   return (
-    <form onSubmit={handleSubmit} className={styles.wrap}>
+    <form action={handleSubmit} className={styles.wrap}>
       <Heading level={4} data-size="xs">
         {t("Inspect {{name}}", { name: scope.name })}
       </Heading>
 
-      <MetadataSection
-        inspectedBy={inspectedBy}
-        setInspectedBy={setInspectedBy}
-        recurrence={recurrence}
-        setRecurrence={setRecurrence}
-      />
+      <MetadataSection defaultInspectedBy={defaultInspectedBy} />
 
       <ProcedureSection
         items={procedureItems}
@@ -257,23 +261,15 @@ export function InspectionFlow(props: {
         />
       </Field>
 
-      {recordMutation.error && (
-        <Paragraph role="alert" data-color="danger">
-          {recordMutation.error.message}
-        </Paragraph>
-      )}
+      <ErrorAlert error={error} />
 
       <div className={styles.actions}>
-        <Button
-          variant="secondary"
-          disabled={recordMutation.isPending}
-          onClick={handleCancel}
-        >
+        <Button variant="secondary" disabled={pending} onClick={onClose}>
           {t("Cancel")}
         </Button>
-        <Button type="submit" disabled={disabled}>
+        <SubmitButton disabled={selectedUserId == null}>
           {t("Complete inspection")}
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   )

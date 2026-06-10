@@ -6,6 +6,7 @@ import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/Equipmen
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/MaintenanceTodos.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 
 export type ModalState =
   | { kind: "none" }
@@ -127,7 +128,7 @@ export function EquipmentCard(props: {
         {isHistoryOpen && !isInspecting && (
           <Card.Block>
             {historyEntries.length === 0 ? (
-              <Paragraph data-size="sm">{t("No history yet.")}</Paragraph>
+              <EmptyState title={t("No history yet.")} />
             ) : (
               <div className={styles.list}>
                 {historyEntries.map(entry => {

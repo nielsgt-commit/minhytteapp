@@ -17,6 +17,7 @@ import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/Mainten
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 
 export type MaintenanceScope =
   | { kind: "structure"; id: number; name: string; builtYear?: number | null }
@@ -114,7 +115,9 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   )
   const historyBlock = showHistory && !inspecting && (
     <Card.Block>
-      <MaintenanceHistory scope={scope} />
+      <QueryBoundary>
+        <MaintenanceHistory scope={scope} />
+      </QueryBoundary>
     </Card.Block>
   )
   const inspectionBlock = inspecting && (

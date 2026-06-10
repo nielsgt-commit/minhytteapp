@@ -2,7 +2,7 @@ import {
   useSelectedPropertyId,
   useSelectedUserId,
 } from "@/selection/useSelection"
-import { type SyntheticEvent, useState } from "react"
+import { startTransition, useOptimistic, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Button,
@@ -15,6 +15,12 @@ import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceTodos.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { fdString } from "@/utils/formData"
 import { addDays, isoWeekYear, startOfSunday } from "@/utils/dateUtils"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
@@ -70,17 +76,26 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
 
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
 
-  const handleAdd = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  // Ids checked off but not yet confirmed by the server: the row disappears
+  // instantly and reappears (with the error surfaced below) if the save fails,
+  // since the optimistic set reverts when the transition settles.
+  const [optimisticDoneIds, addOptimisticDoneId] = useOptimistic(
+    new Set<number>(),
+    (ids, id: number) => new Set(ids).add(id),
+  )
+
+  const { pending, error } = useMutationsStatus(
+    createMutation,
+    updateMutation,
+    deleteMutation,
+  )
+
+  const handleAdd = async (fd: FormData) => {
     if (selectedUserId == null) return
-    const form = e.currentTarget
-    const fd = new FormData(form)
-    const rawDescription = fd.get("description")
-    const description =
-      typeof rawDescription === "string" ? rawDescription.trim() : ""
+    const description = fdString(fd, "description").trim()
     if (!description) return
-    createMutation.mutate(
-      {
+    try {
+      await createMutation.mutateAsync({
         description,
         ...(scope.kind === "structure"
           ? { structure_id: scope.id }
@@ -93,20 +108,18 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
         recurrence: "once",
         // Created as 'not_decided' (server default); the due — including the
         // date picker — is set afterward on the task's own card.
-      },
-      {
-        onSuccess: () => {
-          form.reset()
-        },
-      },
-    )
+      })
+    } catch {
+      // Surfaced via the aggregated ErrorAlert below.
+    }
   }
 
-  if (!items) return <p>{t("Loading…")}</p>
+  if (!items) return <CardSkeleton />
 
   const todos = items
     .filter(i => {
       if (i.status !== "todo" && i.status !== "doing") return false
+      if (optimisticDoneIds.has(i.id)) return false
       return scope.kind === "structure"
         ? i.structure_id === scope.id
         : scope.kind === "infrastructure"
@@ -139,7 +152,18 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   })
 
   const markDone = (item: (typeof todos)[number]) => {
-    updateMutation.mutate({ ...baseUpdate(item), status: "done" })
+    startTransition(async () => {
+      addOptimisticDoneId(item.id)
+      try {
+        await updateMutation.mutateAsync({
+          ...baseUpdate(item),
+          status: "done",
+        })
+      } catch {
+        // The optimistic removal reverts automatically; the error is
+        // surfaced via the aggregated ErrorAlert below.
+      }
+    })
   }
 
   const cycleItemSeverity = (item: (typeof todos)[number]) => {
@@ -170,37 +194,22 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     })
   }
 
-  const pending =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    deleteMutation.isPending
-  const lastError =
-    createMutation.error ?? updateMutation.error ?? deleteMutation.error
-
   return (
     <div className={styles.wrap}>
-      <form onSubmit={handleAdd} className={styles.addRow}>
+      <form action={handleAdd} className={styles.addRow}>
         <Textfield
           aria-label={t("New task")}
           name="description"
           placeholder={t("Add task...")}
           disabled={createMutation.isPending || selectedUserId == null}
         />
-        <Button
-          type="submit"
-          data-size="sm"
-          disabled={createMutation.isPending || selectedUserId == null}
-        >
+        <SubmitButton disabled={selectedUserId == null}>
           {t("Add")}
-        </Button>
+        </SubmitButton>
       </form>
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
+      <ErrorAlert error={error} />
       {todos.length === 0 ? (
-        <p>{t("No active tasks.")}</p>
+        <EmptyState title={t("No active tasks.")} />
       ) : (
         <ul className={styles.list}>
           {todos.map(todo => {
@@ -223,6 +232,9 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                     </Paragraph>
                     <div className={styles.actions}>
                       <MaintenanceDueSelect
+                        // Keyed by due_at so external changes (save/refetch)
+                        // remount the select with a fresh date draft.
+                        key={`${String(todo.id)}-${todo.due_at ?? ""}`}
                         value={{
                           due_kind: todo.due_kind,
                           due_priority_group_id: todo.due_priority_group_id,
