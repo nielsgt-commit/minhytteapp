@@ -1,12 +1,22 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  retainSearchParams,
+} from "@tanstack/react-router"
 import { store } from "@/app/store"
 import { selectSelectedPropertyId } from "@/features/property/propertySlice"
 import { selectSelectedUserId } from "@/features/user/userSlice"
+import { selectionSearchSchema } from "@/selection/searchSchema"
 import { getSession } from "@/auth/auth-client"
 import { trpc } from "@/trpc/client"
 import styles from "./_authed.module.css"
 
 export const Route = createFileRoute("/_authed")({
+  validateSearch: selectionSearchSchema,
+  search: {
+    middlewares: [retainSearchParams(["property", "user"])],
+  },
   beforeLoad: async ({ context }) => {
     const session = await context.queryClient.ensureQueryData({
       queryKey: ["auth", "session"],
