@@ -5,11 +5,11 @@ import { useTRPC } from "@/trpc/trpc"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 
 export function CategorySelect({
-  value,
-  onChange,
+  name,
+  defaultValue,
 }: {
-  value: string
-  onChange: (next: string) => void
+  name: string
+  defaultValue: string
 }) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
@@ -19,17 +19,12 @@ export function CategorySelect({
       property_id: selectedPropertyId ?? 0,
     }),
   )
-  const known = categories.some(c => c.name === value)
+  const known = categories.some(c => c.name === defaultValue)
   return (
-    <Select
-      value={value}
-      onChange={e => {
-        onChange(e.target.value)
-      }}
-    >
+    <Select name={name} defaultValue={defaultValue}>
       <Select.Option value="">{t("(none)")}</Select.Option>
-      {!known && value !== "" && (
-        <Select.Option value={value}>{value}</Select.Option>
+      {!known && defaultValue !== "" && (
+        <Select.Option value={defaultValue}>{defaultValue}</Select.Option>
       )}
       {categories.map(c => (
         <Select.Option key={c.id} value={c.name}>

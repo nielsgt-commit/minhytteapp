@@ -1,8 +1,9 @@
-import { Suspense } from "react"
-import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
+import { Button, Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./CreateSettlementFlow.module.css"
 import { ClosedSettlementSummary } from "@/features/settlement/ClosedSettlementSummary.tsx"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 
 type Status = "open" | "closed"
 type Season = "winter" | "spring" | "summer" | "autumn"
@@ -38,9 +39,7 @@ export function ClosedSettlementsList({
 }: Props) {
   const { t } = useTranslation("settlement")
   if (settlements.length === 0) {
-    return (
-      <Paragraph data-size="sm">{t("No closed settlements yet.")}</Paragraph>
-    )
+    return <EmptyState title={t("No closed settlements yet.")} />
   }
   return (
     <ul className={styles.list}>
@@ -95,11 +94,9 @@ export function ClosedSettlementsList({
                 </Card.Block>
                 {expanded && (
                   <Card.Block data-size="sm">
-                    <Suspense
-                      fallback={<p>{t("Loading closed settlement…")}</p>}
-                    >
+                    <QueryBoundary>
                       <ClosedSettlementSummary settlementId={s.id} />
-                    </Suspense>
+                    </QueryBoundary>
                   </Card.Block>
                 )}
               </article>

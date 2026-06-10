@@ -1,10 +1,7 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
+import { inclusiveDayCount } from "@/utils/dateUtils"
 
 export type Status = "draft" | "submitted" | "reimbursed" | "rejected"
 export type ExpenseType = "food" | "gas" | "maintenance"
@@ -26,16 +23,8 @@ export type ExpenseRow = {
   expense_types: ExpenseType[]
 }
 
-// Inclusive: Jul 6 -> Jul 12 = 7 days. For nights, drop the `+ 1`.
-function inclusiveDayCount(startIso: string, endIso: string) {
-  const s = Date.parse(`${startIso}T00:00:00Z`)
-  const e = Date.parse(`${endIso}T00:00:00Z`)
-  return Math.round((e - s) / 86400000) + 1
-}
-
 export function useReviewSettlementData(settlementId: number) {
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
 
@@ -115,19 +104,12 @@ export function useReviewSettlementData(settlementId: number) {
         return sum + totalHits * days
       }, 0)
 
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: trpc.expense.pathKey() })
-    void qc.invalidateQueries({ queryKey: trpc.user.pathKey() })
-    void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-  }
-
   return {
     heads,
     reimbursed,
     editableHeadId,
     mainGroupForHead,
     groupBookingDays,
-    invalidate,
   }
 }
 

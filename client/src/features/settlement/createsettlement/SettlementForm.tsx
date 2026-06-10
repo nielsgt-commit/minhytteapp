@@ -1,4 +1,4 @@
-import { type SyntheticEvent, Suspense } from "react"
+import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
@@ -10,64 +10,67 @@ import {
 import { useTranslation } from "react-i18next"
 import styles from "./CreateSettlementFlow.module.css"
 import { SplitPolicyBuilder } from "@/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx"
+import { SubmitButton } from "@/components/shared/SubmitButton"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
+import { currentYear } from "@/utils/dateUtils"
 
 type Status = "open" | "closed"
 type Season = "winter" | "spring" | "summer" | "autumn"
 
-type EditTarget = {
+export type EditTarget = {
   id: number
   status: Status
   season: Season | null
+  year: number
+  splitPolicyId: number | null
 }
 
 type Props = {
   propertyId: number
-  year: string
-  setYear: (v: string) => void
-  splitPolicyId: string
-  setSplitPolicyId: (v: string) => void
   editing: EditTarget | null
   pending: boolean
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  onSubmit: (values: { year: number; splitPolicyId: number | null }) => void
   onCancel: () => void
-  builderOpen: boolean
-  onToggleBuilder: () => void
-  onBuilderSaved: (policyId: number) => void
 }
 
+// The parent keys this form by the settlement being edited, so mount-time
+// defaults are safe. The split-policy select stays controlled because saving
+// a policy in the inline builder must select it.
 export function SettlementForm({
   propertyId,
-  year,
-  setYear,
-  splitPolicyId,
-  setSplitPolicyId,
   editing,
   pending,
   onSubmit,
   onCancel,
-  builderOpen,
-  onToggleBuilder,
-  onBuilderSaved,
 }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
+  const [splitPolicyId, setSplitPolicyId] = useState(
+    editing?.splitPolicyId == null ? "" : String(editing.splitPolicyId),
+  )
+  const [builderOpen, setBuilderOpen] = useState(false)
   const { data: customPolicies } = useSuspenseQuery(
     trpc.propertySplitPolicy.listForProperty.queryOptions({
       property_id: propertyId,
     }),
   )
 
+  const handleSubmit = (fd: FormData) => {
+    onSubmit({
+      year: Number(fd.get("year")),
+      splitPolicyId: splitPolicyId === "" ? null : Number(splitPolicyId),
+    })
+  }
+
   return (
-    <form onSubmit={onSubmit}>
+    <form action={handleSubmit}>
       <div className={styles.formRow}>
         <Textfield
           label={t("Year")}
+          name="year"
           type="number"
-          value={year}
-          onChange={e => {
-            setYear(e.target.value)
-          }}
+          defaultValue={editing?.year ?? currentYear()}
           required
         />
         <Field>
@@ -95,17 +98,19 @@ export function SettlementForm({
           type="button"
           variant="tertiary"
           data-size="sm"
-          onClick={onToggleBuilder}
+          onClick={() => {
+            setBuilderOpen(v => !v)
+          }}
         >
           {builderOpen
             ? t("Close split policy builder")
             : t("Add split policy")}
         </Button>
-        <Button type="submit" disabled={pending}>
+        <SubmitButton disabled={pending}>
           {editing == null
             ? t("Create and start settlement")
             : t("Update settlement #{{id}}", { id: String(editing.id) })}
-        </Button>
+        </SubmitButton>
         <Button
           type="button"
           variant="tertiary"
@@ -117,9 +122,14 @@ export function SettlementForm({
         </Button>
       </div>
       {builderOpen && (
-        <Suspense fallback={<p>{t("Loading split policy builder…")}</p>}>
-          <SplitPolicyBuilder onSaved={onBuilderSaved} />
-        </Suspense>
+        <QueryBoundary>
+          <SplitPolicyBuilder
+            onSaved={id => {
+              setSplitPolicyId(String(id))
+              setBuilderOpen(false)
+            }}
+          />
+        </QueryBoundary>
       )}
     </form>
   )

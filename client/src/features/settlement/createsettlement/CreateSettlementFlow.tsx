@@ -1,42 +1,29 @@
-import { type SyntheticEvent, Suspense, useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useState } from "react"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import {
   ClosedSettlementsList,
   type SettlementRow,
 } from "./ClosedSettlementsList"
-import { SettlementForm } from "./SettlementForm"
+import { SettlementForm, type EditTarget } from "./SettlementForm"
 import { useTRPC } from "@/trpc/trpc"
-
-type Status = "open" | "closed"
-type Season = "winter" | "spring" | "summer" | "autumn"
-
-type EditTarget = {
-  id: number
-  status: Status
-  season: Season | null
-}
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 
 type Props = { propertyId: number; isHead: boolean }
 
 export function CreateSettlementFlow({ propertyId, isHead }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const { data: settlements } = useSuspenseQuery(
     trpc.settlement.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
   const [openBlock, setOpenBlock] = useState<"form" | "closed" | null>(null)
-  const [builderOpen, setBuilderOpen] = useState(false)
-  const [year, setYear] = useState(() => String(new Date().getFullYear()))
-  const [splitPolicyId, setSplitPolicyId] = useState("")
   const [editing, setEditing] = useState<EditTarget | null>(null)
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
@@ -49,60 +36,42 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
       return b.year - a.year
     })
 
-  const invalidate = () =>
-    qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-
-  const resetForm = () => {
-    setYear(String(new Date().getFullYear()))
-    setSplitPolicyId("")
+  const closeForm = () => {
+    setOpenBlock(null)
     setEditing(null)
   }
 
-  const createMutation = useMutation(
-    trpc.settlement.create.mutationOptions({
-      onSuccess: () => {
-        resetForm()
-        setOpenBlock(null)
-        setBuilderOpen(false)
-        void invalidate()
-      },
-    }),
+  const createMutation = useMutationWithInvalidation(
+    trpc.settlement.create.mutationOptions({ onSuccess: closeForm }),
+    [trpc.settlement.pathKey()],
   )
 
-  const updateMutation = useMutation(
-    trpc.settlement.update.mutationOptions({
-      onSuccess: () => {
-        resetForm()
-        setOpenBlock(null)
-        setBuilderOpen(false)
-        void invalidate()
-      },
-    }),
+  const updateMutation = useMutationWithInvalidation(
+    trpc.settlement.update.mutationOptions({ onSuccess: closeForm }),
+    [trpc.settlement.pathKey()],
   )
 
-  const deleteMutation = useMutation(
-    trpc.settlement.delete.mutationOptions({
-      onSuccess: () => {
-        void invalidate()
-      },
-    }),
+  const deleteMutation = useMutationWithInvalidation(
+    trpc.settlement.delete.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
 
-  const pending =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    deleteMutation.isPending
-  const lastError =
-    createMutation.error ?? updateMutation.error ?? deleteMutation.error
+  const status = useMutationsStatus(
+    createMutation,
+    updateMutation,
+    deleteMutation,
+  )
 
-  const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = (values: {
+    year: number
+    splitPolicyId: number | null
+  }) => {
     const base = {
       property_id: propertyId,
-      year: Number(year),
+      year: values.year,
       status: editing?.status ?? ("open" as const),
       split_policy: "occupancy_days" as const,
-      split_policy_id: splitPolicyId === "" ? null : Number(splitPolicyId),
+      split_policy_id: values.splitPolicyId,
     }
     const payload =
       editing?.season != null ? { ...base, season: editing.season } : base
@@ -114,10 +83,13 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
   }
 
   const startEditing = (s: SettlementRow) => {
-    setEditing({ id: s.id, status: s.status, season: s.season })
-    setYear(String(s.year))
-    setSplitPolicyId(s.split_policy_id == null ? "" : String(s.split_policy_id))
-    setBuilderOpen(false)
+    setEditing({
+      id: s.id,
+      status: s.status,
+      season: s.season,
+      year: s.year,
+      splitPolicyId: s.split_policy_id,
+    })
     setOpenBlock("form")
   }
 
@@ -128,31 +100,16 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
           <article>
             <Card.Block data-size="sm">
               {openBlock === "form" ? (
-                <Suspense fallback={<p>{t("Loading form…")}</p>}>
+                <QueryBoundary>
                   <SettlementForm
+                    key={editing?.id ?? "new"}
                     propertyId={propertyId}
-                    year={year}
-                    setYear={setYear}
-                    splitPolicyId={splitPolicyId}
-                    setSplitPolicyId={setSplitPolicyId}
                     editing={editing}
-                    pending={pending}
+                    pending={status.pending}
                     onSubmit={handleSubmit}
-                    onCancel={() => {
-                      setOpenBlock(null)
-                      resetForm()
-                      setBuilderOpen(false)
-                    }}
-                    builderOpen={builderOpen}
-                    onToggleBuilder={() => {
-                      setBuilderOpen(v => !v)
-                    }}
-                    onBuilderSaved={id => {
-                      setSplitPolicyId(String(id))
-                      setBuilderOpen(false)
-                    }}
+                    onCancel={closeForm}
                   />
-                </Suspense>
+                </QueryBoundary>
               ) : (
                 <Button
                   type="button"
@@ -192,7 +149,7 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
                 expandedId={expandedId}
                 setExpandedId={setExpandedId}
                 isHead={isHead}
-                pending={pending}
+                pending={status.pending}
                 onEdit={startEditing}
                 onDelete={id => {
                   deleteMutation.mutate({ id })
@@ -202,11 +159,7 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
           </Card.Block>
         </article>
       </Card>
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
+      <ErrorAlert error={status.error} />
     </>
   )
 }

@@ -1,10 +1,6 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Heading,
@@ -20,22 +16,20 @@ import {
   type SettlementPhase,
 } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { inclusiveDayCount } from "@/utils/dateUtils"
 
 type Props = {
   settlementId: number
   phase: SettlementPhase
 }
 
-function inclusiveDayCount(startIso: string, endIso: string) {
-  const s = Date.parse(`${startIso}T00:00:00Z`)
-  const e = Date.parse(`${endIso}T00:00:00Z`)
-  return Math.round((e - s) / 86400000) + 1
-}
-
 export function ReviewBookingDays({ settlementId, phase }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const [stillAccepting, setStillAccepting] = useState(true)
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
@@ -55,21 +49,17 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
     trpc.settlement.getBookingAdjustments.queryOptions({ settlementId }),
   )
 
-  const advancePhase = useMutation(
-    trpc.settlement.advancePhase.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-      },
-    }),
+  const advancePhase = useMutationWithInvalidation(
+    trpc.settlement.advancePhase.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
 
-  const regressPhase = useMutation(
-    trpc.settlement.regressPhase.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-      },
-    }),
+  const regressPhase = useMutationWithInvalidation(
+    trpc.settlement.regressPhase.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
+
+  const status = useMutationsStatus(advancePhase, regressPhase)
 
   const adjustmentsByBooking = new Map(adjustments.map(a => [a.booking_id, a]))
 
@@ -127,7 +117,7 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
         </Paragraph>
       )}
       {visible.length === 0 ? (
-        <Paragraph>{t("No bookings.")}</Paragraph>
+        <EmptyState title={t("No bookings.")} />
       ) : (
         <div className={styles.list}>
           {visible.map(b => {
@@ -187,16 +177,7 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
             )}
           </div>
         )}
-        {advancePhase.error && (
-          <p role="alert">
-            {t("Error: {{message}}", { message: advancePhase.error.message })}
-          </p>
-        )}
-        {regressPhase.error && (
-          <p role="alert">
-            {t("Error: {{message}}", { message: regressPhase.error.message })}
-          </p>
-        )}
+        <ErrorAlert error={status.error} />
       </div>
     </>
   )

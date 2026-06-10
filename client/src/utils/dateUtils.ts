@@ -46,6 +46,13 @@ export function currentYear(): number {
   return new Date().getFullYear()
 }
 
+// Inclusive day count between two `YYYY-MM-DD` dates: Jul 6 -> Jul 12 = 7 days.
+export function inclusiveDayCount(startIso: string, endIso: string): number {
+  const s = Date.parse(`${startIso}T00:00:00Z`)
+  const e = Date.parse(`${endIso}T00:00:00Z`)
+  return Math.round((e - s) / 86400000) + 1
+}
+
 export function startOfSunday(d: Date): Date {
   const out = new Date(d)
   out.setHours(0, 0, 0, 0)

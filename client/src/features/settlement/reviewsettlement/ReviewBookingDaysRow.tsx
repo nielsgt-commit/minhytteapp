@@ -18,6 +18,9 @@ import {
 } from "./ReviewBookingDaysRowEditor"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { formatDateRange, inclusiveDayCount } from "@/utils/dateUtils"
 
 type BookingOccupant = {
   user_id: number
@@ -37,18 +40,12 @@ type Booking = {
   occupants: BookingOccupant[]
 }
 
-function inclusiveDayCount(startIso: string, endIso: string) {
-  const s = Date.parse(`${startIso}T00:00:00Z`)
-  const e = Date.parse(`${endIso}T00:00:00Z`)
-  return Math.round((e - s) / 86400000) + 1
-}
-
-function formatDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })
+// Draft state for an in-progress edit; null when the row is read-only.
+type EditState = {
+  start: string
+  end: string
+  drafts: DraftOccupant[]
+  inputValue: string
 }
 
 function buildDrafts(b: Booking, extras: string[]): DraftOccupant[] {
@@ -101,21 +98,16 @@ export function ReviewBookingDaysRow({
   excluded: boolean
   extras: string[]
 }) {
-  const { t } = useTranslation("settlement")
+  const { t, i18n } = useTranslation("settlement")
   const trpc = useTRPC()
 
-  const [editing, setEditing] = useState(false)
-  const [draftStart, setDraftStart] = useState(booking.start_date)
-  const [draftEnd, setDraftEnd] = useState(booking.end_date)
-  const [drafts, setDrafts] = useState<DraftOccupant[]>(() =>
-    buildDrafts(booking, extras),
-  )
-  const [inputValue, setInputValue] = useState("")
+  const [edit, setEdit] = useState<EditState | null>(null)
+  const editing = edit != null
 
   const updateBooking = useMutationWithInvalidation(
     trpc.booking.update.mutationOptions({
       onSuccess: () => {
-        setEditing(false)
+        setEdit(null)
       },
     }),
     [trpc.booking.pathKey()],
@@ -131,49 +123,56 @@ export function ReviewBookingDaysRow({
     [trpc.settlement.getBookingAdjustments.queryKey()],
   )
 
+  const status = useMutationsStatus(updateBooking, setExcluded, setExtras)
+
   const enterEdit = () => {
-    setDraftStart(booking.start_date)
-    setDraftEnd(booking.end_date)
-    setDrafts(buildDrafts(booking, extras))
-    setInputValue("")
-    setEditing(true)
+    setEdit({
+      start: booking.start_date,
+      end: booking.end_date,
+      drafts: buildDrafts(booking, extras),
+      inputValue: "",
+    })
   }
 
   const cancelEdit = () => {
-    setEditing(false)
-    setInputValue("")
+    setEdit(null)
   }
 
   const removeDraftAt = (index: number) => {
-    setDrafts(drafts.filter((_, i) => i !== index))
+    setEdit(e =>
+      e == null ? e : { ...e, drafts: e.drafts.filter((_, i) => i !== index) },
+    )
   }
 
   const commitInput = () => {
-    const next = commitOccupantInput(inputValue, drafts, users)
-    setDrafts(next.drafts)
-    setInputValue(next.inputValue)
+    setEdit(e => {
+      if (e == null) return e
+      const next = commitOccupantInput(e.inputValue, e.drafts, users)
+      return { ...e, drafts: next.drafts, inputValue: next.inputValue }
+    })
   }
 
   const save = () => {
+    if (edit == null) return
     if (booking.property_id == null) return
-    const userOccupants = drafts.filter(
+    const userOccupants = edit.drafts.filter(
       (d): d is Extract<DraftOccupant, { kind: "user" }> => d.kind === "user",
     )
-    const guestNames = drafts
+    const guestNames = edit.drafts
       .filter(
         (d): d is Extract<DraftOccupant, { kind: "guest" }> =>
           d.kind === "guest",
       )
       .map(d => d.name)
     if (!userOccupants.some(u => u.user_id === booking.booker_id)) return
-    if (draftStart > draftEnd) return
+    if (edit.start > edit.end) return
 
     updateBooking.mutate(
       {
         id: booking.id,
         property_id: booking.property_id,
-        start_date: draftStart,
-        end_date: draftEnd,
+        start_date: edit.start,
+        end_date: edit.end,
         status: booking.status,
         notes: booking.notes ?? undefined,
         occupants: userOccupants.map(u => ({
@@ -194,32 +193,40 @@ export function ReviewBookingDaysRow({
   }
 
   const days = inclusiveDayCount(
-    editing ? draftStart : booking.start_date,
-    editing ? draftEnd : booking.end_date,
+    edit?.start ?? booking.start_date,
+    edit?.end ?? booking.end_date,
   )
-  const occupantsCount = editing
-    ? drafts.length
+  const occupantsCount = edit
+    ? edit.drafts.length
     : booking.occupants.length + extras.length
   const included = !excluded
   const datalistId = `booking-occupants-${String(booking.id)}`
   const bookerMissing =
-    editing &&
-    !drafts.some(d => d.kind === "user" && d.user_id === booking.booker_id)
+    edit != null &&
+    !edit.drafts.some(d => d.kind === "user" && d.user_id === booking.booker_id)
 
   return (
     <Card asChild>
       <article>
         <Card.Block data-size="sm">
-          {editing ? (
+          {edit != null ? (
             <EditDates
-              draftStart={draftStart}
-              draftEnd={draftEnd}
-              onChangeStart={setDraftStart}
-              onChangeEnd={setDraftEnd}
+              draftStart={edit.start}
+              draftEnd={edit.end}
+              onChangeStart={v => {
+                setEdit(e => (e == null ? e : { ...e, start: v }))
+              }}
+              onChangeEnd={v => {
+                setEdit(e => (e == null ? e : { ...e, end: v }))
+              }}
             />
           ) : (
             <Heading level={4} data-size="2xs">
-              {formatDate(booking.start_date)} – {formatDate(booking.end_date)}
+              {formatDateRange(
+                booking.start_date,
+                booking.end_date,
+                i18n.language,
+              )}
             </Heading>
           )}
         </Card.Block>
@@ -231,11 +238,13 @@ export function ReviewBookingDaysRow({
                 {booking.booker_name ?? `#${String(booking.booker_id)}`}
               </Tag>
             </Paragraph>
-            {editing ? (
+            {edit != null ? (
               <OccupantChipInput
-                drafts={drafts}
-                inputValue={inputValue}
-                setInputValue={setInputValue}
+                drafts={edit.drafts}
+                inputValue={edit.inputValue}
+                setInputValue={v => {
+                  setEdit(e => (e == null ? e : { ...e, inputValue: v }))
+                }}
                 users={users}
                 datalistId={datalistId}
                 onRemoveAt={removeDraftAt}
@@ -280,13 +289,7 @@ export function ReviewBookingDaysRow({
                 {t("Booker must remain among the occupants.")}
               </Paragraph>
             )}
-            {updateBooking.error && (
-              <Paragraph role="alert" data-size="sm">
-                {t("Error: {{message}}", {
-                  message: updateBooking.error.message,
-                })}
-              </Paragraph>
-            )}
+            <ErrorAlert error={status.error} />
           </div>
         </Card.Block>
         <Card.Block data-size="sm">

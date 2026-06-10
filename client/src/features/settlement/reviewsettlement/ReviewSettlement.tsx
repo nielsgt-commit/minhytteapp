@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
   Heading,
@@ -16,6 +15,10 @@ import {
   useReviewSettlementData,
 } from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import {
   NEXT_PHASE,
   PREV_PHASE,
@@ -34,36 +37,30 @@ type Props = {
 export function ReviewSettlement({ settlementId, phase }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const [showWaiting, setShowWaiting] = useState(false)
-  const { heads, reimbursed, editableHeadId, invalidate } =
+  const { heads, reimbursed, editableHeadId } =
     useReviewSettlementData(settlementId)
   const { visibleIds } = useHeadVisibility()
 
-  const updateProgress = useMutation(
-    trpc.settlement.setMyReviewProgress.mutationOptions({
-      onSuccess: invalidate,
-    }),
+  const updateProgress = useMutationWithInvalidation(
+    trpc.settlement.setMyReviewProgress.mutationOptions(),
+    [trpc.expense.pathKey(), trpc.user.pathKey(), trpc.settlement.pathKey()],
   )
 
-  const advancePhase = useMutation(
-    trpc.settlement.advancePhase.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-      },
-    }),
+  const advancePhase = useMutationWithInvalidation(
+    trpc.settlement.advancePhase.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
 
-  const regressPhase = useMutation(
-    trpc.settlement.regressPhase.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: trpc.settlement.pathKey() })
-      },
-    }),
+  const regressPhase = useMutationWithInvalidation(
+    trpc.settlement.regressPhase.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
+
+  const status = useMutationsStatus(updateProgress, advancePhase, regressPhase)
 
   if (heads.length === 0) {
-    return <p>{t("No heads found.")}</p>
+    return <EmptyState title={t("No heads found.")} />
   }
 
   const myHead = heads.find(h => h.id === editableHeadId)
@@ -130,7 +127,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
       </div>
 
       {expensesToShow.length === 0 ? (
-        <Paragraph>{t("No reimbursed expenses.")}</Paragraph>
+        <EmptyState title={t("No reimbursed expenses.")} />
       ) : (
         <ul className={expenseRowStyles.list}>
           {expensesToShow.map(e => (
@@ -139,7 +136,6 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
                 expense={e}
                 editable={effectiveHeadId(e) === editableHeadId}
                 openSettlementId={settlementId}
-                onSaved={invalidate}
               />
             </li>
           ))}
@@ -182,21 +178,7 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
           })}
         </Paragraph>
       )}
-      {advancePhase.error && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: advancePhase.error.message })}
-        </p>
-      )}
-      {regressPhase.error && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: regressPhase.error.message })}
-        </p>
-      )}
-      {updateProgress.error && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: updateProgress.error.message })}
-        </p>
-      )}
+      <ErrorAlert error={status.error} />
     </>
   )
 }

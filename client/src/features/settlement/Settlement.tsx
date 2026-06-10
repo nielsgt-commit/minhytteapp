@@ -1,10 +1,11 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./Settlement.module.css"
 import { SettlementFlow } from "@/features/settlement/SettlementFlow.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
+import { EmptyState } from "@/components/shared/query-states/EmptyState"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 
 export function Settlement() {
   const { t } = useTranslation("settlement")
@@ -66,9 +67,11 @@ export function Settlement() {
     return (
       <section className={styles.page}>
         <PageHeader title={t("Settlement")} help={help} />
-        <p>
-          {t("Add or select a property to balance expenses and settle up.")}
-        </p>
+        <EmptyState
+          title={t(
+            "Add or select a property to balance expenses and settle up.",
+          )}
+        />
       </section>
     )
   }
@@ -76,9 +79,9 @@ export function Settlement() {
   return (
     <section className={styles.page}>
       <PageHeader title={t("Settlement")} help={help} />
-      <Suspense fallback={<p>{t("Loading…")}</p>}>
+      <QueryBoundary>
         <SettlementFlow propertyId={selectedPropertyId} />
-      </Suspense>
+      </QueryBoundary>
     </section>
   )
 }

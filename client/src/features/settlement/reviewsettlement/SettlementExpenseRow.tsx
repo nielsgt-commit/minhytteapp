@@ -1,5 +1,3 @@
-import { type SyntheticEvent, useState } from "react"
-import { useMutation } from "@tanstack/react-query"
 import {
   Card,
   Dialog,
@@ -16,13 +14,14 @@ import styles from "./SettlementExpenseRow.module.css"
 import { EditExpenseDialog } from "./EditExpenseDialog"
 import type { ExpenseRow } from "./useReviewSettlementData"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { useToggleState } from "@/hooks/useToggleState"
 
 type Props = {
   expense: ExpenseRow
   editable: boolean
   openSettlementId: number | null
-  onSaved: () => void
 }
 
 const basePayload = (e: ExpenseRow) => ({
@@ -43,22 +42,18 @@ export function SettlementExpenseRow({
   expense,
   editable,
   openSettlementId,
-  onSaved,
 }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const editDialog = useToggleState()
-  const [category, setCategory] = useState<string>(
-    expense.expense_types[0] ?? "",
-  )
 
-  const updateExpense = useMutation(
+  const updateExpense = useMutationWithInvalidation(
     trpc.expense.update.mutationOptions({
       onSuccess: () => {
-        onSaved()
         editDialog.close()
       },
     }),
+    [trpc.expense.pathKey(), trpc.user.pathKey(), trpc.settlement.pathKey()],
   )
 
   const linkedToClosed =
@@ -74,16 +69,18 @@ export function SettlementExpenseRow({
     })
   }
 
-  const submitCategory = (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const trimmed = category.trim()
+  const submitCategory = async (fd: FormData) => {
+    const raw = fd.get("category")
+    const trimmed = (typeof raw === "string" ? raw : "").trim()
     const nextTypes =
       trimmed === "" ? [] : [trimmed, ...expense.expense_types.slice(1)]
-    updateExpense.mutate({
-      ...basePayload(expense),
-      expense_types: nextTypes,
-      settlement_id: expense.settlement_id ?? undefined,
-    })
+    await updateExpense
+      .mutateAsync({
+        ...basePayload(expense),
+        expense_types: nextTypes,
+        settlement_id: expense.settlement_id ?? undefined,
+      })
+      .catch(() => undefined)
   }
 
   return (
@@ -177,14 +174,14 @@ export function SettlementExpenseRow({
               open={editDialog.value}
               onOpen={editDialog.open}
               onClose={editDialog.close}
-              category={category}
-              setCategory={setCategory}
+              defaultCategory={expense.expense_types[0] ?? ""}
               onSubmit={submitCategory}
               saving={updateExpense.isPending}
               errorMessage={updateExpense.error?.message ?? null}
               editable={editable}
             />
           </div>
+          <ErrorAlert error={editDialog.value ? null : updateExpense.error} />
         </Card.Block>
       </article>
     </Card>

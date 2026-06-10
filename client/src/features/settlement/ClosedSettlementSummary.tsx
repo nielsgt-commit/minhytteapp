@@ -1,11 +1,9 @@
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 
 type Props = {
   settlementId: number
@@ -13,16 +11,15 @@ type Props = {
 
 type BuiltInPolicy = "shares" | "groups_equal" | "occupancy_days"
 
-function formatDateTime(value: string | Date | null) {
+function formatDateTime(value: string | Date | null, locale: string) {
   if (value == null) return "—"
   const d = typeof value === "string" ? new Date(value) : value
-  return d.toLocaleString()
+  return d.toLocaleString(locale)
 }
 
 export function ClosedSettlementSummary({ settlementId }: Props) {
-  const { t } = useTranslation("settlement")
+  const { t, i18n } = useTranslation("settlement")
   const trpc = useTRPC()
-  const qc = useQueryClient()
 
   const BUILT_IN_LABEL: Record<BuiltInPolicy, string> = {
     occupancy_days: t("Occupancy days (built-in)"),
@@ -44,14 +41,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
   const { data } = useSuspenseQuery(
     trpc.settlement.getClosedSummary.queryOptions({ id: settlementId }),
   )
-  const markTransferPaid = useMutation(
-    trpc.settlement.markTransferPaid.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({
-          queryKey: trpc.settlement.getClosedSummary.queryKey(),
-        })
-      },
-    }),
+  const markTransferPaid = useMutationWithInvalidation(
+    trpc.settlement.markTransferPaid.mutationOptions(),
+    [trpc.settlement.getClosedSummary.queryKey()],
   )
 
   const customPolicyName = data.split_policy_name
@@ -73,7 +65,9 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
         {data.season ? ` (${data.season})` : ""}
       </Heading>
       <Paragraph>
-        {t("Closed at: {{when}}", { when: formatDateTime(data.closed_at) })}
+        {t("Closed at: {{when}}", {
+          when: formatDateTime(data.closed_at, i18n.language),
+        })}
       </Paragraph>
 
       <Heading level={4} data-size="2xs">
@@ -126,7 +120,10 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
               {tr.status === "paid" ? (
                 <span>
                   {t("(paid {{when}})", {
-                    when: tr.paid_at != null ? formatDateTime(tr.paid_at) : "",
+                    when:
+                      tr.paid_at != null
+                        ? formatDateTime(tr.paid_at, i18n.language)
+                        : "",
                   })}
                 </span>
               ) : (
@@ -152,11 +149,7 @@ export function ClosedSettlementSummary({ settlementId }: Props) {
         </ul>
       )}
 
-      {markTransferPaid.error && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: markTransferPaid.error.message })}
-        </p>
-      )}
+      <ErrorAlert error={markTransferPaid.error} />
     </section>
   )
 }

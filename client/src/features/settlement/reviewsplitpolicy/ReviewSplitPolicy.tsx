@@ -1,13 +1,12 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import { PREV_PHASE } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 
 type Props = {
   settlementId: number
@@ -16,35 +15,26 @@ type Props = {
 export function ReviewSplitPolicy({ settlementId }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const qc = useQueryClient()
   const previewQuery = useQuery({
     ...trpc.settlement.previewSplit.queryOptions({ id: settlementId }),
     retry: false,
   })
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
 
-  const acceptSplit = useMutation(
-    trpc.settlement.acceptSplit.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({
-          queryKey: trpc.settlement.pathKey(),
-        })
-      },
-    }),
+  const acceptSplit = useMutationWithInvalidation(
+    trpc.settlement.acceptSplit.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
 
-  const regressPhase = useMutation(
-    trpc.settlement.regressPhase.mutationOptions({
-      onSuccess: () => {
-        void qc.invalidateQueries({
-          queryKey: trpc.settlement.pathKey(),
-        })
-      },
-    }),
+  const regressPhase = useMutationWithInvalidation(
+    trpc.settlement.regressPhase.mutationOptions(),
+    [trpc.settlement.pathKey()],
   )
+
+  const status = useMutationsStatus(acceptSplit, regressPhase)
 
   if (previewQuery.isPending) {
-    return <Paragraph>{t("Loading split preview…")}</Paragraph>
+    return <CardSkeleton />
   }
   if (previewQuery.isError) {
     return (
@@ -56,11 +46,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
             </Heading>
           </Card.Block>
           <Card.Block data-size="sm">
-            <Paragraph role="alert">
-              {t("Couldn't build a split preview: {{message}}", {
-                message: previewQuery.error.message,
-              })}
-            </Paragraph>
+            <ErrorAlert error={previewQuery.error} />
             <Paragraph data-size="sm">
               <Trans
                 ns="settlement"
@@ -224,16 +210,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
               {t("Only heads of this property can accept.")}
             </Paragraph>
           )}
-          {acceptSplit.error && (
-            <p role="alert">
-              {t("Error: {{message}}", { message: acceptSplit.error.message })}
-            </p>
-          )}
-          {regressPhase.error && (
-            <p role="alert">
-              {t("Error: {{message}}", { message: regressPhase.error.message })}
-            </p>
-          )}
+          <ErrorAlert error={status.error} />
         </Card.Block>
       </article>
     </Card>

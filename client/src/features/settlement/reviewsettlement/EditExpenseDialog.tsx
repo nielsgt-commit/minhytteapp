@@ -1,4 +1,3 @@
-import { type SyntheticEvent } from "react"
 import {
   Button,
   Dialog,
@@ -14,9 +13,8 @@ type Props = {
   open: boolean
   onOpen: () => void
   onClose: () => void
-  category: string
-  setCategory: (next: string) => void
-  onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void
+  defaultCategory: string
+  onSubmit: (fd: FormData) => Promise<void>
   saving: boolean
   errorMessage: string | null
   editable: boolean
@@ -27,8 +25,7 @@ export function EditExpenseDialog({
   open,
   onOpen,
   onClose,
-  category,
-  setCategory,
+  defaultCategory,
   onSubmit,
   saving,
   errorMessage,
@@ -55,10 +52,10 @@ export function EditExpenseDialog({
           </Heading>
         </Dialog.Block>
         <Dialog.Block>
-          <form id={formId} className={styles.editForm} onSubmit={onSubmit}>
+          <form id={formId} className={styles.editForm} action={onSubmit}>
             <label>
               {t("Category")}
-              <CategorySelect value={category} onChange={setCategory} />
+              <CategorySelect name="category" defaultValue={defaultCategory} />
             </label>
           </form>
         </Dialog.Block>
