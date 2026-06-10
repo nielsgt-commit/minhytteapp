@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -7,6 +7,7 @@ import { useSelectedUserId } from "@/selection/useSelection"
 import { useFlatpickr } from "../hooks/useFlatpickr.ts"
 import { useBookingForm } from "../hooks/useBookingForm.ts"
 import { useOccupancyData } from "../hooks/useOccupancyData.ts"
+import { useOverlappingPriorityWeeks } from "../hooks/useOverlappingPriorityWeeks.ts"
 import { StepDates } from "./stepdates/StepDates.tsx"
 import { StepGuests } from "./stepguests/StepGuests.tsx"
 import { StepRooms } from "./steprooms/StepRooms.tsx"
@@ -17,16 +18,6 @@ import styles from "./AddStayFlow.module.css"
 const TOTAL_STEPS = 4
 // Label each "Next" button with the step it leads to.
 const NEXT_STEP_LABELS = ["Add guests", "Add rooms", "Review"] as const
-
-function isoWeekMonday(year: number, week: number): Date {
-  const jan4 = new Date(Date.UTC(year, 0, 4))
-  const dow = jan4.getUTCDay() === 0 ? 7 : jan4.getUTCDay()
-  const week1Mon = new Date(jan4)
-  week1Mon.setUTCDate(jan4.getUTCDate() - (dow - 1))
-  const target = new Date(week1Mon)
-  target.setUTCDate(week1Mon.getUTCDate() + (week - 1) * 7)
-  return target
-}
 
 export function AddStayFlow({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("planstay")
@@ -97,43 +88,10 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
     conflicts,
   })
 
-  const draftYear = draft.start_date
-    ? parseInt(draft.start_date.slice(0, 4))
-    : new Date().getFullYear()
-  const { data: priorityData } = useQuery({
-    ...trpc.priority.list.queryOptions({
-      property_id: propertyId,
-      year: draftYear,
-    }),
-    enabled: draft.start_date != null && draft.end_date != null,
-  })
-
-  const overlappingPriorityWeeks = useMemo(() => {
-    const startDate = draft.start_date
-    const endDate = draft.end_date
-    if (!startDate || !endDate || !priorityData) return []
-    const ownerNameById = new Map(
-      priorityData.eligibleOwners.map(o => [
-        o.user_group_id,
-        o.user_group_name,
-      ]),
-    )
-    return priorityData.assignments
-      .filter(a => {
-        const weekStart = isoWeekMonday(a.year, a.iso_week)
-        const weekEnd = new Date(weekStart)
-        weekEnd.setUTCDate(weekStart.getUTCDate() + 6)
-        return (
-          weekStart.toISOString().slice(0, 10) <= endDate &&
-          weekEnd.toISOString().slice(0, 10) >= startDate
-        )
-      })
-      .map(a => ({
-        iso_week: a.iso_week,
-        owner_name:
-          ownerNameById.get(a.user_group_id) ?? `#${String(a.user_group_id)}`,
-      }))
-  }, [draft.start_date, draft.end_date, priorityData])
+  const overlappingPriorityWeeks = useOverlappingPriorityWeeks(
+    propertyId,
+    draft,
+  )
 
   const goToStep = (n: number) => {
     if (n < 1 || n > TOTAL_STEPS) return

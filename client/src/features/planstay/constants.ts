@@ -1,5 +1,7 @@
+import { currentYear } from "@/utils/dateUtils"
+
 function seasonYear() {
-  const y = new Date().getFullYear()
+  const y = currentYear()
   return new Date().getMonth() > 7 ? y + 1 : y
 }
 

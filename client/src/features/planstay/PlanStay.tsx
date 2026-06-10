@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import styles from "./PlanStay.module.css"
 import { AddStayFlow } from "@/features/planstay/addstayflow/AddStayFlow.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 
 export function PlanStay() {
@@ -61,7 +62,9 @@ export function PlanStay() {
     <section className={styles.page}>
       <PageHeader title={t("Plan stay")} help={help} />
       <div className={styles.main}>
-        <AddStayFlow propertyId={selectedPropertyId} />
+        <QueryBoundary>
+          <AddStayFlow propertyId={selectedPropertyId} />
+        </QueryBoundary>
       </div>
     </section>
   )

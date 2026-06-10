@@ -5,7 +5,9 @@ import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import {
   AddBedsFlow,
   type RoomData,
@@ -61,9 +63,11 @@ export function BedroomsStep({ propertyId }: Props) {
   >(null)
   const [editingRoomId, setEditingRoomId] = useState<number | null>(null)
 
-  const lastError = createRoom.error ?? updateRoom.error ?? deleteRoom.error
-  const pending =
-    createRoom.isPending || updateRoom.isPending || deleteRoom.isPending
+  const { error: lastError, pending } = useMutationsStatus(
+    createRoom,
+    updateRoom,
+    deleteRoom,
+  )
 
   const handleDeleteRoom = (r: Room) => {
     if (!window.confirm(t('Delete room "{{name}}"?', { name: r.name }))) return
@@ -120,11 +124,7 @@ export function BedroomsStep({ propertyId }: Props) {
     <section>
       <Heading level={3}>{t("Bedrooms in each building")}</Heading>
 
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
+      <ErrorAlert error={lastError} />
 
       <ul className={listStyles.list}>
         {structures.map(structure => {

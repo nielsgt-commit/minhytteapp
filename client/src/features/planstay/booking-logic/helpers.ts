@@ -4,23 +4,15 @@
 
 // ---- Date utilities ----
 
-function pad2(n: number): string {
-  return String(n).padStart(2, "0")
-}
+import { addDays, toIso } from "@/utils/dateUtils"
 
-export function toIso(d: Date): string {
-  return `${String(d.getFullYear())}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
-}
+// Re-export the shared local-time date helpers so this module keeps its
+// historical import surface (`booking-logic` exposes toIso/addDays/…).
+export { addDays, isoWeekNumber, toIso } from "@/utils/dateUtils"
 
 export function fromIso(iso: string): Date {
   const parts = iso.split("-").map(Number)
   return new Date(parts[0], parts[1] - 1, parts[2])
-}
-
-export function addDays(d: Date, n: number): Date {
-  const out = new Date(d)
-  out.setDate(out.getDate() + n)
-  return out
 }
 
 /**
@@ -36,14 +28,6 @@ export function expandRange(start_date: string, end_date: string): string[] {
     cur = addDays(cur, 1)
   }
   return result
-}
-
-export function isoWeekNumber(d: Date): number {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = t.getUTCDay() || 7
-  t.setUTCDate(t.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1))
-  return Math.ceil(((t.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
 }
 
 export type Range = { start: string; end: string; days: string[] }

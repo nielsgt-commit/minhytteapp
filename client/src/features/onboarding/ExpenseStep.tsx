@@ -6,7 +6,9 @@ import { useSelectedPropertyId } from "@/selection/useSelection"
 import { fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { SubmitButton } from "@/components/shared/SubmitButton"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import listStyles from "./StepList.module.css"
 
 // Common shared-cost buckets offered as one-tap suggestions. Kept as
@@ -41,8 +43,10 @@ export function ExpenseStep() {
     keys,
   )
 
-  const lastError = createCategory.error ?? archiveCategory.error
-  const pending = createCategory.isPending || archiveCategory.isPending
+  const { error: lastError, pending } = useMutationsStatus(
+    createCategory,
+    archiveCategory,
+  )
 
   const existingNames = new Set(categories.map(c => c.name.toLowerCase()))
 
@@ -76,11 +80,7 @@ export function ExpenseStep() {
         )}
       </p>
 
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
+      <ErrorAlert error={lastError} />
 
       {categories.length > 0 && (
         <ul className={listStyles.list}>

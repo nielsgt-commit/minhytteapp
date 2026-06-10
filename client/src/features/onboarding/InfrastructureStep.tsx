@@ -6,9 +6,11 @@ import { useTRPC } from "@/trpc/trpc"
 import { fdNumber, fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import listStyles from "./StepList.module.css"
 
 type Props = {
@@ -52,9 +54,11 @@ export function InfrastructureStep({ propertyId }: Props) {
     keys,
   )
 
-  const lastError = createInfra.error ?? updateInfra.error ?? deleteInfra.error
-  const pending =
-    createInfra.isPending || updateInfra.isPending || deleteInfra.isPending
+  const { error: lastError, pending } = useMutationsStatus(
+    createInfra,
+    updateInfra,
+    deleteInfra,
+  )
 
   const handleAdd = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
@@ -168,11 +172,7 @@ export function InfrastructureStep({ propertyId }: Props) {
         )}
       </p>
 
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
+      <ErrorAlert error={lastError} />
 
       <ul className={listStyles.list}>
         {items.map(i => (

@@ -5,6 +5,9 @@ import { useTranslation } from "react-i18next"
 import { Button, Card, Heading } from "@digdir/designsystemet-react"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { UserCreationForm } from "./UserCreationForm"
 import {
   PROPERTY_BASICS_FORM_ID,
@@ -65,7 +68,17 @@ type Props = {
   preview?: boolean
 }
 
-export function OnboardingFlow({ preview = false }: Props) {
+export function OnboardingFlow(props: Props) {
+  // The flow (and its step components) read data with useSuspenseQuery, so
+  // give them a suspense + error boundary inside the feature.
+  return (
+    <QueryBoundary>
+      <OnboardingFlowInner {...props} />
+    </QueryBoundary>
+  )
+}
+
+function OnboardingFlowInner({ preview = false }: Props) {
   const { t } = useTranslation("onboarding")
   const trpc = useTRPC()
   const navigate = useNavigate()
@@ -138,8 +151,12 @@ export function OnboardingFlow({ preview = false }: Props) {
     await navigate({ to: "/oversikt" })
   }
 
-  const lastError =
-    createUser.error ?? createProperty.error ?? setStep.error ?? dismiss.error
+  const { error: lastError } = useMutationsStatus(
+    createUser,
+    createProperty,
+    setStep,
+    dismiss,
+  )
 
   const footerPending = setStep.isPending || dismiss.isPending
 
@@ -189,11 +206,7 @@ export function OnboardingFlow({ preview = false }: Props) {
               </div>
             )}
 
-            {lastError && (
-              <p role="alert">
-                {t("Error: {{message}}", { message: lastError.message })}
-              </p>
-            )}
+            <ErrorAlert error={lastError} />
 
             {currentStep === "user" && (
               <UserCreationForm

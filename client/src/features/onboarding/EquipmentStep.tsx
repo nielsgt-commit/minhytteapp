@@ -6,9 +6,11 @@ import { useTRPC } from "@/trpc/trpc"
 import { fdNumber, fdString } from "@/utils/formData"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useToggleState } from "@/hooks/useToggleState"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import listStyles from "./StepList.module.css"
 
 type Props = {
@@ -51,12 +53,11 @@ export function EquipmentStep({ propertyId }: Props) {
     keys,
   )
 
-  const lastError =
-    createEquipment.error ?? updateEquipment.error ?? deleteEquipment.error
-  const pending =
-    createEquipment.isPending ||
-    updateEquipment.isPending ||
-    deleteEquipment.isPending
+  const { error: lastError, pending } = useMutationsStatus(
+    createEquipment,
+    updateEquipment,
+    deleteEquipment,
+  )
 
   const handleAdd = async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
@@ -179,11 +180,7 @@ export function EquipmentStep({ propertyId }: Props) {
         )}
       </p>
 
-      {lastError && (
-        <p role="alert">
-          {t("Error: {{message}}", { message: lastError.message })}
-        </p>
-      )}
+      <ErrorAlert error={lastError} />
 
       <ul className={listStyles.list}>
         {items.map(i => (
