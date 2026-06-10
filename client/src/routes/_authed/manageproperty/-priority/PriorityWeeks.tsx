@@ -13,7 +13,6 @@ import {
 } from "./priorityUtils"
 import { YearNavigator } from "./YearNavigator"
 import { PriorityWeeksTable } from "./PriorityWeeksTable"
-import { usePrioritySliceSync } from "./usePrioritySliceSync"
 
 export function PriorityWeeks() {
   const { t } = useTranslation("priority")
@@ -38,8 +37,6 @@ export function PriorityWeeks() {
     }),
     enabled: selectedPropertyId != null,
   })
-
-  usePrioritySliceSync(priorityQuery.data, year)
 
   const invalidate = () => {
     if (selectedPropertyId == null) return
