@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@digdir/designsystemet-react"
 import {

@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTranslation } from "react-i18next"
 import styles from "./Maintenance.module.css"
 import { StructureStats } from "@/features/maintenance/structure/StructureStats.tsx"

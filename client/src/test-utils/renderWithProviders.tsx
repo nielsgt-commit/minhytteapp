@@ -1,18 +1,35 @@
-import { type ReactElement, type ReactNode } from "react"
+import { type ReactElement } from "react"
 import {
+  act,
   render,
   type RenderOptions,
   type RenderResult,
 } from "@testing-library/react"
-import { Provider } from "react-redux"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { makeStore, type AppStore, type RootState } from "@/app/store"
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  type AnyRouter,
+} from "@tanstack/react-router"
+import { selectionSearchSchema } from "@/selection/searchSchema"
 import { TRPCProvider } from "@/trpc/trpc"
 import { trpcClient as defaultTrpcClient } from "@/trpc/client"
 import i18n from "@/i18n"
 
 export type ProviderOptions = {
-  preloadedState?: Partial<RootState>
+  /** Initial URL search params (selection state) for the test router. */
+  initialSearch?: { property?: number; user?: number }
+  /**
+   * @deprecated Redux is gone; selection now lives in the URL. The legacy
+   * `property.selectedPropertyId` / `user.selectedUserId` shapes are mapped
+   * onto `initialSearch`. Use `initialSearch` instead.
+   */
+  preloadedState?: {
+    property?: { selectedPropertyId?: number | null }
+    user?: { selectedUserId?: number | null }
+  }
   queryClient?: QueryClient
   trpcClient?: typeof defaultTrpcClient
   seed?: (queryClient: QueryClient) => void
@@ -29,15 +46,17 @@ export function makeTestQueryClient(): QueryClient {
 }
 
 export type RenderWithProvidersResult = RenderResult & {
-  store: AppStore
+  router: AnyRouter
   queryClient: QueryClient
 }
 
-export function renderWithProviders(
+export async function renderWithProviders(
   ui: ReactElement,
   options: ProviderOptions & Omit<RenderOptions, "wrapper"> = {},
-): RenderWithProvidersResult {
+): Promise<RenderWithProvidersResult> {
   const {
+    initialSearch,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- the shim consumes its own deprecated option
     preloadedState,
     queryClient = makeTestQueryClient(),
     trpcClient = defaultTrpcClient,
@@ -46,23 +65,42 @@ export function renderWithProviders(
     ...rtlOptions
   } = options
 
-  const store = makeStore(preloadedState)
-
   if (i18n.language !== language) void i18n.changeLanguage(language)
   if (seed) seed(queryClient)
 
-  function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-            {children}
-          </TRPCProvider>
-        </QueryClientProvider>
-      </Provider>
-    )
-  }
+  const property =
+    initialSearch?.property ??
+    preloadedState?.property?.selectedPropertyId ??
+    undefined
+  const user =
+    initialSearch?.user ?? preloadedState?.user?.selectedUserId ?? undefined
 
-  const result = render(ui, { wrapper: Wrapper, ...rtlOptions })
-  return { ...result, store, queryClient }
+  const params = new URLSearchParams()
+  if (property != null) params.set("property", String(property))
+  if (user != null) params.set("user", String(user))
+  const search = params.toString()
+  const initial = search ? `/?${search}` : "/"
+
+  const rootRoute = createRootRoute({
+    validateSearch: selectionSearchSchema,
+    component: () => (
+      <QueryClientProvider client={queryClient}>
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          {ui}
+        </TRPCProvider>
+      </QueryClientProvider>
+    ),
+  })
+
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory({ initialEntries: [initial] }),
+  })
+
+  let result!: RenderResult
+  await act(async () => {
+    // The test router is structurally independent of the app's Register types.
+    result = render(<RouterProvider router={router as never} />, rtlOptions)
+  })
+  return { ...result, router, queryClient }
 }

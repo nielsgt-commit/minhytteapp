@@ -36,7 +36,6 @@
     "@portabletext/react": "^6.2.0",
     "@portabletext/toolbar": "^8.0.0",
     "@portabletext/types": "^4.0.2",
-    "@reduxjs/toolkit": "^2.6.1",
     "@tanstack/react-query": "^5.99.2",
     "@tanstack/react-query-devtools": "^5.99.2",
     "@tanstack/react-router": "^1.168.23",
@@ -56,7 +55,6 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^17.0.8",
-    "react-redux": "^9.2.0",
     "resend": "^6.12.4",
     "tsx": "^4.21.0",
     "zod": "^4.3.6"

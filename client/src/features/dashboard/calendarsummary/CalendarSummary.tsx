@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
 import PlannedAvailabilitySummary from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
 import PlannedMaintenanceSummary from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"

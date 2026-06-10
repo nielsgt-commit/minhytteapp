@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Card, Chip, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"

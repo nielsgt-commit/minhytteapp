@@ -75,19 +75,6 @@ const eslintConfig = defineConfig(
           disallowTypeAnnotations: true,
         },
       ],
-      "no-restricted-imports": [
-        2,
-        {
-          paths: [
-            {
-              name: "react-redux",
-              importNames: ["useSelector", "useStore", "useDispatch"],
-              message:
-                "Please use pre-typed versions from `src/app/hooks.ts` instead.",
-            },
-          ],
-        },
-      ],
     },
   },
 

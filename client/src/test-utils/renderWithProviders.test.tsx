@@ -1,11 +1,10 @@
 import { describe, expect, test } from "vitest"
 import { useQuery } from "@tanstack/react-query"
-import { useAppSelector } from "@/app/hooks"
-import { selectSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { renderWithProviders } from "./renderWithProviders.tsx"
 
 function PropertyIdProbe() {
-  const id = useAppSelector(selectSelectedPropertyId)
+  const id = useSelectedPropertyId()
   return <div data-testid="pid">{id ?? "none"}</div>
 }
 
@@ -18,20 +17,37 @@ function CacheProbe() {
 }
 
 describe("renderWithProviders", () => {
-  test("preloaded Redux state is visible via useAppSelector", () => {
-    const { getByTestId } = renderWithProviders(<PropertyIdProbe />, {
-      preloadedState: { property: { selectedPropertyId: 42 } },
+  test("initialSearch is visible via useSelectedPropertyId", async () => {
+    const { getByTestId } = await renderWithProviders(<PropertyIdProbe />, {
+      initialSearch: { property: 42 },
     })
     expect(getByTestId("pid").textContent).toBe("42")
   })
 
-  test("returns the store so tests can dispatch / inspect", () => {
-    const { store } = renderWithProviders(<PropertyIdProbe />)
-    expect(store.getState().property.selectedPropertyId).toBeNull()
+  test("deprecated preloadedState maps onto the search params", async () => {
+    const { getByTestId, router } = await renderWithProviders(
+      <PropertyIdProbe />,
+      {
+        preloadedState: {
+          property: { selectedPropertyId: 42 },
+          user: { selectedUserId: 7 },
+        },
+      },
+    )
+    expect(getByTestId("pid").textContent).toBe("42")
+    expect(router.state.location.search).toEqual({ property: 42, user: 7 })
   })
 
-  test("seed callback can prime the React Query cache", () => {
-    const { getByTestId } = renderWithProviders(<CacheProbe />, {
+  test("returns the router so tests can inspect the location", async () => {
+    const { router, getByTestId } = await renderWithProviders(
+      <PropertyIdProbe />,
+    )
+    expect(router.state.location.search).toEqual({})
+    expect(getByTestId("pid").textContent).toBe("none")
+  })
+
+  test("seed callback can prime the React Query cache", async () => {
+    const { getByTestId } = await renderWithProviders(<CacheProbe />, {
       seed: qc => {
         qc.setQueryData(["probe"], "from-cache")
       },
@@ -39,13 +55,13 @@ describe("renderWithProviders", () => {
     expect(getByTestId("data").textContent).toBe("from-cache")
   })
 
-  test("each render gets an isolated QueryClient", () => {
-    const first = renderWithProviders(<CacheProbe />, {
+  test("each render gets an isolated QueryClient", async () => {
+    const first = await renderWithProviders(<CacheProbe />, {
       seed: qc => {
         qc.setQueryData(["probe"], "a")
       },
     })
-    const second = renderWithProviders(<CacheProbe />, {
+    const second = await renderWithProviders(<CacheProbe />, {
       seed: qc => {
         qc.setQueryData(["probe"], "b")
       },

@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Select } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 
 export function CategorySelect({
   value,

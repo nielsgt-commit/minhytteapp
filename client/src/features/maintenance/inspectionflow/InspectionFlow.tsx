@@ -1,5 +1,7 @@
-import { useSelectedUserId } from "@/features/user/userSlice"
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import {
+  useSelectedPropertyId,
+  useSelectedUserId,
+} from "@/selection/useSelection"
 import { type SyntheticEvent, useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {

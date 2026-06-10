@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
 import { useAuthSession } from "@/auth/auth-client"

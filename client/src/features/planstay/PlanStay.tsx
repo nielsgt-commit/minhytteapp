@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTranslation } from "react-i18next"
 import styles from "./PlanStay.module.css"
 import { AddStayFlow } from "@/features/planstay/addstayflow/AddStayFlow.tsx"
@@ -23,7 +23,7 @@ export function PlanStay() {
       {
         title: t("Say who's coming"),
         body: t(
-          "Add the people joining you — other co-owners, family, and children. This is used to count beds and to show up in the \"who's coming\" lists the others see.",
+          'Add the people joining you — other co-owners, family, and children. This is used to count beds and to show up in the "who\'s coming" lists the others see.',
         ),
       },
       {

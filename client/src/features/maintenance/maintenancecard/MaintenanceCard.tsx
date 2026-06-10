@@ -15,12 +15,17 @@ import { InspectionFlow } from "@/features/maintenance/inspectionflow/Inspection
 import { MaintenanceHistory } from "@/features/maintenance/maintenancecard/MaintenanceHistory.tsx"
 import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/MaintenanceTodos.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 export type MaintenanceScope =
   | { kind: "structure"; id: number; name: string; builtYear?: number | null }
-  | { kind: "infrastructure"; id: number; name: string; builtYear?: number | null }
+  | {
+      kind: "infrastructure"
+      id: number
+      name: string
+      builtYear?: number | null
+    }
   | { kind: "equipment"; id: number; name: string; builtYear?: number | null }
 
 export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
@@ -129,11 +134,7 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
       <Card asChild>
         <article>
           <Card.Block className={styles.mobileTopRow} data-size="sm">
-            <Heading
-              level={3}
-              data-size="xs"
-              className={styles.nameTag}
-            >
+            <Heading level={3} data-size="xs" className={styles.nameTag}>
               {scope.name}
             </Heading>
             {!inspecting && (

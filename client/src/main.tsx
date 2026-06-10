@@ -6,8 +6,6 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { routeTree } from "./routeTree.gen"
 
 import { createRoot } from "react-dom/client"
-import { Provider } from "react-redux"
-import { store } from "./app/store"
 import { queryClient } from "./app/queryClient"
 import { TRPCProvider } from "./trpc/trpc"
 import { trpcClient } from "./trpc/client"
@@ -44,13 +42,11 @@ if (container) {
 
   root.render(
     <StrictMode>
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-            <RouterProvider router={router} />
-          </TRPCProvider>
-        </QueryClientProvider>
-      </Provider>
+      <QueryClientProvider client={queryClient}>
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          <RouterProvider router={router} />
+        </TRPCProvider>
+      </QueryClientProvider>
     </StrictMode>,
   )
 } else {

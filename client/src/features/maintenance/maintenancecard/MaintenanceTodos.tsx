@@ -1,5 +1,7 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
-import { useSelectedUserId } from "@/features/user/userSlice"
+import {
+  useSelectedPropertyId,
+  useSelectedUserId,
+} from "@/selection/useSelection"
 import { type SyntheticEvent, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -11,7 +13,6 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceTodos.module.css"
-import {} from "@/features/property/propertySlice.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { addDays, isoWeekYear, startOfSunday } from "@/utils/dateUtils"

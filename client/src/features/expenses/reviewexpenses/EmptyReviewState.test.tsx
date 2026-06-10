@@ -5,8 +5,8 @@ import { renderWithProviders } from "@/test-utils/renderWithProviders.tsx"
 import { EmptyReviewState } from "./EmptyReviewState.tsx"
 
 describe("EmptyReviewState", () => {
-  test("shows '(nothing to review)' for phases other than collecting_expenses", () => {
-    renderWithProviders(
+  test("shows '(nothing to review)' for phases other than collecting_expenses", async () => {
+    await renderWithProviders(
       <EmptyReviewState
         phase="reviewing"
         stillAccepting={false}
@@ -19,8 +19,8 @@ describe("EmptyReviewState", () => {
     expect(screen.getByText("(nothing to review)")).toBeInTheDocument()
   })
 
-  test("hides the continue button while still accepting new expenses", () => {
-    renderWithProviders(
+  test("hides the continue button while still accepting new expenses", async () => {
+    await renderWithProviders(
       <EmptyReviewState
         phase="collecting_expenses"
         stillAccepting={true}
@@ -35,8 +35,8 @@ describe("EmptyReviewState", () => {
     ).not.toBeInTheDocument()
   })
 
-  test("shows the continue button when closed and next phase exists", () => {
-    renderWithProviders(
+  test("shows the continue button when closed and next phase exists", async () => {
+    await renderWithProviders(
       <EmptyReviewState
         phase="collecting_expenses"
         stillAccepting={false}
@@ -54,7 +54,7 @@ describe("EmptyReviewState", () => {
   test("invokes onContinue when the button is clicked", async () => {
     const onContinue = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(
+    await renderWithProviders(
       <EmptyReviewState
         phase="collecting_expenses"
         stillAccepting={false}
@@ -70,8 +70,8 @@ describe("EmptyReviewState", () => {
     expect(onContinue).toHaveBeenCalledTimes(1)
   })
 
-  test("renders advance error message when provided", () => {
-    renderWithProviders(
+  test("renders advance error message when provided", async () => {
+    await renderWithProviders(
       <EmptyReviewState
         phase="collecting_expenses"
         stillAccepting={false}

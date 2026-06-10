@@ -5,8 +5,8 @@ import { renderWithProviders } from "@/test-utils/renderWithProviders.tsx"
 import { AmountEditor } from "./AmountEditor.tsx"
 
 describe("AmountEditor", () => {
-  test("uses the category name in the amount label", () => {
-    renderWithProviders(
+  test("uses the category name in the amount label", async () => {
+    await renderWithProviders(
       <AmountEditor
         category="food"
         amount=""
@@ -22,7 +22,7 @@ describe("AmountEditor", () => {
   test("typing into the field calls onAmountChange", async () => {
     const onAmountChange = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(
+    await renderWithProviders(
       <AmountEditor
         category="food"
         amount=""
@@ -39,7 +39,7 @@ describe("AmountEditor", () => {
   test("pressing Enter inside the field calls onAdd", async () => {
     const onAdd = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(
+    await renderWithProviders(
       <AmountEditor
         category="food"
         amount="10"
@@ -59,7 +59,7 @@ describe("AmountEditor", () => {
     const onAdd = vi.fn()
     const onCancel = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(
+    await renderWithProviders(
       <AmountEditor
         category="food"
         amount="10"
@@ -75,8 +75,8 @@ describe("AmountEditor", () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
-  test("disables every button while pending", () => {
-    renderWithProviders(
+  test("disables every button while pending", async () => {
+    await renderWithProviders(
       <AmountEditor
         category="food"
         amount="10"

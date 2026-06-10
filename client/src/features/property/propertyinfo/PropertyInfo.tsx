@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { Suspense, type SyntheticEvent, useState } from "react"
 import {
   useMutation,

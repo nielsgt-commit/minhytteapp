@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import type { ReactNode } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Divider, Heading, Tag } from "@digdir/designsystemet-react"

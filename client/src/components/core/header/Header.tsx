@@ -5,7 +5,7 @@ import PropertyMenu from "./PropertyMenu.tsx"
 import UserMenu from "./UserMenu"
 import styles from "./Header.module.css"
 import CheckIn from "@/components/core/header/CheckIn.tsx"
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useAuthSession } from "@/auth/auth-client"
 import { useTRPC } from "@/trpc/trpc"
 

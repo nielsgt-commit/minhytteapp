@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 
 export function useCanEdit(propertyId?: number): boolean {
   const trpc = useTRPC()

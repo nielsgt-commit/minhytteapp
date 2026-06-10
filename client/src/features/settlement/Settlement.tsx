@@ -1,4 +1,4 @@
-import { useSelectedPropertyId } from "@/features/property/propertySlice"
+import { useSelectedPropertyId } from "@/selection/useSelection"
 import { Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./Settlement.module.css"
