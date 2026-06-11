@@ -11,12 +11,18 @@ type EventItem = {
   description: string
   buildingName: string
   key: string
+  // When set, replaces the default `{year} {description}` rendering — used for
+  // events whose phrasing reads better with the year at the end.
+  label?: string
 }
 
 export function PropertyEvents() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
+  const { data: properties } = useSuspenseQuery(
+    trpc.property.mine.queryOptions(),
+  )
   const { data: structures } = useSuspenseQuery(
     trpc.structure.listForProperty.queryOptions({ property_id: propertyId }),
   )
@@ -24,9 +30,24 @@ export function PropertyEvents() {
     trpc.maintenance.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
+  const inFamilySince = properties.find(p => p.id === propertyId)
+    ?.in_family_since
   const structureName = new Map(structures.map(s => [s.id, s.name]))
 
   const events: EventItem[] = [
+    ...(inFamilySince != null
+      ? [
+          {
+            year: inFamilySince,
+            description: "",
+            buildingName: "",
+            key: "in-family-since",
+            label: t("This property has been in the family since: {{year}}", {
+              year: inFamilySince,
+            }),
+          },
+        ]
+      : []),
     ...structures.flatMap(s =>
       s.built_year != null
         ? [
@@ -68,7 +89,7 @@ export function PropertyEvents() {
                     <article>
                       <Card.Block className={styles.eventBlock}>
                         <span>
-                          {ev.year} {ev.description}
+                          {ev.label ?? `${String(ev.year)} ${ev.description}`}
                         </span>
                         {ev.buildingName && (
                           <Tag data-color="info">{ev.buildingName}</Tag>
