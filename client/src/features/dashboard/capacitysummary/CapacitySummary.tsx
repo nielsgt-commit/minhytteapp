@@ -30,7 +30,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} data-size="md">
+              <Heading level={6} data-size="xs">
                 {t("Weather now")}
               </Heading>
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
@@ -44,7 +44,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} data-size="md">
+              <Heading level={6} data-size="xs">
                 {t("At property now")}
               </Heading>
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
@@ -58,7 +58,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} data-size="md">
+              <Heading level={6} data-size="xs">
                 {t("Available parking")}
               </Heading>
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
@@ -72,7 +72,7 @@ export function CapacitySummary() {
         <section>
           <Card.Block>
             <div className={styles.cardStack}>
-              <Heading level={6} data-size="md">
+              <Heading level={6} data-size="xs">
                 {t("Available beds")}
               </Heading>
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
