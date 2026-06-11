@@ -176,7 +176,7 @@ async function visibleGroupIdsForUser(
     )
 
   const propertyIds = new Set<number>()
-  for (const r of viaOwners) if (r.id != null) propertyIds.add(r.id)
+  for (const r of viaOwners) propertyIds.add(r.id)
   for (const r of viaGroupLink) if (r.id != null) propertyIds.add(r.id)
 
   const groupIds = new Set<number>()

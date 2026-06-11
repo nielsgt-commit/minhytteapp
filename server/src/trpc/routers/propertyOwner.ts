@@ -90,7 +90,7 @@ export const propertyOwnerRouter = router({
           .where(eq(userGroupsTable.id, input.user_group_id))
           .limit(1)
       ).at(0)
-      if (!group || group.property_id !== input.property_id) {
+      if (group?.property_id !== input.property_id) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "group does not belong to this property",
