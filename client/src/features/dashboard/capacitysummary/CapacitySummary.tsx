@@ -31,7 +31,7 @@ export function CapacitySummary() {
           <Card.Block>
             <div className={styles.cardStack}>
               <Heading level={6} data-size="xs">
-                {t("Weather now")}
+                {t("Weather today")}
               </Heading>
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
                 <NowWeather />

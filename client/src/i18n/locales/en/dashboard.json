@@ -42,6 +42,7 @@
   "Day view": "Day view",
   "Edit stay": "Edit stay",
   "Equipment": "Equipment",
+  "Forecast for today": "Forecast for today",
   "FRI": "FRI",
   "Grid": "Grid",
   "Loading…": "Loading…",
@@ -98,7 +99,7 @@
   "TUE": "TUE",
   "Unassigned room": "Unassigned room",
   "User groups": "User groups",
-  "Weather now": "Weather now",
+  "Weather today": "Weather today",
   "WED": "WED",
   "Week {{weekNumber}}": "Week {{weekNumber}}",
   "Weekday": "Weekday"

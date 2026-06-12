@@ -36,9 +36,44 @@ export type NowWeather = {
   updated_at: Temporal.Instant
 }
 
+export type HourSlot = {
+  time: Temporal.Instant
+  temperature_c: number
+  symbol_code: string | null
+}
+
 export type ForecastResult = {
   now: NowWeather | null
+  today: HourSlot[]
   days: DayForecast[]
+}
+
+// The next four 6-hour blocks ≈ the next 24h, aligned to the 00/06/12/18 Oslo
+// grid so the client can label them as ranges (12–18, 18–00, …). yr's compact
+// series is hourly near-term, so each boundary hour has its own entry — except
+// the current block, which is already partly past, so the strip starts at the
+// next boundary.
+const TODAY_SLOTS = 4
+const BLOCK_HOURS = 6
+
+function buildToday(series: YrTimeseries[]): HourSlot[] {
+  const slots: HourSlot[] = []
+
+  for (const entry of series) {
+    const time = Temporal.Instant.from(entry.time)
+    if (osloZdt(entry.time).hour % BLOCK_HOURS !== 0) continue
+    const temp = entry.data.instant.details.air_temperature
+    if (typeof temp !== "number") continue
+
+    slots.push({
+      time,
+      temperature_c: Math.round(temp * 10) / 10,
+      symbol_code: symbolFor(entry) ?? null,
+    })
+    if (slots.length >= TODAY_SLOTS) break
+  }
+
+  return slots
 }
 
 function buildDays(
@@ -127,7 +162,7 @@ export const weatherRouter = router({
       ).at(0)
 
       if (!property?.latitude || !property.longitude) {
-        return { now: null, days: [] }
+        return { now: null, today: [], days: [] }
       }
 
       try {
@@ -138,11 +173,12 @@ export const weatherRouter = router({
         const series = forecast.properties.timeseries
         return {
           now: buildNow(series),
+          today: buildToday(series),
           days: buildDays(series, input.week_start),
         }
       } catch (err) {
         console.warn("[weather] fetch failed:", err)
-        return { now: null, days: [] }
+        return { now: null, today: [], days: [] }
       }
     }),
 })

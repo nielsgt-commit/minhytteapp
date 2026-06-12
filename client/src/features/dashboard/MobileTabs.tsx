@@ -98,7 +98,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
         <section>
           <Card.Block>
             <Heading level={2} data-size="xs">
-              {t("Weather now")}
+              {t("Weather today")}
             </Heading>
             <QueryBoundary fallback={<CardSkeleton lines={1} />}>
               <NowWeather />

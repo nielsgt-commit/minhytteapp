@@ -7,6 +7,7 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { Temporal } from "temporal-polyfill"
 import { startOfSunday } from "@/utils/dateUtils"
 import { WeatherSymbol } from "./WeatherSymbol"
+import { TodayForecast } from "./TodayForecast"
 import styles from "./NowWeather.module.css"
 
 export function NowWeather() {
@@ -46,9 +47,12 @@ export function NowWeather() {
   if (!data?.now) return null
 
   return (
-    <span aria-label={t("Current weather")} className={styles.now}>
-      <WeatherSymbol code={data.now.symbol_code} />
-      <strong>{Math.round(data.now.temperature_c)}°</strong>
-    </span>
+    <div className={styles.stack}>
+      <span aria-label={t("Current weather")} className={styles.now}>
+        <WeatherSymbol code={data.now.symbol_code} />
+        <strong>{Math.round(data.now.temperature_c)}°</strong>
+      </span>
+      <TodayForecast slots={data.today} />
+    </div>
   )
 }
