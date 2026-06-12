@@ -25,7 +25,7 @@ Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via D
 - React 19 + TypeScript, bundled with Vite 6
 - TanStack Router (file-based, code-split) for routing
 - TanStack React Query for server state, paired with `@trpc/tanstack-react-query` for typed hooks (`useTRPC()`, `useSuspenseQuery`, `useMutation`)
-- Redux Toolkit + React-Redux for local UI state
+- Shared selection state (active property / user) lives in URL search params via TanStack Router, validated with Zod (`client/src/selection/`); local UI state uses React's built-in hooks
 - `@digdir/designsystemet-react` (+ matching CSS) for the design system, with `@navikt/aksel-icons` for icons
 - i18next + react-i18next (browser language detection) for internationalization
 - PortableText (`@portabletext/editor` + `@portabletext/react`) for rich-text content
