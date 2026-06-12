@@ -4,7 +4,8 @@ import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { startOfSunday, toIso } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
+import { startOfSunday } from "@/utils/dateUtils"
 import { WeatherSymbol } from "./WeatherSymbol"
 import styles from "./NowWeather.module.css"
 
@@ -12,7 +13,7 @@ export function NowWeather() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId()
-  const weekStart = toIso(startOfSunday(new Date()))
+  const weekStart = startOfSunday(Temporal.Now.plainDateISO())
 
   // Preloaded by the dashboard route loader.
   const { data: properties } = useSuspenseQuery(

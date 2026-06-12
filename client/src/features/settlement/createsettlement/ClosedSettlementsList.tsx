@@ -1,5 +1,6 @@
 import { Button, Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import styles from "./CreateSettlementFlow.module.css"
 import { ClosedSettlementSummary } from "@/features/settlement/ClosedSettlementSummary.tsx"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
@@ -15,7 +16,7 @@ export type SettlementRow = {
   status: Status
   split_policy: "shares" | "groups_equal" | "occupancy_days"
   split_policy_id: number | null
-  closed_at: string | Date | null
+  closed_at: Temporal.Instant | null
 }
 
 type Props = {

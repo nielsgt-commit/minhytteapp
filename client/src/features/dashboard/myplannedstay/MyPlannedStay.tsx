@@ -9,26 +9,30 @@ import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
+import { Temporal } from "temporal-polyfill"
 import { formatDateRange } from "@/utils/dateUtils"
 import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
 import { EditStayFlow } from "@/features/planstay/editstayflow/EditStayFlow.tsx"
 import styles from "./MyPlannedStay.module.css"
 
 function rangesOverlap(
-  aStart: string,
-  aEnd: string,
-  bStart: string,
-  bEnd: string,
+  aStart: Temporal.PlainDate,
+  aEnd: Temporal.PlainDate,
+  bStart: Temporal.PlainDate,
+  bEnd: Temporal.PlainDate,
 ) {
-  return aStart <= bEnd && bStart <= aEnd
+  return (
+    Temporal.PlainDate.compare(aStart, bEnd) <= 0 &&
+    Temporal.PlainDate.compare(bStart, aEnd) <= 0
+  )
 }
 
 type BookingShape = {
   id: number
   property_id: number
   booker_id: number
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   status: "pending" | "confirmed" | "cancelled"
   notes: string | null
   occupants: {
@@ -45,8 +49,8 @@ function bookingToRecord(b: BookingShape): BookingDraftRecord {
     id: b.id,
     property_id: b.property_id,
     booker_id: b.booker_id,
-    start_date: b.start_date,
-    end_date: b.end_date,
+    start_date: b.start_date.toString(),
+    end_date: b.end_date.toString(),
     status: b.status,
     notes: b.notes,
     occupants: b.occupants.map(o => ({

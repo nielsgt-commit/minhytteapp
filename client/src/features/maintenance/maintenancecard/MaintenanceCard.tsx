@@ -63,7 +63,7 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   const builtYear = scope.builtYear ?? null
   const finished: { description: string; t: number }[] = scoped.flatMap(i =>
     i.status === "done" && i.completed_at != null
-      ? [{ description: i.description, t: new Date(i.completed_at).getTime() }]
+      ? [{ description: i.description, t: i.completed_at.epochMilliseconds }]
       : [],
   )
   if (builtYear != null) {

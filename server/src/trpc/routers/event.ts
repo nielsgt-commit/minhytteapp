@@ -4,6 +4,12 @@ import { z } from "zod"
 import { eventTable } from "../../db/schema/event.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import {
+  instantFromDate,
+  plainDateFromDbOrNull,
+  plainDateToDbString,
+  zPlainDate,
+} from "../../shared/temporal.ts"
+import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
@@ -26,7 +32,7 @@ export const eventRouter = router({
     .input(propertyInput)
     .query(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.property_id)
-      return ctx.db
+      const rows = await ctx.db
         .select({
           id: eventTable.id,
           body: eventTable.body,
@@ -39,13 +45,18 @@ export const eventRouter = router({
         .innerJoin(usersTable, eq(usersTable.id, eventTable.author_id))
         .where(activeFilter(input.property_id))
         .orderBy(desc(eventTable.created_at))
+      return rows.map(r => ({
+        ...r,
+        expires_on: plainDateFromDbOrNull(r.expires_on),
+        created_at: instantFromDate(r.created_at),
+      }))
     }),
 
   create: propertyAdminProcedure
     .input(
       z.object({
         body: z.string().trim().min(1).max(280),
-        expires_on: z.iso.date().nullable().optional(),
+        expires_on: zPlainDate.nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -55,10 +66,17 @@ export const eventRouter = router({
           property_id: input.property_id,
           author_id: ctx.user.id,
           body: input.body,
-          expires_on: input.expires_on ?? null,
+          expires_on:
+            input.expires_on != null
+              ? plainDateToDbString(input.expires_on)
+              : null,
         })
         .returning()
-      return created
+      return {
+        ...created,
+        expires_on: plainDateFromDbOrNull(created.expires_on),
+        created_at: instantFromDate(created.created_at),
+      }
     }),
 
   delete: protectedProcedure

@@ -1,22 +1,20 @@
+import { Temporal } from "temporal-polyfill"
 import { isoWeekMonday } from "@/utils/dateUtils"
 
 export type PeakWeek = 28 | 29 | 30
 export const PEAK_WEEKS: PeakWeek[] = [28, 29, 30]
 
-export type WeekRange = { start: Date; end: Date }
+export type WeekRange = { start: Temporal.PlainDate; end: Temporal.PlainDate }
 
 export function peakWeekRange(year: number, week: PeakWeek): WeekRange {
   const start = isoWeekMonday(year, week)
-  const end = new Date(start)
-  end.setUTCDate(start.getUTCDate() + 6)
-  return { start, end }
+  return { start, end: start.add({ days: 6 }) }
 }
 
-export function formatDate(d: Date): string {
-  return d.toLocaleDateString(undefined, {
+export function formatDate(d: Temporal.PlainDate): string {
+  return d.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
   })
 }
 
@@ -25,10 +23,8 @@ export function formatRange(r: WeekRange): string {
 }
 
 export function defaultYear(): number {
-  const now = new Date()
-  return now.getUTCMonth() >= 8
-    ? now.getUTCFullYear() + 1
-    : now.getUTCFullYear()
+  const now = Temporal.Now.plainDateISO()
+  return now.month >= 9 ? now.year + 1 : now.year
 }
 
 export type EligibleOwner = {

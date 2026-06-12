@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import { buildOccupantDots } from "./occupantDots.ts"
+
+const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
 // All dates kept inside the season window (May–Aug) so they aren't clamped.
 const groups = [
@@ -15,8 +18,8 @@ function booking(
   return {
     id: 1,
     status: "confirmed",
-    start_date: "2026-07-10",
-    end_date: "2026-07-10",
+    start_date: pd("2026-07-10"),
+    end_date: pd("2026-07-10"),
     occupants: [],
     ...over,
   }
@@ -27,8 +30,8 @@ describe("buildOccupantDots", () => {
     const dots = buildOccupantDots(
       [
         booking({
-          start_date: "2026-07-10",
-          end_date: "2026-07-11",
+          start_date: pd("2026-07-10"),
+          end_date: pd("2026-07-11"),
           occupants: [
             { user_id: 1, queued: false },
             { user_id: 2, queued: false },
@@ -87,8 +90,8 @@ describe("buildOccupantDots", () => {
     const dots = buildOccupantDots(
       [
         booking({
-          start_date: "2026-01-01",
-          end_date: "2026-12-31",
+          start_date: pd("2026-01-01"),
+          end_date: pd("2026-12-31"),
           occupants: [{ user_id: 1, queued: false }],
         }),
       ],

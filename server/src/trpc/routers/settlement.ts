@@ -24,6 +24,11 @@ import {
   usersTable,
 } from "../../db/schema/users.schema.ts"
 import {
+  type Temporal,
+  instantFromDate,
+  instantFromDateOrNull,
+} from "../../shared/temporal.ts"
+import {
   assertPropertyMember,
   isPropertyHead,
   propertyAdminProcedure,
@@ -32,6 +37,29 @@ import {
 } from "../init.ts"
 
 type Db = typeof dbClient
+
+// Wire mapping: settlement timestamp columns → Temporal.Instant.
+function toWireSettlement<
+  T extends { opened_at: Date; closed_at: Date | null },
+>(
+  s: T,
+): Omit<T, "opened_at" | "closed_at"> & {
+  opened_at: Temporal.Instant
+  closed_at: Temporal.Instant | null
+} {
+  return {
+    ...s,
+    opened_at: instantFromDate(s.opened_at),
+    closed_at: instantFromDateOrNull(s.closed_at),
+  }
+}
+
+// Wire mapping: settlement transfer paid_at → Temporal.Instant | null.
+function toWireTransfer<T extends { paid_at: Date | null }>(
+  t: T,
+): Omit<T, "paid_at"> & { paid_at: Temporal.Instant | null } {
+  return { ...t, paid_at: instantFromDateOrNull(t.paid_at) }
+}
 
 const PHASES = [
   "collecting_expenses",
@@ -82,7 +110,7 @@ type HeadStatus = {
   user_id: number
   user_name: string
   accepted: boolean
-  accepted_at: string | null
+  accepted_at: Temporal.Instant | null
   review_done: boolean
 }
 
@@ -479,7 +507,7 @@ async function computePreviewSplit(
       user_id: h.user_id,
       user_name: h.user_name,
       accepted: at != null,
-      accepted_at: at != null ? at.toISOString() : null,
+      accepted_at: at != null ? instantFromDate(at) : null,
       review_done: reviewDoneHeads.has(h.user_id),
     }
   })
@@ -518,7 +546,7 @@ export const settlementRouter = router({
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.property_id)
-      return ctx.db
+      const rows = await ctx.db
         .select({
           id: settlementsTable.id,
           property_id: settlementsTable.property_id,
@@ -537,6 +565,7 @@ export const settlementRouter = router({
         .leftJoin(usersTable, eq(usersTable.id, settlementsTable.created_by_id))
         .where(eq(settlementsTable.property_id, input.property_id))
         .orderBy(asc(settlementsTable.year))
+      return rows.map(toWireSettlement)
     }),
 
   create: propertyAdminProcedure
@@ -550,7 +579,7 @@ export const settlementRouter = router({
           closed_at: input.status === "closed" ? new Date() : null,
         })
         .returning()
-      return created
+      return toWireSettlement(created)
     }),
 
   update: propertyAdminProcedure
@@ -575,7 +604,7 @@ export const settlementRouter = router({
         })
         .where(eq(settlementsTable.id, id))
         .returning()
-      return updated
+      return toWireSettlement(updated)
     }),
 
   delete: protectedProcedure
@@ -587,7 +616,7 @@ export const settlementRouter = router({
         .delete(settlementsTable)
         .where(eq(settlementsTable.id, input.id))
         .returning()
-      return deleted
+      return toWireSettlement(deleted)
     }),
 
   previewSplit: protectedProcedure
@@ -994,13 +1023,13 @@ export const settlementRouter = router({
         id: settlement.id,
         year: settlement.year,
         season: settlement.season,
-        closed_at: settlement.closed_at,
+        closed_at: instantFromDateOrNull(settlement.closed_at),
         split_policy: settlement.split_policy,
         split_policy_id: settlement.split_policy_id,
         split_policy_name: settlement.split_policy_name,
         groups,
         transfers: transfers.map(t => ({
-          ...t,
+          ...toWireTransfer(t),
           can_mark_paid:
             canMarkAnyPaid &&
             t.status === "pending" &&
@@ -1068,14 +1097,14 @@ export const settlementRouter = router({
           .from(settlementTransfersTable)
           .where(eq(settlementTransfersTable.id, input.transferId))
           .limit(1)
-        return existing
+        return toWireTransfer(existing)
       }
       const [updated] = await ctx.db
         .update(settlementTransfersTable)
         .set({ status: "paid", paid_at: new Date() })
         .where(eq(settlementTransfersTable.id, input.transferId))
         .returning()
-      return updated
+      return toWireTransfer(updated)
     }),
 
   advancePhase: protectedProcedure
@@ -1120,7 +1149,7 @@ export const settlementRouter = router({
           message: "settlement phase changed concurrently",
         })
       }
-      return updated
+      return toWireSettlement(updated)
     }),
 
   regressPhase: protectedProcedure
@@ -1175,6 +1204,6 @@ export const settlementRouter = router({
           message: "settlement phase changed concurrently",
         })
       }
-      return updated
+      return toWireSettlement(updated)
     }),
 })

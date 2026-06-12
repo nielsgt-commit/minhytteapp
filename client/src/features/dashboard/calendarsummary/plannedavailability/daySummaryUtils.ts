@@ -1,3 +1,5 @@
+import type { Temporal } from "temporal-polyfill"
+
 export type RoomInfo = {
   id: number
   name: string
@@ -12,8 +14,8 @@ export type OccupantInfo = {
 
 export type BookingInfo = {
   status: string
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   occupants: OccupantInfo[]
 }
 
@@ -36,7 +38,7 @@ export function roomGroupsForDay(
   for (const b of bookings) {
     if (b.status === "cancelled") continue
     // end_date is inclusive, so the booking occupies [start_date, end_date].
-    if (iso < b.start_date || iso > b.end_date) continue
+    if (iso < b.start_date.toString() || iso > b.end_date.toString()) continue
     for (const o of b.occupants) {
       const guests = byRoom.get(o.room_id) ?? new Map<number, string>()
       guests.set(o.user_id, o.user_name ?? `#${String(o.user_id)}`)

@@ -2,7 +2,22 @@ import { TRPCError } from "@trpc/server"
 import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { propertyContactsTable } from "../../db/schema/property.schema.ts"
+import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
 import { propertyAdminProcedure, router } from "../init.ts"
+
+// Wire mapping: contact timestamp columns → Temporal.Instant.
+function toWireContact<T extends { created_at: Date; updated_at: Date }>(
+  c: T,
+): Omit<T, "created_at" | "updated_at"> & {
+  created_at: Temporal.Instant
+  updated_at: Temporal.Instant
+} {
+  return {
+    ...c,
+    created_at: instantFromDate(c.created_at),
+    updated_at: instantFromDate(c.updated_at),
+  }
+}
 
 const contactFields = {
   name: z.string().trim().min(1).max(255),
@@ -40,7 +55,7 @@ export const propertyContactRouter = router({
           info: input.info ?? null,
         })
         .returning()
-      return created
+      return toWireContact(created)
     }),
 
   update: propertyAdminProcedure
@@ -67,7 +82,7 @@ export const propertyContactRouter = router({
       if (!updated) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
-      return updated
+      return toWireContact(updated)
     }),
 
   delete: propertyAdminProcedure
@@ -87,6 +102,6 @@ export const propertyContactRouter = router({
       if (!deleted) {
         throw new TRPCError({ code: "NOT_FOUND" })
       }
-      return deleted
+      return toWireContact(deleted)
     }),
 })

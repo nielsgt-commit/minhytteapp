@@ -1,9 +1,12 @@
 import { describe, expect, test } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import {
   roomGroupsForDay,
   type BookingInfo,
   type RoomInfo,
 } from "./daySummaryUtils"
+
+const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
 const rooms = new Map<number, RoomInfo>([
   [1, { id: 1, name: "Loft", structure_name: "Main cabin" }],
@@ -21,8 +24,8 @@ describe("roomGroupsForDay", () => {
     const bookings: BookingInfo[] = [
       {
         status: "confirmed",
-        start_date: "2026-07-10",
-        end_date: "2026-07-15",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-15"),
         occupants: [occ(1, 1, "Alice"), occ(2, 2, "Bob")],
       },
     ]
@@ -37,8 +40,8 @@ describe("roomGroupsForDay", () => {
     const bookings: BookingInfo[] = [
       {
         status: "cancelled",
-        start_date: "2026-07-10",
-        end_date: "2026-07-15",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-15"),
         occupants: [occ(1, 1, "Alice")],
       },
     ]
@@ -51,8 +54,8 @@ describe("roomGroupsForDay", () => {
     const bookings: BookingInfo[] = [
       {
         status: "confirmed",
-        start_date: "2026-07-10",
-        end_date: "2026-07-12",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-12"),
         occupants: [occ(1, 1, "Alice")],
       },
     ]
@@ -72,14 +75,14 @@ describe("roomGroupsForDay", () => {
     const bookings: BookingInfo[] = [
       {
         status: "confirmed",
-        start_date: "2026-07-10",
-        end_date: "2026-07-12",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-12"),
         occupants: [occ(1, 1, "Alice")],
       },
       {
         status: "confirmed",
-        start_date: "2026-07-12",
-        end_date: "2026-07-14",
+        start_date: pd("2026-07-12"),
+        end_date: pd("2026-07-14"),
         occupants: [occ(1, 1, "Alice")],
       },
     ]
@@ -92,8 +95,8 @@ describe("roomGroupsForDay", () => {
     const bookings: BookingInfo[] = [
       {
         status: "confirmed",
-        start_date: "2026-07-10",
-        end_date: "2026-07-15",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-15"),
         occupants: [occ(1, null, "Alice")],
       },
     ]
@@ -110,8 +113,8 @@ describe("roomGroupsForDay", () => {
     const bookings: BookingInfo[] = [
       {
         status: "confirmed",
-        start_date: "2026-07-10",
-        end_date: "2026-07-15",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-15"),
         occupants: [occ(7, 1, null)],
       },
     ]

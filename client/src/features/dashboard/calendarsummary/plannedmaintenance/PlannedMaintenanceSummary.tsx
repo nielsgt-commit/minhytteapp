@@ -5,11 +5,13 @@ import { Divider, Heading, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import type { TFunction } from "i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { Temporal } from "temporal-polyfill"
 import {
   addDays,
   isoWeekNumber,
   isoWeekYear,
   startOfSunday,
+  toDateInputValue,
 } from "@/utils/dateUtils"
 import {
   priorityGroupLabel,
@@ -31,7 +33,7 @@ function severityColor(
 
 type Props = {
   mode: "this-week" | "rest"
-  weekStart?: Date
+  weekStart?: Temporal.PlainDate
 }
 
 export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
@@ -45,7 +47,7 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
     trpc.maintenance.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const wkStart = weekStart ?? startOfSunday(new Date())
+  const wkStart = weekStart ?? startOfSunday(Temporal.Now.plainDateISO())
   const wkEnd = addDays(wkStart, 7)
   const refMid = addDays(wkStart, 3)
   const refWeek = isoWeekNumber(refMid)
@@ -69,8 +71,9 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const inDisplayedWeek = (i: Item) => {
     if (i.due_kind === "date") {
       if (i.due_at == null) return false
-      const d = new Date(i.due_at)
-      return d >= wkStart && d < wkEnd
+      // Compare the due instant's Oslo day against the displayed week.
+      const d = toDateInputValue(i.due_at)
+      return d >= wkStart.toString() && d < wkEnd.toString()
     }
     if (i.due_kind === "priority_week" && i.due_priority_group_id != null) {
       return weekByGroup.get(i.due_priority_group_id) === refWeek

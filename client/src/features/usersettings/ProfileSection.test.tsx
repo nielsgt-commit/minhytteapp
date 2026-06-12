@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, test, vi } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import { ProfileSection } from "./ProfileSection"
 
 vi.mock("react-i18next", () => ({
@@ -10,6 +11,11 @@ vi.mock("react-i18next", () => ({
         ? key.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "")
         : key,
   }),
+}))
+
+let selectedPropertyId: number | null = 10
+vi.mock("@/selection/useSelection", () => ({
+  useSelectedPropertyId: () => selectedPropertyId,
 }))
 
 const nameMutate = vi.fn()
@@ -67,7 +73,7 @@ let mutationDispatcher: MutationStub[] = []
 const me = {
   id: 1,
   name: "Alice",
-  birthday: "1990-05-12",
+  birthday: Temporal.PlainDate.from("1990-05-12"),
   my_main_memberships: [
     {
       property_id: 10,
@@ -79,6 +85,7 @@ const me = {
 }
 
 beforeEach(() => {
+  selectedPropertyId = 10
   nameMutate.mockReset()
   birthdayMutate.mockReset()
   headMutate.mockReset()
@@ -120,7 +127,8 @@ describe("ProfileSection", () => {
     expect(screen.getByLabelText(headLabel)).toBeChecked()
   })
 
-  test("renders a checkbox per membership", () => {
+  test("renders only the selected cabin's head field", () => {
+    selectedPropertyId = 11
     render(
       <ProfileSection
         me={{
@@ -137,18 +145,27 @@ describe("ProfileSection", () => {
         }}
       />,
     )
-    expect(screen.getByLabelText(headLabel)).toBeInTheDocument()
+    // Only the selected cabin (Stua, id 11) is shown — Hytta is filtered out.
     expect(
       screen.getByLabelText(
         "I am a household head for Stua (can be assigned a priority week and settlement)",
       ),
+    ).toBeInTheDocument()
+    expect(screen.queryByLabelText(headLabel)).not.toBeInTheDocument()
+  })
+
+  test("renders a note when not a member of the selected cabin", () => {
+    selectedPropertyId = 99
+    render(<ProfileSection me={me} />)
+    expect(
+      screen.getByText("You are not in a family group for this cabin yet."),
     ).toBeInTheDocument()
   })
 
   test("renders a note when there are no main memberships", () => {
     render(<ProfileSection me={{ ...me, my_main_memberships: [] }} />)
     expect(
-      screen.getByText("You are not in a family group yet."),
+      screen.getByText("You are not in a family group for this cabin yet."),
     ).toBeInTheDocument()
   })
 

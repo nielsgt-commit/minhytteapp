@@ -1,5 +1,6 @@
 import { Badge, Card, Popover } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import { pad2 } from "@/utils/dateUtils"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import { DaySummary } from "./DaySummary"
@@ -15,7 +16,7 @@ type Forecast = {
 type WeekdayLabel = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT"
 
 type Props = {
-  date: Date
+  date: Temporal.PlainDate
   weekdayLabel: WeekdayLabel
   iso: string
   isSelected: boolean
@@ -73,15 +74,15 @@ export function DayCard({
             <Badge.Position placement="top-right">
               <Badge data-color="warning" />
               <span>
-                <strong>{weekdayT[weekdayLabel]}</strong> {pad2(date.getDate())}
-                /{pad2(date.getMonth() + 1)}
+                <strong>{weekdayT[weekdayLabel]}</strong> {pad2(date.day)}/
+                {pad2(date.month)}
                 {showTodayLabel && ` · ${t("Today")}`}
               </span>
             </Badge.Position>
           ) : (
             <span>
-              <strong>{weekdayT[weekdayLabel]}</strong> {pad2(date.getDate())}/
-              {pad2(date.getMonth() + 1)}
+              <strong>{weekdayT[weekdayLabel]}</strong> {pad2(date.day)}/
+              {pad2(date.month)}
               {showTodayLabel && ` · ${t("Today")}`}
             </span>
           )}

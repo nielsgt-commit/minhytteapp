@@ -11,11 +11,33 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
+import {
+  type Temporal,
+  instantFromDate,
+  instantFromDateOrNull,
+} from "../../shared/temporal.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromInspection,
   resolvePropertyIdFromMaintenanceParent,
 } from "../util/propertyAccess.ts"
+import { toWireMaintenance } from "./maintenance.ts"
+
+// Wire mapping: inspection timestamp columns → Temporal.Instant.
+function toWireInspection<
+  T extends { started_at: Date; completed_at: Date | null },
+>(
+  i: T,
+): Omit<T, "started_at" | "completed_at"> & {
+  started_at: Temporal.Instant
+  completed_at: Temporal.Instant | null
+} {
+  return {
+    ...i,
+    started_at: instantFromDate(i.started_at),
+    completed_at: instantFromDateOrNull(i.completed_at),
+  }
+}
 
 const targetXor = {
   check: (v: {
@@ -100,7 +122,7 @@ export const inspectionRouter = router({
           ),
         )
         .orderBy(asc(inspectionsTable.started_at))
-      return rows.map(r => r.i)
+      return rows.map(r => toWireInspection(r.i))
     }),
 
   listFindings: protectedProcedure
@@ -111,11 +133,12 @@ export const inspectionRouter = router({
         input.inspection_id,
       )
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      return ctx.db
+      const rows = await ctx.db
         .select()
         .from(maintenanceTable)
         .where(eq(maintenanceTable.inspection_id, input.inspection_id))
         .orderBy(asc(maintenanceTable.created_at))
+      return rows.map(toWireMaintenance)
     }),
 
   start: protectedProcedure
@@ -137,7 +160,7 @@ export const inspectionRouter = router({
           recurrence: input.recurrence,
         })
         .returning()
-      return created
+      return toWireInspection(created)
     }),
 
   complete: protectedProcedure
@@ -220,7 +243,7 @@ export const inspectionRouter = router({
           })
           .where(eq(inspectionsTable.id, input.id))
           .returning()
-        return updated
+        return toWireInspection(updated)
       })
     }),
 
@@ -238,7 +261,7 @@ export const inspectionRouter = router({
           .delete(inspectionsTable)
           .where(eq(inspectionsTable.id, input.id))
           .returning()
-        return deleted
+        return toWireInspection(deleted)
       })
     }),
 
@@ -322,7 +345,7 @@ export const inspectionRouter = router({
           })
         }
 
-        return inspection
+        return toWireInspection(inspection)
       })
     }),
 })

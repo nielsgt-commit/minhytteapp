@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import i18next from "i18next"
 import { initReactI18next } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import { DayCard } from "./DayCard"
 import type { RoomGroup } from "./daySummaryUtils"
 
@@ -22,7 +23,7 @@ beforeAll(async () => {
 })
 
 const baseProps = {
-  date: new Date(2026, 6, 15), // 15 July 2026
+  date: Temporal.PlainDate.from("2026-07-15"),
   weekdayLabel: "WED" as const,
   iso: "2026-07-15",
   isSelected: false,

@@ -1,16 +1,20 @@
+import { Temporal } from "temporal-polyfill"
 import { describe, expect, test } from "vitest"
 import {
   addDays,
   currentYear,
   formatDate,
   formatDateRange,
+  inclusiveDayCount,
   isoWeekMonday,
   isoWeekNumber,
   isoWeekYear,
   pad2,
   startOfSunday,
-  toIso,
+  toDateInputValue,
 } from "./dateUtils.ts"
+
+const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
 describe("pad2", () => {
   test("pads single digit", () => {
@@ -22,87 +26,70 @@ describe("pad2", () => {
   })
 })
 
-describe("toIso", () => {
-  test("formats local date as YYYY-MM-DD with zero-padding", () => {
-    expect(toIso(new Date(2026, 0, 5))).toBe("2026-01-05")
-  })
-})
-
 describe("addDays", () => {
   test("crosses month boundary", () => {
-    expect(toIso(addDays(new Date(2026, 0, 30), 3))).toBe("2026-02-02")
+    expect(addDays(pd("2026-01-30"), 3).toString()).toBe("2026-02-02")
   })
 
   test("negative offset", () => {
-    expect(toIso(addDays(new Date(2026, 2, 1), -1))).toBe("2026-02-28")
+    expect(addDays(pd("2026-03-01"), -1).toString()).toBe("2026-02-28")
   })
 
-  test("does not mutate input", () => {
-    const d = new Date(2026, 0, 1)
+  test("does not mutate input (PlainDate is immutable)", () => {
+    const d = pd("2026-01-01")
     addDays(d, 5)
-    expect(d.getDate()).toBe(1)
+    expect(d.equals(pd("2026-01-01"))).toBe(true)
   })
 })
 
 describe("startOfSunday", () => {
   test("returns the same day when called on Sunday", () => {
-    const sun = new Date(2026, 0, 4) // Sunday
-    expect(toIso(startOfSunday(sun))).toBe("2026-01-04")
+    expect(startOfSunday(pd("2026-01-04")).toString()).toBe("2026-01-04")
   })
 
   test("snaps a midweek date back to the prior Sunday", () => {
-    const wed = new Date(2026, 0, 7) // Wednesday
-    expect(toIso(startOfSunday(wed))).toBe("2026-01-04")
-  })
-
-  test("zeroes the time component", () => {
-    const d = startOfSunday(new Date(2026, 0, 7, 15, 42))
-    expect(d.getHours()).toBe(0)
-    expect(d.getMinutes()).toBe(0)
+    expect(startOfSunday(pd("2026-01-07")).toString()).toBe("2026-01-04")
   })
 })
 
 describe("isoWeekNumber / isoWeekYear", () => {
   // ISO week edge case: 2027-01-01 (Friday) belongs to week 53 of 2026.
   test("Jan 1 2027 is week 53 of ISO year 2026", () => {
-    const d = new Date(2027, 0, 1)
+    const d = pd("2027-01-01")
     expect(isoWeekNumber(d)).toBe(53)
     expect(isoWeekYear(d)).toBe(2026)
   })
 
   test("mid-year week", () => {
-    const d = new Date(2026, 6, 15) // 15 July 2026
+    const d = pd("2026-07-15")
     expect(isoWeekNumber(d)).toBe(29)
     expect(isoWeekYear(d)).toBe(2026)
   })
 })
 
 describe("formatDate", () => {
-  test("formats a Date for the given locale", () => {
-    expect(formatDate(new Date(2026, 0, 5), "en-GB")).toBe("05/01/2026")
+  test("formats a PlainDate for the given locale", () => {
+    expect(formatDate(pd("2026-01-05"), "en-GB")).toBe("05/01/2026")
   })
 
   test("formats with Norwegian locale", () => {
-    expect(formatDate(new Date(2026, 0, 5), "nb-NO")).toBe("5.1.2026")
+    expect(formatDate(pd("2026-01-05"), "nb-NO")).toBe("5.1.2026")
   })
 
-  test("accepts a parseable string", () => {
-    expect(formatDate("2026-01-05T12:00:00", "en-GB")).toBe("05/01/2026")
+  test("formats an Instant as its Oslo local day", () => {
+    const i = Temporal.Instant.from("2026-01-05T12:00:00Z")
+    expect(formatDate(i, "en-GB")).toBe("05/01/2026")
   })
 
   test("returns empty string for null/undefined", () => {
     expect(formatDate(null, "en-GB")).toBe("")
     expect(formatDate(undefined, "en-GB")).toBe("")
   })
-
-  test("returns empty string for invalid input", () => {
-    expect(formatDate("not a date", "en-GB")).toBe("")
-  })
 })
 
 describe("formatDateRange", () => {
-  const start = new Date(2026, 0, 5)
-  const end = new Date(2026, 0, 9)
+  const start = pd("2026-01-05")
+  const end = pd("2026-01-09")
 
   test("joins both ends with an en dash", () => {
     expect(formatDateRange(start, end, "en-GB")).toBe("05/01/2026 – 09/01/2026")
@@ -117,13 +104,40 @@ describe("formatDateRange", () => {
   })
 
   test("collapses identical ends to a single date", () => {
-    expect(formatDateRange(start, new Date(2026, 0, 5), "en-GB")).toBe(
+    expect(formatDateRange(start, pd("2026-01-05"), "en-GB")).toBe(
       "05/01/2026",
     )
   })
 
   test("returns empty string when both ends are missing", () => {
     expect(formatDateRange(null, undefined, "en-GB")).toBe("")
+  })
+})
+
+describe("toDateInputValue", () => {
+  test("PlainDate becomes its ISO string", () => {
+    expect(toDateInputValue(pd("2026-01-05"))).toBe("2026-01-05")
+  })
+
+  test("Instant becomes its Oslo local day", () => {
+    // 23:30Z on Jan 5 is already Jan 6 in Oslo (UTC+1).
+    const i = Temporal.Instant.from("2026-01-05T23:30:00Z")
+    expect(toDateInputValue(i)).toBe("2026-01-06")
+  })
+
+  test("returns empty string for null/undefined", () => {
+    expect(toDateInputValue(null)).toBe("")
+    expect(toDateInputValue(undefined)).toBe("")
+  })
+})
+
+describe("inclusiveDayCount", () => {
+  test("Jul 6 -> Jul 12 is 7 days", () => {
+    expect(inclusiveDayCount(pd("2026-07-06"), pd("2026-07-12"))).toBe(7)
+  })
+
+  test("same day counts as 1", () => {
+    expect(inclusiveDayCount(pd("2026-07-06"), pd("2026-07-06"))).toBe(1)
   })
 })
 
@@ -136,8 +150,8 @@ describe("currentYear", () => {
 describe("isoWeekMonday", () => {
   test("returns the Monday of the requested ISO week", () => {
     const d = isoWeekMonday(2026, 29)
-    expect(d.getUTCDay()).toBe(1)
-    expect(d.toISOString().slice(0, 10)).toBe("2026-07-13")
+    expect(d.dayOfWeek).toBe(1)
+    expect(d.toString()).toBe("2026-07-13")
   })
 
   test("round-trips with isoWeekNumber", () => {

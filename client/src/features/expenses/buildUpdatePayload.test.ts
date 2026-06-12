@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import { basePayload, toUpdateInput } from "./buildUpdatePayload.ts"
 import type { ExpenseRow } from "./types.ts"
+
+const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
 const baseExpense: ExpenseRow = {
   id: 1,
@@ -13,7 +16,7 @@ const baseExpense: ExpenseRow = {
   booking_id: null,
   maintenance_id: null,
   settlement_id: null,
-  date: "2026-01-15",
+  date: pd("2026-01-15"),
   status: "submitted",
   receipt_url: null,
   expense_types: ["food"],
@@ -28,7 +31,7 @@ describe("basePayload", () => {
       amount: 50,
       booking_id: undefined,
       maintenance_id: undefined,
-      date: "2026-01-15",
+      date: pd("2026-01-15"),
       receipt_url: null,
       expense_types: ["food"],
     })
@@ -45,22 +48,22 @@ describe("toUpdateInput", () => {
     const result = toUpdateInput(baseExpense, 99, {
       description: "Tea",
       amount: 75,
-      date: "2026-02-01",
+      date: pd("2026-02-01"),
       status: "reimbursed",
     })
     expect(result).toMatchObject({
       description: "Tea",
       amount: 75,
-      date: "2026-02-01",
       status: "reimbursed",
     })
+    expect(result.date.toString()).toBe("2026-02-01")
   })
 
   test("falls back to existing values when overrides are omitted", () => {
     const result = toUpdateInput(baseExpense, 99, { status: "submitted" })
     expect(result.description).toBe("Coffee")
     expect(result.amount).toBe(50)
-    expect(result.date).toBe("2026-01-15")
+    expect(result.date.toString()).toBe("2026-01-15")
   })
 
   test("preserves settlement_id when override is undefined, overrides when explicit (including null)", () => {

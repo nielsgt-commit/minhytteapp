@@ -1,8 +1,9 @@
-import { currentYear } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
 
 function seasonYear() {
-  const y = currentYear()
-  return new Date().getMonth() > 7 ? y + 1 : y
+  // From September onward the planner targets next summer's season.
+  const now = Temporal.Now.plainDateISO()
+  return now.month > 8 ? now.year + 1 : now.year
 }
 
 export const YEAR = seasonYear()

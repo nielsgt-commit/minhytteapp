@@ -11,15 +11,19 @@ import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import {
+  Temporal,
+  instantFromDate,
+  instantFromDateOrNull,
+  plainDateFromDb,
+  plainDateToDbString,
+  zPlainDate,
+} from "../../shared/temporal.ts"
+import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
   router,
 } from "../init.ts"
-
-const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
-  error: "expected YYYY-MM-DD",
-})
 
 const statusEnum = z.enum(["pending", "confirmed", "cancelled"])
 
@@ -32,8 +36,8 @@ const bookingOccupantInput = z.object({
 
 const bookingFields = {
   property_id: z.number().int().positive(),
-  start_date: dateString,
-  end_date: dateString,
+  start_date: zPlainDate,
+  end_date: zPlainDate,
   status: statusEnum.default("confirmed"),
   notes: z.string().max(1024).nullable().optional(),
   occupants: z.array(bookingOccupantInput).min(1, {
@@ -42,8 +46,8 @@ const bookingFields = {
 }
 
 const dateOrder = {
-  check: (v: { start_date: string; end_date: string }) =>
-    v.start_date <= v.end_date,
+  check: (v: { start_date: Temporal.PlainDate; end_date: Temporal.PlainDate }) =>
+    Temporal.PlainDate.compare(v.start_date, v.end_date) <= 0,
   error: "start_date must be on or before end_date",
   path: ["end_date"] as const,
 }
@@ -373,6 +377,38 @@ function computeBookingRooms(
   return { bookingRooms, overflowByRoom, adultInKidOnlyByRoom }
 }
 
+// Wire mapping: drizzle `date` columns are "YYYY-MM-DD" strings and
+// `timestamp` columns are JS Dates — convert to Temporal at the handler edge.
+function toWireBooking<
+  T extends {
+    start_date: string
+    end_date: string
+    created_at: Date
+    updated_at: Date
+    cancelled_at: Date | null
+  },
+>(
+  b: T,
+): Omit<
+  T,
+  "start_date" | "end_date" | "created_at" | "updated_at" | "cancelled_at"
+> & {
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
+  created_at: Temporal.Instant
+  updated_at: Temporal.Instant
+  cancelled_at: Temporal.Instant | null
+} {
+  return {
+    ...b,
+    start_date: plainDateFromDb(b.start_date),
+    end_date: plainDateFromDb(b.end_date),
+    created_at: instantFromDate(b.created_at),
+    updated_at: instantFromDate(b.updated_at),
+    cancelled_at: instantFromDateOrNull(b.cancelled_at),
+  }
+}
+
 async function loadBookings(db: Db, filter?: { property_id: number }) {
   const query = db
     .select({
@@ -421,7 +457,7 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
   ])
 
   return bookings.map(b => ({
-    ...b,
+    ...toWireBooking(b),
     rooms: rooms.filter(r => r.booking_id === b.id),
     occupants: occupants.filter(o => o.booking_id === b.id),
   }))
@@ -439,8 +475,8 @@ export const bookingRouter = router({
     .input(
       z.object({
         property_id: z.number().int().positive(),
-        start_date: dateString,
-        end_date: dateString,
+        start_date: zPlainDate,
+        end_date: zPlainDate,
         occupants: z.array(
           z.object({
             user_id: z.number().int().positive(),
@@ -452,13 +488,10 @@ export const bookingRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const {
-        property_id,
-        start_date,
-        end_date,
-        occupants,
-        exclude_booking_id,
-      } = input
+      const { property_id, occupants, exclude_booking_id } = input
+      // DB-side range filters and overlap math stay string-based.
+      const start_date = plainDateToDbString(input.start_date)
+      const end_date = plainDateToDbString(input.end_date)
 
       await assertPropertyMember(ctx.db, ctx.user, property_id)
 
@@ -573,8 +606,8 @@ export const bookingRouter = router({
           booking_id: b.id,
           booker_id: b.booker_id,
           booker_name: b.booker_name ?? "",
-          start_date: b.start_date,
-          end_date: b.end_date,
+          start_date: plainDateFromDb(b.start_date),
+          end_date: plainDateFromDb(b.end_date),
           status: b.status,
           sharedDays,
           sameUserOccupants,
@@ -786,8 +819,10 @@ export const bookingRouter = router({
         occupantQueued.set(o.user_id, clientQueued || roomOverflow)
       }
 
+      const startDate = plainDateToDbString(input.start_date)
+      const endDate = plainDateToDbString(input.end_date)
       await assertBookingsUnlocked(ctx.db, input.property_id, [
-        { start_date: input.start_date, end_date: input.end_date },
+        { start_date: startDate, end_date: endDate },
       ])
 
       return ctx.db.transaction(async tx => {
@@ -796,8 +831,8 @@ export const bookingRouter = router({
           .values({
             property_id: input.property_id,
             booker_id: bookerId,
-            start_date: input.start_date,
-            end_date: input.end_date,
+            start_date: startDate,
+            end_date: endDate,
             status: input.status,
             notes: input.notes ?? null,
             cancelled_at: input.status === "cancelled" ? new Date() : null,
@@ -822,7 +857,7 @@ export const bookingRouter = router({
           })),
         )
 
-        return created
+        return toWireBooking(created)
       })
     }),
 
@@ -852,6 +887,9 @@ export const bookingRouter = router({
           message: "cannot reassign booking to another property",
         })
       }
+
+      const startDate = plainDateToDbString(input.start_date)
+      const endDate = plainDateToDbString(input.end_date)
 
       const bookerId = existing.booker_id
       ensureBookerIsOccupant(bookerId, input.occupants)
@@ -896,8 +934,8 @@ export const bookingRouter = router({
           forbid("only the booker can edit this booking")
         }
         if (
-          input.start_date !== existing.start_date ||
-          input.end_date !== existing.end_date ||
+          startDate !== existing.start_date ||
+          endDate !== existing.end_date ||
           input.status !== existing.status ||
           (input.notes ?? null) !== existing.notes
         ) {
@@ -927,7 +965,7 @@ export const bookingRouter = router({
 
       await assertBookingsUnlocked(ctx.db, input.property_id, [
         { start_date: existing.start_date, end_date: existing.end_date },
-        { start_date: input.start_date, end_date: input.end_date },
+        { start_date: startDate, end_date: endDate },
       ])
 
       return ctx.db.transaction(async tx => {
@@ -937,8 +975,8 @@ export const bookingRouter = router({
         const [updated] = await tx
           .update(bookingTable)
           .set({
-            start_date: input.start_date,
-            end_date: input.end_date,
+            start_date: startDate,
+            end_date: endDate,
             status: input.status,
             notes: input.notes ?? null,
             updated_at: new Date(),
@@ -980,7 +1018,7 @@ export const bookingRouter = router({
           })),
         )
 
-        return updated
+        return toWireBooking(updated)
       })
     }),
 
@@ -1011,11 +1049,14 @@ export const bookingRouter = router({
         await tx
           .delete(bookingOccupantsTable)
           .where(eq(bookingOccupantsTable.booking_id, input.id))
-        const [deleted] = await tx
-          .delete(bookingTable)
-          .where(eq(bookingTable.id, input.id))
-          .returning()
-        return deleted
+        // No existence check above, so the delete may match nothing.
+        const deleted = (
+          await tx
+            .delete(bookingTable)
+            .where(eq(bookingTable.id, input.id))
+            .returning()
+        ).at(0)
+        return deleted ? toWireBooking(deleted) : deleted
       })
     }),
 })

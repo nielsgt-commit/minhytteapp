@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import { selectExpensesToReview, selectMyExpenses } from "./selectors.ts"
 import type { ExpenseRow, Status } from "./types.ts"
+
+const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
 function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
   return {
@@ -14,7 +17,7 @@ function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     booking_id: null,
     maintenance_id: null,
     settlement_id: null,
-    date: "2026-01-15",
+    date: pd("2026-01-15"),
     status: "submitted",
     receipt_url: null,
     expense_types: [],
@@ -42,20 +45,20 @@ describe("selectExpensesToReview", () => {
 
   test("sorts by date ascending", () => {
     const expenses = [
-      makeExpense({ id: 1, payer_id: 2, date: "2026-03-01" }),
-      makeExpense({ id: 2, payer_id: 4, date: "2026-01-01" }),
-      makeExpense({ id: 3, payer_id: 2, date: "2026-02-01" }),
+      makeExpense({ id: 1, payer_id: 2, date: pd("2026-03-01") }),
+      makeExpense({ id: 2, payer_id: 4, date: pd("2026-01-01") }),
+      makeExpense({ id: 3, payer_id: 2, date: pd("2026-02-01") }),
     ]
-    const dates = selectExpensesToReview(expenses, members, reviewer).map(
-      e => e.date,
+    const dates = selectExpensesToReview(expenses, members, reviewer).map(e =>
+      e.date.toString(),
     )
     expect(dates).toEqual(["2026-01-01", "2026-02-01", "2026-03-01"])
   })
 
   test("does not mutate the input array", () => {
     const expenses = [
-      makeExpense({ id: 1, payer_id: 2, date: "2026-03-01" }),
-      makeExpense({ id: 2, payer_id: 4, date: "2026-01-01" }),
+      makeExpense({ id: 1, payer_id: 2, date: pd("2026-03-01") }),
+      makeExpense({ id: 2, payer_id: 4, date: pd("2026-01-01") }),
     ]
     const before = expenses.map(e => e.id)
     selectExpensesToReview(expenses, members, reviewer)
@@ -77,7 +80,7 @@ describe("selectMyExpenses", () => {
   test("sorts by STATUS_ORDER then by date ascending", () => {
     const statuses: Status[] = ["rejected", "draft", "submitted", "reimbursed"]
     const expenses = statuses.map((s, i) =>
-      makeExpense({ id: i + 1, payer_id: 7, status: s, date: "2026-01-01" }),
+      makeExpense({ id: i + 1, payer_id: 7, status: s, date: pd("2026-01-01") }),
     )
     const order = selectMyExpenses(expenses, 7).map(e => e.status)
     expect(order).toEqual(["draft", "submitted", "reimbursed", "rejected"])
@@ -85,8 +88,8 @@ describe("selectMyExpenses", () => {
 
   test("within the same status, earlier date comes first", () => {
     const expenses = [
-      makeExpense({ id: 1, payer_id: 7, status: "draft", date: "2026-02-01" }),
-      makeExpense({ id: 2, payer_id: 7, status: "draft", date: "2026-01-01" }),
+      makeExpense({ id: 1, payer_id: 7, status: "draft", date: pd("2026-02-01") }),
+      makeExpense({ id: 2, payer_id: 7, status: "draft", date: pd("2026-01-01") }),
     ]
     expect(selectMyExpenses(expenses, 7).map(e => e.id)).toEqual([2, 1])
   })

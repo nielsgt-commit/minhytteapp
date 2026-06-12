@@ -4,6 +4,7 @@ import {
   Button,
   Fieldset,
   Heading,
+  Select,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -21,6 +22,9 @@ export function ChildrenSection() {
   const trpc = useTRPC()
 
   const { data: children } = useQuery(trpc.user.listMyChildren.queryOptions())
+  const { data: linkableParents } = useQuery(
+    trpc.user.listLinkableParents.queryOptions(),
+  )
 
   const [editingId, setEditingId] = useState<number | null>(null)
 
@@ -45,9 +49,21 @@ export function ChildrenSection() {
     childrenKeys,
   )
 
+  const addParent = useMutationWithInvalidation(
+    trpc.user.addParent.mutationOptions(),
+    childrenKeys,
+  )
+
+  const removeParent = useMutationWithInvalidation(
+    trpc.user.removeParent.mutationOptions(),
+    childrenKeys,
+  )
+
   const { pending: editPending, error: editError } = useMutationsStatus(
     updateChild,
     removeChild,
+    addParent,
+    removeParent,
   )
 
   const handleAddChild = async (fd: FormData) => {
@@ -75,67 +91,147 @@ export function ChildrenSection() {
     removeChild.mutate({ id })
   }
 
+  const handleAddParent = (childId: number) => async (fd: FormData) => {
+    const parentUserId = Number(fdString(fd, "parentUserId"))
+    if (!parentUserId) return
+    try {
+      await addParent.mutateAsync({ childId, parentUserId })
+    } catch {
+      /* surfaced via useMutationsStatus */
+    }
+  }
+
+  const handleRemoveParent = (
+    childId: number,
+    parentUserId: number,
+    parentName: string,
+  ) => {
+    if (!window.confirm(t("Remove {{name}} as a parent?", { name: parentName })))
+      return
+    removeParent.mutate({ childId, parentUserId })
+  }
+
   return (
     <section>
       <Heading level={2}>{t("My children (under 13)")}</Heading>
       {children && children.length > 0 ? (
         <ul className={styles.list}>
-          {children.map(c => (
-            <li key={c.id}>
-              {editingId === c.id ? (
-                <form
-                  key={`edit-child-${String(c.id)}`}
-                  className={styles.row}
-                  action={handleEditSubmit(c.id)}
-                >
-                  <Textfield
-                    className={styles.field}
-                    label={t("Name")}
-                    type="text"
-                    name="name"
-                    defaultValue={c.name}
-                    required
-                    autoFocus
-                  />
-                  <SubmitButton disabled={editPending}>
-                    {t("Save")}
-                  </SubmitButton>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      setEditingId(null)
-                    }}
-                    disabled={editPending}
+          {children.map(c => {
+            const parentIds = new Set(c.parents.map(p => p.id))
+            const candidates = (linkableParents ?? []).filter(
+              u => !parentIds.has(u.id),
+            )
+            return (
+              <li key={c.id}>
+                {editingId === c.id ? (
+                  <form
+                    key={`edit-child-${String(c.id)}`}
+                    className={styles.row}
+                    action={handleEditSubmit(c.id)}
                   >
-                    {t("Cancel")}
-                  </Button>
-                </form>
-              ) : (
-                <div className={styles.row}>
-                  <span className={styles.name}>{c.name}</span>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setEditingId(c.id)
-                    }}
-                  >
-                    {t("Edit")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      handleRemove(c.id, c.name)
-                    }}
-                    disabled={editPending}
-                  >
-                    {t("Remove")}
-                  </Button>
-                </div>
-              )}
-            </li>
-          ))}
+                    <Textfield
+                      className={styles.field}
+                      label={t("Name")}
+                      type="text"
+                      name="name"
+                      defaultValue={c.name}
+                      required
+                      autoFocus
+                    />
+                    <SubmitButton disabled={editPending}>
+                      {t("Save")}
+                    </SubmitButton>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        setEditingId(null)
+                      }}
+                      disabled={editPending}
+                    >
+                      {t("Cancel")}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className={styles.child}>
+                    <div className={styles.row}>
+                      <span className={styles.name}>{c.name}</span>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(c.id)
+                        }}
+                      >
+                        {t("Edit")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          handleRemove(c.id, c.name)
+                        }}
+                        disabled={editPending}
+                      >
+                        {t("Remove")}
+                      </Button>
+                    </div>
+
+                    <div className={styles.parents}>
+                      <span className={styles.parentsLabel}>
+                        {t("Parents")}:
+                      </span>
+                      {c.parents.map(p => (
+                        <span key={p.id} className={styles.parentChip}>
+                          {p.name}
+                          {!p.isCreator && (
+                            <Button
+                              type="button"
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                handleRemoveParent(c.id, p.id, p.name)
+                              }}
+                              disabled={editPending}
+                            >
+                              {t("Remove")}
+                            </Button>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+
+                    {c.parents.length < 2 && candidates.length > 0 && (
+                      <form
+                        className={styles.row}
+                        action={handleAddParent(c.id)}
+                      >
+                        <Select
+                          className={styles.field}
+                          name="parentUserId"
+                          aria-label={t("Add another parent")}
+                          data-size="sm"
+                          defaultValue=""
+                          required
+                        >
+                          <Select.Option value="" disabled>
+                            {t("Choose a person")}
+                          </Select.Option>
+                          {candidates.map(u => (
+                            <Select.Option key={u.id} value={String(u.id)}>
+                              {u.name}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                        <SubmitButton disabled={editPending}>
+                          {t("Add parent")}
+                        </SubmitButton>
+                      </form>
+                    )}
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       ) : (
         <EmptyState title={t("No children yet.")} />

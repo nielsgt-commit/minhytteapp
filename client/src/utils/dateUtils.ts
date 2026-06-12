@@ -1,38 +1,39 @@
+import { Temporal } from "temporal-polyfill"
+
+// All cabin dates are human "which day" values in Norway; instants are
+// rendered as their Oslo local day.
+const OSLO = "Europe/Oslo"
+
+type DateLike = Temporal.PlainDate | Temporal.Instant | null | undefined
+
 export function pad2(n: number): string {
   return String(n).padStart(2, "0")
 }
 
-export function toIso(d: Date): string {
-  return `${String(d.getFullYear())}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+function toPlainDate(value: Temporal.PlainDate | Temporal.Instant) {
+  return value instanceof Temporal.Instant
+    ? value.toZonedDateTimeISO(OSLO).toPlainDate()
+    : value
 }
 
-// Format a date (or parseable string) as the local-day `YYYY-MM-DD` value an
-// <input type="date"> expects. Local-time on purpose: a calendar due date is a
-// human "which day", not a UTC instant. Returns "" for null/invalid input.
-export function toDateInputValue(
-  value: string | Date | null | undefined,
-): string {
+// The local-day `YYYY-MM-DD` value an <input type="date"> expects.
+// Oslo-local on purpose: a calendar due date is a human "which day", not a
+// UTC instant. Returns "" for null/undefined.
+export function toDateInputValue(value: DateLike): string {
   if (value == null) return ""
-  const d = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(d.getTime())) return ""
-  return toIso(d)
+  return toPlainDate(value).toString()
 }
 
-// Locale-aware display of a date (or parseable string). Returns "" for
-// null/invalid input, mirroring toDateInputValue.
-export function formatDate(
-  value: string | Date | null | undefined,
-  locale: string,
-): string {
+// Locale-aware display of a calendar day or instant (shown as its Oslo
+// day). Returns "" for null/undefined, mirroring toDateInputValue.
+export function formatDate(value: DateLike, locale: string): string {
   if (value == null) return ""
-  const d = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(d.getTime())) return ""
-  return d.toLocaleDateString(locale)
+  return toPlainDate(value).toLocaleString(locale)
 }
 
 export function formatDateRange(
-  start: string | Date | null | undefined,
-  end: string | Date | null | undefined,
+  start: DateLike,
+  end: DateLike,
   locale: string,
 ): string {
   const a = formatDate(start, locale)
@@ -43,50 +44,58 @@ export function formatDateRange(
 }
 
 export function currentYear(): number {
-  return new Date().getFullYear()
+  return Temporal.Now.plainDateISO().year
 }
 
-// Inclusive day count between two `YYYY-MM-DD` dates: Jul 6 -> Jul 12 = 7 days.
-export function inclusiveDayCount(startIso: string, endIso: string): number {
-  const s = Date.parse(`${startIso}T00:00:00Z`)
-  const e = Date.parse(`${endIso}T00:00:00Z`)
-  return Math.round((e - s) / 86400000) + 1
+// Inclusive day count: Jul 6 -> Jul 12 = 7 days.
+export function inclusiveDayCount(
+  start: Temporal.PlainDate,
+  end: Temporal.PlainDate,
+): number {
+  return start.until(end, { largestUnit: "days" }).days + 1
 }
 
-export function startOfSunday(d: Date): Date {
-  const out = new Date(d)
-  out.setHours(0, 0, 0, 0)
-  out.setDate(out.getDate() - out.getDay())
-  return out
+export function startOfSunday(pd: Temporal.PlainDate): Temporal.PlainDate {
+  // dayOfWeek: Mon=1 … Sun=7; Sunday maps to 0 days back.
+  return pd.subtract({ days: pd.dayOfWeek % 7 })
 }
 
-export function addDays(d: Date, n: number): Date {
-  const out = new Date(d)
-  out.setDate(out.getDate() + n)
-  return out
+export function addDays(
+  pd: Temporal.PlainDate,
+  n: number,
+): Temporal.PlainDate {
+  return pd.add({ days: n })
 }
 
-export function isoWeekNumber(d: Date): number {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = t.getUTCDay() || 7
-  t.setUTCDate(t.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1))
-  return Math.ceil(((t.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+export function isoWeekNumber(pd: Temporal.PlainDate): number {
+  // weekOfYear is typed `number | undefined` per spec, but the ISO calendar
+  // always yields a number; fall back via Jan-4 arithmetic just in case.
+  return pd.weekOfYear ?? isoWeekFallback(pd).week
 }
 
-export function isoWeekYear(d: Date): number {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const dayNum = t.getUTCDay() || 7
-  t.setUTCDate(t.getUTCDate() + 4 - dayNum)
-  return t.getUTCFullYear()
+export function isoWeekYear(pd: Temporal.PlainDate): number {
+  return pd.yearOfWeek ?? isoWeekFallback(pd).year
 }
 
-export function isoWeekMonday(year: number, week: number): Date {
-  const jan4 = new Date(Date.UTC(year, 0, 4))
-  const jan4Dow = jan4.getUTCDay() === 0 ? 7 : jan4.getUTCDay()
-  const week1Monday = new Date(jan4)
-  week1Monday.setUTCDate(jan4.getUTCDate() - (jan4Dow - 1))
-  const target = new Date(week1Monday)
-  target.setUTCDate(week1Monday.getUTCDate() + (week - 1) * 7)
-  return target
+function isoWeekFallback(pd: Temporal.PlainDate): {
+  week: number
+  year: number
+} {
+  // Thursday of pd's week determines the ISO week-year.
+  const thursday = pd.add({ days: 4 - pd.dayOfWeek })
+  const week1Monday = isoWeekMonday(thursday.year, 1)
+  const week =
+    Math.floor(week1Monday.until(thursday, { largestUnit: "days" }).days / 7) +
+    1
+  return { week, year: thursday.year }
+}
+
+export function isoWeekMonday(
+  year: number,
+  week: number,
+): Temporal.PlainDate {
+  // Temporal.PlainDate.from() rejects week fields as input, so keep the
+  // classic Jan-4 arithmetic: Jan 4 is always in ISO week 1.
+  const jan4 = Temporal.PlainDate.from({ year, month: 1, day: 4 })
+  return jan4.subtract({ days: jan4.dayOfWeek - 1 }).add({ weeks: week - 1 })
 }

@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server"
-import { and, asc, eq, inArray, sql } from "drizzle-orm"
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
 import { z } from "zod"
 import { propertyTable } from "../../db/schema/property.schema.ts"
 import {
   allowedEmailsTable,
+  childParentsTable,
   userGroupMembersTable,
   userGroupsTable,
   usersTable,
@@ -14,19 +15,53 @@ import {
   protectedProcedure,
   router,
 } from "../init.ts"
-import { userIdsForProperty } from "./userGroup.ts"
+import type { Context } from "../context.ts"
+import {
+  type Temporal,
+  instantFromDate,
+  instantFromDateOrNull,
+  plainDateFromDbOrNull,
+  plainDateToDbString,
+  zPlainDate,
+} from "../../shared/temporal.ts"
+import { userIdsForProperty, visibleGroupIdsForUser } from "./userGroup.ts"
 import { isSyntheticEmail, normalizeEmail } from "../../auth/email.ts"
-
-const birthdayString = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, { error: "expected YYYY-MM-DD" })
 
 const userFields = {
   name: z.string().min(1, { error: "name is required" }),
   email: z.email(),
   is_admin: z.boolean().optional(),
   is_child: z.boolean().optional(),
-  birthday: birthdayString.nullable().optional(),
+  birthday: zPlainDate.nullable().optional(),
+}
+
+// Wire mapping for full users rows: `birthday` is a "YYYY-MM-DD" string
+// (date column), the *_at columns are JS Dates — convert to Temporal.
+function toWireUser<
+  T extends {
+    birthday: string | null
+    onboarding_dismissed_at: Date | null
+    created_at: Date
+    updated_at: Date
+  },
+>(
+  u: T,
+): Omit<
+  T,
+  "birthday" | "onboarding_dismissed_at" | "created_at" | "updated_at"
+> & {
+  birthday: Temporal.PlainDate | null
+  onboarding_dismissed_at: Temporal.Instant | null
+  created_at: Temporal.Instant
+  updated_at: Temporal.Instant
+} {
+  return {
+    ...u,
+    birthday: plainDateFromDbOrNull(u.birthday),
+    onboarding_dismissed_at: instantFromDateOrNull(u.onboarding_dismissed_at),
+    created_at: instantFromDate(u.created_at),
+    updated_at: instantFromDate(u.updated_at),
+  }
 }
 
 const createInput = z.object(userFields)
@@ -35,6 +70,27 @@ const updateInput = z.object({
   id: z.number().int().positive(),
   ...userFields,
 })
+
+// Whether the calling user is one of a child's (at most two) parents. This is
+// the authorization boundary for editing/removing a child and managing its
+// parent links.
+async function callerIsParent(
+  ctx: Context,
+  childId: number,
+  callerUserId: number,
+): Promise<boolean> {
+  const rows = await ctx.db
+    .select({ child_user_id: childParentsTable.child_user_id })
+    .from(childParentsTable)
+    .where(
+      and(
+        eq(childParentsTable.child_user_id, childId),
+        eq(childParentsTable.parent_user_id, callerUserId),
+      ),
+    )
+    .limit(1)
+  return rows.length > 0
+}
 
 export const userRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
@@ -66,7 +122,7 @@ export const userRouter = router({
         ),
       )
     const headIds = new Set(headRows.map(r => r.user_id))
-    return rows.map(u => ({ ...u, is_head: headIds.has(u.id) }))
+    return rows.map(u => ({ ...toWireUser(u), is_head: headIds.has(u.id) }))
   }),
 
   me: protectedProcedure.query(async ({ ctx }) => {
@@ -137,7 +193,18 @@ export const userRouter = router({
     }
     const my_main_memberships = [...byProperty.values()]
     // is_head kept = is_head_anywhere for transitional client compat.
-    return { ...ctx.user, head_property_ids, my_main_memberships }
+    // AuthUser carries camelCase createdAt/updatedAt (better-auth shape).
+    return {
+      ...ctx.user,
+      birthday: plainDateFromDbOrNull(ctx.user.birthday),
+      onboarding_dismissed_at: instantFromDateOrNull(
+        ctx.user.onboarding_dismissed_at,
+      ),
+      createdAt: instantFromDate(ctx.user.createdAt),
+      updatedAt: instantFromDate(ctx.user.updatedAt),
+      head_property_ids,
+      my_main_memberships,
+    }
   }),
 
   create: protectedProcedure
@@ -151,9 +218,17 @@ export const userRouter = router({
       const roleFields = ctx.user.is_admin ? { is_admin, is_child } : {}
       const [created] = await ctx.db
         .insert(usersTable)
-        .values({ ...rest, email: normalizeEmail(email), ...roleFields })
+        .values({
+          ...rest,
+          birthday:
+            rest.birthday != null
+              ? plainDateToDbString(rest.birthday)
+              : rest.birthday,
+          email: normalizeEmail(email),
+          ...roleFields,
+        })
         .returning()
-      return created
+      return toWireUser(created)
     }),
 
   updateMyName: protectedProcedure
@@ -164,7 +239,7 @@ export const userRouter = router({
         .set({ name: input.name })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()
-      return updated
+      return toWireUser(updated)
     }),
 
   updateMyHeadForProperty: protectedProcedure
@@ -212,14 +287,19 @@ export const userRouter = router({
     }),
 
   updateMyBirthday: protectedProcedure
-    .input(z.object({ birthday: birthdayString.nullable() }))
+    .input(z.object({ birthday: zPlainDate.nullable() }))
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
         .update(usersTable)
-        .set({ birthday: input.birthday })
+        .set({
+          birthday:
+            input.birthday != null
+              ? plainDateToDbString(input.birthday)
+              : null,
+        })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()
-      return updated
+      return toWireUser(updated)
     }),
 
   setOnboardingStep: protectedProcedure
@@ -243,7 +323,7 @@ export const userRouter = router({
         .set({ onboarding_step: input.step })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()
-      return updated
+      return toWireUser(updated)
     }),
 
   dismissOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
@@ -252,32 +332,120 @@ export const userRouter = router({
       .set({ onboarding_dismissed_at: new Date() })
       .where(eq(usersTable.id, ctx.user.id))
       .returning()
-    return updated
+    return toWireUser(updated)
   }),
 
   listMyChildren: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db
-      .select()
+    const childRows = await ctx.db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        creator_id: usersTable.parent_user_id,
+      })
       .from(usersTable)
-      .where(eq(usersTable.parent_user_id, ctx.user.id))
+      .innerJoin(
+        childParentsTable,
+        eq(childParentsTable.child_user_id, usersTable.id),
+      )
+      .where(eq(childParentsTable.parent_user_id, ctx.user.id))
       .orderBy(asc(usersTable.id))
+
+    if (childRows.length === 0) return []
+
+    const childIds = childRows.map(c => c.id)
+    const parentRows = await ctx.db
+      .select({
+        child_user_id: childParentsTable.child_user_id,
+        parent_id: usersTable.id,
+        parent_name: usersTable.name,
+      })
+      .from(childParentsTable)
+      .innerJoin(
+        usersTable,
+        eq(usersTable.id, childParentsTable.parent_user_id),
+      )
+      .where(inArray(childParentsTable.child_user_id, childIds))
+
+    const creatorByChild = new Map(childRows.map(c => [c.id, c.creator_id]))
+    const parentsByChild = new Map<
+      number,
+      { id: number; name: string; isCreator: boolean }[]
+    >()
+    for (const p of parentRows) {
+      const list = parentsByChild.get(p.child_user_id) ?? []
+      list.push({
+        id: p.parent_id,
+        name: p.parent_name,
+        isCreator: p.parent_id === creatorByChild.get(p.child_user_id),
+      })
+      parentsByChild.set(p.child_user_id, list)
+    }
+    // Creator (primary parent) first, then by id, so the UI can render a stable
+    // "you / co-parent" order and only offer Remove on the non-creator parent.
+    for (const list of parentsByChild.values()) {
+      list.sort((a, b) =>
+        a.isCreator === b.isCreator ? a.id - b.id : a.isCreator ? -1 : 1,
+      )
+    }
+
+    return childRows.map(c => ({
+      id: c.id,
+      name: c.name,
+      parents: parentsByChild.get(c.id) ?? [],
+    }))
+  }),
+
+  // Real (non-child) users the caller may link as a second parent: members of
+  // any group the caller can see (admins see everyone), minus the caller. The
+  // client filters out a child's existing parents per row.
+  listLinkableParents: protectedProcedure.query(async ({ ctx }) => {
+    let groupIds: number[] | null = null
+    if (!ctx.user.is_admin) {
+      const ids = await visibleGroupIdsForUser(ctx, ctx.user.id)
+      if (ids.size === 0) return []
+      groupIds = Array.from(ids)
+    }
+
+    return ctx.db
+      .selectDistinct({ id: usersTable.id, name: usersTable.name })
+      .from(usersTable)
+      .innerJoin(
+        userGroupMembersTable,
+        eq(userGroupMembersTable.user_id, usersTable.id),
+      )
+      .where(
+        and(
+          eq(usersTable.is_child, false),
+          ne(usersTable.id, ctx.user.id),
+          groupIds
+            ? inArray(userGroupMembersTable.user_group_id, groupIds)
+            : undefined,
+        ),
+      )
+      .orderBy(asc(usersTable.name))
   }),
 
   createChild: protectedProcedure
     .input(z.object({ name: z.string().min(1, { error: "name is required" }) }))
     .mutation(async ({ ctx, input }) => {
       const email = `child-${String(ctx.user.id)}-${String(Date.now())}@example.local`
-      const [created] = await ctx.db
-        .insert(usersTable)
-        .values({
-          name: input.name,
-          email,
-          is_admin: false,
-          is_child: true,
+      return ctx.db.transaction(async tx => {
+        const [created] = await tx
+          .insert(usersTable)
+          .values({
+            name: input.name,
+            email,
+            is_admin: false,
+            is_child: true,
+            parent_user_id: ctx.user.id,
+          })
+          .returning()
+        await tx.insert(childParentsTable).values({
+          child_user_id: created.id,
           parent_user_id: ctx.user.id,
         })
-        .returning()
-      return created
+        return toWireUser(created)
+      })
     }),
 
   updateChild: protectedProcedure
@@ -288,40 +456,148 @@ export const userRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!(await callerIsParent(ctx, input.id, ctx.user.id))) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
+      }
       const updated = (
         await ctx.db
           .update(usersTable)
           .set({ name: input.name })
           .where(
-            and(
-              eq(usersTable.id, input.id),
-              eq(usersTable.parent_user_id, ctx.user.id),
-            ),
+            and(eq(usersTable.id, input.id), eq(usersTable.is_child, true)),
           )
           .returning()
       ).at(0)
       if (!updated) {
         throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
       }
-      return updated
+      return toWireUser(updated)
     }),
 
   removeChild: protectedProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
+      if (!(await callerIsParent(ctx, input.id, ctx.user.id))) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
+      }
       const deleted = (
         await ctx.db
           .delete(usersTable)
           .where(
-            and(
-              eq(usersTable.id, input.id),
-              eq(usersTable.parent_user_id, ctx.user.id),
-            ),
+            and(eq(usersTable.id, input.id), eq(usersTable.is_child, true)),
           )
           .returning()
       ).at(0)
       if (!deleted) {
         throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
+      }
+      return toWireUser(deleted)
+    }),
+
+  addParent: protectedProcedure
+    .input(
+      z.object({
+        childId: z.number().int().positive(),
+        parentUserId: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!(await callerIsParent(ctx, input.childId, ctx.user.id))) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
+      }
+      if (input.parentUserId === ctx.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "you are already a parent of this child",
+        })
+      }
+
+      const target = (
+        await ctx.db
+          .select({ id: usersTable.id, is_child: usersTable.is_child })
+          .from(usersTable)
+          .where(eq(usersTable.id, input.parentUserId))
+          .limit(1)
+      ).at(0)
+      if (!target) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "user not found" })
+      }
+      if (target.is_child) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "a child cannot be a parent",
+        })
+      }
+
+      const existing = await ctx.db
+        .select({ parent_user_id: childParentsTable.parent_user_id })
+        .from(childParentsTable)
+        .where(eq(childParentsTable.child_user_id, input.childId))
+      if (existing.some(e => e.parent_user_id === input.parentUserId)) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "already a parent of this child",
+        })
+      }
+      if (existing.length >= 2) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "a child can have at most two parents",
+        })
+      }
+
+      await ctx.db.insert(childParentsTable).values({
+        child_user_id: input.childId,
+        parent_user_id: input.parentUserId,
+      })
+      return { childId: input.childId, parentUserId: input.parentUserId }
+    }),
+
+  removeParent: protectedProcedure
+    .input(
+      z.object({
+        childId: z.number().int().positive(),
+        parentUserId: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!(await callerIsParent(ctx, input.childId, ctx.user.id))) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
+      }
+      const child = (
+        await ctx.db
+          .select({ creator_id: usersTable.parent_user_id })
+          .from(usersTable)
+          .where(eq(usersTable.id, input.childId))
+          .limit(1)
+      ).at(0)
+      if (!child) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "child not found" })
+      }
+      // The primary (creating) parent is the anchor and can't be unlinked; to
+      // fully remove a child use removeChild.
+      if (child.creator_id === input.parentUserId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "cannot remove the primary parent",
+        })
+      }
+      const deleted = (
+        await ctx.db
+          .delete(childParentsTable)
+          .where(
+            and(
+              eq(childParentsTable.child_user_id, input.childId),
+              eq(childParentsTable.parent_user_id, input.parentUserId),
+            ),
+          )
+          .returning()
+      ).at(0)
+      if (!deleted) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "parent link not found",
+        })
       }
       return deleted
     }),
@@ -367,7 +643,15 @@ export const userRouter = router({
         ).at(0)
         const [updated] = await tx
           .update(usersTable)
-          .set({ ...rest, email: newEmail, ...roleFields })
+          .set({
+            ...rest,
+            birthday:
+              rest.birthday != null
+                ? plainDateToDbString(rest.birthday)
+                : rest.birthday,
+            email: newEmail,
+            ...roleFields,
+          })
           .where(eq(usersTable.id, id))
           .returning()
 
@@ -420,17 +704,20 @@ export const userRouter = router({
             })
           }
         }
-        return updated
+        return toWireUser(updated)
       })
     }),
 
   delete: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const [deleted] = await ctx.db
-        .delete(usersTable)
-        .where(eq(usersTable.id, input.id))
-        .returning()
-      return deleted
+      // No existence check above, so the delete may match nothing.
+      const deleted = (
+        await ctx.db
+          .delete(usersTable)
+          .where(eq(usersTable.id, input.id))
+          .returning()
+      ).at(0)
+      return deleted ? toWireUser(deleted) : deleted
     }),
 })

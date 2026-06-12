@@ -8,11 +8,25 @@ import {
 } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import {
+  type Temporal,
+  plainDateFromDb,
+  plainDateToDbString,
+  zPlainDate,
+} from "../../shared/temporal.ts"
+import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
   router,
 } from "../init.ts"
+
+// Wire mapping: the `date` column is a "YYYY-MM-DD" string in drizzle —
+// convert to Temporal.PlainDate before returning rows.
+function toWireExpense<T extends { date: string }>(
+  e: T,
+): Omit<T, "date"> & { date: Temporal.PlainDate } {
+  return { ...e, date: plainDateFromDb(e.date) }
+}
 
 type Db = typeof dbClient
 
@@ -46,7 +60,7 @@ const expenseFields = {
   booking_id: z.number().int().positive().optional(),
   maintenance_id: z.number().int().positive().optional(),
   settlement_id: z.number().int().positive().nullish(),
-  date: z.iso.date(),
+  date: zPlainDate,
   status: z.enum(["draft", "submitted", "reimbursed", "rejected"]),
   receipt_url: z.url().optional().nullable(),
   expense_types: z.array(z.string().min(1).max(64)).default([]),
@@ -95,12 +109,13 @@ export const expenseRouter = router({
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.property_id)
-      return ctx.db
+      const rows = await ctx.db
         .select(expenseColumns)
         .from(expensesTable)
         .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
         .where(eq(expensesTable.property_id, input.property_id))
         .orderBy(asc(expensesTable.date))
+      return rows.map(toWireExpense)
     }),
 
   create: propertyAdminProcedure
@@ -111,9 +126,13 @@ export const expenseRouter = router({
       }
       const [created] = await ctx.db
         .insert(expensesTable)
-        .values({ ...input, payer_id: ctx.user.id })
+        .values({
+          ...input,
+          date: plainDateToDbString(input.date),
+          payer_id: ctx.user.id,
+        })
         .returning()
-      return created
+      return toWireExpense(created)
     }),
 
   update: propertyAdminProcedure
@@ -141,10 +160,10 @@ export const expenseRouter = router({
       const { id, property_id: _propertyId, ...rest } = input
       const [updated] = await ctx.db
         .update(expensesTable)
-        .set(rest)
+        .set({ ...rest, date: plainDateToDbString(rest.date) })
         .where(eq(expensesTable.id, id))
         .returning()
-      return updated
+      return toWireExpense(updated)
     }),
 
   delete: protectedProcedure
@@ -175,6 +194,6 @@ export const expenseRouter = router({
           .where(eq(expensesTable.id, input.id))
           .returning()
       ).at(0)
-      return deleted
+      return deleted ? toWireExpense(deleted) : deleted
     }),
 })

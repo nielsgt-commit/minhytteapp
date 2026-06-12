@@ -67,8 +67,8 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
     .filter(i => matchesScope(i) && i.status === "done")
     .slice()
     .sort((a, b) => {
-      const aT = a.completed_at ? new Date(a.completed_at).getTime() : 0
-      const bT = b.completed_at ? new Date(b.completed_at).getTime() : 0
+      const aT = a.completed_at?.epochMilliseconds ?? 0
+      const bT = b.completed_at?.epochMilliseconds ?? 0
       if (bT !== aT) return bT - aT
       return b.id - a.id
     })
@@ -96,12 +96,12 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
   const entries: HistoryEntry[] = [
     ...doneItems.map(item => ({
       kind: "maintenance" as const,
-      t: item.completed_at ? new Date(item.completed_at).getTime() : 0,
+      t: item.completed_at?.epochMilliseconds ?? 0,
       item,
     })),
     ...scopedInspections.map(item => ({
       kind: "inspection" as const,
-      t: item.completed_at ? new Date(item.completed_at).getTime() : 0,
+      t: item.completed_at?.epochMilliseconds ?? 0,
       item,
     })),
     ...(builtYear != null
@@ -137,7 +137,7 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
       recurrence: item.recurrence,
       due_kind: item.due_kind,
       due_priority_group_id: item.due_priority_group_id ?? undefined,
-      due_at: item.due_at ? new Date(item.due_at) : undefined,
+      due_at: item.due_at ?? undefined,
     })
   }
 
@@ -158,7 +158,7 @@ export function MaintenanceHistory({ scope }: { scope: MaintenanceScope }) {
         recurrence: item.recurrence,
         due_kind: item.due_kind,
         due_priority_group_id: item.due_priority_group_id ?? undefined,
-        due_at: item.due_at ? new Date(item.due_at) : undefined,
+        due_at: item.due_at ?? undefined,
         completed_at: values.completed_at,
       })
       setEditing(null)

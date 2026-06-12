@@ -1,3 +1,4 @@
+import type { Temporal } from "temporal-polyfill"
 import type { Status } from "./expenseStatus.ts"
 
 export type { Status } from "./expenseStatus.ts"
@@ -15,7 +16,7 @@ export type ExpenseRow = {
   booking_id: number | null
   maintenance_id: number | null
   settlement_id: number | null
-  date: string
+  date: Temporal.PlainDate
   status: Status
   receipt_url: string | null
   expense_types: string[]

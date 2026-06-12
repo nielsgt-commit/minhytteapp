@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill"
 import { STATUS_ORDER } from "./expenseStatus.ts"
 import type { ExpenseRow } from "./types.ts"
 
@@ -14,7 +15,7 @@ export function selectExpensesToReview(
         e.payer_id !== reviewerId,
     )
     .slice()
-    .sort((a, b) => a.date.localeCompare(b.date))
+    .sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
 }
 
 export function selectMyExpenses(
@@ -27,6 +28,6 @@ export function selectMyExpenses(
     .sort((a, b) => {
       const s = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]
       if (s !== 0) return s
-      return a.date.localeCompare(b.date)
+      return Temporal.PlainDate.compare(a.date, b.date)
     })
 }

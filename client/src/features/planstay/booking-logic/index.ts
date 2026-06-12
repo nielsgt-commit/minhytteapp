@@ -26,9 +26,9 @@
 //   propertyCapacity(rooms, structures)
 //   expandRange(start_date, end_date)
 //   groupConsecutive(isos)
-//   isoWeekNumber(date)
+//   isoWeekNumber(plainDate)
 //   sundayBeforeIsoWeek(year, week)
-//   toIso(date), fromIso(iso), addDays(date, n)
+//   fromIso(iso), addDays(plainDate, n)
 //   Range (type)
 // ============================================================
 
@@ -76,7 +76,6 @@ export {
   isoWeekNumber,
   propertyCapacity,
   sundayBeforeIsoWeek,
-  toIso,
 } from "./helpers.ts"
 
 export type { Range } from "./helpers.ts"

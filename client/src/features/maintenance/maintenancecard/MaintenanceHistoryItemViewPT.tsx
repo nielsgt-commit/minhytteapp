@@ -9,6 +9,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { Trans, useTranslation } from "react-i18next"
 import type { PortableTextBlock } from "@portabletext/types"
+import type { Temporal } from "temporal-polyfill"
 import { formatDate } from "@/utils/dateUtils"
 import styles from "./MaintenanceHistory.module.css"
 import {
@@ -21,7 +22,7 @@ export type MaintenanceHistoryItemViewPTData = {
   id: number
   description: string
   instructions_pt: PortableTextBlock[] | null
-  completed_at: string | Date | null
+  completed_at: Temporal.Instant | null
   severity: Severity
 }
 

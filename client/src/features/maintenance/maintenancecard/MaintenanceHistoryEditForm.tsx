@@ -9,6 +9,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import type { PortableTextBlock } from "@portabletext/types"
+import { Temporal } from "temporal-polyfill"
 import { toDateInputValue } from "@/utils/dateUtils"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
@@ -20,13 +21,13 @@ export type MaintenanceHistoryItem = {
   id: number
   description: string
   instructions_pt: PortableTextBlock[] | null
-  completed_at: string | Date | null
+  completed_at: Temporal.Instant | null
 }
 
 export type MaintenanceHistoryEditValues = {
   description: string
   instructions_pt: PortableTextBlock[] | null
-  completed_at?: Date
+  completed_at?: Temporal.Instant
 }
 
 type SubmitState = {
@@ -61,8 +62,15 @@ export function MaintenanceHistoryEditForm(props: {
         await onSubmit({
           description,
           instructions_pt: instructionsPT.length > 0 ? instructionsPT : null,
+          // Anchor the picked day at Oslo noon so the stored instant lands on
+          // the same calendar day regardless of the viewer's timezone.
           completed_at: completedAtStr
-            ? new Date(`${completedAtStr}T12:00:00`)
+            ? Temporal.PlainDate.from(completedAtStr)
+                .toZonedDateTime({
+                  timeZone: "Europe/Oslo",
+                  plainTime: "12:00",
+                })
+                .toInstant()
             : undefined,
         })
         return { error: null }

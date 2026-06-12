@@ -3,6 +3,8 @@
 // These mirror the server-side booking.previewConflicts output.
 // ============================================================
 
+import type { Temporal } from "temporal-polyfill"
+
 export type BookingStatus = "pending" | "confirmed" | "cancelled"
 
 export type OccupantDraft = {
@@ -39,8 +41,8 @@ export type OverlappingBooking = {
   booking_id: number
   booker_id: number
   booker_name: string
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   status: BookingStatus
   sharedDays: number
   sameUserOccupants: SameUserOccupant[]

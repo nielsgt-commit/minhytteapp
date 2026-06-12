@@ -1,8 +1,9 @@
 import { Fragment } from "react"
 import { useTranslation } from "react-i18next"
 import { Table } from "@digdir/designsystemet-react"
+import { Temporal } from "temporal-polyfill"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
-import { pad2, toIso } from "@/utils/dateUtils"
+import { pad2 } from "@/utils/dateUtils"
 import styles from "./OccupancyMatrix.module.css"
 
 const WEEKDAY_LABELS = [
@@ -23,8 +24,8 @@ type Occupant = {
 
 type Booking = {
   status: string
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   occupants: Occupant[]
 }
 
@@ -42,7 +43,7 @@ type Room = {
 }
 
 type Props = {
-  days: Date[]
+  days: Temporal.PlainDate[]
   bookings: readonly Booking[]
   rooms: readonly Room[]
 }
@@ -102,10 +103,10 @@ function densityStyle(ratio: number): { backgroundColor?: string } {
 
 export function OccupancyMatrix({ days, bookings, rooms }: Props) {
   const { t } = useTranslation("dashboard")
-  const weekIsos = days.map(toIso)
+  const weekIsos = days.map(d => d.toString())
   const wStart = weekIsos[0]
   const wEnd = weekIsos[6]
-  const todayIso = toIso(new Date())
+  const todayIso = Temporal.Now.plainDateISO().toString()
 
   const roomById = new Map(rooms.map(r => [r.id, r]))
 
@@ -115,9 +116,11 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
 
   for (const b of bookings) {
     if (b.status === "cancelled") continue
-    if (b.start_date > wEnd || b.end_date < wStart) continue
-    const s = b.start_date < wStart ? wStart : b.start_date
-    const e = b.end_date > wEnd ? wEnd : b.end_date
+    const bStart = b.start_date.toString()
+    const bEnd = b.end_date.toString()
+    if (bStart > wEnd || bEnd < wStart) continue
+    const s = bStart < wStart ? wStart : bStart
+    const e = bEnd > wEnd ? wEnd : bEnd
     const startCol = weekIsos.indexOf(s)
     const endCol = weekIsos.indexOf(e)
     if (startCol === -1 || endCol === -1) continue
@@ -235,9 +238,9 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
                   weekIsos[i] === todayIso ? styles.dayHeadToday : ""
                 }`}
               >
-                {t(WEEKDAY_LABELS[d.getDay()])}
+                {t(WEEKDAY_LABELS[d.dayOfWeek % 7])}
                 <span className={styles.dayHeadDate}>
-                  {pad2(d.getDate())}/{pad2(d.getMonth() + 1)}
+                  {pad2(d.day)}/{pad2(d.month)}
                 </span>
               </Table.HeaderCell>
             ))}

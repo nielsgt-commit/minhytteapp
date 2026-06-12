@@ -8,6 +8,7 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { Temporal } from "temporal-polyfill"
 import { toDateInputValue } from "@/utils/dateUtils"
 import { fdString } from "@/utils/formData"
 
@@ -55,7 +56,7 @@ export function MyExpenseEditForm({
         toUpdateInput(expense, propertyId, {
           description: values.description,
           amount: Number(values.amount),
-          date: values.date,
+          date: Temporal.PlainDate.from(values.date),
           status: "submitted",
         }),
       )

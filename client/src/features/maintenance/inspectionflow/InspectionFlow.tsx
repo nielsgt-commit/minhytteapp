@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Button, Field, Heading, Label } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import styles from "./InspectionFlow.module.css"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -82,9 +83,7 @@ export function InspectionFlow(props: {
       const aP = a.procedure_position ?? Number.MAX_SAFE_INTEGER
       const bP = b.procedure_position ?? Number.MAX_SAFE_INTEGER
       if (aP !== bP) return aP - bP
-      const aT = new Date(a.created_at).getTime()
-      const bT = new Date(b.created_at).getTime()
-      return aT - bT
+      return Temporal.Instant.compare(a.created_at, b.created_at)
     })
 
   return (

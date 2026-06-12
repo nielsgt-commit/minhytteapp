@@ -6,11 +6,12 @@ import {
   userGroupMembersTable,
   userGroupsTable,
 } from "../db/schema/users.schema.ts"
+import { transformer } from "../shared/transformer.ts"
 import type { AuthUser, Context } from "./context.ts"
 
 type Db = typeof dbClient
 
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create({ transformer })
 
 export const router = t.router
 export const createCallerFactory = t.createCallerFactory

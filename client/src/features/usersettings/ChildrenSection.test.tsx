@@ -19,9 +19,15 @@ vi.mock("@/trpc/trpc", () => ({
         queryKey: () => ["user", "listMyChildren"],
         queryOptions: () => ({ queryKey: ["user", "listMyChildren"] }),
       },
+      listLinkableParents: {
+        queryKey: () => ["user", "listLinkableParents"],
+        queryOptions: () => ({ queryKey: ["user", "listLinkableParents"] }),
+      },
       createChild: { mutationOptions: (opts: unknown) => opts },
       updateChild: { mutationOptions: (opts: unknown) => opts },
       removeChild: { mutationOptions: (opts: unknown) => opts },
+      addParent: { mutationOptions: (opts: unknown) => opts },
+      removeParent: { mutationOptions: (opts: unknown) => opts },
     },
   }),
 }))
@@ -31,21 +37,37 @@ type MutationStub = {
   state: { isPending: boolean; error: { message: string } | null }
 }
 
-let childrenData: { id: number; name: string }[] | undefined
+type Parent = { id: number; name: string; isCreator: boolean }
+type Child = { id: number; name: string; parents: Parent[] }
+
+let childrenData: Child[] | undefined
+let linkableData: { id: number; name: string }[] | undefined
+// Mutation stubs in the order the component calls useMutation.
 let createStub: MutationStub
 let updateStub: MutationStub
 let removeStub: MutationStub
+let addParentStub: MutationStub
+let removeParentStub: MutationStub
 let mutationCallIndex = 0
 
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
-  useQuery: () => {
-    // Reset per render — useQuery runs before useMutation calls in the component.
+  useQuery: (opts: { queryKey: string[] }) => {
+    if (opts.queryKey[1] === "listLinkableParents") {
+      return { data: linkableData }
+    }
+    // listMyChildren runs before the useMutation calls — reset the index here.
     mutationCallIndex = 0
     return { data: childrenData }
   },
   useMutation: (opts: Record<string, unknown>) => {
-    const stubs = [createStub, updateStub, removeStub]
+    const stubs = [
+      createStub,
+      updateStub,
+      removeStub,
+      addParentStub,
+      removeParentStub,
+    ]
     const stub = stubs[mutationCallIndex++ % stubs.length]
     return {
       mutate: stub.mutate,
@@ -62,11 +84,20 @@ const freshStub = (): MutationStub => ({
   state: { isPending: false, error: null },
 })
 
+const child = (
+  id: number,
+  name: string,
+  parents: Parent[] = [{ id: 100, name: "Me", isCreator: true }],
+): Child => ({ id, name, parents })
+
 beforeEach(() => {
   childrenData = []
+  linkableData = []
   createStub = freshStub()
   updateStub = freshStub()
   removeStub = freshStub()
+  addParentStub = freshStub()
+  removeParentStub = freshStub()
   mutationCallIndex = 0
 })
 
@@ -77,10 +108,7 @@ describe("ChildrenSection", () => {
   })
 
   test("renders a list when children exist", () => {
-    childrenData = [
-      { id: 1, name: "Lila" },
-      { id: 2, name: "Mo" },
-    ]
+    childrenData = [child(1, "Lila"), child(2, "Mo")]
     render(<ChildrenSection />)
     expect(screen.getByText("Lila")).toBeInTheDocument()
     expect(screen.getByText("Mo")).toBeInTheDocument()
@@ -107,7 +135,7 @@ describe("ChildrenSection", () => {
   })
 
   test("clicking Edit reveals an editable form pre-filled with the child's name", async () => {
-    childrenData = [{ id: 5, name: "Pip" }]
+    childrenData = [child(5, "Pip")]
     const user = userEvent.setup()
     render(<ChildrenSection />)
     await user.click(screen.getByRole("button", { name: "Edit" }))
@@ -119,7 +147,7 @@ describe("ChildrenSection", () => {
   })
 
   test("Cancel exits edit mode without calling updateChild", async () => {
-    childrenData = [{ id: 5, name: "Pip" }]
+    childrenData = [child(5, "Pip")]
     const user = userEvent.setup()
     render(<ChildrenSection />)
     await user.click(screen.getByRole("button", { name: "Edit" }))
@@ -131,7 +159,7 @@ describe("ChildrenSection", () => {
   })
 
   test("submitting edit form calls updateChild with id and trimmed name", async () => {
-    childrenData = [{ id: 5, name: "Pip" }]
+    childrenData = [child(5, "Pip")]
     const user = userEvent.setup()
     render(<ChildrenSection />)
     await user.click(screen.getByRole("button", { name: "Edit" }))
@@ -143,7 +171,7 @@ describe("ChildrenSection", () => {
   })
 
   test("Remove asks for confirmation and calls removeChild on confirm", async () => {
-    childrenData = [{ id: 9, name: "Sam" }]
+    childrenData = [child(9, "Sam")]
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true)
     const user = userEvent.setup()
     render(<ChildrenSection />)
@@ -154,7 +182,7 @@ describe("ChildrenSection", () => {
   })
 
   test("Remove does NOT call removeChild when confirmation is cancelled", async () => {
-    childrenData = [{ id: 9, name: "Sam" }]
+    childrenData = [child(9, "Sam")]
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false)
     const user = userEvent.setup()
     render(<ChildrenSection />)
@@ -176,9 +204,91 @@ describe("ChildrenSection", () => {
   })
 
   test("renders an alert for update/remove errors above the add form", () => {
-    childrenData = [{ id: 1, name: "Lila" }]
+    childrenData = [child(1, "Lila")]
     updateStub.state.error = { message: "update failed" }
     render(<ChildrenSection />)
     expect(screen.getByRole("alert")).toHaveTextContent("update failed")
+  })
+
+  test("lists a child's parents", () => {
+    childrenData = [
+      child(1, "Lila", [
+        { id: 100, name: "Me", isCreator: true },
+        { id: 200, name: "Co-parent", isCreator: false },
+      ]),
+    ]
+    render(<ChildrenSection />)
+    expect(screen.getByText("Me")).toBeInTheDocument()
+    expect(screen.getByText("Co-parent")).toBeInTheDocument()
+  })
+
+  test("offers candidates and adds a second parent", async () => {
+    childrenData = [child(1, "Lila")]
+    linkableData = [{ id: 200, name: "Dana" }]
+    const user = userEvent.setup()
+    render(<ChildrenSection />)
+    await user.selectOptions(
+      screen.getByLabelText("Add another parent"),
+      "200",
+    )
+    await user.click(screen.getByRole("button", { name: "Add parent" }))
+    expect(addParentStub.mutate).toHaveBeenCalledWith({
+      childId: 1,
+      parentUserId: 200,
+    })
+  })
+
+  test("hides the add-parent form once a child has two parents", () => {
+    childrenData = [
+      child(1, "Lila", [
+        { id: 100, name: "Me", isCreator: true },
+        { id: 200, name: "Dana", isCreator: false },
+      ]),
+    ]
+    linkableData = [{ id: 300, name: "Eli" }]
+    render(<ChildrenSection />)
+    expect(
+      screen.queryByLabelText("Add another parent"),
+    ).not.toBeInTheDocument()
+  })
+
+  test("excludes a child's existing parents from the candidate list", () => {
+    childrenData = [
+      child(1, "Lila", [{ id: 100, name: "Me", isCreator: true }]),
+    ]
+    linkableData = [
+      { id: 100, name: "Me" },
+      { id: 200, name: "Dana" },
+    ]
+    render(<ChildrenSection />)
+    const select = screen.getByLabelText("Add another parent")
+    expect(
+      screen.getByRole("option", { name: "Dana" }),
+    ).toBeInTheDocument()
+    // "Me" (id 100) is already a parent, so it must not be an option.
+    const meOption = screen.queryByRole("option", { name: "Me" })
+    expect(meOption).not.toBeInTheDocument()
+    expect(select).toBeInTheDocument()
+  })
+
+  test("removeParent asks for confirmation and fires on confirm", async () => {
+    childrenData = [
+      child(1, "Lila", [
+        { id: 100, name: "Me", isCreator: true },
+        { id: 200, name: "Dana", isCreator: false },
+      ]),
+    ]
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true)
+    const user = userEvent.setup()
+    render(<ChildrenSection />)
+    // Two "Remove" buttons exist: the child's, and Dana's (non-creator parent).
+    const removeButtons = screen.getAllByRole("button", { name: "Remove" })
+    await user.click(removeButtons[removeButtons.length - 1])
+    expect(confirmSpy).toHaveBeenCalledWith("Remove Dana as a parent?")
+    expect(removeParentStub.mutate).toHaveBeenCalledWith({
+      childId: 1,
+      parentUserId: 200,
+    })
+    confirmSpy.mockRestore()
   })
 })

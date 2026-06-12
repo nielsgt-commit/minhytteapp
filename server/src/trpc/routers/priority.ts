@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { propertyPriorityWeeksTable } from "../../db/schema/property.schema.ts"
 import { userGroupsTable } from "../../db/schema/users.schema.ts"
+import { instantFromDate } from "../../shared/temporal.ts"
 import { isPropertyHead, propertyAdminProcedure, router } from "../init.ts"
 import type { AuthUser } from "../context.ts"
 import type { db as dbClient } from "../../db/client.ts"
@@ -119,7 +120,11 @@ export const priorityRouter = router({
             iso_week: input.iso_week,
           })
           .returning()
-        return created
+        return {
+          ...created,
+          created_at: instantFromDate(created.created_at),
+          updated_at: instantFromDate(created.updated_at),
+        }
       })
     }),
 
@@ -148,6 +153,13 @@ export const priorityRouter = router({
           ),
         )
         .returning()
-      return rows[0] ?? null
+      const cleared = rows.at(0)
+      return cleared
+        ? {
+            ...cleared,
+            created_at: instantFromDate(cleared.created_at),
+            updated_at: instantFromDate(cleared.updated_at),
+          }
+        : null
     }),
 })

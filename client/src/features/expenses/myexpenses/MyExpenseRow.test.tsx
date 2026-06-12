@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
@@ -20,7 +21,7 @@ function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     booking_id: null,
     maintenance_id: null,
     settlement_id: null,
-    date: "2026-01-15",
+    date: Temporal.PlainDate.from("2026-01-15"),
     status: "submitted",
     receipt_url: null,
     expense_types: ["food", "gas"],

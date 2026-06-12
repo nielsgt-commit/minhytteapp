@@ -22,3 +22,26 @@
   flex: 1;
   min-width: 0;
 }
+
+.child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.parents {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.parentsLabel {
+  font-weight: 500;
+}
+
+.parentChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}

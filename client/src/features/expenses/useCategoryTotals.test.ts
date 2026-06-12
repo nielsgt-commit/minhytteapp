@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill"
 import { describe, expect, test } from "vitest"
 import { useCategoryTotals } from "./useCategoryTotals.ts"
 import type { ExpenseRow } from "./types.ts"
@@ -14,7 +15,7 @@ function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     booking_id: null,
     maintenance_id: null,
     settlement_id: null,
-    date: "2026-01-01",
+    date: Temporal.PlainDate.from("2026-01-01"),
     status: "submitted",
     receipt_url: null,
     expense_types: [],

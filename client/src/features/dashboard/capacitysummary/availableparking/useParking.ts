@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type ClaimList = {
@@ -6,7 +7,7 @@ type ClaimList = {
   slot_index: number
   user_id: number
   user_name: string
-  claimed_at: string
+  claimed_at: Temporal.Instant
 }[]
 
 type Me = { id: number; name: string } | null | undefined
@@ -39,7 +40,7 @@ export function useParking(propertyId: number, me: Me) {
                 slot_index: vars.slot_index,
                 user_id: me.id,
                 user_name: me.name,
-                claimed_at: new Date().toISOString(),
+                claimed_at: Temporal.Now.instant(),
               },
             ].sort((a, b) => a.slot_index - b.slot_index)
           })

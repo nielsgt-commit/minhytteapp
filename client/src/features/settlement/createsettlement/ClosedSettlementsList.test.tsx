@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { Temporal } from "temporal-polyfill"
 import {
   ClosedSettlementsList,
   type SettlementRow,
@@ -17,7 +18,7 @@ const ROW: SettlementRow = {
   status: "closed",
   split_policy: "occupancy_days",
   split_policy_id: null,
-  closed_at: "2025-09-01T10:00:00Z",
+  closed_at: Temporal.Instant.from("2025-09-01T10:00:00Z"),
 }
 
 describe("ClosedSettlementsList", () => {

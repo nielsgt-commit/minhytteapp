@@ -5,7 +5,7 @@ import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
-import { toIso } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
 import {
   AddNewExpenseFlow,
   type ExpenseDraft,
@@ -28,7 +28,7 @@ export function ExpenseForm() {
 
   const submitDrafts = (drafts: ExpenseDraft[], description: string) => {
     if (selectedPropertyId == null) return
-    const date = toIso(new Date())
+    const date = Temporal.Now.plainDateISO()
     for (const d of drafts) {
       createMutation.mutate({
         property_id: selectedPropertyId,

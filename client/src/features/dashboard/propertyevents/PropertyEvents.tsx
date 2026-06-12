@@ -60,16 +60,22 @@ export function PropertyEvents() {
           ]
         : [],
     ),
-    ...items
-      .filter(i => i.severity === "major" && i.completed_at != null)
-      .map(i => ({
-        year: new Date(i.completed_at as Date | string).getFullYear(),
-        description: i.description,
-        buildingName:
-          (i.structure_id != null ? structureName.get(i.structure_id) : null) ??
-          "",
-        key: `maintenance-${String(i.id)}`,
-      })),
+    ...items.flatMap(i =>
+      i.severity === "major" && i.completed_at != null
+        ? [
+            {
+              // The event year is the Oslo-local year of the completion instant.
+              year: i.completed_at.toZonedDateTimeISO("Europe/Oslo").year,
+              description: i.description,
+              buildingName:
+                (i.structure_id != null
+                  ? structureName.get(i.structure_id)
+                  : null) ?? "",
+              key: `maintenance-${String(i.id)}`,
+            },
+          ]
+        : [],
+    ),
   ].sort((a, b) => a.year - b.year)
 
   return (

@@ -1,6 +1,7 @@
 import { Card, Paragraph } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import { formatDate } from "@/utils/dateUtils"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
 
@@ -10,7 +11,7 @@ type MaintenanceEntry = {
   m: {
     id: number
     description: string
-    completed_at: string | Date | null
+    completed_at: Temporal.Instant | null
   }
 }
 
@@ -25,8 +26,8 @@ type InspectionEntry = {
     inspected_by: string
     recurrence: "yearly" | "5year" | "spring" | "fall"
     notes_pt: PortableTextBlock[] | null
-    started_at: string | Date
-    completed_at: string | Date | null
+    started_at: Temporal.Instant
+    completed_at: Temporal.Instant | null
   }
 }
 

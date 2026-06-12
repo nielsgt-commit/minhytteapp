@@ -3,7 +3,7 @@ import { Card, Heading, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc"
-import { pad2 } from "@/utils/dateUtils"
+import type { Temporal } from "temporal-polyfill"
 import {
   formatRange,
   peakWeekRange,
@@ -12,25 +12,17 @@ import type { PeakWeek } from "@/routes/_authed/manageproperty/-priority/priorit
 import type { SortMode } from "./SummerSummary"
 import styles from "./SummerSummary.module.css"
 
-function isoUTC(d: Date) {
-  return `${String(d.getUTCFullYear())}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`
-}
-
 type WeekDay = { iso: string; index: number; name: string }
 
 // The seven days (Mon–Sun) of a priority week, with localized short names.
-function weekDays(weekStart: Date, locale: string): WeekDay[] {
+function weekDays(weekStart: Temporal.PlainDate, locale: string): WeekDay[] {
   const days: WeekDay[] = []
   for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart)
-    d.setUTCDate(weekStart.getUTCDate() + i)
+    const d = weekStart.add({ days: i })
     days.push({
-      iso: isoUTC(d),
+      iso: d.toString(),
       index: i,
-      name: d.toLocaleDateString(locale, {
-        weekday: "short",
-        timeZone: "UTC",
-      }),
+      name: d.toLocaleString(locale, { weekday: "short" }),
     })
   }
   return days
@@ -104,12 +96,12 @@ export function PriorityWeekSummary({
   const stays: StayRow[] = []
   for (const b of bookings) {
     if (b.status === "cancelled") continue
+    const bStart = b.start_date.toString()
+    const bEnd = b.end_date.toString()
     // end_date is inclusive, so the booking occupies [start_date, end_date].
-    if (b.start_date > weekEnd || b.end_date < weekStart) continue
+    if (bStart > weekEnd || bEnd < weekStart) continue
 
-    const stayDays = days.filter(
-      d => d.iso >= b.start_date && d.iso <= b.end_date,
-    )
+    const stayDays = days.filter(d => d.iso >= bStart && d.iso <= bEnd)
     if (stayDays.length === 0) continue
 
     const guestsByRoom = new Map<number | null, string[]>()

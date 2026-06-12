@@ -13,6 +13,11 @@ import {
 import { stayTable } from "../../db/schema/stay.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import {
+  instantFromDate,
+  plainDateFromDb,
+  plainDateFromDbOrNull,
+} from "../../shared/temporal.ts"
+import {
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
@@ -121,8 +126,21 @@ export const stayRouter = router({
       ).at(0)
 
       return {
-        stay: openStay ?? null,
-        booking: coveringBooking ?? null,
+        stay: openStay
+          ? {
+              ...openStay,
+              start_date: plainDateFromDb(openStay.start_date),
+              end_date: plainDateFromDbOrNull(openStay.end_date),
+              created_at: instantFromDate(openStay.created_at),
+            }
+          : null,
+        booking: coveringBooking
+          ? {
+              ...coveringBooking,
+              start_date: plainDateFromDb(coveringBooking.start_date),
+              end_date: plainDateFromDb(coveringBooking.end_date),
+            }
+          : null,
         checkedIn: openStay != null || coveringBooking?.status === "confirmed",
       }
     }),

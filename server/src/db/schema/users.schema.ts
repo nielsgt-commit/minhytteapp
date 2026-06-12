@@ -52,6 +52,26 @@ export const usersTable = pgTable(
   ],
 )
 
+// Parents of a child user. A child is capped at two parents (enforced in app
+// logic, not the DB). The child's `users.parent_user_id` marks the creating
+// (primary) parent; this table is the authoritative set for visibility and
+// authorization, and always contains a row for that primary parent too.
+export const childParentsTable = pgTable(
+  "child_parents",
+  {
+    child_user_id: integer("child_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    parent_user_id: integer("parent_user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+  },
+  t => [
+    primaryKey({ columns: [t.child_user_id, t.parent_user_id] }),
+    index("child_parents_parent_user_id_idx").on(t.parent_user_id),
+  ],
+)
+
 export const userGroupsTable = pgTable(
   "user_groups",
   {

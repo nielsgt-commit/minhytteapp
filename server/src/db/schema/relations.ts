@@ -28,6 +28,7 @@ import {
 import { stayTable } from "./stay.schema.ts"
 import { eventTable } from "./event.schema.ts"
 import {
+  childParentsTable,
   userGroupMembersTable,
   userGroupsTable,
   usersTable,
@@ -61,7 +62,29 @@ export const usersRelations = relations(usersTable, ({ one, many }) => ({
     relationName: "user_parent",
   }),
   children: many(usersTable, { relationName: "user_parent" }),
+  parentLinks: many(childParentsTable, {
+    relationName: "child_parent_child",
+  }),
+  childLinks: many(childParentsTable, {
+    relationName: "child_parent_parent",
+  }),
 }))
+
+export const childParentsRelations = relations(
+  childParentsTable,
+  ({ one }) => ({
+    child: one(usersTable, {
+      fields: [childParentsTable.child_user_id],
+      references: [usersTable.id],
+      relationName: "child_parent_child",
+    }),
+    parent: one(usersTable, {
+      fields: [childParentsTable.parent_user_id],
+      references: [usersTable.id],
+      relationName: "child_parent_parent",
+    }),
+  }),
+)
 
 export const userGroupsRelations = relations(userGroupsTable, ({ many }) => ({
   settlementTotals: many(settlementUserGroupTotalsTable),

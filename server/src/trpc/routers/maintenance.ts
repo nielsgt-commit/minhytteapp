@@ -12,12 +12,38 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
+import {
+  type Temporal,
+  dateFromInstant,
+  instantFromDate,
+  instantFromDateOrNull,
+  zInstant,
+} from "../../shared/temporal.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromMaintenance,
   resolvePropertyIdFromMaintenanceParent,
 } from "../util/propertyAccess.ts"
 import { ensureMainGroupOfProperty } from "./priority.ts"
+
+// Wire mapping for full maintenance rows (also used by the inspection router's
+// listFindings): timestamp columns (JS Date from drizzle) → Temporal.Instant.
+export function toWireMaintenance<
+  T extends { due_at: Date | null; created_at: Date; completed_at: Date | null },
+>(
+  m: T,
+): Omit<T, "due_at" | "created_at" | "completed_at"> & {
+  due_at: Temporal.Instant | null
+  created_at: Temporal.Instant
+  completed_at: Temporal.Instant | null
+} {
+  return {
+    ...m,
+    due_at: instantFromDateOrNull(m.due_at),
+    created_at: instantFromDate(m.created_at),
+    completed_at: instantFromDateOrNull(m.completed_at),
+  }
+}
 
 const maintenanceFields = {
   description: z.string().min(1),
@@ -34,14 +60,14 @@ const maintenanceFields = {
   recurrence: z.enum(["once", "yearly", "5year", "spring", "fall"]),
   due_kind: z.enum(dueKindValues).default("not_decided"),
   due_priority_group_id: z.number().int().positive().optional(),
-  due_at: z.coerce.date().optional(),
-  completed_at: z.coerce.date().optional(),
+  due_at: zInstant.optional(),
+  completed_at: zInstant.optional(),
 }
 
 type DueInput = {
   due_kind: DueKind
   due_priority_group_id?: number
-  due_at?: Date
+  due_at?: Temporal.Instant
 }
 
 const dueShape = {
@@ -69,7 +95,10 @@ const dueShape = {
 function normalizeDue(input: DueInput) {
   return {
     due_kind: input.due_kind,
-    due_at: input.due_kind === "date" ? (input.due_at ?? null) : null,
+    due_at:
+      input.due_kind === "date" && input.due_at != null
+        ? dateFromInstant(input.due_at)
+        : null,
     due_priority_group_id:
       input.due_kind === "priority_week"
         ? (input.due_priority_group_id ?? null)
@@ -134,7 +163,7 @@ export const maintenanceRouter = router({
           ),
         )
         .orderBy(asc(maintenanceTable.created_at), asc(maintenanceTable.id))
-      return rows.map(r => r.m)
+      return rows.map(r => toWireMaintenance(r.m))
     }),
 
   create: protectedProcedure
@@ -162,10 +191,14 @@ export const maintenanceRouter = router({
           ...normalizeDue(input),
           added_by: ctx.user.id,
           completed_at:
-            input.status === "done" ? (input.completed_at ?? new Date()) : null,
+            input.status === "done"
+              ? input.completed_at != null
+                ? dateFromInstant(input.completed_at)
+                : new Date()
+              : null,
         })
         .returning()
-      return created
+      return toWireMaintenance(created)
     }),
 
   update: protectedProcedure
@@ -196,14 +229,16 @@ export const maintenanceRouter = router({
       }
       const completed_at =
         rest.status === "done"
-          ? (rest.completed_at ?? existing.completed_at ?? new Date())
+          ? rest.completed_at != null
+            ? dateFromInstant(rest.completed_at)
+            : (existing.completed_at ?? new Date())
           : null
       const [updated] = await ctx.db
         .update(maintenanceTable)
         .set({ ...rest, ...normalizeDue(rest), completed_at })
         .where(eq(maintenanceTable.id, id))
         .returning()
-      return updated
+      return toWireMaintenance(updated)
     }),
 
   delete: protectedProcedure
@@ -218,7 +253,7 @@ export const maintenanceRouter = router({
         .delete(maintenanceTable)
         .where(eq(maintenanceTable.id, input.id))
         .returning()
-      return deleted
+      return toWireMaintenance(deleted)
     }),
 
   setPinned: protectedProcedure
@@ -239,7 +274,7 @@ export const maintenanceRouter = router({
         .set({ is_pinned: input.is_pinned })
         .where(eq(maintenanceTable.id, input.id))
         .returning()
-      return updated
+      return toWireMaintenance(updated)
     }),
 
   setProcedureOrder: protectedProcedure

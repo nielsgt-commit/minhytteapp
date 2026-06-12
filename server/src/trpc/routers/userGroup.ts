@@ -145,7 +145,7 @@ async function fetchGroupsWithMembers(ctx: Context, groupIds: number[]) {
 // Group ids a non-admin user is allowed to see: the relevant groups of every
 // property they belong to (property membership mirrors property.mine). Used to
 // scope listWithMembers so a user can't read every group/member in the system.
-async function visibleGroupIdsForUser(
+export async function visibleGroupIdsForUser(
   ctx: Context,
   userId: number,
 ): Promise<Set<number>> {

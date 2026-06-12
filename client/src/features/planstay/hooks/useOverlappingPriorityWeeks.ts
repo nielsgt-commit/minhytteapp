@@ -40,14 +40,12 @@ export function useOverlappingPriorityWeeks(
     )
     return priorityData.assignments
       .filter(a => {
-        // isoWeekMonday returns UTC-midnight Dates, so slicing the UTC ISO
-        // string (not local-time toIso) yields the intended calendar day.
         const weekStart = isoWeekMonday(a.year, a.iso_week)
-        const weekEnd = new Date(weekStart)
-        weekEnd.setUTCDate(weekStart.getUTCDate() + 6)
+        const weekEnd = weekStart.add({ days: 6 })
+        // The draft keeps ISO "YYYY-MM-DD" strings, which compare correctly
+        // against PlainDate.toString() lexicographically.
         return (
-          weekStart.toISOString().slice(0, 10) <= endDate &&
-          weekEnd.toISOString().slice(0, 10) >= startDate
+          weekStart.toString() <= endDate && weekEnd.toString() >= startDate
         )
       })
       .map(a => ({

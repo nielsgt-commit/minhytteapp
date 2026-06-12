@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { Card, Heading } from "@digdir/designsystemet-react"
+import { Temporal } from "temporal-polyfill"
 import { startOfSunday } from "@/utils/dateUtils"
 import styles from "./CalendarSummary.module.css"
 
@@ -21,9 +22,11 @@ export function CalendarSummary() {
   const propertyName =
     properties.find(p => p.id === propertyId)?.name ?? "property"
 
-  const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
+  const [weekStart, setWeekStart] = useState(() =>
+    startOfSunday(Temporal.Now.plainDateISO()),
+  )
   const resetWeek = () => {
-    setWeekStart(startOfSunday(new Date()))
+    setWeekStart(startOfSunday(Temporal.Now.plainDateISO()))
   }
 
   return (

@@ -1,5 +1,6 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import type { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc"
 import { inclusiveDayCount } from "@/utils/dateUtils"
 
@@ -17,7 +18,7 @@ export type ExpenseRow = {
   booking_id: number | null
   maintenance_id: number | null
   settlement_id: number | null
-  date: string
+  date: Temporal.PlainDate
   status: Status
   receipt_url: string | null
   expense_types: ExpenseType[]

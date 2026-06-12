@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import styles from "./Equipment.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
@@ -43,11 +44,9 @@ export function Equipment() {
     )
   }
 
-  const sortedEquipment = equipment.slice().sort((a, b) => {
-    const aT = new Date(a.created_at).getTime()
-    const bT = new Date(b.created_at).getTime()
-    return bT - aT
-  })
+  const sortedEquipment = equipment
+    .slice()
+    .sort((a, b) => Temporal.Instant.compare(b.created_at, a.created_at))
 
   const body =
     sortedEquipment.length === 0 ? (
@@ -59,8 +58,8 @@ export function Equipment() {
             .filter(m => m.equipment_id === item.id && m.status === "done")
             .slice()
             .sort((a, b) => {
-              const aT = a.completed_at ? new Date(a.completed_at).getTime() : 0
-              const bT = b.completed_at ? new Date(b.completed_at).getTime() : 0
+              const aT = a.completed_at?.epochMilliseconds ?? 0
+              const bT = b.completed_at?.epochMilliseconds ?? 0
               return bT - aT
             })
           const itemInspections = inspections.filter(
@@ -69,12 +68,12 @@ export function Equipment() {
           const historyEntries: EquipmentHistoryEntryData[] = [
             ...itemMaintenance.map(m => ({
               kind: "maintenance" as const,
-              t: m.completed_at ? new Date(m.completed_at).getTime() : 0,
+              t: m.completed_at?.epochMilliseconds ?? 0,
               m,
             })),
             ...itemInspections.map(i => ({
               kind: "inspection" as const,
-              t: i.completed_at ? new Date(i.completed_at).getTime() : 0,
+              t: i.completed_at?.epochMilliseconds ?? 0,
               i,
             })),
           ].sort((a, b) => b.t - a.t)

@@ -5,12 +5,11 @@ import {
   fromIso,
   groupConsecutive,
   propertyCapacity,
-  toIso,
 } from "./helpers.ts"
 
-describe("toIso / fromIso round-trip", () => {
-  test("round-trips a local date", () => {
-    expect(toIso(fromIso("2026-07-15"))).toBe("2026-07-15")
+describe("fromIso round-trip", () => {
+  test("round-trips a calendar date", () => {
+    expect(fromIso("2026-07-15").toString()).toBe("2026-07-15")
   })
 })
 

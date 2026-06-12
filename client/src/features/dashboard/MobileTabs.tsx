@@ -14,6 +14,7 @@ import { RoomAvailabilityIndicator } from "@/features/dashboard/capacitysummary/
 import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
 import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
+import { Temporal } from "temporal-polyfill"
 import { startOfSunday } from "@/utils/dateUtils"
 
 type Tab = "now" | "week" | "summer" | "year"
@@ -174,7 +175,9 @@ function MobileYearPanel() {
 }
 
 function MobileWeekPanel() {
-  const [weekStart, setWeekStart] = useState(() => startOfSunday(new Date()))
+  const [weekStart, setWeekStart] = useState(() =>
+    startOfSunday(Temporal.Now.plainDateISO()),
+  )
 
   return (
     <div className={styles.stackedPanels}>

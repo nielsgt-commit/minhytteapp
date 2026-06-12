@@ -6,6 +6,7 @@ import {
   Switch,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import styles from "./ReviewSettlement.module.css"
 import expenseRowStyles from "./SettlementExpenseRow.module.css"
 import { SettlementExpenseRow } from "./SettlementExpenseRow"
@@ -26,7 +27,9 @@ import {
 } from "@/features/settlement/phase"
 
 function sortExpenses(expenses: ExpenseRow[]) {
-  return expenses.slice().sort((a, b) => a.date.localeCompare(b.date))
+  return expenses
+    .slice()
+    .sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
 }
 
 type Props = {

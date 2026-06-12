@@ -5,29 +5,14 @@ import {
   getCompactForecast,
   type YrTimeseries,
 } from "../../services/yrCache.ts"
+import { Temporal, zPlainDate } from "../../shared/temporal.ts"
 import { propertyAdminProcedure, router } from "../init.ts"
 
 const OSLO_TZ = "Europe/Oslo"
 
-const isoDateFormatter = new Intl.DateTimeFormat("en-CA", {
-  timeZone: OSLO_TZ,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-})
-
-const hourFormatter = new Intl.DateTimeFormat("en-GB", {
-  timeZone: OSLO_TZ,
-  hour: "2-digit",
-  hour12: false,
-})
-
-function toOsloIso(time: string): string {
-  return isoDateFormatter.format(new Date(time))
-}
-
-function osloHour(time: string): number {
-  return Number(hourFormatter.format(new Date(time)))
+// yr API timestamps are ISO instants; bucket them by Oslo wall-clock day.
+function osloZdt(time: string): Temporal.ZonedDateTime {
+  return Temporal.Instant.from(time).toZonedDateTimeISO(OSLO_TZ)
 }
 
 function symbolFor(t: YrTimeseries): string | undefined {
@@ -39,7 +24,7 @@ function symbolFor(t: YrTimeseries): string | undefined {
 }
 
 export type DayForecast = {
-  iso: string
+  iso: Temporal.PlainDate
   min_c: number
   max_c: number
   symbol_code: string | null
@@ -48,7 +33,7 @@ export type DayForecast = {
 export type NowWeather = {
   temperature_c: number
   symbol_code: string | null
-  updated_at: string
+  updated_at: Temporal.Instant
 }
 
 export type ForecastResult = {
@@ -56,29 +41,30 @@ export type ForecastResult = {
   days: DayForecast[]
 }
 
-function buildDays(series: YrTimeseries[], weekStart: string): DayForecast[] {
+function buildDays(
+  series: YrTimeseries[],
+  weekStart: Temporal.PlainDate,
+): DayForecast[] {
+  // Keyed by ISO string — PlainDate objects don't compare by value in a Map.
   const byIso = new Map<
     string,
     { min: number; max: number; symbol: string | null; symbolDelta: number }
   >()
 
   const targetIsos = new Set<string>()
-  const start = new Date(`${weekStart}T00:00:00Z`)
   for (let i = 0; i < 7; i++) {
-    const d = new Date(start)
-    d.setUTCDate(d.getUTCDate() + i)
-    targetIsos.add(isoDateFormatter.format(d))
+    targetIsos.add(weekStart.add({ days: i }).toString())
   }
 
   for (const entry of series) {
-    const iso = toOsloIso(entry.time)
+    const zdt = osloZdt(entry.time)
+    const iso = zdt.toPlainDate().toString()
     if (!targetIsos.has(iso)) continue
     const temp = entry.data.instant.details.air_temperature
     if (typeof temp !== "number") continue
 
     const existing = byIso.get(iso)
-    const hour = osloHour(entry.time)
-    const symbolDelta = Math.abs(hour - 12)
+    const symbolDelta = Math.abs(zdt.hour - 12)
     const symbol = symbolFor(entry) ?? null
 
     if (!existing) {
@@ -100,7 +86,7 @@ function buildDays(series: YrTimeseries[], weekStart: string): DayForecast[] {
       if (!v) return []
       return [
         {
-          iso,
+          iso: Temporal.PlainDate.from(iso),
           min_c: Math.round(v.min * 10) / 10,
           max_c: Math.round(v.max * 10) / 10,
           symbol_code: v.symbol,
@@ -117,7 +103,7 @@ function buildNow(series: YrTimeseries[]): NowWeather | null {
   return {
     temperature_c: Math.round(temp * 10) / 10,
     symbol_code: symbolFor(first) ?? null,
-    updated_at: first.time,
+    updated_at: Temporal.Instant.from(first.time),
   }
 }
 
@@ -125,7 +111,7 @@ export const weatherRouter = router({
   forProperty: propertyAdminProcedure
     .input(
       z.object({
-        week_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        week_start: zPlainDate,
       }),
     )
     .query(async ({ ctx, input }): Promise<ForecastResult> => {

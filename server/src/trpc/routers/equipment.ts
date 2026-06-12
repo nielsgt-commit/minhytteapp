@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { equipmentTable } from "../../db/schema/maintenance.schema.ts"
+import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
 import {
   assertPropertyMember,
   propertyAdminProcedure,
@@ -9,6 +10,13 @@ import {
   router,
 } from "../init.ts"
 import { resolvePropertyIdFromEquipment } from "../util/propertyAccess.ts"
+
+// Wire mapping: created_at (timestamp) → Temporal.Instant.
+function toWireEquipment<T extends { created_at: Date }>(
+  e: T,
+): Omit<T, "created_at"> & { created_at: Temporal.Instant } {
+  return { ...e, created_at: instantFromDate(e.created_at) }
+}
 
 const equipmentFields = {
   name: z.string().min(1, { error: "name is required" }).max(255),
@@ -28,11 +36,12 @@ const updateInput = z.object({
 
 export const equipmentRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
-    return ctx.db
+    const rows = await ctx.db
       .select()
       .from(equipmentTable)
       .where(eq(equipmentTable.property_id, input.property_id))
       .orderBy(asc(equipmentTable.id))
+    return rows.map(toWireEquipment)
   }),
 
   create: propertyAdminProcedure
@@ -42,7 +51,7 @@ export const equipmentRouter = router({
         .insert(equipmentTable)
         .values(input)
         .returning()
-      return created
+      return toWireEquipment(created)
     }),
 
   update: propertyAdminProcedure
@@ -64,7 +73,7 @@ export const equipmentRouter = router({
         .set(rest)
         .where(eq(equipmentTable.id, id))
         .returning()
-      return updated
+      return toWireEquipment(updated)
     }),
 
   delete: protectedProcedure
@@ -76,6 +85,6 @@ export const equipmentRouter = router({
         .delete(equipmentTable)
         .where(eq(equipmentTable.id, input.id))
         .returning()
-      return deleted
+      return toWireEquipment(deleted)
     }),
 })

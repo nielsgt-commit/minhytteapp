@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
@@ -11,10 +12,9 @@ type Props = {
 
 type BuiltInPolicy = "shares" | "groups_equal" | "occupancy_days"
 
-function formatDateTime(value: string | Date | null, locale: string) {
+function formatDateTime(value: Temporal.Instant | null, locale: string) {
   if (value == null) return "—"
-  const d = typeof value === "string" ? new Date(value) : value
-  return d.toLocaleString(locale)
+  return value.toLocaleString(locale)
 }
 
 export function ClosedSettlementSummary({ settlementId }: Props) {

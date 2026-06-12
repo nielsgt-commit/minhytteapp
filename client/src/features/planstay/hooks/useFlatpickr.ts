@@ -6,8 +6,9 @@ import { Norwegian } from "flatpickr/dist/l10n/no.js"
 import "flatpickr/dist/flatpickr.min.css"
 import "../flatpickr-digdir.css"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import { SEASON_MIN, SEASON_MAX } from "../constants"
-import { setDates, toIso } from "@/features/planstay/booking-logic"
+import { setDates } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
   BookingDraftAction,
@@ -20,10 +21,14 @@ const WIDE_QUERY = "(min-width: 640px)"
 // rounded bar segmented by family group.
 const MAX_DOTS = 4
 
-function localIso(date: Date): string {
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${String(date.getFullYear())}-${m}-${d}`
+// flatpickr only speaks `Date` — convert at this boundary. A picker `Date`
+// is a local wall-clock day, so read its local calendar fields.
+function pickerDateToPlainDate(d: Date): Temporal.PlainDate {
+  return Temporal.PlainDate.from({
+    year: d.getFullYear(),
+    month: d.getMonth() + 1,
+    day: d.getDate(),
+  })
 }
 
 function subscribeWide(callback: () => void) {
@@ -81,15 +86,21 @@ export function useFlatpickr(
         draftRef.current.end_date,
       ].filter((d): d is string => d != null),
       onChange(selectedDates) {
+        // The reducer stays string-keyed — dispatch ISO strings.
         if (selectedDates.length === 2) {
-          dispatch(setDates(toIso(selectedDates[0]), toIso(selectedDates[1])))
+          dispatch(
+            setDates(
+              pickerDateToPlainDate(selectedDates[0]).toString(),
+              pickerDateToPlainDate(selectedDates[1]).toString(),
+            ),
+          )
         } else if (selectedDates.length === 1) {
-          const s = toIso(selectedDates[0])
+          const s = pickerDateToPlainDate(selectedDates[0]).toString()
           dispatch(setDates(s, s))
         }
       },
       onDayCreate(_dates, _str, _instance, dayElem: DayElement) {
-        const iso = localIso(dayElem.dateObj)
+        const iso = pickerDateToPlainDate(dayElem.dateObj).toString()
         const groups = dotsRef.current?.get(iso)
         if (!groups || groups.length === 0) return
         // Cluster same-family dots together for an at-a-glance read.

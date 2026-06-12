@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Field, Select, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import { toDateInputValue } from "@/utils/dateUtils"
 import {
   type DueSelection,
@@ -51,10 +52,13 @@ export function MaintenanceDueSelect({
     setDateDraft(str)
     if (!str) return
     setDraftToken(null)
-    // Parse at local noon (not `new Date(str)`, which is UTC midnight) so the
-    // stored instant lands on the same calendar day the user picked regardless
-    // of timezone, round-tripping with toDateInputValue's local-day formatting.
-    onChange({ due_kind: "date", due_at: new Date(`${str}T12:00:00`) })
+    // Anchor the picked day at Oslo noon (not UTC midnight) so the stored
+    // instant lands on the same calendar day the user picked, round-tripping
+    // with toDateInputValue's Oslo-day formatting.
+    const due_at = Temporal.PlainDate.from(str)
+      .toZonedDateTime({ timeZone: "Europe/Oslo", plainTime: "12:00" })
+      .toInstant()
+    onChange({ due_kind: "date", due_at })
   }
 
   return (

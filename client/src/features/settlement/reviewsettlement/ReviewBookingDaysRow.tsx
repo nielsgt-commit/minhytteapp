@@ -16,11 +16,16 @@ import {
   OccupantChipInput,
   type UserOption,
 } from "./ReviewBookingDaysRowEditor"
+import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
+import {
+  formatDateRange,
+  inclusiveDayCount,
+  toDateInputValue,
+} from "@/utils/dateUtils"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
-import { formatDateRange, inclusiveDayCount } from "@/utils/dateUtils"
 
 type BookingOccupant = {
   user_id: number
@@ -33,8 +38,8 @@ type Booking = {
   property_id: number | null
   booker_id: number
   booker_name: string | null
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   status: "pending" | "confirmed" | "cancelled"
   notes: string | null
   occupants: BookingOccupant[]
@@ -127,8 +132,8 @@ export function ReviewBookingDaysRow({
 
   const enterEdit = () => {
     setEdit({
-      start: booking.start_date,
-      end: booking.end_date,
+      start: toDateInputValue(booking.start_date),
+      end: toDateInputValue(booking.end_date),
       drafts: buildDrafts(booking, extras),
       inputValue: "",
     })
@@ -165,14 +170,14 @@ export function ReviewBookingDaysRow({
       )
       .map(d => d.name)
     if (!userOccupants.some(u => u.user_id === booking.booker_id)) return
-    if (edit.start > edit.end) return
+    if (!edit.start || !edit.end || edit.start > edit.end) return
 
     updateBooking.mutate(
       {
         id: booking.id,
         property_id: booking.property_id,
-        start_date: edit.start,
-        end_date: edit.end,
+        start_date: Temporal.PlainDate.from(edit.start),
+        end_date: Temporal.PlainDate.from(edit.end),
         status: booking.status,
         notes: booking.notes ?? undefined,
         occupants: userOccupants.map(u => ({
@@ -192,10 +197,20 @@ export function ReviewBookingDaysRow({
     )
   }
 
-  const days = inclusiveDayCount(
-    edit?.start ?? booking.start_date,
-    edit?.end ?? booking.end_date,
-  )
+  // The draft holds raw <input type="date"> strings, which can be empty
+  // mid-edit; fall back to 0 days until both are valid.
+  const draftStart = edit
+    ? edit.start
+      ? Temporal.PlainDate.from(edit.start)
+      : null
+    : booking.start_date
+  const draftEnd = edit
+    ? edit.end
+      ? Temporal.PlainDate.from(edit.end)
+      : null
+    : booking.end_date
+  const days =
+    draftStart && draftEnd ? inclusiveDayCount(draftStart, draftEnd) : 0
   const occupantsCount = edit
     ? edit.drafts.length
     : booking.occupants.length + extras.length

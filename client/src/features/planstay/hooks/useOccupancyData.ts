@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill"
 import {
   bedCapacity,
   propertyCapacity,
@@ -11,8 +12,8 @@ import type { RoomShape, ExistingOccupant } from "../types"
 type Booking = {
   id: number
   status: string
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   booker_id: number
   booker_name: string | null
   occupants: {
@@ -44,20 +45,23 @@ export function useOccupancyData({
   const occupiedBeds = (() => {
     if (!draft.start_date || !draft.end_date) return null
     let peak = 0
-    const cur = new Date(draft.start_date)
-    const end = new Date(draft.end_date)
-    while (cur <= end) {
-      const d = cur.toISOString().slice(0, 10)
+    let cur = Temporal.PlainDate.from(draft.start_date)
+    const end = Temporal.PlainDate.from(draft.end_date)
+    while (Temporal.PlainDate.compare(cur, end) <= 0) {
       let dayCount = 0
       for (const b of bookings) {
         if (b.status === "cancelled") continue
-        if (b.start_date > d || b.end_date < d) continue
+        if (
+          Temporal.PlainDate.compare(b.start_date, cur) > 0 ||
+          Temporal.PlainDate.compare(b.end_date, cur) < 0
+        )
+          continue
         dayCount += b.occupants.filter(
           o => !o.queued && o.sleeps_separately !== true,
         ).length
       }
       if (dayCount > peak) peak = dayCount
-      cur.setUTCDate(cur.getUTCDate() + 1)
+      cur = cur.add({ days: 1 })
     }
     return peak
   })()
@@ -93,8 +97,8 @@ export function useOccupancyData({
       : bookings.filter(
           b =>
             b.status !== "cancelled" &&
-            b.start_date <= endDate &&
-            b.end_date >= startDate,
+            b.start_date.toString() <= endDate &&
+            b.end_date.toString() >= startDate,
         )
 
   const existingOccupantsByRoom = new Map<number, ExistingOccupant[]>()
@@ -127,15 +131,18 @@ export function useOccupancyData({
       set.add(o.user_id)
     }
 
-    const cur = new Date(draft.start_date)
-    const end = new Date(draft.end_date)
-    while (cur <= end) {
-      const d = cur.toISOString().slice(0, 10)
+    let cur = Temporal.PlainDate.from(draft.start_date)
+    const end = Temporal.PlainDate.from(draft.end_date)
+    while (Temporal.PlainDate.compare(cur, end) <= 0) {
       for (const room of propertyRooms) {
         const placed = new Set<number>(draftByRoom.get(room.id) ?? [])
         for (const b of bookings) {
           if (b.status === "cancelled") continue
-          if (b.start_date > d || b.end_date < d) continue
+          if (
+            Temporal.PlainDate.compare(b.start_date, cur) > 0 ||
+            Temporal.PlainDate.compare(b.end_date, cur) < 0
+          )
+            continue
           for (const o of b.occupants) {
             if (o.room_id !== room.id) continue
             if (o.queued) continue
@@ -144,11 +151,11 @@ export function useOccupancyData({
         }
         if (placed.size > bedCapacity(room)) {
           const list = map.get(room.id) ?? []
-          list.push(d)
+          list.push(cur.toString())
           map.set(room.id, list)
         }
       }
-      cur.setUTCDate(cur.getUTCDate() + 1)
+      cur = cur.add({ days: 1 })
     }
     return map
   })()

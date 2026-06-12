@@ -6,10 +6,21 @@ import {
   expensesTable,
 } from "../../db/schema/settlement.schema.ts"
 import {
+  type Temporal,
+  instantFromDateOrNull,
+} from "../../shared/temporal.ts"
+import {
   propertyAdminProcedure,
   propertyHeadOrAdminProcedure,
   router,
 } from "../init.ts"
+
+// Wire mapping: archived_at (nullable timestamp) → Temporal.Instant | null.
+function toWireCategory<T extends { archived_at: Date | null }>(
+  c: T,
+): Omit<T, "archived_at"> & { archived_at: Temporal.Instant | null } {
+  return { ...c, archived_at: instantFromDateOrNull(c.archived_at) }
+}
 
 export const expenseCategoryRouter = router({
   list: propertyAdminProcedure.query(async ({ ctx, input }) => {
@@ -29,7 +40,7 @@ export const expenseCategoryRouter = router({
   }),
 
   listAllForDisplay: propertyAdminProcedure.query(async ({ ctx, input }) => {
-    return ctx.db
+    const rows = await ctx.db
       .select({
         id: expenseCategoriesTable.id,
         name: expenseCategoriesTable.name,
@@ -38,6 +49,7 @@ export const expenseCategoryRouter = router({
       .from(expenseCategoriesTable)
       .where(eq(expenseCategoriesTable.property_id, input.property_id))
       .orderBy(asc(expenseCategoriesTable.name))
+    return rows.map(toWireCategory)
   }),
 
   create: propertyHeadOrAdminProcedure
@@ -47,7 +59,7 @@ export const expenseCategoryRouter = router({
         .insert(expenseCategoriesTable)
         .values({ name: input.name, property_id: input.property_id })
         .returning()
-      return created
+      return toWireCategory(created)
     }),
 
   rename: propertyHeadOrAdminProcedure
@@ -91,7 +103,7 @@ export const expenseCategoryRouter = router({
             })
             .where(eq(expensesTable.property_id, input.property_id))
         }
-        return updated
+        return toWireCategory(updated)
       })
     }),
 
@@ -112,7 +124,7 @@ export const expenseCategoryRouter = router({
         .set({ archived_at: new Date() })
         .where(eq(expenseCategoriesTable.id, input.id))
         .returning()
-      return archived
+      return toWireCategory(archived)
     }),
 
   unarchive: propertyHeadOrAdminProcedure
@@ -132,6 +144,6 @@ export const expenseCategoryRouter = router({
         .set({ archived_at: null })
         .where(eq(expenseCategoriesTable.id, input.id))
         .returning()
-      return unarchived
+      return toWireCategory(unarchived)
     }),
 })

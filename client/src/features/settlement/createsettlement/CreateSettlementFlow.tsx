@@ -30,8 +30,8 @@ export function CreateSettlementFlow({ propertyId, isHead }: Props) {
   const closedSettlements = settlements
     .filter(s => s.status === "closed")
     .sort((a, b) => {
-      const aClosed = a.closed_at ? new Date(a.closed_at).getTime() : 0
-      const bClosed = b.closed_at ? new Date(b.closed_at).getTime() : 0
+      const aClosed = a.closed_at?.epochMilliseconds ?? 0
+      const bClosed = b.closed_at?.epochMilliseconds ?? 0
       if (aClosed !== bClosed) return bClosed - aClosed
       return b.year - a.year
     })

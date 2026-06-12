@@ -4,28 +4,29 @@
 
 // ---- Date utilities ----
 
-import { addDays, toIso } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
 
-// Re-export the shared local-time date helpers so this module keeps its
-// historical import surface (`booking-logic` exposes toIso/addDays/…).
-export { addDays, isoWeekNumber, toIso } from "@/utils/dateUtils"
+// Re-export the shared date helpers so this module keeps its historical
+// import surface (`booking-logic` exposes addDays/isoWeekNumber/…).
+export { addDays, isoWeekNumber } from "@/utils/dateUtils"
 
-export function fromIso(iso: string): Date {
-  const parts = iso.split("-").map(Number)
-  return new Date(parts[0], parts[1] - 1, parts[2])
+export function fromIso(iso: string): Temporal.PlainDate {
+  return Temporal.PlainDate.from(iso)
 }
 
 /**
  * Expand a start_date..end_date range into an array of ISO date strings,
- * inclusive on both ends.
+ * inclusive on both ends. Returns strings on purpose: the booking-draft
+ * reducer and `dotsByDay` Map stay string-keyed (PlainDate is an object,
+ * so value-keyed Map lookups would break).
  */
 export function expandRange(start_date: string, end_date: string): string[] {
   const result: string[] = []
   let cur = fromIso(start_date)
   const end = fromIso(end_date)
-  while (cur <= end) {
-    result.push(toIso(cur))
-    cur = addDays(cur, 1)
+  while (Temporal.PlainDate.compare(cur, end) <= 0) {
+    result.push(cur.toString())
+    cur = cur.add({ days: 1 })
   }
   return result
 }
@@ -43,7 +44,7 @@ export function groupConsecutive(isos: string[]): Range[] {
   let cur: Range = { start: sorted[0], end: sorted[0], days: [sorted[0]] }
   for (let i = 1; i < sorted.length; i++) {
     const iso = sorted[i]
-    const expected = toIso(addDays(fromIso(cur.end), 1))
+    const expected = fromIso(cur.end).add({ days: 1 }).toString()
     if (iso === expected) {
       cur.end = iso
       cur.days.push(iso)
@@ -102,13 +103,14 @@ export function propertyCapacity(
 
 // ---- Sunday before ISO week (from ExperimentalWeekPanel) ----
 
-export function sundayBeforeIsoWeek(year: number, week: number): Date {
-  const jan4 = new Date(year, 0, 4)
-  const jan4Day = jan4.getDay() === 0 ? 7 : jan4.getDay()
-  const monday = new Date(jan4)
-  monday.setDate(jan4.getDate() - jan4Day + 1 + (week - 1) * 7)
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() - 1)
-  sunday.setHours(0, 0, 0, 0)
-  return sunday
+export function sundayBeforeIsoWeek(
+  year: number,
+  week: number,
+): Temporal.PlainDate {
+  // Jan-4 arithmetic — Temporal.PlainDate.from() rejects week fields.
+  const jan4 = Temporal.PlainDate.from({ year, month: 1, day: 4 })
+  const monday = jan4
+    .subtract({ days: jan4.dayOfWeek - 1 })
+    .add({ weeks: week - 1 })
+  return monday.subtract({ days: 1 })
 }

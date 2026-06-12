@@ -1,10 +1,11 @@
+import { Temporal } from "temporal-polyfill"
 import { SEASON_MIN, SEASON_MAX } from "./constants.ts"
 
 type DotBooking = {
   id: number
   status: string
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   occupants: { user_id: number; queued: boolean }[]
 }
 
@@ -42,18 +43,20 @@ export function buildOccupantDots(
       .map(o => familyGroupByUser.get(o.user_id) ?? 0)
     if (occGroups.length === 0) continue
 
-    const start = b.start_date < SEASON_MIN ? SEASON_MIN : b.start_date
-    const end = b.end_date > SEASON_MAX ? SEASON_MAX : b.end_date
+    const startIso = b.start_date.toString()
+    const endIso = b.end_date.toString()
+    const start = startIso < SEASON_MIN ? SEASON_MIN : startIso
+    const end = endIso > SEASON_MAX ? SEASON_MAX : endIso
     if (start > end) continue
 
-    const cur = new Date(start)
-    const last = new Date(end)
-    while (cur <= last) {
-      const iso = cur.toISOString().slice(0, 10)
+    let cur = Temporal.PlainDate.from(start)
+    const last = Temporal.PlainDate.from(end)
+    while (Temporal.PlainDate.compare(cur, last) <= 0) {
+      const iso = cur.toString()
       const list = map.get(iso)
       if (list) list.push(...occGroups)
       else map.set(iso, [...occGroups])
-      cur.setUTCDate(cur.getUTCDate() + 1)
+      cur = cur.add({ days: 1 })
     }
   }
   return map

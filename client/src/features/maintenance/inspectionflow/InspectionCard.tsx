@@ -9,6 +9,7 @@ import {
 } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -29,8 +30,8 @@ type Inspection = {
   inspected_by: string
   recurrence: "yearly" | "5year" | "spring" | "fall"
   notes_pt: PortableTextBlock[] | null
-  started_at: string | Date
-  completed_at: string | Date | null
+  started_at: Temporal.Instant
+  completed_at: Temporal.Instant | null
 }
 
 export function InspectionCard({ inspection }: { inspection: Inspection }) {
@@ -83,7 +84,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
       recurrence: f.recurrence,
       due_kind: f.due_kind,
       due_priority_group_id: f.due_priority_group_id ?? undefined,
-      due_at: f.due_at ? new Date(f.due_at) : undefined,
+      due_at: f.due_at ?? undefined,
     })
   }
 

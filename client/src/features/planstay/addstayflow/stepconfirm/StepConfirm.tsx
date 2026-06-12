@@ -10,6 +10,7 @@ import {
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import { setNotes, setStatus } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
@@ -76,11 +77,10 @@ export function StepConfirm({
   const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
   const nights =
     draft.start_date && draft.end_date
-      ? Math.round(
-          (new Date(draft.end_date).getTime() -
-            new Date(draft.start_date).getTime()) /
-            86400000,
-        )
+      ? Temporal.PlainDate.from(draft.start_date).until(
+          Temporal.PlainDate.from(draft.end_date),
+          { largestUnit: "days" },
+        ).days
       : null
   const guestNames = draft.occupants
     .filter(o => o.user_id !== draft.booker_id)

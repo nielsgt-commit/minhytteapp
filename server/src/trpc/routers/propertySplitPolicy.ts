@@ -5,9 +5,24 @@ import type { db as dbClient } from "../../db/client.ts"
 import { propertySplitPoliciesTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import type { AuthUser } from "../context.ts"
+import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 
 type Db = typeof dbClient
+
+// Wire mapping: policy timestamp columns → Temporal.Instant.
+function toWirePolicy<T extends { created_at: Date; updated_at: Date }>(
+  p: T,
+): Omit<T, "created_at" | "updated_at"> & {
+  created_at: Temporal.Instant
+  updated_at: Temporal.Instant
+} {
+  return {
+    ...p,
+    created_at: instantFromDate(p.created_at),
+    updated_at: instantFromDate(p.updated_at),
+  }
+}
 
 const whatSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("total") }),
@@ -107,7 +122,7 @@ export const propertySplitPolicyRouter = router({
     .input(z.object({ property_id: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.property_id)
-      return ctx.db
+      const rows = await ctx.db
         .select({
           id: propertySplitPoliciesTable.id,
           property_id: propertySplitPoliciesTable.property_id,
@@ -125,6 +140,7 @@ export const propertySplitPolicyRouter = router({
         )
         .where(eq(propertySplitPoliciesTable.property_id, input.property_id))
         .orderBy(asc(propertySplitPoliciesTable.name))
+      return rows.map(toWirePolicy)
     }),
 
   save: protectedProcedure
@@ -148,7 +164,7 @@ export const propertySplitPolicyRouter = router({
             created_by_id: ctx.user.id,
           })
           .returning()
-        return created
+        return toWirePolicy(created)
       }
       await assertAuthorOf(ctx.db, ctx.user, input.id, input.property_id)
       const [updated] = await ctx.db
@@ -165,7 +181,7 @@ export const propertySplitPolicyRouter = router({
           ),
         )
         .returning()
-      return updated
+      return toWirePolicy(updated)
     }),
 
   delete: protectedProcedure
@@ -187,6 +203,6 @@ export const propertySplitPolicyRouter = router({
           ),
         )
         .returning()
-      return deleted
+      return toWirePolicy(deleted)
     }),
 })

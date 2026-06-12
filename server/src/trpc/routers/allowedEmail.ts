@@ -12,7 +12,26 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
+import {
+  type Temporal,
+  instantFromDate,
+  instantFromDateOrNull,
+} from "../../shared/temporal.ts"
 import { assertPropertyHead, headOrAdminProcedure, router } from "../init.ts"
+
+// Wire mapping: allowed_emails timestamp columns → Temporal.Instant.
+function toWireInvite<T extends { used_at: Date | null; created_at: Date }>(
+  row: T,
+): Omit<T, "used_at" | "created_at"> & {
+  used_at: Temporal.Instant | null
+  created_at: Temporal.Instant
+} {
+  return {
+    ...row,
+    used_at: instantFromDateOrNull(row.used_at),
+    created_at: instantFromDate(row.created_at),
+  }
+}
 
 export const allowedEmailRouter = router({
   list: headOrAdminProcedure
@@ -32,7 +51,7 @@ export const allowedEmailRouter = router({
           message: "admin role required to list all invitations",
         })
       }
-      return ctx.db
+      const rows = await ctx.db
         .select({
           id: allowedEmailsTable.id,
           email: allowedEmailsTable.email,
@@ -56,6 +75,7 @@ export const allowedEmailRouter = router({
             : undefined,
         )
         .orderBy(desc(allowedEmailsTable.created_at))
+      return rows.map(toWireInvite)
     }),
 
   add: headOrAdminProcedure
@@ -247,7 +267,7 @@ export const allowedEmailRouter = router({
                 used_by_user_id: userId,
               })
               .returning()
-            return created
+            return toWireInvite(created)
           }
         }
 
@@ -265,7 +285,7 @@ export const allowedEmailRouter = router({
             added_by_user_id: ctx.user.id,
           })
           .returning()
-        return created
+        return toWireInvite(created)
       })
     }),
 
@@ -340,7 +360,7 @@ export const allowedEmailRouter = router({
           .set({ user_group_id: input.user_group_id })
           .where(eq(allowedEmailsTable.id, input.id))
           .returning()
-        return updated
+        return toWireInvite(updated)
       })
     }),
 
@@ -372,7 +392,7 @@ export const allowedEmailRouter = router({
           .delete(allowedEmailsTable)
           .where(eq(allowedEmailsTable.id, invite.id))
           .returning()
-        return deleted
+        return toWireInvite(deleted)
       }
 
       const userId = invite.used_by_user_id
@@ -433,7 +453,7 @@ export const allowedEmailRouter = router({
           .delete(allowedEmailsTable)
           .where(eq(allowedEmailsTable.id, invite.id))
           .returning()
-        return deleted
+        return toWireInvite(deleted)
       })
     }),
 })

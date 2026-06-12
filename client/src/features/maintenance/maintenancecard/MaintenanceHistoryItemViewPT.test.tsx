@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import {
   MaintenanceHistoryItemViewPT,
   type MaintenanceHistoryItemViewPTData,
@@ -25,7 +26,7 @@ const baseItem: MaintenanceHistoryItemViewPTData = {
   id: 11,
   description: "Replace gutter",
   instructions_pt: null,
-  completed_at: "2026-03-15T12:00:00.000Z",
+  completed_at: Temporal.Instant.from("2026-03-15T12:00:00.000Z"),
   severity: "minor",
 }
 

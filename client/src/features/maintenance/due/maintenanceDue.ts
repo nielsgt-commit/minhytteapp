@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next"
+import type { Temporal } from "temporal-polyfill"
 
 // Mirror of the server's dueKindValues in
 // server/src/db/schema/maintenance.schema.ts — KEEP IN SYNC (client can't import
@@ -21,13 +22,13 @@ export const STATIC_DUE_KINDS = [
 export type DueValue = {
   due_kind: DueKind
   due_priority_group_id?: number | null
-  due_at?: string | Date | null
+  due_at?: Temporal.Instant | null
 }
 
 export type DueSelection = {
   due_kind: DueKind
   due_priority_group_id?: number
-  due_at?: Date
+  due_at?: Temporal.Instant
 }
 
 const GROUP_PREFIX = "group:"
@@ -39,7 +40,10 @@ export function dueToToken(d: DueValue): string {
   return d.due_kind
 }
 
-export function tokenToDue(token: string, due_at?: Date): DueSelection {
+export function tokenToDue(
+  token: string,
+  due_at?: Temporal.Instant,
+): DueSelection {
   if (token.startsWith(GROUP_PREFIX)) {
     return {
       due_kind: "priority_week",

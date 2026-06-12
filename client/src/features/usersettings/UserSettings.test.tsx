@@ -18,6 +18,10 @@ vi.mock("react-i18next", () => ({
   }),
 }))
 
+vi.mock("@/selection/useSelection", () => ({
+  useSelectedPropertyId: () => 10,
+}))
+
 vi.mock("@/trpc/trpc", () => ({
   useTRPC: () => ({
     user: {
@@ -29,12 +33,18 @@ vi.mock("@/trpc/trpc", () => ({
         queryKey: () => ["user", "listMyChildren"],
         queryOptions: () => ({ queryKey: ["user", "listMyChildren"] }),
       },
+      listLinkableParents: {
+        queryKey: () => ["user", "listLinkableParents"],
+        queryOptions: () => ({ queryKey: ["user", "listLinkableParents"] }),
+      },
       updateMyName: { mutationOptions: (opts: unknown) => opts },
       updateMyBirthday: { mutationOptions: (opts: unknown) => opts },
       updateMyHeadForProperty: { mutationOptions: (opts: unknown) => opts },
       createChild: { mutationOptions: (opts: unknown) => opts },
       updateChild: { mutationOptions: (opts: unknown) => opts },
       removeChild: { mutationOptions: (opts: unknown) => opts },
+      addParent: { mutationOptions: (opts: unknown) => opts },
+      removeParent: { mutationOptions: (opts: unknown) => opts },
     },
   }),
 }))

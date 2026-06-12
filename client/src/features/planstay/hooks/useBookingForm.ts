@@ -1,6 +1,7 @@
 import { useActionState, useReducer } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc"
 import {
   bookingDraftReducer,
@@ -100,8 +101,9 @@ export function useBookingForm(
     try {
       const payload = {
         property_id: d.property_id,
-        start_date: d.start_date,
-        end_date: d.end_date,
+        // The draft keeps ISO strings; convert at the tRPC boundary.
+        start_date: Temporal.PlainDate.from(d.start_date),
+        end_date: Temporal.PlainDate.from(d.end_date),
         status: d.status,
         notes: d.notes.trim() !== "" ? d.notes : null,
         occupants: d.occupants.map(o => ({

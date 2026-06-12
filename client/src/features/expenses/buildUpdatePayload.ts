@@ -1,3 +1,4 @@
+import type { Temporal } from "temporal-polyfill"
 import type { ExpenseRow, Status } from "./types.ts"
 
 /**
@@ -21,7 +22,7 @@ export function basePayload(e: ExpenseRow, fallbackPropertyId: number) {
 type UpdateOverrides = {
   description?: string
   amount?: number
-  date?: string
+  date?: Temporal.PlainDate
   status: Status
   reimbursed_by_id?: number
   settlement_id?: number | null

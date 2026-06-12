@@ -17,13 +17,8 @@ import { OccupancyMatrix } from "./OccupancyMatrix"
 import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
-import {
-  addDays,
-  isoWeekNumber,
-  isoWeekYear,
-  pad2,
-  toIso,
-} from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
+import { addDays, isoWeekNumber, isoWeekYear, pad2 } from "@/utils/dateUtils"
 
 const WEEKDAY_LABELS = [
   "SUN",
@@ -36,8 +31,8 @@ const WEEKDAY_LABELS = [
 ] as const
 
 type Props = {
-  weekStart: Date
-  onWeekStartChange: (d: Date) => void
+  weekStart: Temporal.PlainDate
+  onWeekStartChange: (d: Temporal.PlainDate) => void
 }
 
 export function PlannedAvailabilitySummary({
@@ -62,11 +57,13 @@ export function PlannedAvailabilitySummary({
   )
   const { data: weather } = useQuery(
     trpc.weather.forProperty.queryOptions(
-      { property_id: propertyId, week_start: toIso(weekStart) },
+      { property_id: propertyId, week_start: weekStart },
       { staleTime: 10 * 60_000, gcTime: 30 * 60_000 },
     ),
   )
-  const forecastByIso = new Map((weather?.days ?? []).map(d => [d.iso, d]))
+  const forecastByIso = new Map(
+    (weather?.days ?? []).map(d => [d.iso.toString(), d]),
+  )
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const thursday = addDays(weekStart, 4)
@@ -89,7 +86,7 @@ export function PlannedAvailabilitySummary({
   })()
 
   const [selectedDay, setSelectedDay] = useState<string | null>(() =>
-    toIso(new Date()),
+    Temporal.Now.plainDateISO().toString(),
   )
 
   // Desktop view mode. "grid" = week columns + inline row drawer,
@@ -104,9 +101,9 @@ export function PlannedAvailabilitySummary({
   const expandInline = isMobile || useRows
 
   useEffect(() => {
-    const todayIso = toIso(new Date())
+    const todayIso = Temporal.Now.plainDateISO().toString()
     const visible = Array.from({ length: 7 }, (_, i) =>
-      toIso(addDays(weekStart, i)),
+      addDays(weekStart, i).toString(),
     )
     if (visible.includes(todayIso)) {
       setSelectedDay(todayIso)
@@ -115,7 +112,10 @@ export function PlannedAvailabilitySummary({
     const active = bookings.filter(b => b.status !== "cancelled")
     const firstWithGuests = visible.find(iso =>
       active.some(
-        b => iso >= b.start_date && iso <= b.end_date && b.occupants.length > 0,
+        b =>
+          iso >= b.start_date.toString() &&
+          iso <= b.end_date.toString() &&
+          b.occupants.length > 0,
       ),
     )
     setSelectedDay(firstWithGuests ?? null)
@@ -128,7 +128,7 @@ export function PlannedAvailabilitySummary({
   const guestsOnDay = (iso: string) => {
     let count = 0
     for (const b of propertyBookings) {
-      if (iso >= b.start_date && iso <= b.end_date) {
+      if (iso >= b.start_date.toString() && iso <= b.end_date.toString()) {
         count += b.occupants.length
       }
     }
@@ -144,22 +144,22 @@ export function PlannedAvailabilitySummary({
     !isMobile && selectedDay ? roomGroupsOnDay(selectedDay) : []
 
   const selectedIndex = selectedDay
-    ? days.findIndex(d => toIso(d) === selectedDay)
+    ? days.findIndex(d => d.toString() === selectedDay)
     : -1
   const selectedDate = selectedIndex >= 0 ? days[selectedIndex] : null
 
   const userById = new Map(users.map(u => [u.id, u]))
 
-  const todayIso = toIso(new Date())
+  const todayIso = Temporal.Now.plainDateISO().toString()
 
   const birthdayGuestsOnDay = (iso: string) => {
     const seen = new Map<number, string>()
     for (const b of propertyBookings) {
-      if (iso < b.start_date || iso > b.end_date) continue
+      if (iso < b.start_date.toString() || iso > b.end_date.toString()) continue
       for (const o of b.occupants) {
         const u = userById.get(o.user_id)
         if (!u?.birthday) continue
-        if (u.birthday.slice(5) !== iso.slice(5)) continue
+        if (u.birthday.toString().slice(5) !== iso.slice(5)) continue
         if (seen.has(o.user_id)) continue
         seen.set(o.user_id, u.name)
       }
@@ -168,7 +168,7 @@ export function PlannedAvailabilitySummary({
       for (const p of atProperty) {
         const u = userById.get(p.user_id)
         if (!u?.birthday) continue
-        if (u.birthday.slice(5) !== iso.slice(5)) continue
+        if (u.birthday.toString().slice(5) !== iso.slice(5)) continue
         if (seen.has(p.user_id)) continue
         seen.set(p.user_id, u.name)
       }
@@ -179,7 +179,7 @@ export function PlannedAvailabilitySummary({
   const weekBirthdayGuests = (() => {
     const seen = new Map<number, string>()
     for (const d of days) {
-      for (const g of birthdayGuestsOnDay(toIso(d))) {
+      for (const g of birthdayGuestsOnDay(d.toString())) {
         if (!seen.has(g.id)) seen.set(g.id, g.name)
       }
     }
@@ -253,7 +253,7 @@ export function PlannedAvailabilitySummary({
           >
             {isMobile &&
             !hasForecast &&
-            days.every(d => guestsOnDay(toIso(d)) === 0) ? (
+            days.every(d => guestsOnDay(d.toString()) === 0) ? (
               <Card asChild>
                 <li>
                   <Card.Block
@@ -269,7 +269,7 @@ export function PlannedAvailabilitySummary({
               </Card>
             ) : (
               days.map((d, i) => {
-                const iso = toIso(d)
+                const iso = d.toString()
                 const isSelected = selectedDay === iso
                 const count = guestsOnDay(iso)
                 const toggle = () => {
@@ -315,8 +315,7 @@ export function PlannedAvailabilitySummary({
                       aria-live="polite"
                     >
                       <strong>{t(WEEKDAY_LABELS[selectedIndex])}</strong>{" "}
-                      {pad2(selectedDate.getDate())}/
-                      {pad2(selectedDate.getMonth() + 1)}
+                      {pad2(selectedDate.day)}/{pad2(selectedDate.month)}
                     </Paragraph>
                     <DaySummary groups={selectedGroups} buildingDividers />
                   </Card.Block>

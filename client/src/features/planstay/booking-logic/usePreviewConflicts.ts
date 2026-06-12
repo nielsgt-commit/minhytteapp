@@ -1,12 +1,13 @@
 import { useDeferredValue, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc"
 import type { BookingDraft, PreviewConflicts } from "./types.ts"
 
 type PreviewInput = {
   property_id: number
-  start_date: string
-  end_date: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
   occupants: {
     user_id: number
     room_id?: number | null
@@ -29,8 +30,9 @@ function extractInput(
   }
   return {
     property_id: draft.property_id,
-    start_date: draft.start_date,
-    end_date: draft.end_date,
+    // The draft keeps ISO strings; convert at the tRPC boundary.
+    start_date: Temporal.PlainDate.from(draft.start_date),
+    end_date: Temporal.PlainDate.from(draft.end_date),
     occupants: draft.occupants.map(o => ({
       user_id: o.user_id,
       room_id: o.room_id,
@@ -52,8 +54,8 @@ function hasAnyWarning(data: PreviewConflicts | undefined): boolean {
 
 const FALLBACK_INPUT: PreviewInput = {
   property_id: 0,
-  start_date: "2000-01-01",
-  end_date: "2000-01-01",
+  start_date: Temporal.PlainDate.from("2000-01-01"),
+  end_date: Temporal.PlainDate.from("2000-01-01"),
   occupants: [],
 }
 
