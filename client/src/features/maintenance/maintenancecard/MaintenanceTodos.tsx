@@ -22,7 +22,7 @@ import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
 import { Temporal } from "temporal-polyfill"
-import { addDays, isoWeekYear, startOfSunday } from "@/utils/dateUtils"
+import { isoWeekYear, startOfSunday } from "@/utils/dateUtils"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
 import {
@@ -50,7 +50,7 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   // ISO-week/year boundary in late December. Only eligibleOwners is consumed
   // here (year-independent); the year just drives the shared cache key.
   const priorityYear = isoWeekYear(
-    addDays(startOfSunday(Temporal.Now.plainDateISO()), 3),
+    startOfSunday(Temporal.Now.plainDateISO()).add({ days: 3 }),
   )
   const { data: priority } = useQuery(
     trpc.priority.list.queryOptions(

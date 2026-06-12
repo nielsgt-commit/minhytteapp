@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Table } from "@digdir/designsystemet-react"
 import { Temporal } from "temporal-polyfill"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
-import { pad2 } from "@/utils/dateUtils"
+import { formatDayMonth } from "@/utils/dateUtils"
 import styles from "./OccupancyMatrix.module.css"
 
 const WEEKDAY_LABELS = [
@@ -240,7 +240,7 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
               >
                 {t(WEEKDAY_LABELS[d.dayOfWeek % 7])}
                 <span className={styles.dayHeadDate}>
-                  {pad2(d.day)}/{pad2(d.month)}
+                  {formatDayMonth(d)}
                 </span>
               </Table.HeaderCell>
             ))}

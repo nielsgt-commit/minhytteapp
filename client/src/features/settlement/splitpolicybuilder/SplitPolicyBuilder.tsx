@@ -34,7 +34,7 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { SubmitButton } from "@/components/shared/SubmitButton"
-import { currentYear } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
 
 type SplitPolicyBuilderProps = {
   onSaved?: (policyId: number) => void
@@ -85,7 +85,7 @@ export function SplitPolicyBuilder({ onSaved }: SplitPolicyBuilderProps = {}) {
   const { data: priorityData } = useSuspenseQuery(
     trpc.priority.list.queryOptions({
       property_id: selectedPropertyId ?? 0,
-      year: currentYear(),
+      year: Temporal.Now.plainDateISO().year,
     }),
   )
   const eligibleOwners: EligibleOwner[] = priorityData.eligibleOwners

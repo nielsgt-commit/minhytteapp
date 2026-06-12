@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next"
 import type { Temporal } from "temporal-polyfill"
-import { pad2 } from "@/utils/dateUtils"
 import { WeatherSymbol } from "./WeatherSymbol"
 import styles from "./TodayForecast.module.css"
 
@@ -20,7 +19,9 @@ type Slot = {
 function rangeLabel(time: Temporal.Instant): string {
   const start = time.toZonedDateTimeISO(OSLO_TZ).toPlainTime()
   const end = start.add({ hours: 6 })
-  return `${pad2(start.hour)}-${pad2(end.hour)}`
+  // PlainTime.toString() is "HH:MM:SS"; the label only wants the padded hour.
+  const hh = (t: Temporal.PlainTime) => t.toString().slice(0, 2)
+  return `${hh(start)}-${hh(end)}`
 }
 
 export function TodayForecast({ slots }: { slots: Slot[] }) {

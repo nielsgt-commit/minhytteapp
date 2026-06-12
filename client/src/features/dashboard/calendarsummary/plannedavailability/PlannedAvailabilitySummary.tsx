@@ -18,7 +18,11 @@ import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { Temporal } from "temporal-polyfill"
-import { addDays, isoWeekNumber, isoWeekYear, pad2 } from "@/utils/dateUtils"
+import {
+  formatDayMonth,
+  isoWeekNumber,
+  isoWeekYear,
+} from "@/utils/dateUtils"
 
 const WEEKDAY_LABELS = [
   "SUN",
@@ -65,8 +69,8 @@ export function PlannedAvailabilitySummary({
     (weather?.days ?? []).map(d => [d.iso.toString(), d]),
   )
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  const thursday = addDays(weekStart, 4)
+  const days = Array.from({ length: 7 }, (_, i) => weekStart.add({ days: i }))
+  const thursday = weekStart.add({ days: 4 })
   const weekNumber = isoWeekNumber(thursday)
   const weekYear = isoWeekYear(thursday)
 
@@ -103,7 +107,7 @@ export function PlannedAvailabilitySummary({
   useEffect(() => {
     const todayIso = Temporal.Now.plainDateISO().toString()
     const visible = Array.from({ length: 7 }, (_, i) =>
-      addDays(weekStart, i).toString(),
+      weekStart.add({ days: i }).toString(),
     )
     if (visible.includes(todayIso)) {
       setSelectedDay(todayIso)
@@ -195,7 +199,7 @@ export function PlannedAvailabilitySummary({
             icon
             aria-label={t("Previous week")}
             onClick={() => {
-              onWeekStartChange(addDays(weekStart, -7))
+              onWeekStartChange(weekStart.subtract({ days: 7 }))
             }}
           >
             <ChevronLeftIcon aria-hidden />
@@ -206,7 +210,7 @@ export function PlannedAvailabilitySummary({
             icon
             aria-label={t("Next week")}
             onClick={() => {
-              onWeekStartChange(addDays(weekStart, 7))
+              onWeekStartChange(weekStart.add({ days: 7 }))
             }}
           >
             <ChevronRightIcon aria-hidden />
@@ -315,7 +319,7 @@ export function PlannedAvailabilitySummary({
                       aria-live="polite"
                     >
                       <strong>{t(WEEKDAY_LABELS[selectedIndex])}</strong>{" "}
-                      {pad2(selectedDate.day)}/{pad2(selectedDate.month)}
+                      {formatDayMonth(selectedDate)}
                     </Paragraph>
                     <DaySummary groups={selectedGroups} buildingDividers />
                   </Card.Block>

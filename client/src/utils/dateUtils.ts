@@ -6,10 +6,6 @@ const OSLO = "Europe/Oslo"
 
 type DateLike = Temporal.PlainDate | Temporal.Instant | null | undefined
 
-export function pad2(n: number): string {
-  return String(n).padStart(2, "0")
-}
-
 function toPlainDate(value: Temporal.PlainDate | Temporal.Instant) {
   return value instanceof Temporal.Instant
     ? value.toZonedDateTimeISO(OSLO).toPlainDate()
@@ -43,8 +39,12 @@ export function formatDateRange(
   return `${a} – ${b}`
 }
 
-export function currentYear(): number {
-  return Temporal.Now.plainDateISO().year
+// Fixed `dd/MM` for the calendar-grid day labels (format-stable across
+// locales on purpose). Sliced from the ISO string so the zero-padding
+// comes from Temporal itself.
+export function formatDayMonth(pd: Temporal.PlainDate): string {
+  const iso = pd.toString() // YYYY-MM-DD
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
 }
 
 // Inclusive day count: Jul 6 -> Jul 12 = 7 days.
@@ -60,34 +60,22 @@ export function startOfSunday(pd: Temporal.PlainDate): Temporal.PlainDate {
   return pd.subtract({ days: pd.dayOfWeek % 7 })
 }
 
-export function addDays(
-  pd: Temporal.PlainDate,
-  n: number,
-): Temporal.PlainDate {
-  return pd.add({ days: n })
-}
-
+// weekOfYear/yearOfWeek are typed `number | undefined` per spec (calendars
+// without well-defined weeks exist), but the ISO calendar — the only one we
+// use — always yields a number. These narrow the type for callers.
 export function isoWeekNumber(pd: Temporal.PlainDate): number {
-  // weekOfYear is typed `number | undefined` per spec, but the ISO calendar
-  // always yields a number; fall back via Jan-4 arithmetic just in case.
-  return pd.weekOfYear ?? isoWeekFallback(pd).week
+  return requireWeekField(pd.weekOfYear)
 }
 
 export function isoWeekYear(pd: Temporal.PlainDate): number {
-  return pd.yearOfWeek ?? isoWeekFallback(pd).year
+  return requireWeekField(pd.yearOfWeek)
 }
 
-function isoWeekFallback(pd: Temporal.PlainDate): {
-  week: number
-  year: number
-} {
-  // Thursday of pd's week determines the ISO week-year.
-  const thursday = pd.add({ days: 4 - pd.dayOfWeek })
-  const week1Monday = isoWeekMonday(thursday.year, 1)
-  const week =
-    Math.floor(week1Monday.until(thursday, { largestUnit: "days" }).days / 7) +
-    1
-  return { week, year: thursday.year }
+function requireWeekField(n: number | undefined): number {
+  if (n === undefined) {
+    throw new Error("ISO calendar always defines week fields")
+  }
+  return n
 }
 
 export function isoWeekMonday(

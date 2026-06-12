@@ -13,7 +13,7 @@ import { SplitPolicyBuilder } from "@/features/settlement/splitpolicybuilder/Spl
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
-import { currentYear } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
 
 type Status = "open" | "closed"
 type Season = "winter" | "spring" | "summer" | "autumn"
@@ -70,7 +70,7 @@ export function SettlementForm({
           label={t("Year")}
           name="year"
           type="number"
-          defaultValue={editing?.year ?? currentYear()}
+          defaultValue={editing?.year ?? Temporal.Now.plainDateISO().year}
           required
         />
         <Field>

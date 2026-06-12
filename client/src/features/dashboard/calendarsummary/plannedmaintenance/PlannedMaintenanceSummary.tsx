@@ -7,7 +7,6 @@ import type { TFunction } from "i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { Temporal } from "temporal-polyfill"
 import {
-  addDays,
   isoWeekNumber,
   isoWeekYear,
   startOfSunday,
@@ -48,8 +47,8 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   )
 
   const wkStart = weekStart ?? startOfSunday(Temporal.Now.plainDateISO())
-  const wkEnd = addDays(wkStart, 7)
-  const refMid = addDays(wkStart, 3)
+  const wkEnd = wkStart.add({ days: 7 })
+  const refMid = wkStart.add({ days: 3 })
   const refWeek = isoWeekNumber(refMid)
   const refYear = isoWeekYear(refMid)
 

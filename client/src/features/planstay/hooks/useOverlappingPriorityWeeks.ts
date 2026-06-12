@@ -1,7 +1,8 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/trpc"
-import { currentYear, isoWeekMonday } from "@/utils/dateUtils"
+import { Temporal } from "temporal-polyfill"
+import { isoWeekMonday } from "@/utils/dateUtils"
 import type { BookingDraft } from "@/features/planstay/booking-logic"
 
 export type OverlappingPriorityWeek = { iso_week: number; owner_name: string }
@@ -19,7 +20,7 @@ export function useOverlappingPriorityWeeks(
 
   const draftYear = draft.start_date
     ? parseInt(draft.start_date.slice(0, 4))
-    : currentYear()
+    : Temporal.Now.plainDateISO().year
   const { data: priorityData } = useQuery({
     ...trpc.priority.list.queryOptions({
       property_id: propertyId,

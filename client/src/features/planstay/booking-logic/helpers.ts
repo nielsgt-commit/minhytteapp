@@ -6,10 +6,6 @@
 
 import { Temporal } from "temporal-polyfill"
 
-// Re-export the shared date helpers so this module keeps its historical
-// import surface (`booking-logic` exposes addDays/isoWeekNumber/…).
-export { addDays, isoWeekNumber } from "@/utils/dateUtils"
-
 export function fromIso(iso: string): Temporal.PlainDate {
   return Temporal.PlainDate.from(iso)
 }

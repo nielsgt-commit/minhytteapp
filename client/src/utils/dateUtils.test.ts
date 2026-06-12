@@ -1,44 +1,26 @@
 import { Temporal } from "temporal-polyfill"
 import { describe, expect, test } from "vitest"
 import {
-  addDays,
-  currentYear,
   formatDate,
   formatDateRange,
+  formatDayMonth,
   inclusiveDayCount,
   isoWeekMonday,
   isoWeekNumber,
   isoWeekYear,
-  pad2,
   startOfSunday,
   toDateInputValue,
 } from "./dateUtils.ts"
 
 const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
-describe("pad2", () => {
-  test("pads single digit", () => {
-    expect(pad2(3)).toBe("03")
+describe("formatDayMonth", () => {
+  test("zero-pads day and month", () => {
+    expect(formatDayMonth(pd("2026-01-05"))).toBe("05/01")
   })
 
-  test("leaves two digits unchanged", () => {
-    expect(pad2(42)).toBe("42")
-  })
-})
-
-describe("addDays", () => {
-  test("crosses month boundary", () => {
-    expect(addDays(pd("2026-01-30"), 3).toString()).toBe("2026-02-02")
-  })
-
-  test("negative offset", () => {
-    expect(addDays(pd("2026-03-01"), -1).toString()).toBe("2026-02-28")
-  })
-
-  test("does not mutate input (PlainDate is immutable)", () => {
-    const d = pd("2026-01-01")
-    addDays(d, 5)
-    expect(d.equals(pd("2026-01-01"))).toBe(true)
+  test("keeps two-digit values", () => {
+    expect(formatDayMonth(pd("2026-11-23"))).toBe("23/11")
   })
 })
 
@@ -138,12 +120,6 @@ describe("inclusiveDayCount", () => {
 
   test("same day counts as 1", () => {
     expect(inclusiveDayCount(pd("2026-07-06"), pd("2026-07-06"))).toBe(1)
-  })
-})
-
-describe("currentYear", () => {
-  test("matches the system clock's year", () => {
-    expect(currentYear()).toBe(new Date().getFullYear())
   })
 })
 
