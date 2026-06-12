@@ -1,0 +1,25 @@
+.today {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ds-size-1);
+}
+
+.time {
+  font-size: 0.7rem;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.temp {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
