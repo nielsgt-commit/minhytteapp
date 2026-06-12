@@ -96,6 +96,15 @@ export const userRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     const ids = await userIdsForProperty(ctx, input.property_id, ctx.user.id)
 
+    // Children are not group members (visibility flows through child_parents),
+    // so they're absent from the group-membership set above. Surface the
+    // caller's own children so they can be added as booking occupants.
+    const ownChildRows = await ctx.db
+      .select({ child_user_id: childParentsTable.child_user_id })
+      .from(childParentsTable)
+      .where(eq(childParentsTable.parent_user_id, ctx.user.id))
+    for (const row of ownChildRows) ids.add(row.child_user_id)
+
     if (ids.size === 0) return []
     const idList = Array.from(ids)
     const rows = await ctx.db
