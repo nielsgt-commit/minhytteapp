@@ -18,5 +18,6 @@
   "Switch language to {{label}}": "Switch language to {{label}}",
   "Switch to dark mode": "Switch to dark mode",
   "Switch to light mode": "Switch to light mode",
-  "User menu": "User menu"
+  "User menu": "User menu",
+  "You are viewing {{name}}": "You are viewing {{name}}"
 }

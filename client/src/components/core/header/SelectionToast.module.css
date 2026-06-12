@@ -1,0 +1,35 @@
+.toast {
+  position: fixed;
+  inset-block-end: 1.5rem;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  padding-inline: 1rem;
+  z-index: 101;
+  pointer-events: none;
+}
+
+/* Lift above the fixed BottomNavBar (~56px + paddings), which shows ≤900px. */
+@media (max-width: 900px) {
+  .toast {
+    inset-block-end: calc(64px + 2rem + env(safe-area-inset-bottom));
+  }
+}
+
+.toast > * {
+  max-width: 28rem;
+  pointer-events: auto;
+  box-shadow: var(--ds-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+  animation: toast-in 0.2s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

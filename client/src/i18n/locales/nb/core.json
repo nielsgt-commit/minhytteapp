@@ -24,5 +24,6 @@
   "Switch to dark mode": "Bytt til mørk modus",
   "Switch to light mode": "Bytt til lys modus",
   "User group": "Brukergruppe",
-  "User menu": "Brukermeny"
+  "User menu": "Brukermeny",
+  "You are viewing {{name}}": "Du ser på {{name}}"
 }

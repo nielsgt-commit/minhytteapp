@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/trpc/trpc"
@@ -9,9 +10,11 @@ import {
 import { useAuthSession } from "@/auth/auth-client"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { PropertySwitcher } from "./PropertySwitcher"
+import { SelectionToast } from "./SelectionToast"
 import styles from "./Header.module.css"
 
 export function PropertyMenu() {
+  const { t } = useTranslation("core")
   const trpc = useTRPC()
   const auth = useAuthSession()
   const { data: properties } = useQuery(
@@ -34,6 +37,10 @@ export function PropertyMenu() {
   }, [properties, selectedId, setSelectedPropertyId])
 
   const [isAddOpen, setIsAddOpen] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const dismissToast = useCallback(() => {
+    setToast(null)
+  }, [])
 
   const createProperty = useMutationWithInvalidation(
     trpc.property.create.mutationOptions({
@@ -56,6 +63,10 @@ export function PropertyMenu() {
         value={selectedId}
         onChange={id => {
           void setSelectedPropertyId(id)
+          const selected = list.find(p => p.id === id)
+          if (selected) {
+            setToast(t("You are viewing {{name}}", { name: selected.name }))
+          }
         }}
         isAddOpen={isAddOpen}
         onAddOpenChange={setIsAddOpen}
@@ -68,6 +79,7 @@ export function PropertyMenu() {
         isAddPending={createProperty.isPending}
         addError={createProperty.error?.message ?? null}
       />
+      {toast && <SelectionToast message={toast} onDismiss={dismissToast} />}
     </div>
   )
 }
