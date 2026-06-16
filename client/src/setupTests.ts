@@ -15,3 +15,9 @@ window.matchMedia = vi.fn().mockImplementation((query: string) => ({
 
 // jsdom does not implement getAnimations; designsystemet Skeleton calls it.
 document.getAnimations = () => []
+
+// jsdom does not implement the native <dialog> methods; designsystemet Dialog
+// calls them from a mount effect (e.g. the split-policy "?" help dialog).
+HTMLDialogElement.prototype.show = vi.fn()
+HTMLDialogElement.prototype.showModal = vi.fn()
+HTMLDialogElement.prototype.close = vi.fn()

@@ -55,6 +55,8 @@ import { Route as AuthedAdministrerEierskapRouteImport } from './routes/_authed/
 import { Route as AuthedAdministrerBygningerRouteImport } from './routes/_authed/administrer/bygninger'
 import { Route as AuthedAdministrerBrukergrupperRouteImport } from './routes/_authed/administrer/brukergrupper'
 import { Route as AuthedAdministrerBrukereRouteImport } from './routes/_authed/administrer/brukere'
+import { Route as AuthedAdministrerFordelingspolicyIndexRouteImport } from './routes/_authed/administrer/fordelingspolicy/index'
+import { Route as AuthedAdministrerFordelingspolicyPersondaysRouteImport } from './routes/_authed/administrer/fordelingspolicy/persondays'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/_onboarding',
@@ -307,6 +309,18 @@ const AuthedAdministrerBrukereRoute =
     path: '/brukere',
     getParentRoute: () => AuthedAdministrerRoute,
   } as any)
+const AuthedAdministrerFordelingspolicyIndexRoute =
+  AuthedAdministrerFordelingspolicyIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthedAdministrerFordelingspolicyRoute,
+  } as any)
+const AuthedAdministrerFordelingspolicyPersondaysRoute =
+  AuthedAdministrerFordelingspolicyPersondaysRouteImport.update({
+    id: '/persondays',
+    path: '/persondays',
+    getParentRoute: () => AuthedAdministrerFordelingspolicyRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
@@ -329,7 +343,7 @@ export interface FileRoutesByFullPath {
   '/administrer/brukergrupper': typeof AuthedAdministrerBrukergrupperRoute
   '/administrer/bygninger': typeof AuthedAdministrerBygningerRoute
   '/administrer/eierskap': typeof AuthedAdministrerEierskapRoute
-  '/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRoute
+  '/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRouteWithChildren
   '/administrer/info': typeof AuthedAdministrerInfoRoute
   '/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
   '/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
@@ -352,6 +366,8 @@ export interface FileRoutesByFullPath {
   '/manageproperty/users': typeof AuthedManagepropertyUsersRoute
   '/administrer/': typeof AuthedAdministrerIndexRoute
   '/manageproperty/': typeof AuthedManagepropertyIndexRoute
+  '/administrer/fordelingspolicy/persondays': typeof AuthedAdministrerFordelingspolicyPersondaysRoute
+  '/administrer/fordelingspolicy/': typeof AuthedAdministrerFordelingspolicyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
@@ -372,7 +388,6 @@ export interface FileRoutesByTo {
   '/administrer/brukergrupper': typeof AuthedAdministrerBrukergrupperRoute
   '/administrer/bygninger': typeof AuthedAdministrerBygningerRoute
   '/administrer/eierskap': typeof AuthedAdministrerEierskapRoute
-  '/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRoute
   '/administrer/info': typeof AuthedAdministrerInfoRoute
   '/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
   '/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
@@ -395,6 +410,8 @@ export interface FileRoutesByTo {
   '/manageproperty/users': typeof AuthedManagepropertyUsersRoute
   '/administrer': typeof AuthedAdministrerIndexRoute
   '/manageproperty': typeof AuthedManagepropertyIndexRoute
+  '/administrer/fordelingspolicy/persondays': typeof AuthedAdministrerFordelingspolicyPersondaysRoute
+  '/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -421,7 +438,7 @@ export interface FileRoutesById {
   '/_authed/administrer/brukergrupper': typeof AuthedAdministrerBrukergrupperRoute
   '/_authed/administrer/bygninger': typeof AuthedAdministrerBygningerRoute
   '/_authed/administrer/eierskap': typeof AuthedAdministrerEierskapRoute
-  '/_authed/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRoute
+  '/_authed/administrer/fordelingspolicy': typeof AuthedAdministrerFordelingspolicyRouteWithChildren
   '/_authed/administrer/info': typeof AuthedAdministrerInfoRoute
   '/_authed/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
   '/_authed/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
@@ -444,6 +461,8 @@ export interface FileRoutesById {
   '/_authed/manageproperty/users': typeof AuthedManagepropertyUsersRoute
   '/_authed/administrer/': typeof AuthedAdministrerIndexRoute
   '/_authed/manageproperty/': typeof AuthedManagepropertyIndexRoute
+  '/_authed/administrer/fordelingspolicy/persondays': typeof AuthedAdministrerFordelingspolicyPersondaysRoute
+  '/_authed/administrer/fordelingspolicy/': typeof AuthedAdministrerFordelingspolicyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -491,6 +510,8 @@ export interface FileRouteTypes {
     | '/manageproperty/users'
     | '/administrer/'
     | '/manageproperty/'
+    | '/administrer/fordelingspolicy/persondays'
+    | '/administrer/fordelingspolicy/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -511,7 +532,6 @@ export interface FileRouteTypes {
     | '/administrer/brukergrupper'
     | '/administrer/bygninger'
     | '/administrer/eierskap'
-    | '/administrer/fordelingspolicy'
     | '/administrer/info'
     | '/administrer/infrastruktur'
     | '/administrer/innstillinger'
@@ -534,6 +554,8 @@ export interface FileRouteTypes {
     | '/manageproperty/users'
     | '/administrer'
     | '/manageproperty'
+    | '/administrer/fordelingspolicy/persondays'
+    | '/administrer/fordelingspolicy'
   id:
     | '__root__'
     | '/_authed'
@@ -582,6 +604,8 @@ export interface FileRouteTypes {
     | '/_authed/manageproperty/users'
     | '/_authed/administrer/'
     | '/_authed/manageproperty/'
+    | '/_authed/administrer/fordelingspolicy/persondays'
+    | '/_authed/administrer/fordelingspolicy/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -914,15 +938,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdministrerBrukereRouteImport
       parentRoute: typeof AuthedAdministrerRoute
     }
+    '/_authed/administrer/fordelingspolicy/': {
+      id: '/_authed/administrer/fordelingspolicy/'
+      path: '/'
+      fullPath: '/administrer/fordelingspolicy/'
+      preLoaderRoute: typeof AuthedAdministrerFordelingspolicyIndexRouteImport
+      parentRoute: typeof AuthedAdministrerFordelingspolicyRoute
+    }
+    '/_authed/administrer/fordelingspolicy/persondays': {
+      id: '/_authed/administrer/fordelingspolicy/persondays'
+      path: '/persondays'
+      fullPath: '/administrer/fordelingspolicy/persondays'
+      preLoaderRoute: typeof AuthedAdministrerFordelingspolicyPersondaysRouteImport
+      parentRoute: typeof AuthedAdministrerFordelingspolicyRoute
+    }
   }
 }
+
+interface AuthedAdministrerFordelingspolicyRouteChildren {
+  AuthedAdministrerFordelingspolicyPersondaysRoute: typeof AuthedAdministrerFordelingspolicyPersondaysRoute
+  AuthedAdministrerFordelingspolicyIndexRoute: typeof AuthedAdministrerFordelingspolicyIndexRoute
+}
+
+const AuthedAdministrerFordelingspolicyRouteChildren: AuthedAdministrerFordelingspolicyRouteChildren =
+  {
+    AuthedAdministrerFordelingspolicyPersondaysRoute:
+      AuthedAdministrerFordelingspolicyPersondaysRoute,
+    AuthedAdministrerFordelingspolicyIndexRoute:
+      AuthedAdministrerFordelingspolicyIndexRoute,
+  }
+
+const AuthedAdministrerFordelingspolicyRouteWithChildren =
+  AuthedAdministrerFordelingspolicyRoute._addFileChildren(
+    AuthedAdministrerFordelingspolicyRouteChildren,
+  )
 
 interface AuthedAdministrerRouteChildren {
   AuthedAdministrerBrukereRoute: typeof AuthedAdministrerBrukereRoute
   AuthedAdministrerBrukergrupperRoute: typeof AuthedAdministrerBrukergrupperRoute
   AuthedAdministrerBygningerRoute: typeof AuthedAdministrerBygningerRoute
   AuthedAdministrerEierskapRoute: typeof AuthedAdministrerEierskapRoute
-  AuthedAdministrerFordelingspolicyRoute: typeof AuthedAdministrerFordelingspolicyRoute
+  AuthedAdministrerFordelingspolicyRoute: typeof AuthedAdministrerFordelingspolicyRouteWithChildren
   AuthedAdministrerInfoRoute: typeof AuthedAdministrerInfoRoute
   AuthedAdministrerInfrastrukturRoute: typeof AuthedAdministrerInfrastrukturRoute
   AuthedAdministrerInnstillingerRoute: typeof AuthedAdministrerInnstillingerRoute
@@ -940,7 +996,7 @@ const AuthedAdministrerRouteChildren: AuthedAdministrerRouteChildren = {
   AuthedAdministrerBygningerRoute: AuthedAdministrerBygningerRoute,
   AuthedAdministrerEierskapRoute: AuthedAdministrerEierskapRoute,
   AuthedAdministrerFordelingspolicyRoute:
-    AuthedAdministrerFordelingspolicyRoute,
+    AuthedAdministrerFordelingspolicyRouteWithChildren,
   AuthedAdministrerInfoRoute: AuthedAdministrerInfoRoute,
   AuthedAdministrerInfrastrukturRoute: AuthedAdministrerInfrastrukturRoute,
   AuthedAdministrerInnstillingerRoute: AuthedAdministrerInnstillingerRoute,

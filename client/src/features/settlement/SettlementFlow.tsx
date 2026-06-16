@@ -7,6 +7,12 @@ import { ReviewSplitPolicy } from "@/features/settlement/reviewsplitpolicy/Revie
 import { SettlementPhaseStepper } from "@/features/settlement/SettlementPhaseStepper.tsx"
 import { SettlementProgressSummary } from "@/features/settlement/SettlementProgressSummary.tsx"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
+import {
+  nextPhaseIn,
+  prevPhaseIn,
+  requiredPhases,
+} from "@/features/settlement/phase"
+import { normalizeParameters } from "@server/shared/splitPolicy.ts"
 import { useTRPC } from "@/trpc/trpc"
 
 export function SettlementFlow({ propertyId }: { propertyId: number }) {
@@ -16,6 +22,11 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
     trpc.settlement.listForProperty.queryOptions({ property_id: propertyId }),
   )
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
+  const { data: policies } = useSuspenseQuery(
+    trpc.propertySplitPolicy.listForProperty.queryOptions({
+      property_id: propertyId,
+    }),
+  )
 
   const openSettlement = settlements.find(s => s.status === "open") ?? null
 
@@ -33,21 +44,49 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
   const phase = openSettlement.phase
   const settlementId = openSettlement.id
 
+  // A missing policy (built-in occupancy or deleted) means every phase, same
+  // as the server's resolveSettlementParameters.
+  const policy =
+    openSettlement.split_policy_id == null
+      ? undefined
+      : policies.find(p => p.id === openSettlement.split_policy_id)
+  const parameters = normalizeParameters(policy?.config.parameters)
+  const phases = requiredPhases(parameters)
+  const next = nextPhaseIn(phases, phase)
+  const prev = prevPhaseIn(phases, phase)
+  const stepNumber = phases.indexOf(phase) + 1
+
   return (
     <>
-      <SettlementPhaseStepper phase={phase} />
+      <SettlementPhaseStepper phases={phases} phase={phase} />
       <SettlementProgressSummary settlementId={settlementId} phase={phase} />
       {phase === "collecting_expenses" && (
-        <ReviewExpenses settlementId={settlementId} phase={phase} />
+        <ReviewExpenses settlementId={settlementId} phase={phase} next={next} />
       )}
       {phase === "collecting_bookings" && (
-        <ReviewBookingDays settlementId={settlementId} phase={phase} />
+        <ReviewBookingDays
+          settlementId={settlementId}
+          phase={phase}
+          next={next}
+          prev={prev}
+          stepNumber={stepNumber}
+        />
       )}
       {phase === "reviewing" && (
-        <ReviewSettlement settlementId={settlementId} phase={phase} />
+        <ReviewSettlement
+          settlementId={settlementId}
+          phase={phase}
+          next={next}
+          prev={prev}
+          stepNumber={stepNumber}
+        />
       )}
       {phase === "split_policy" && (
-        <ReviewSplitPolicy settlementId={settlementId} />
+        <ReviewSplitPolicy
+          settlementId={settlementId}
+          prev={prev}
+          stepNumber={stepNumber}
+        />
       )}
     </>
   )

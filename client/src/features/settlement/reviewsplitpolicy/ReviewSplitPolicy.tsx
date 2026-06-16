@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
-import { Trans, useTranslation } from "react-i18next"
-import { PREV_PHASE } from "@/features/settlement/phase"
+import { useTranslation } from "react-i18next"
+import { type SettlementPhase } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -10,9 +10,11 @@ import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 
 type Props = {
   settlementId: number
+  prev: SettlementPhase | null
+  stepNumber: number
 }
 
-export function ReviewSplitPolicy({ settlementId }: Props) {
+export function ReviewSplitPolicy({ settlementId, prev, stepNumber }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const previewQuery = useQuery({
@@ -42,17 +44,13 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
         <article>
           <Card.Block data-size="sm">
             <Heading level={3} data-size="xs">
-              4. {t("Review split policy")}
+              {String(stepNumber)}. {t("Review split policy")}
             </Heading>
           </Card.Block>
           <Card.Block data-size="sm">
             <ErrorAlert error={previewQuery.error} />
             <Paragraph data-size="sm">
-              <Trans
-                ns="settlement"
-                i18nKey="Update this settlement's split policy from the Settlement Test Form (only <strong>occupancy_days</strong> is implemented)."
-                components={{ strong: <strong /> }}
-              />
+              {t("Could not compute the split for this settlement's policy.")}
             </Paragraph>
           </Card.Block>
         </article>
@@ -63,16 +61,20 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
   const { inputs, groups, transfers, policy, heads, closed } = preview
   const myHead = heads.find(h => h.user_id === me.id)
   const acceptedCount = heads.filter(h => h.accepted).length
+  const showBookingDays = preview.parameters.includes("booking_days")
+  const policyLabel =
+    preview.policy_name ??
+    (policy === "occupancy_days" ? t("Occupancy days (built-in)") : policy)
 
   return (
     <Card asChild>
       <article>
         <Card.Block data-size="sm">
           <Heading level={3} data-size="xs">
-            4. {t("Review split policy")}
+            {String(stepNumber)}. {t("Review split policy")}
           </Heading>
           <Paragraph data-size="sm">
-            {t("Policy:")} <strong>{policy}</strong>
+            {t("Policy:")} <strong>{policyLabel}</strong>
             {closed ? t(" (closed)") : ""}
           </Paragraph>
         </Card.Block>
@@ -82,10 +84,12 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
             {t("Total reimbursed:")}{" "}
             <strong>{String(inputs.total_reimbursed)},-</strong>
           </Paragraph>
-          <Paragraph data-size="sm">
-            {t("Total booking days:")}{" "}
-            <strong>{String(inputs.total_booking_days)}</strong>
-          </Paragraph>
+          {showBookingDays && (
+            <Paragraph data-size="sm">
+              {t("Total booking days:")}{" "}
+              <strong>{String(inputs.total_booking_days ?? 0)}</strong>
+            </Paragraph>
+          )}
         </Card.Block>
 
         <Card.Block data-size="sm">
@@ -99,7 +103,7 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
               <thead>
                 <tr>
                   <th align="left">{t("Group")}</th>
-                  <th align="right">{t("Days")}</th>
+                  {showBookingDays && <th align="right">{t("Days")}</th>}
                   <th align="right">{t("Paid")}</th>
                   <th align="right">{t("Share")}</th>
                   <th align="right">{t("Net")}</th>
@@ -109,7 +113,9 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
                 {groups.map(g => (
                   <tr key={g.group_id}>
                     <td>{g.group_name}</td>
-                    <td align="right">{String(g.booking_days)}</td>
+                    {showBookingDays && (
+                      <td align="right">{String(g.booking_days ?? 0)}</td>
+                    )}
                     <td align="right">{String(g.total_paid)},-</td>
                     <td align="right">{String(g.total_share)},-</td>
                     <td align="right">
@@ -180,7 +186,6 @@ export function ReviewSplitPolicy({ settlementId }: Props) {
                 data-size="sm"
                 disabled={regressPhase.isPending}
                 onClick={() => {
-                  const prev = PREV_PHASE.split_policy
                   if (prev == null) return
                   regressPhase.mutate({
                     id: settlementId,

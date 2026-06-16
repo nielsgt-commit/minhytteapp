@@ -29,6 +29,24 @@ import {
   instantFromDateOrNull,
 } from "../../shared/temporal.ts"
 import {
+  SETTLEMENT_PHASES,
+  SPLIT_POLICY_PARAMETERS,
+  type SplitPolicyParameter,
+  nextPhaseIn,
+  normalizeParameters,
+  prevPhaseIn,
+  requiredPhases,
+} from "../../shared/splitPolicy.ts"
+import {
+  type GroupAllocation,
+  type Transfer,
+  computePolicySplit,
+  computeTransfers,
+  inclusiveDayCount,
+  loadSplitInput,
+} from "../../services/settlementSplit.ts"
+import {
+  assertPropertyHead,
   assertPropertyMember,
   isPropertyHead,
   propertyAdminProcedure,
@@ -61,49 +79,25 @@ function toWireTransfer<T extends { paid_at: Date | null }>(
   return { ...t, paid_at: instantFromDateOrNull(t.paid_at) }
 }
 
-const PHASES = [
-  "collecting_expenses",
-  "collecting_bookings",
-  "reviewing",
-  "split_policy",
-  "closed",
-] as const
+const phaseEnum = z.enum(SETTLEMENT_PHASES)
 
-type Phase = (typeof PHASES)[number]
-
-const phaseEnum = z.enum(PHASES)
-
-const NEXT_PHASE: Record<Phase, Phase | null> = {
-  collecting_expenses: "collecting_bookings",
-  collecting_bookings: "reviewing",
-  reviewing: "split_policy",
-  split_policy: null,
-  closed: null,
-}
-
-const PREV_PHASE: Record<Phase, Phase | null> = {
-  collecting_expenses: null,
-  collecting_bookings: "collecting_expenses",
-  reviewing: "collecting_bookings",
-  split_policy: "reviewing",
-  closed: null,
-}
-
-type GroupAllocation = {
-  group_id: number
-  group_name: string
-  booking_days: number
-  total_paid: number
-  total_share: number
-  net: number
-}
-
-type Transfer = {
-  from_group_id: number
-  from_group_name: string
-  to_group_id: number
-  to_group_name: string
-  amount: number
+// Which phases a settlement needs is defined by its policy's parameters; a
+// settlement without a custom policy uses the built-in occupancy flow with
+// every phase.
+async function resolveSettlementParameters(
+  db: Db,
+  splitPolicyId: number | null,
+): Promise<SplitPolicyParameter[]> {
+  if (splitPolicyId == null) return [...SPLIT_POLICY_PARAMETERS]
+  const policy = (
+    await db
+      .select({ config: propertySplitPoliciesTable.config })
+      .from(propertySplitPoliciesTable)
+      .where(eq(propertySplitPoliciesTable.id, splitPolicyId))
+      .limit(1)
+  ).at(0)
+  if (policy == null) return [...SPLIT_POLICY_PARAMETERS]
+  return normalizeParameters(policy.config.parameters)
 }
 
 type HeadStatus = {
@@ -115,10 +109,12 @@ type HeadStatus = {
 }
 
 type PreviewResult = {
-  policy: "occupancy_days"
+  policy: "occupancy_days" | "custom"
+  policy_name: string | null
+  parameters: SplitPolicyParameter[]
   inputs: {
     total_reimbursed: number
-    total_booking_days: number
+    total_booking_days: number | null
   }
   groups: GroupAllocation[]
   transfers: Transfer[]
@@ -249,44 +245,39 @@ async function assertCanEditBookingAdjustments(
   }
 }
 
-function inclusiveDayCount(start: string, end: string): number {
-  const s = Date.parse(`${start}T00:00:00Z`)
-  const e = Date.parse(`${end}T00:00:00Z`)
-  return Math.round((e - s) / 86_400_000) + 1
-}
-
-function computeTransfers(allocations: GroupAllocation[]): Transfer[] {
-  const debtors = allocations
-    .filter(a => a.net < 0)
-    .map(a => ({ a, remaining: -a.net }))
-    .sort((x, y) => y.remaining - x.remaining)
-  const creditors = allocations
-    .filter(a => a.net > 0)
-    .map(a => ({ a, remaining: a.net }))
-    .sort((x, y) => y.remaining - x.remaining)
-
-  const transfers: Transfer[] = []
-  let i = 0
-  let j = 0
-  while (i < debtors.length && j < creditors.length) {
-    const d = debtors[i]
-    const c = creditors[j]
-    const amount = Math.min(d.remaining, c.remaining)
-    if (amount > 0) {
-      transfers.push({
-        from_group_id: d.a.group_id,
-        from_group_name: d.a.group_name,
-        to_group_id: c.a.group_id,
-        to_group_name: c.a.group_name,
-        amount,
-      })
-    }
-    d.remaining -= amount
-    c.remaining -= amount
-    if (d.remaining === 0) i++
-    if (c.remaining === 0) j++
+async function headStatuses(
+  db: Db,
+  settlementId: number,
+  headsRows: { user_id: number; user_name: string }[],
+): Promise<HeadStatus[]> {
+  const acceptanceRows = await db
+    .select({
+      head_user_id: settlementAcceptancesTable.head_user_id,
+      accepted_at: settlementAcceptancesTable.accepted_at,
+    })
+    .from(settlementAcceptancesTable)
+    .where(eq(settlementAcceptancesTable.settlement_id, settlementId))
+  const acceptanceByHead = new Map<number, Date>()
+  for (const a of acceptanceRows) {
+    acceptanceByHead.set(a.head_user_id, a.accepted_at)
   }
-  return transfers
+  const reviewRows = await db
+    .select({
+      head_user_id: settlementReviewsTable.head_user_id,
+    })
+    .from(settlementReviewsTable)
+    .where(eq(settlementReviewsTable.settlement_id, settlementId))
+  const reviewDoneHeads = new Set(reviewRows.map(r => r.head_user_id))
+  return headsRows.map(h => {
+    const at = acceptanceByHead.get(h.user_id)
+    return {
+      user_id: h.user_id,
+      user_name: h.user_name,
+      accepted: at != null,
+      accepted_at: at != null ? instantFromDate(at) : null,
+      review_done: reviewDoneHeads.has(h.user_id),
+    }
+  })
 }
 
 async function computePreviewSplit(
@@ -303,12 +294,6 @@ async function computePreviewSplit(
   if (settlement == null) {
     throw new TRPCError({ code: "NOT_FOUND", message: "settlement not found" })
   }
-  if (settlement.split_policy !== "occupancy_days") {
-    throw new TRPCError({
-      code: "NOT_IMPLEMENTED",
-      message: `preview not implemented for policy: ${settlement.split_policy}`,
-    })
-  }
   if (settlement.property_id == null) {
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -316,6 +301,49 @@ async function computePreviewSplit(
     })
   }
   const propertyId = settlement.property_id
+
+  if (settlement.split_policy_id != null) {
+    const policy = (
+      await db
+        .select({
+          name: propertySplitPoliciesTable.name,
+          config: propertySplitPoliciesTable.config,
+        })
+        .from(propertySplitPoliciesTable)
+        .where(eq(propertySplitPoliciesTable.id, settlement.split_policy_id))
+        .limit(1)
+    ).at(0)
+    if (policy != null) {
+      const parameters = normalizeParameters(policy.config.parameters)
+      const input = await loadSplitInput(
+        db,
+        { id: settlementId, property_id: propertyId, year: settlement.year },
+        parameters,
+      )
+      const result = computePolicySplit(policy.config, input, parameters)
+      const headsRows = await listSettlementHeads(db, propertyId)
+      return {
+        policy: "custom",
+        policy_name: policy.name,
+        parameters,
+        inputs: {
+          total_reimbursed: result.total_reimbursed,
+          total_booking_days: result.total_booking_days,
+        },
+        groups: result.groups,
+        transfers: computeTransfers(result.groups),
+        heads: await headStatuses(db, settlementId, headsRows),
+        closed: settlement.phase === "closed",
+      }
+    }
+  }
+
+  if (settlement.split_policy !== "occupancy_days") {
+    throw new TRPCError({
+      code: "NOT_IMPLEMENTED",
+      message: `preview not implemented for policy: ${settlement.split_policy}`,
+    })
+  }
 
   const mainGroups = await db
     .selectDistinct({
@@ -336,6 +364,8 @@ async function computePreviewSplit(
   if (mainGroups.length === 0) {
     return {
       policy: "occupancy_days",
+      policy_name: null,
+      parameters: [...SPLIT_POLICY_PARAMETERS],
       inputs: { total_reimbursed: 0, total_booking_days: 0 },
       groups: [],
       transfers: [],
@@ -477,50 +507,23 @@ async function computePreviewSplit(
   if (drift !== 0 && allocations.length > 0) {
     let largest = allocations[0]
     for (const a of allocations) {
-      if (a.booking_days > largest.booking_days) largest = a
+      if ((a.booking_days ?? 0) > (largest.booking_days ?? 0)) largest = a
     }
     largest.total_share += drift
     largest.net = largest.total_paid - largest.total_share
   }
 
-  const acceptanceRows = await db
-    .select({
-      head_user_id: settlementAcceptancesTable.head_user_id,
-      accepted_at: settlementAcceptancesTable.accepted_at,
-    })
-    .from(settlementAcceptancesTable)
-    .where(eq(settlementAcceptancesTable.settlement_id, settlementId))
-  const acceptanceByHead = new Map<number, Date>()
-  for (const a of acceptanceRows) {
-    acceptanceByHead.set(a.head_user_id, a.accepted_at)
-  }
-  const reviewRows = await db
-    .select({
-      head_user_id: settlementReviewsTable.head_user_id,
-    })
-    .from(settlementReviewsTable)
-    .where(eq(settlementReviewsTable.settlement_id, settlementId))
-  const reviewDoneHeads = new Set(reviewRows.map(r => r.head_user_id))
-  const heads: HeadStatus[] = headsRows.map(h => {
-    const at = acceptanceByHead.get(h.user_id)
-    return {
-      user_id: h.user_id,
-      user_name: h.user_name,
-      accepted: at != null,
-      accepted_at: at != null ? instantFromDate(at) : null,
-      review_done: reviewDoneHeads.has(h.user_id),
-    }
-  })
-
   return {
     policy: "occupancy_days",
+    policy_name: null,
+    parameters: [...SPLIT_POLICY_PARAMETERS],
     inputs: {
       total_reimbursed: totalReimbursed,
       total_booking_days: totalDays,
     },
     groups: allocations,
     transfers: computeTransfers(allocations),
-    heads,
+    heads: await headStatuses(db, settlementId, headsRows),
     closed: settlement.phase === "closed",
   }
 }
@@ -611,7 +614,7 @@ export const settlementRouter = router({
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
-      await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      await assertPropertyHead(ctx.db, ctx.user, propertyId)
       const [deleted] = await ctx.db
         .delete(settlementsTable)
         .where(eq(settlementsTable.id, input.id))
@@ -1124,7 +1127,18 @@ export const settlementRouter = router({
           message: "only heads can advance settlement phase",
         })
       }
-      const expectedNext = NEXT_PHASE[input.from]
+      const row = (
+        await ctx.db
+          .select({ split_policy_id: settlementsTable.split_policy_id })
+          .from(settlementsTable)
+          .where(eq(settlementsTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      const parameters = await resolveSettlementParameters(
+        ctx.db,
+        row?.split_policy_id ?? null,
+      )
+      const expectedNext = nextPhaseIn(requiredPhases(parameters), input.from)
       if (expectedNext == null || expectedNext !== input.to) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -1169,7 +1183,18 @@ export const settlementRouter = router({
           message: "only heads can regress settlement phase",
         })
       }
-      const expectedPrev = PREV_PHASE[input.from]
+      const row = (
+        await ctx.db
+          .select({ split_policy_id: settlementsTable.split_policy_id })
+          .from(settlementsTable)
+          .where(eq(settlementsTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      const parameters = await resolveSettlementParameters(
+        ctx.db,
+        row?.split_policy_id ?? null,
+      )
+      const expectedPrev = prevPhaseIn(requiredPhases(parameters), input.from)
       if (expectedPrev == null || expectedPrev !== input.to) {
         throw new TRPCError({
           code: "BAD_REQUEST",

@@ -6,11 +6,18 @@ export const Route = createFileRoute("/_authed/settlement")({
   loader: ({ context }) => {
     const { selectedPropertyId } = context
     if (selectedPropertyId == null) return
-    return context.queryClient.ensureQueryData(
-      trpc.settlement.listForProperty.queryOptions({
-        property_id: selectedPropertyId,
-      }),
-    )
+    return Promise.all([
+      context.queryClient.ensureQueryData(
+        trpc.settlement.listForProperty.queryOptions({
+          property_id: selectedPropertyId,
+        }),
+      ),
+      context.queryClient.ensureQueryData(
+        trpc.propertySplitPolicy.listForProperty.queryOptions({
+          property_id: selectedPropertyId,
+        }),
+      ),
+    ])
   },
   component: Settlement,
 })

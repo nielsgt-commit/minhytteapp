@@ -23,6 +23,7 @@
   "Cancel": "Avbryt",
   "Category name": "Kategorinavn",
   "Continue to booking days": "Gå videre til bookingdager",
+  "Continue to review settlement": "Gå videre til å gjennomgå oppgjøret",
   "Date": "Dato",
   "Delete": "Slett",
   "Description": "Beskrivelse",
@@ -62,6 +63,7 @@
   "Upload receipt": "Last opp kvittering",
   "View receipt": "Vis kvittering",
   "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Ta imot nye utgifter</1> og klikk <3>Gå videre til bookingdager</3>.",
+  "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to review settlement</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Ta imot nye utgifter</1> og klikk <3>Gå videre til å gjennomgå oppgjøret</3>.",
   "You still have {{count}} item to review — finish the list before continuing._one": "Du har fortsatt {{count}} ting å gå gjennom — fullfør listen før du går videre.",
   "You still have {{count}} item to review — finish the list before continuing._other": "Du har fortsatt {{count}} ting å gå gjennom — fullfør listen før du går videre."
 }

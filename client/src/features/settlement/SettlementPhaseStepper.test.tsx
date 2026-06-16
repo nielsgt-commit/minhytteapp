@@ -35,4 +35,18 @@ describe("SettlementPhaseStepper", () => {
     const { container } = render(<SettlementPhaseStepper phase="closed" />)
     expect(container.querySelectorAll("[aria-current='step']")).toHaveLength(1)
   })
+
+  test("renders only the given phases, renumbered from 1", () => {
+    render(
+      <SettlementPhaseStepper
+        phase="reviewing"
+        phases={["collecting_expenses", "reviewing", "split_policy", "closed"]}
+      />,
+    )
+    expect(screen.queryByText("Stays")).not.toBeInTheDocument()
+    for (const n of ["1", "2", "3", "4"]) {
+      expect(screen.getByText(n)).toBeInTheDocument()
+    }
+    expect(screen.queryByText("5")).not.toBeInTheDocument()
+  })
 })

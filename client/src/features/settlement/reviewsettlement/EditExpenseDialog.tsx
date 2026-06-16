@@ -2,6 +2,7 @@ import {
   Button,
   Dialog,
   Heading,
+  Label,
   Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -53,10 +54,10 @@ export function EditExpenseDialog({
         </Dialog.Block>
         <Dialog.Block>
           <form id={formId} className={styles.editForm} action={onSubmit}>
-            <label>
+            <Label>
               {t("Category")}
               <CategorySelect name="category" defaultValue={defaultCategory} />
-            </label>
+            </Label>
           </form>
         </Dialog.Block>
         <Dialog.Block>

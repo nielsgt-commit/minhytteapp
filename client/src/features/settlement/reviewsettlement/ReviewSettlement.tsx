@@ -20,11 +20,7 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
-import {
-  NEXT_PHASE,
-  PREV_PHASE,
-  type SettlementPhase,
-} from "@/features/settlement/phase"
+import { type SettlementPhase } from "@/features/settlement/phase"
 
 function sortExpenses(expenses: ExpenseRow[]) {
   return expenses
@@ -35,9 +31,18 @@ function sortExpenses(expenses: ExpenseRow[]) {
 type Props = {
   settlementId: number
   phase: SettlementPhase
+  next: SettlementPhase | null
+  prev: SettlementPhase | null
+  stepNumber: number
 }
 
-export function ReviewSettlement({ settlementId, phase }: Props) {
+export function ReviewSettlement({
+  settlementId,
+  phase,
+  next,
+  prev,
+  stepNumber,
+}: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const [showWaiting, setShowWaiting] = useState(false)
@@ -99,23 +104,19 @@ export function ReviewSettlement({ settlementId, phase }: Props) {
       setShowWaiting(true)
       return
     }
-    const nextPhase = NEXT_PHASE.reviewing
-    if (nextPhase == null) return
+    if (next == null) return
     advancePhase.mutate({
       id: settlementId,
       from: "reviewing",
-      to: nextPhase,
+      to: next,
     })
   }
-
-  const next = NEXT_PHASE.reviewing
-  const prev = PREV_PHASE.reviewing
 
   return (
     <>
       <div className={styles.header}>
         <Heading level={4} data-size="sm">
-          3. {t("Review settlement")}
+          {String(stepNumber)}. {t("Review settlement")}
         </Heading>
         <Switch
           label={t("Still reviewing")}

@@ -14,6 +14,7 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
+import type { SplitPolicyConfig } from "../../shared/splitPolicy.ts"
 import { userGroupsTable, usersTable } from "./users.schema.ts"
 import { bookingTable } from "./booking.schema.ts"
 import { maintenanceTable } from "./maintenance.schema.ts"
@@ -207,49 +208,16 @@ export const settlementBookingAdjustmentsTable = pgTable(
   t => [primaryKey({ columns: [t.settlement_id, t.booking_id] })],
 )
 
-export type SplitPolicyWhat =
-  | { kind: "total" }
-  | { kind: "category"; category_id: number }
-
-export type SplitPolicyHow =
-  | { kind: "equally" }
-  | { kind: "weighted_by_occupancy" }
-  | { kind: "by_ownership_pct" }
-
-export type SplitPolicyWho =
-  | { kind: "all_users" }
-  | { kind: "user_group"; group_id: number }
-  | { kind: "user"; user_id: number }
-  | { kind: "heads_only" }
-  | { kind: "main_groups" }
-
-export type SplitPolicyWhen =
-  | { kind: "always" }
-  | { kind: "present_when_expense_added" }
-  | { kind: "present_this_year" }
-  | { kind: "during_any_priority_week" }
-  | { kind: "during_priority_week"; user_group_id: number }
-
-export type SplitPolicyExcept =
-  | { kind: "user"; user_id: number }
-  | { kind: "group"; group_id: number }
-  | { kind: "kids" }
-
-export type SplitPolicyRule = {
-  what: SplitPolicyWhat
-  how: SplitPolicyHow
-  who: SplitPolicyWho[]
-  except: SplitPolicyExcept[]
-  when: SplitPolicyWhen
-  include_extra_guests?: boolean
-}
-
-export type SplitPolicyFallback = Omit<SplitPolicyRule, "what">
-
-export type SplitPolicyConfig = {
-  rules: SplitPolicyRule[]
-  fallback: SplitPolicyFallback
-}
+export type {
+  SplitPolicyWhat,
+  SplitPolicyHow,
+  SplitPolicyWho,
+  SplitPolicyWhen,
+  SplitPolicyExcept,
+  SplitPolicyRule,
+  SplitPolicyFallback,
+  SplitPolicyConfig,
+} from "../../shared/splitPolicy.ts"
 
 export const propertySplitPoliciesTable = pgTable(
   "property_split_policies",

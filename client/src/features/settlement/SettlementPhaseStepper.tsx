@@ -16,12 +16,18 @@ export function usePhaseLabels(): Record<SettlementPhase, string> {
   }
 }
 
-export function SettlementPhaseStepper({ phase }: { phase: SettlementPhase }) {
+export function SettlementPhaseStepper({
+  phase,
+  phases = [...SETTLEMENT_PHASES],
+}: {
+  phase: SettlementPhase
+  phases?: SettlementPhase[]
+}) {
   const { t } = useTranslation("settlement")
   const PHASE_LABELS = usePhaseLabels()
   return (
     <nav className={styles.stepper} aria-label={t("Settlement phases")}>
-      {SETTLEMENT_PHASES.map((p, i) => {
+      {phases.map((p, i) => {
         const isActive = p === phase
         return (
           <div

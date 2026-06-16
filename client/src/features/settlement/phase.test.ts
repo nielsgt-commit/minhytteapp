@@ -1,5 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { NEXT_PHASE, PREV_PHASE, phaseAtLeast } from "./phase.ts"
+import {
+  SETTLEMENT_PHASES,
+  nextPhaseIn,
+  phaseAtLeast,
+  prevPhaseIn,
+  requiredPhases,
+} from "./phase.ts"
+import { SPLIT_POLICY_PARAMETERS } from "@server/shared/splitPolicy.ts"
+
+const ALL = [...SPLIT_POLICY_PARAMETERS]
+const NO_BOOKINGS = ALL.filter(p => p !== "booking_days")
 
 describe("phaseAtLeast", () => {
   test("true when current equals target", () => {
@@ -15,19 +25,51 @@ describe("phaseAtLeast", () => {
   })
 })
 
-describe("NEXT_PHASE / PREV_PHASE", () => {
-  test("NEXT_PHASE forms a chain ending in null", () => {
-    expect(NEXT_PHASE.collecting_expenses).toBe("collecting_bookings")
-    expect(NEXT_PHASE.collecting_bookings).toBe("reviewing")
-    expect(NEXT_PHASE.reviewing).toBe("split_policy")
-    expect(NEXT_PHASE.split_policy).toBeNull()
-    expect(NEXT_PHASE.closed).toBeNull()
+describe("requiredPhases", () => {
+  test("includes every phase when booking_days is enabled", () => {
+    expect(requiredPhases(ALL)).toEqual([...SETTLEMENT_PHASES])
   })
 
-  test("PREV_PHASE is the inverse of NEXT_PHASE for the linear chain", () => {
-    expect(PREV_PHASE.collecting_bookings).toBe("collecting_expenses")
-    expect(PREV_PHASE.reviewing).toBe("collecting_bookings")
-    expect(PREV_PHASE.split_policy).toBe("reviewing")
-    expect(PREV_PHASE.collecting_expenses).toBeNull()
+  test("drops collecting_bookings when booking_days is off", () => {
+    expect(requiredPhases(NO_BOOKINGS)).toEqual([
+      "collecting_expenses",
+      "reviewing",
+      "split_policy",
+      "closed",
+    ])
+  })
+})
+
+describe("nextPhaseIn / prevPhaseIn", () => {
+  test("forms the legacy chain with all parameters", () => {
+    const phases = requiredPhases(ALL)
+    expect(nextPhaseIn(phases, "collecting_expenses")).toBe(
+      "collecting_bookings",
+    )
+    expect(nextPhaseIn(phases, "collecting_bookings")).toBe("reviewing")
+    expect(nextPhaseIn(phases, "reviewing")).toBe("split_policy")
+    expect(nextPhaseIn(phases, "split_policy")).toBeNull()
+    expect(nextPhaseIn(phases, "closed")).toBeNull()
+    expect(prevPhaseIn(phases, "collecting_bookings")).toBe(
+      "collecting_expenses",
+    )
+    expect(prevPhaseIn(phases, "reviewing")).toBe("collecting_bookings")
+    expect(prevPhaseIn(phases, "split_policy")).toBe("reviewing")
+    expect(prevPhaseIn(phases, "collecting_expenses")).toBeNull()
+    expect(prevPhaseIn(phases, "closed")).toBeNull()
+  })
+
+  test("skips the booking phase in both directions when not required", () => {
+    const phases = requiredPhases(NO_BOOKINGS)
+    expect(nextPhaseIn(phases, "collecting_expenses")).toBe("reviewing")
+    expect(prevPhaseIn(phases, "reviewing")).toBe("collecting_expenses")
+  })
+
+  test("recovers a settlement stranded in a no-longer-required phase", () => {
+    const phases = requiredPhases(NO_BOOKINGS)
+    expect(nextPhaseIn(phases, "collecting_bookings")).toBe("reviewing")
+    expect(prevPhaseIn(phases, "collecting_bookings")).toBe(
+      "collecting_expenses",
+    )
   })
 })

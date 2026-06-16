@@ -10,11 +10,7 @@ import {
 import { Trans, useTranslation } from "react-i18next"
 import styles from "./ReviewBookingDays.module.css"
 import { ReviewBookingDaysRow } from "./ReviewBookingDaysRow"
-import {
-  NEXT_PHASE,
-  PREV_PHASE,
-  type SettlementPhase,
-} from "@/features/settlement/phase"
+import { type SettlementPhase } from "@/features/settlement/phase"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -25,9 +21,18 @@ import { inclusiveDayCount } from "@/utils/dateUtils"
 type Props = {
   settlementId: number
   phase: SettlementPhase
+  next: SettlementPhase | null
+  prev: SettlementPhase | null
+  stepNumber: number
 }
 
-export function ReviewBookingDays({ settlementId, phase }: Props) {
+export function ReviewBookingDays({
+  settlementId,
+  phase,
+  next,
+  prev,
+  stepNumber,
+}: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const [stillAccepting, setStillAccepting] = useState(true)
@@ -87,14 +92,11 @@ export function ReviewBookingDays({ settlementId, phase }: Props) {
       return sum + headcount * inclusiveDayCount(b.start_date, b.end_date)
     }, 0)
 
-  const next = NEXT_PHASE.collecting_bookings
-  const prev = PREV_PHASE.collecting_bookings
-
   return (
     <>
       <div className={styles.header}>
         <Heading level={4} data-size="sm">
-          2. {t("Review bookings")}
+          {String(stepNumber)}. {t("Review bookings")}
         </Heading>
         <Switch
           label={t("Accept new bookings")}

@@ -9,3 +9,16 @@
 .card {
   background: transparent;
 }
+
+/* Inline, link-styled toggle for the split-policy name so it reads as part of
+   the sentence while still being clickable to reveal the policy details. */
+.policyToggle {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: var(--ds-font-weight-medium);
+  color: var(--ds-color-accent-text-default);
+  text-decoration: underline;
+  cursor: pointer;
+}

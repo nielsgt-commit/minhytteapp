@@ -10,6 +10,8 @@ import {
 import { useTranslation } from "react-i18next"
 import styles from "./CreateSettlementFlow.module.css"
 import { SplitPolicyBuilder } from "@/features/settlement/splitpolicybuilder/SplitPolicyBuilder.tsx"
+import { PersonDaysPanel } from "@/features/settlement/splitpolicybuilder/PersonDaysPanel.tsx"
+import { SplitPolicyProvider } from "@/features/settlement/splitpolicybuilder/SplitPolicyContext.tsx"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
@@ -123,12 +125,15 @@ export function SettlementForm({
       </div>
       {builderOpen && (
         <QueryBoundary>
-          <SplitPolicyBuilder
+          <SplitPolicyProvider
             onSaved={id => {
               setSplitPolicyId(String(id))
               setBuilderOpen(false)
             }}
-          />
+          >
+            <PersonDaysPanel />
+            <SplitPolicyBuilder />
+          </SplitPolicyProvider>
         </QueryBoundary>
       )}
     </form>

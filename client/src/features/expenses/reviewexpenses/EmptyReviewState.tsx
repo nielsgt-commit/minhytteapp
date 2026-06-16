@@ -25,15 +25,26 @@ export function EmptyReviewState({
   if (phase !== "collecting_expenses") {
     return <EmptyState title={t("(nothing to review)")} />
   }
+  // When a policy splits by person-days the next phase collects booking days;
+  // otherwise that phase is skipped and the head continues straight to review.
+  const toBookingDays = next === "collecting_bookings"
   return (
     <>
       <Card>{t("No more items to review.")}</Card>
       <Paragraph data-size="sm">
-        <Trans
-          t={t}
-          i18nKey="When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>."
-          components={{ 1: <em />, 3: <em /> }}
-        />
+        {toBookingDays ? (
+          <Trans
+            t={t}
+            i18nKey="When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>."
+            components={{ 1: <em />, 3: <em /> }}
+          />
+        ) : (
+          <Trans
+            t={t}
+            i18nKey="When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to review settlement</3>."
+            components={{ 1: <em />, 3: <em /> }}
+          />
+        )}
       </Paragraph>
       {!stillAccepting && next != null && (
         <Button
@@ -42,7 +53,9 @@ export function EmptyReviewState({
           disabled={advancePending}
           onClick={onContinue}
         >
-          {t("Continue to booking days")}
+          {toBookingDays
+            ? t("Continue to booking days")
+            : t("Continue to review settlement")}
         </Button>
       )}
       <ErrorAlert error={advanceError} />

@@ -14,15 +14,13 @@ import { useReviewMutations } from "./useReviewMutations.ts"
 import { useAcceptingToggle } from "./useAcceptingToggle.ts"
 import type { ExpenseRow } from "../types.ts"
 import { selectExpensesToReview } from "../selectors.ts"
-import {
-  NEXT_PHASE,
-  type SettlementPhase,
-} from "@/features/settlement/phase.ts"
+import { type SettlementPhase } from "@/features/settlement/phase.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type Props = {
   settlementId: number
   phase: SettlementPhase
+  next: SettlementPhase | null
 }
 
 export function ReviewExpenses(props: Props) {
@@ -33,7 +31,7 @@ export function ReviewExpenses(props: Props) {
   )
 }
 
-function ReviewExpensesContent({ settlementId, phase }: Props) {
+function ReviewExpensesContent({ settlementId, phase, next }: Props) {
   const { t } = useTranslation("expenses")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
@@ -87,8 +85,6 @@ function ReviewExpensesContent({ settlementId, phase }: Props) {
       </Paragraph>
     )
   }
-
-  const next = NEXT_PHASE.collecting_expenses
 
   const header = (
     <ReviewHeader
