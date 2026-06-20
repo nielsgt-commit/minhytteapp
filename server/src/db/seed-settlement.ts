@@ -3,6 +3,7 @@ import { eq, inArray, like } from "drizzle-orm"
 import { normalizeEmail } from "../auth/email.ts"
 import type { SplitPolicyConfig } from "../shared/splitPolicy.ts"
 import { normalizeParameters } from "../shared/splitPolicy.ts"
+import { Temporal } from "../shared/temporal.ts"
 import {
   computePolicySplit,
   computeTransfers,
@@ -57,42 +58,69 @@ const LOGIN_EMAIL = normalizeEmail(
 )
 const YEAR = new Date().getFullYear()
 
-// Simple, hand-checkable occupancy: 5 + 3 + 2 = 10 person-days. Ownership is
-// deliberately NOT proportional to days (60/20/20 vs 50/30/20) so the custom
-// "by ownership %" policy gives a visibly different split from the built-in
-// occupancy_days flow. The built-in flow ignores ownership entirely.
-const GROUPS = [
+// Each family owns the property and books its own priority week (28/29/30, the
+// only weeks allowed by the priority_week_peak_only check). Children carry the
+// `child` flag so child_weight policies have something to scale. Ownership is
+// deliberately NOT proportional to person-days so the custom "by ownership %"
+// policy splits visibly differently from the built-in occupancy_days flow.
+// Person-days = (members who book) * stayLength, child_weight = 1 in built-in.
+type SeedMember = { name: string; email: string; child?: boolean }
+type SeedGroup = {
+  key: "alpha" | "beta" | "gamma"
+  name: string
+  ownership: string
+  priorityWeek: 28 | 29 | 30
+  stayLength: number
+  members: SeedMember[]
+}
+const GROUPS: SeedGroup[] = [
   {
     key: "alpha",
     name: "Familie Alpha",
     ownership: "60.00",
-    days: 5,
+    priorityWeek: 28,
+    stayLength: 7, // the whole of week 28
     members: [
+      // The login admin is prepended as the head; these are the rest.
       { name: "Anna Alpha", email: `anna${SEED_DOMAIN}` },
-      // index 1 is the booking occupant / first non-head member
+      { name: "Alma Alpha", email: `alma${SEED_DOMAIN}`, child: true },
+      { name: "Aksel Alpha", email: `aksel${SEED_DOMAIN}`, child: true },
     ],
   },
   {
     key: "beta",
     name: "Familie Beta",
     ownership: "20.00",
-    days: 3,
+    priorityWeek: 29,
+    stayLength: 5,
     members: [
       { name: "Bjørn Beta", email: `bjorn${SEED_DOMAIN}` },
       { name: "Berit Beta", email: `berit${SEED_DOMAIN}` },
+      { name: "Bea Beta", email: `bea${SEED_DOMAIN}` },
+      { name: "Bo Beta", email: `bo${SEED_DOMAIN}`, child: true },
     ],
   },
   {
     key: "gamma",
     name: "Familie Gamma",
     ownership: "20.00",
-    days: 2,
+    priorityWeek: 30,
+    stayLength: 3,
     members: [
       { name: "Cecilie Gamma", email: `cecilie${SEED_DOMAIN}` },
       { name: "Carl Gamma", email: `carl${SEED_DOMAIN}` },
+      { name: "Cilla Gamma", email: `cilla${SEED_DOMAIN}`, child: true },
     ],
   },
-] as const
+]
+
+// Monday of an ISO week, as a "YYYY-MM-DD" string. Mirrors isoWeekRange in
+// settlementSplit.ts so seeded stays line up with the priority-week windows.
+function isoWeekMonday(year: number, week: number): Temporal.PlainDate {
+  const jan4 = Temporal.PlainDate.from({ year, month: 1, day: 4 })
+  const week1Monday = jan4.subtract({ days: jan4.dayOfWeek - 1 })
+  return week1Monday.add({ weeks: week - 1 })
+}
 
 const CATEGORIES = ["Strøm", "Forsikring", "Vedlikehold", "Renhold", "Brensel"]
 
@@ -344,8 +372,9 @@ async function main() {
   const categoryIdByName = new Map(categoryRows.map(c => [c.name, c.id]))
 
   // --- groups, members, owners -------------------------------------------
-  // memberIds[groupKey] = [userId, ...] in declared order.
+  // memberIds[groupKey] = [userId, ...] in declared order (Alpha's head first).
   const memberIds: Record<string, number[]> = {}
+  const groupIdByKey: Record<string, number> = {}
   for (const g of GROUPS) {
     const groupId = (
       await db
@@ -353,6 +382,7 @@ async function main() {
         .values({ name: g.name, is_family: true, property_id: propertyId })
         .returning({ id: userGroupsTable.id })
     )[0].id
+    groupIdByKey[g.key] = groupId
 
     const ids: number[] = []
 
@@ -375,6 +405,7 @@ async function main() {
             name: m.name,
             email: normalizeEmail(m.email),
             email_verified: true,
+            is_child: m.child ?? false,
             onboarding_step: "done",
           })
           .returning({ id: usersTable.id })
@@ -394,6 +425,16 @@ async function main() {
       ownership_pct: g.ownership,
     })
   }
+
+  // --- priority weeks (peak weeks 28-30, one per owner group) ------------
+  await db.insert(propertyPriorityWeeksTable).values(
+    GROUPS.map(g => ({
+      property_id: propertyId,
+      user_group_id: groupIdByKey[g.key],
+      year: YEAR,
+      iso_week: g.priorityWeek,
+    })),
+  )
 
   // --- settlement (built-in occupancy_days flow) -------------------------
   const settlementId = (
@@ -458,84 +499,113 @@ async function main() {
   }
 
   // --- bookings + occupants (the person-days that drive the split) -------
-  // Each group's occupant is its first *seed* member (index after the head in
-  // Alpha), so day-credit lands on the group regardless of who logs in.
-  const occupantOf = (key: string): number => {
-    const ids = memberIds[key]
-    return key === "alpha" ? ids[1] : ids[0]
-  }
-  let startDay = 1
+  // Each family stays its whole priority week with all its members aboard, so
+  // person-days = members * stayLength and every member is "present during a
+  // priority week" for the time-condition policies.
   for (const g of GROUPS) {
-    const occupant = occupantOf(g.key)
-    const start = isoDate(7, startDay)
-    const end = isoDate(7, startDay + g.days - 1) // inclusive day count = g.days
+    const occupants = memberIds[g.key]
+    const monday = isoWeekMonday(YEAR, g.priorityWeek)
+    const start = monday.toString()
+    const end = monday.add({ days: g.stayLength - 1 }).toString()
     const bookingId = (
       await db
         .insert(bookingTable)
         .values({
           property_id: propertyId,
-          booker_id: occupant,
+          booker_id: occupants[0],
           start_date: start,
           end_date: end,
           status: "confirmed",
         })
         .returning({ id: bookingTable.id })
     )[0].id
-    await db.insert(bookingOccupantsTable).values({
-      booking_id: bookingId,
-      user_id: occupant,
-    })
-    startDay += g.days + 1 // a one-day gap between stays
+    await db.insert(bookingOccupantsTable).values(
+      occupants.map(user_id => ({ booking_id: bookingId, user_id })),
+    )
   }
 
   // --- expenses ----------------------------------------------------------
-  // Two already-reimbursed expenses give an immediate, multi-party "divide"
-  // result; reimbursed_by stays within the payer's own group so credit lands
-  // on that group (effectivePayer = reimbursed_by ?? payer).
+  // A bunch of expenses across categories. Reimbursed ones count toward the
+  // divide immediately (credited to the reimburser's group); submitted ones sit
+  // in the review queue for the "reviewing" phase. reimbursed_by stays within
+  // the payer's own group so credit lands on that group.
+  const week28Day = isoWeekMonday(YEAR, 28).add({ days: 2 }).toString()
   await db.insert(expensesTable).values([
+    // Reimbursed → counted now.
     {
       property_id: propertyId,
       settlement_id: settlementId,
-      description: "Strøm Q1",
-      amount: 600,
+      description: "Strøm sommer",
+      amount: 800,
       payer_id: memberIds.alpha[1], // Anna Alpha
-      reimbursed_by_id: memberIds.alpha[0], // admin (Alpha) — must differ from payer
-      date: isoDate(2, 10),
+      reimbursed_by_id: memberIds.alpha[0], // admin (Alpha)
+      date: week28Day, // inside week 28 (Alpha's stay)
       status: "reimbursed",
       expense_types: ["Strøm"],
     },
     {
       property_id: propertyId,
       settlement_id: settlementId,
+      description: "Vedlikehold tak",
+      amount: 1200,
+      payer_id: memberIds.alpha[0], // admin (Alpha)
+      reimbursed_by_id: memberIds.alpha[1], // Anna Alpha
+      date: isoDate(5, 4),
+      status: "reimbursed",
+      expense_types: ["Vedlikehold"],
+    },
+    {
+      property_id: propertyId,
+      settlement_id: settlementId,
       description: "Forsikring",
-      amount: 400,
+      amount: 500,
       payer_id: memberIds.beta[1], // Berit Beta
       reimbursed_by_id: memberIds.beta[0], // Bjørn Beta
       date: isoDate(3, 1),
       status: "reimbursed",
       expense_types: ["Forsikring"],
     },
-    // Two submitted expenses sitting in the review queue for the dev to
-    // reimburse/reject during the "reviewing" phase.
     {
       property_id: propertyId,
       settlement_id: settlementId,
-      description: "Vedlikehold tak",
-      amount: 250,
+      description: "Brensel",
+      amount: 300,
       payer_id: memberIds.gamma[1], // Carl Gamma
-      date: isoDate(5, 12),
+      reimbursed_by_id: memberIds.gamma[0], // Cecilie Gamma
+      date: isoDate(4, 20),
+      status: "reimbursed",
+      expense_types: ["Brensel"],
+    },
+    // Submitted → review queue.
+    {
+      property_id: propertyId,
+      settlement_id: settlementId,
+      description: "Renhold etter sesong",
+      amount: 400,
+      payer_id: memberIds.gamma[1], // Carl Gamma
+      date: isoDate(8, 6),
       status: "submitted",
-      expense_types: ["Vedlikehold"],
+      expense_types: ["Renhold"],
     },
     {
       property_id: propertyId,
       settlement_id: settlementId,
-      description: "Renhold",
+      description: "Strøm tillegg",
       amount: 150,
-      payer_id: memberIds.gamma[0], // Cecilie Gamma
-      date: isoDate(6, 3),
+      payer_id: memberIds.beta[2], // Bea Beta
+      date: isoDate(8, 9),
       status: "submitted",
-      expense_types: ["Renhold"],
+      expense_types: ["Strøm"],
+    },
+    {
+      property_id: propertyId,
+      settlement_id: settlementId,
+      description: "Vedlikehold rør",
+      amount: 250,
+      payer_id: memberIds.gamma[0], // Cecilie Gamma
+      date: isoDate(8, 14),
+      status: "submitted",
+      expense_types: ["Vedlikehold"],
     },
   ])
 
@@ -544,6 +614,8 @@ async function main() {
   // (getClosedSummary reads persisted totals/transfers — it does not recompute).
   // We run the real calc here and persist exactly what acceptSplit would.
   let closedSettlementId: number | null = null
+  let closedResult: ReturnType<typeof computePolicySplit> | null = null
+  let closedTransfers: ReturnType<typeof computeTransfers> | null = null
   if (customPolicyId != null && customConfig != null) {
     const closedYear = YEAR - 1
     closedSettlementId = (
@@ -598,6 +670,8 @@ async function main() {
     )
     const result = computePolicySplit(customConfig, input, params)
     const transfers = computeTransfers(result.groups)
+    closedResult = result
+    closedTransfers = transfers
 
     if (result.groups.length > 0) {
       await db.insert(settlementUserGroupTotalsTable).values(
@@ -623,29 +697,77 @@ async function main() {
     }
   }
 
+  // --- built-in occupancy divide for the open settlement (for the log) ----
+  // Equivalent to the UI's occupancy_days preview: a fallback that splits
+  // everything weighted_by_occupancy across the main groups. Computed live so
+  // the printed numbers never drift from the seeded data.
+  const occupancyConfig: SplitPolicyConfig = {
+    parameters: ["booking_days"],
+    rules: [],
+    fallback: {
+      how: { kind: "weighted_by_occupancy" },
+      who: [{ kind: "main_groups" }],
+      except: [],
+      when: { kind: "always" },
+    },
+    occupancy: { window: { kind: "year" }, include_extra_guests: false, child_weight: 1 },
+  }
+  const openParams = normalizeParameters(occupancyConfig.parameters)
+  const openInput = await loadSplitInput(
+    db,
+    { id: settlementId, property_id: propertyId, year: YEAR },
+    openParams,
+  )
+  const openResult = computePolicySplit(occupancyConfig, openInput, openParams)
+  const openTransfers = computeTransfers(openResult.groups)
+
   // --- summary -----------------------------------------------------------
+  const short = (name: string) => name.replace("Familie ", "")
+  const shareLine = (r: ReturnType<typeof computePolicySplit>) =>
+    r.groups
+      .map(g => `${short(g.group_name)} ${g.total_share} (days ${g.booking_days ?? 0})`)
+      .join(" / ")
+  const netLine = (r: ReturnType<typeof computePolicySplit>) =>
+    r.groups
+      .map(g => `${short(g.group_name)} ${g.net >= 0 ? "+" : ""}${g.net}`)
+      .join(" / ")
+  const xferLine = (ts: ReturnType<typeof computeTransfers>) =>
+    ts.length === 0
+      ? "none"
+      : ts.map(t => `${short(t.from_group_name)}->${short(t.to_group_name)} ${t.amount}`).join(", ")
+
+  const userCount = GROUPS.reduce((n, g) => n + g.members.length, 1) // +1 admin
+  const childCount = GROUPS.reduce(
+    (n, g) => n + g.members.filter(m => m.child).length,
+    0,
+  )
+
   console.log("settlement seed complete.")
   console.log(`  property      #${String(propertyId)} "${PROPERTY_NAME}"`)
-  console.log(`  settlement    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, collecting_expenses)`)
   console.log(`  log in as     ${LOGIN_EMAIL}  (admin + sole head of Familie Alpha)`)
-  console.log("  occupancy     Alpha 5 + Beta 3 + Gamma 2 = 10 person-days")
-  console.log("  reimbursed    Strøm 600 -> Alpha, Forsikring 400 -> Beta (total 1000)")
-  console.log("  to review     Vedlikehold 250, Renhold 150 (submitted)")
-  console.log("  divide (now)  shares Alpha 500 / Beta 300 / Gamma 200")
-  console.log("                net    Alpha +100 / Beta +100 / Gamma -200")
-  console.log("                xfers  Gamma->Alpha 100, Gamma->Beta 100")
-  console.log("  ownership     Alpha 60% / Beta 20% / Gamma 20%")
+  console.log(
+    `  users         ${String(userCount)} across 3 owner groups (${String(childCount)} children)`,
+  )
+  console.log("  priority wks  Alpha=28, Beta=29, Gamma=30 (stays land in these weeks)")
+  console.log(`  total days    ${String(openResult.total_booking_days ?? 0)} person-days`)
+  console.log("")
+  console.log(`  OPEN sett.    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, collecting_expenses)`)
+  console.log("    reimbursed  Strøm 800 + Vedlikehold 1200 -> Alpha, Forsikring 500 -> Beta, Brensel 300 -> Gamma")
+  console.log("    to review   Renhold 400, Strøm 150, Vedlikehold 250 (submitted)")
+  console.log(`    shares      ${shareLine(openResult)}`)
+  console.log(`    net         ${netLine(openResult)}`)
+  console.log(`    transfers   ${xferLine(openTransfers)}`)
   console.log("")
   console.log('  custom policy "Strøm etter eierandel, resten etter døgn"')
-  console.log("                Strøm by ownership %, rest by person-days")
-  console.log("                edit it in Administrer -> Fordelingspolicy")
-  if (closedSettlementId != null) {
+  console.log("    Strøm by ownership % (Alpha 60 / Beta 20 / Gamma 20), rest by person-days")
+  console.log("    edit it in Administrer -> Fordelingspolicy")
+  if (closedSettlementId != null && closedResult != null && closedTransfers != null) {
     console.log(
-      `  closed sett.  #${String(closedSettlementId)} (${String(YEAR - 1)} summer) divided by the custom policy:`,
+      `  CLOSED sett.  #${String(closedSettlementId)} (${String(YEAR - 1)} summer) divided by the custom policy:`,
     )
-    console.log("                shares Alpha 560 / Beta 240 / Gamma 200")
-    console.log("                net    Alpha +40 / Beta +160 / Gamma -200")
-    console.log("                xfers  Gamma->Beta 160, Gamma->Alpha 40 (pending)")
+    console.log(`    shares      ${shareLine(closedResult)}`)
+    console.log(`    net         ${netLine(closedResult)}`)
+    console.log(`    transfers   ${xferLine(closedTransfers)} (pending)`)
   }
 }
 
