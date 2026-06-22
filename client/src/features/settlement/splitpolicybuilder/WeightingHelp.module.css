@@ -1,0 +1,19 @@
+.trigger {
+  flex-shrink: 0;
+}
+
+.dialog {
+  max-width: 32rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-4);
+}
+
+.method {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-1);
+}
