@@ -197,7 +197,7 @@ export function RuleSentence({
         )}
         {/* who */}
         {t("between")}{" "}
-        {!participantsEditable ? (
+        {!participantsEditable || edit == null ? (
           <strong>{describeWhoList(who, groups)}</strong>
         ) : (
           <>
@@ -277,7 +277,7 @@ export function RuleSentence({
           </>
         )}
         {/* except */}
-        {participantsEditable ? (
+        {participantsEditable && edit != null ? (
           <>
             {" "}
             {t("except")}{" "}

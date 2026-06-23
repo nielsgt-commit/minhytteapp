@@ -44,7 +44,7 @@ type SplitPolicyContextValue = Form & {
   propertyUsers: PropertyUser[]
   allowed: AllowedOptions
   pending: boolean
-  error: unknown
+  error: { message: string } | null
   submitAction: () => Promise<void>
   // Persists just the occupancy of the loaded policy; null for an unsaved one.
   persistOccupancy: (() => Promise<void>) | null
