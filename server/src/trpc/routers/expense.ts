@@ -14,6 +14,7 @@ import {
   zPlainDate,
 } from "../../shared/temporal.ts"
 import {
+  assertPropertyHead,
   assertPropertyMember,
   propertyAdminProcedure,
   protectedProcedure,
@@ -50,6 +51,15 @@ async function assertExpensesUnlocked(db: Db, propertyId: number) {
         "expenses are locked: the open settlement is past the collecting phase",
     })
   }
+}
+
+// reimbursed/rejected are the "review" outcomes — approving or rejecting a
+// submitted expense. Only a property head (or admin) may set them; members keep
+// full control of their own draft/submitted expenses. The review UI already
+// hides these actions from non-heads, but the API must enforce it too since
+// authz is app-layer (no RLS).
+function isReviewStatus(status: string) {
+  return status === "reimbursed" || status === "rejected"
 }
 
 const expenseFields = {
@@ -124,6 +134,9 @@ export const expenseRouter = router({
       if (input.status === "submitted") {
         await assertExpensesUnlocked(ctx.db, input.property_id)
       }
+      if (isReviewStatus(input.status)) {
+        await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+      }
       const [created] = await ctx.db
         .insert(expensesTable)
         .values({
@@ -138,12 +151,12 @@ export const expenseRouter = router({
   update: propertyAdminProcedure
     .input(updateInput)
     .mutation(async ({ ctx, input }) => {
-      if (input.status === "submitted") {
-        await assertExpensesUnlocked(ctx.db, input.property_id)
-      }
       const existing = (
         await ctx.db
-          .select({ property_id: expensesTable.property_id })
+          .select({
+            property_id: expensesTable.property_id,
+            status: expensesTable.status,
+          })
           .from(expensesTable)
           .where(eq(expensesTable.id, input.id))
           .limit(1)
@@ -156,6 +169,14 @@ export const expenseRouter = router({
           code: "FORBIDDEN",
           message: "cannot reassign expense to another property",
         })
+      }
+      // Approving/rejecting, or editing an already-reimbursed expense (e.g.
+      // un-reimbursing or changing its amount), is a head-only review action.
+      if (isReviewStatus(input.status) || existing.status === "reimbursed") {
+        await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+      }
+      if (input.status === "submitted") {
+        await assertExpensesUnlocked(ctx.db, input.property_id)
       }
       const { id, property_id: _propertyId, ...rest } = input
       const [updated] = await ctx.db
@@ -184,6 +205,11 @@ export const expenseRouter = router({
       }
       if (existing.property_id != null) {
         await assertPropertyMember(ctx.db, ctx.user, existing.property_id)
+      }
+      // Deleting a reimbursed expense pulls it out of the settlement pot — a
+      // head-only action, same as un-reimbursing it.
+      if (existing.status === "reimbursed" && existing.property_id != null) {
+        await assertPropertyHead(ctx.db, ctx.user, existing.property_id)
       }
       if (existing.status === "submitted" && existing.property_id != null) {
         await assertExpensesUnlocked(ctx.db, existing.property_id)
