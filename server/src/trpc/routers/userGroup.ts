@@ -50,47 +50,34 @@ export async function relevantGroupIdsForProperty(
     for (const r of owningMembers) peopleSet.add(r.user_id)
   }
 
-  const relevantIds = new Set<number>(propertyGroupIds)
-  if (peopleSet.size > 0) {
-    const groupsByMember = await ctx.db
-      .selectDistinct({ id: userGroupMembersTable.user_group_id })
-      .from(userGroupMembersTable)
-      .where(inArray(userGroupMembersTable.user_id, Array.from(peopleSet)))
-    for (const r of groupsByMember) relevantIds.add(r.id)
+  // A property's scope is exactly its own groups (every group carries
+  // property_id on create, plus the owning groups from property_owners). We
+  // deliberately do NOT expand to "other groups these members belong to":
+  // those groups live in OTHER properties this user is also part of, and
+  // pulling them in leaks their members across the property boundary — e.g. a
+  // brand-new property would show everyone from the creator's existing cabin.
+  return {
+    relevantGroupIds: new Set<number>(propertyGroupIds),
+    peopleSet,
   }
-
-  return { relevantGroupIds: relevantIds, peopleSet }
 }
 
-// The set of user ids considered "part of" a property: people in its
-// owning/linked groups, plus everyone in groups those people belong to, plus
-// the calling user. This is the same population `user.listForProperty`
-// exposes, and the authorization boundary for editing a property's users.
+// The set of user ids considered "part of" a property: the members of its
+// owning/linked groups plus the calling user. This is the same population
+// `user.listForProperty` exposes, and the authorization boundary for editing a
+// property's users. Scoping lives entirely in `relevantGroupIdsForProperty`,
+// whose `peopleSet` is exactly the members of the property's own groups.
 export async function userIdsForProperty(
   ctx: Context,
   property_id: number,
   calling_user_id: number,
 ): Promise<Set<number>> {
-  const { relevantGroupIds, peopleSet } = await relevantGroupIdsForProperty(
+  const { peopleSet } = await relevantGroupIdsForProperty(
     ctx,
     property_id,
     calling_user_id,
   )
-  const ids = new Set<number>(peopleSet)
-  if (relevantGroupIds.size > 0) {
-    const memberRows = await ctx.db
-      .selectDistinct({ user_id: userGroupMembersTable.user_id })
-      .from(userGroupMembersTable)
-      .where(
-        inArray(
-          userGroupMembersTable.user_group_id,
-          Array.from(relevantGroupIds),
-        ),
-      )
-    for (const row of memberRows) ids.add(row.user_id)
-  }
-  ids.add(calling_user_id)
-  return ids
+  return new Set<number>(peopleSet)
 }
 
 const userGroupFields = {

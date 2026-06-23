@@ -228,3 +228,75 @@ describe("userGroup by-id writes are bound to the group's property", () => {
     })
   })
 })
+
+// A user may belong to several properties (own multiple cabins). Listing
+// property A's users/groups must NOT bleed in people or groups that only exist
+// in property B, even when the caller is the shared member linking the two.
+// Previously `relevantGroupIdsForProperty` transitively expanded to "every
+// group the property's members belong to", which leaked the other property's
+// roster across the boundary.
+describe("user/group listings are isolated per property for a shared member", () => {
+  // sharedUser is a member of BOTH properties; outsider exists only in B.
+  async function seedShared(tx: Tx) {
+    const [propA] = await tx
+      .insert(propertyTable)
+      .values({ name: "Prop A", address: "addr A" })
+      .returning()
+    const [propB] = await tx
+      .insert(propertyTable)
+      .values({ name: "Prop B", address: "addr B" })
+      .returning()
+    const [sharedUser] = await tx
+      .insert(usersTable)
+      .values({ name: "Shared", email: "authz-test-shared@example.test" })
+      .returning()
+    const [outsider] = await tx
+      .insert(usersTable)
+      .values({ name: "Outsider B", email: "authz-test-outsider@example.test" })
+      .returning()
+    const [groupA] = await tx
+      .insert(userGroupsTable)
+      .values({ name: "Fam A", is_family: true, property_id: propA.id })
+      .returning()
+    const [groupB] = await tx
+      .insert(userGroupsTable)
+      .values({ name: "Fam B", is_family: true, property_id: propB.id })
+      .returning()
+    await tx.insert(userGroupMembersTable).values([
+      // shared member belongs to both properties' groups
+      { user_group_id: groupA.id, user_id: sharedUser.id, is_head: true },
+      { user_group_id: groupB.id, user_id: sharedUser.id, is_head: true },
+      // outsider belongs only to property B
+      { user_group_id: groupB.id, user_id: outsider.id },
+    ])
+    return { propA, propB, sharedUser, outsider, groupA, groupB }
+  }
+
+  it("user.listForProperty(A) excludes a user who only belongs to B", async () => {
+    await withRollback(async tx => {
+      const { propA, sharedUser, outsider } = await seedShared(tx)
+      const caller = createCaller(ctxFor(tx, authUser(sharedUser)))
+      const users = await caller.user.listForProperty({ property_id: propA.id })
+      const ids = users.map(u => u.id)
+      expect(ids).toContain(sharedUser.id)
+      expect(ids).not.toContain(outsider.id)
+    })
+  })
+
+  it("userGroup.listWithMembersForProperty(A) excludes property B's group", async () => {
+    await withRollback(async tx => {
+      const { propA, sharedUser, outsider, groupA, groupB } =
+        await seedShared(tx)
+      const caller = createCaller(ctxFor(tx, authUser(sharedUser)))
+      const groups = await caller.userGroup.listWithMembersForProperty({
+        property_id: propA.id,
+      })
+      const groupIds = groups.map(g => g.id)
+      expect(groupIds).toContain(groupA.id)
+      expect(groupIds).not.toContain(groupB.id)
+      // and the outsider must not surface through any returned group's members
+      const memberIds = groups.flatMap(g => g.members.map(m => m.user_id))
+      expect(memberIds).not.toContain(outsider.id)
+    })
+  })
+})
