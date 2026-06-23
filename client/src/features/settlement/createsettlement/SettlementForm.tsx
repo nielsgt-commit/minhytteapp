@@ -48,6 +48,10 @@ export function SettlementForm({
 }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
+  // "" is the unselected placeholder. There is no built-in policy to fall back
+  // on anymore: a head must pick a saved policy or build one. A new settlement
+  // starts blank; editing pre-selects the settlement's current saved policy
+  // (legacy settlements with no policy stay blank, forcing a deliberate pick).
   const [splitPolicyId, setSplitPolicyId] = useState(
     editing?.splitPolicyId == null ? "" : String(editing.splitPolicyId),
   )
@@ -79,13 +83,12 @@ export function SettlementForm({
           <Label>{t("Split policy")}</Label>
           <Select
             value={splitPolicyId}
+            required
             onChange={e => {
               setSplitPolicyId(e.target.value)
             }}
           >
-            <Select.Option value="">
-              {t("Occupancy days (built-in)")}
-            </Select.Option>
+            <Select.Option value="">{t("Choose a split policy…")}</Select.Option>
             {customPolicies.map(p => (
               <Select.Option key={p.id} value={String(p.id)}>
                 {t("{{name}} (by {{creator}})", {

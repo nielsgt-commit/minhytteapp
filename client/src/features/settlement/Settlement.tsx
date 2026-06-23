@@ -1,7 +1,7 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTranslation } from "react-i18next"
 import styles from "./Settlement.module.css"
-import { SettlementFlow } from "@/features/settlement/SettlementFlow.tsx"
+import { SettlementHome } from "@/features/settlement/SettlementHome.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
@@ -80,7 +80,7 @@ export function Settlement() {
     <section className={styles.page}>
       <PageHeader title={t("Settlement")} help={help} />
       <QueryBoundary>
-        <SettlementFlow propertyId={selectedPropertyId} />
+        <SettlementHome propertyId={selectedPropertyId} />
       </QueryBoundary>
     </section>
   )
