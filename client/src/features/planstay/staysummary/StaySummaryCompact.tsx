@@ -156,7 +156,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     const offset = (8 - FOCUS_START.dayOfWeek) % 7
     let cur = FOCUS_START.add({ days: offset })
     while (Temporal.PlainDate.compare(cur, FOCUS_END) < 0) {
-      out.push({ date: cur, week: cur.weekOfYear })
+      out.push({ date: cur, week: cur.weekOfYear ?? 0 })
       cur = cur.add({ days: 7 })
     }
     return out
