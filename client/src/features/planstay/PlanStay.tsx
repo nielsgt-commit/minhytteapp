@@ -1,14 +1,20 @@
+import { useState } from "react"
+import { Tabs } from "@digdir/designsystemet-react"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTranslation } from "react-i18next"
 import styles from "./PlanStay.module.css"
 import { AddStayFlow } from "@/features/planstay/addstayflow/AddStayFlow.tsx"
+import { StaySummaryCompact } from "@/features/planstay/staysummary/StaySummaryCompact.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 
+type TabValue = "overview" | "plan"
+
 export function PlanStay() {
   const { t } = useTranslation("planstay")
   const selectedPropertyId = useSelectedPropertyId()
+  const [activeTab, setActiveTab] = useState<TabValue>("overview")
 
   const help: PageHelpContent = {
     intro: t(
@@ -61,11 +67,31 @@ export function PlanStay() {
   return (
     <section className={styles.page}>
       <PageHeader title={t("Plan stay")} help={help} />
-      <div className={styles.main}>
-        <QueryBoundary>
-          <AddStayFlow propertyId={selectedPropertyId} />
-        </QueryBoundary>
-      </div>
+      <Tabs
+        value={activeTab}
+        onChange={value => {
+          setActiveTab(value as TabValue)
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Tab value="overview">{t("Season overview")}</Tabs.Tab>
+          <Tabs.Tab value="plan">{t("Pick dates")}</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="overview">
+          <QueryBoundary>
+            <StaySummaryCompact propertyId={selectedPropertyId} />
+          </QueryBoundary>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="plan">
+          <div className={styles.main}>
+            <QueryBoundary>
+              <AddStayFlow propertyId={selectedPropertyId} />
+            </QueryBoundary>
+          </div>
+        </Tabs.Panel>
+      </Tabs>
     </section>
   )
 }

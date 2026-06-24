@@ -1,0 +1,160 @@
+/* Border, radius, background and padding now come from the Digdir Card /
+   Card.Block. Internal headroom above the dividers is handled by .chart. */
+
+/* Positioning context for the absolutely placed month dividers + lanes.
+   Side gutters reserve room for the adjacent-month labels (may / aug) that
+   sit just outside the capped June–July window. */
+.chart {
+  position: relative;
+  margin: 1.5rem 1.9rem 0;
+  /* Let the edge month labels overflow into the gutters. */
+  overflow: visible;
+  /* Establish a BFC so the lanes' margin-top reserves the label rows here
+     instead of collapsing out and letting the bars ride up over the labels. */
+  display: flow-root;
+}
+
+/* Each month anchor spans the full chart height: a solid divider line, with
+   the abbreviated month name on the lower label row. */
+.month {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--ds-color-neutral-border-default);
+}
+
+.monthLabel {
+  position: absolute;
+  top: 0.85rem;
+  left: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1rem;
+  color: var(--ds-color-neutral-text-subtle);
+  padding-left: 3px;
+  white-space: nowrap;
+}
+
+/* Out-of-range boundary label (aug), shown only as edge context. */
+.monthLabelFaint {
+  opacity: 0.6;
+}
+
+/* Adjacent month (may) clipped off the left edge: parked in the left gutter,
+   just before the Jun 1 divider, rendered faint as it's out of range. */
+.leadLabel {
+  position: absolute;
+  top: 0.85rem;
+  right: 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1rem;
+  color: var(--ds-color-neutral-text-subtle);
+  opacity: 0.6;
+  padding-right: 3px;
+  white-space: nowrap;
+}
+
+/* Each week anchor spans the full chart height: a dotted divider, with its
+   ISO week number on the top label row. */
+.week {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dotted var(--ds-color-neutral-border-default);
+}
+
+.weekLabel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.6rem;
+  line-height: 0.8rem;
+  color: var(--ds-color-neutral-text-subtle);
+  opacity: 0.7;
+  padding-left: 2px;
+  white-space: nowrap;
+}
+
+.lanes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  /* Clear the week-number + month-name label rows above. */
+  margin-top: 2.2rem;
+}
+
+/* One person per lane. 8px-tall bars for a slim Gantt look. */
+.lane {
+  position: relative;
+  height: 8px;
+}
+
+/* Guest name, revealed instantly when the lane is hovered. Sits just above
+   the thin bar so it never disrupts the row layout. No transition → no delay. */
+.laneLabel {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 2px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  line-height: 1rem;
+  white-space: nowrap;
+  color: var(--ds-color-neutral-text-default);
+  background: var(--ds-color-neutral-background-default);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+}
+
+.bar:hover + .laneLabel,
+.barQueued:hover + .laneLabel {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Bar background color (family-group color) is set inline per occupant. */
+.bar,
+.barQueued {
+  position: absolute;
+  top: 0;
+  height: 8px;
+  min-width: 1px;
+  border-radius: 2px;
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* One chip per family group present in the chart. */
+.legend {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.legendSwatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
