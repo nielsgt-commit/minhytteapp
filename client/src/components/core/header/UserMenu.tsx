@@ -134,6 +134,7 @@ export function UserMenu({ showCheckIn = true }: Props) {
         >
           <span>{name}</span>
           {mainGroup && <Tag data-color="info">{mainGroup.name}</Tag>}
+          {me?.is_admin && <Tag data-color="danger">{t("Admin")}</Tag>}
         </div>
         <Divider />
         {showCheckIn && (

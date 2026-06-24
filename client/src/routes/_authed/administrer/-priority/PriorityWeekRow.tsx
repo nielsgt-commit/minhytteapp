@@ -30,7 +30,7 @@ export function PriorityWeekRow({
   onAssign,
   onClear,
 }: PriorityWeekRowProps) {
-  const { t } = useTranslation("priority")
+  const { t, i18n } = useTranslation("priority")
   const range = peakWeekRange(year, week)
   const showClear =
     ownersForWeek.length > 0 &&
@@ -39,7 +39,7 @@ export function PriorityWeekRow({
   return (
     <Table.Row>
       <Table.Cell>{t("W{{week}}", { week })}</Table.Cell>
-      <Table.Cell>{formatRange(range)}</Table.Cell>
+      <Table.Cell>{formatRange(range, i18n.language)}</Table.Cell>
       {eligibleOwners.map(o => {
         const checked = ownersForWeek.includes(o.user_group_id)
         const isMyColumn = o.user_group_id === myGroupId

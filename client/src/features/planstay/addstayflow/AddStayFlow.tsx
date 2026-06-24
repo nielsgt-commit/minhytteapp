@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Paragraph } from "@digdir/designsystemet-react"
+import { Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useSelectedUserId } from "@/selection/useSelection"
@@ -15,11 +15,16 @@ import { StepConfirm } from "./stepconfirm/StepConfirm.tsx"
 import { buildOccupantDots } from "../occupantDots.ts"
 import styles from "./AddStayFlow.module.css"
 
-const TOTAL_STEPS = 4
-// Label each "Next" button with the step it leads to.
-const NEXT_STEP_LABELS = ["Add guests", "Add rooms", "Review"] as const
-
-export function AddStayFlow({ propertyId }: { propertyId: number }) {
+export function AddStayFlow({
+  propertyId,
+  currentStep,
+  onComplete,
+}: {
+  propertyId: number
+  currentStep: number
+  // Called after a stay is saved, so the page can return to the overview.
+  onComplete: () => void
+}) {
   const { t } = useTranslation("planstay")
   const trpc = useTRPC()
   const selectedUserId = useSelectedUserId()
@@ -43,7 +48,6 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
   )
 
   const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null)
-  const [currentStep, setCurrentStep] = useState(1)
 
   const {
     draft,
@@ -56,7 +60,7 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
     isPending,
     canSubmit,
   } = useBookingForm(propertyId, selectedUserId, { kind: "create" }, () => {
-    setCurrentStep(1)
+    onComplete()
   })
 
   // Per-day occupant dots for the calendar, colored by family group.
@@ -92,11 +96,6 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
     propertyId,
     draft,
   )
-
-  const goToStep = (n: number) => {
-    if (n < 1 || n > TOTAL_STEPS) return
-    setCurrentStep(n)
-  }
 
   return (
     <section>
@@ -175,41 +174,7 @@ export function AddStayFlow({ propertyId }: { propertyId: number }) {
           roomOverCapacityDays={occupancy.roomOverCapacityDays}
           stepClass={styles.step}
           stepActiveClass={styles.stepActive}
-          navActions={
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                goToStep(currentStep - 1)
-              }}
-            >
-              {t("Back")}
-            </Button>
-          }
         />
-
-        {currentStep < TOTAL_STEPS && (
-          <div className={styles.navButtons}>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={currentStep === 1}
-              onClick={() => {
-                goToStep(currentStep - 1)
-              }}
-            >
-              {t("Back")}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                goToStep(currentStep + 1)
-              }}
-            >
-              {t(NEXT_STEP_LABELS[currentStep - 1])}
-            </Button>
-          </div>
-        )}
       </form>
     </section>
   )

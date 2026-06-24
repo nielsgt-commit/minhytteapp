@@ -11,15 +11,15 @@ export function peakWeekRange(year: number, week: PeakWeek): WeekRange {
   return { start, end: start.add({ days: 6 }) }
 }
 
-export function formatDate(d: Temporal.PlainDate): string {
-  return d.toLocaleString(undefined, {
+export function formatDate(d: Temporal.PlainDate, locale: string): string {
+  return d.toLocaleString(locale, {
     month: "short",
     day: "numeric",
   })
 }
 
-export function formatRange(r: WeekRange): string {
-  return `${formatDate(r.start)} – ${formatDate(r.end)}`
+export function formatRange(r: WeekRange, locale: string): string {
+  return `${formatDate(r.start, locale)} – ${formatDate(r.end, locale)}`
 }
 
 export function defaultYear(): number {

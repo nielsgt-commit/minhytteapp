@@ -14,6 +14,9 @@ const yearField = z.number().int().min(2000).max(2100)
 const peakWeek = z.union([z.literal(28), z.literal(29), z.literal(30)])
 
 async function ensureCanEdit(db: Db, user: AuthUser, propertyId: number) {
+  // Priority weeks are an operator surface: a platform admin may edit any
+  // group's pick even without membership. Heads edit their own property.
+  if (user.is_admin) return
   if (!(await isPropertyHead(db, user, propertyId))) {
     throw new TRPCError({
       code: "FORBIDDEN",

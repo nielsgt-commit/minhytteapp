@@ -46,7 +46,12 @@ export async function isPropertyHead(
   user: AuthUser,
   propertyId: number,
 ): Promise<boolean> {
-  if (user.is_admin) return true
+  // "Head" means a real head-member of a family group on THIS property — it is
+  // deliberately NOT satisfied by the platform-admin flag. Settlement and
+  // expense participation rely on this being membership-only so the gates agree
+  // with the split math (which builds heads/households from real membership).
+  // Operator surfaces that should still honour admins use
+  // assertPropertyHeadOrAdmin instead.
   const rows = await db
     .select({ user_id: userGroupMembersTable.user_id })
     .from(userGroupMembersTable)
@@ -77,6 +82,20 @@ export async function assertPropertyHead(
       message: "head or admin role required for this property",
     })
   }
+}
+
+// Operator override for surfaces where a platform admin should be able to act
+// as a head even without membership (invite management, priority weeks). Kept
+// explicit per call site — rather than baked into isPropertyHead — so a future
+// "admin mode" toggle can gate it in one obvious place. Do NOT use this for
+// settlement/expense participation: being a head there means real membership.
+export async function assertPropertyHeadOrAdmin(
+  db: Db,
+  user: AuthUser,
+  propertyId: number,
+) {
+  if (user.is_admin) return
+  await assertPropertyHead(db, user, propertyId)
 }
 
 export async function assertPropertyMember(

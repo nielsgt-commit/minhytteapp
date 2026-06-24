@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Tabs } from "@digdir/designsystemet-react"
+import { Button, Heading, Paragraph, ToggleGroup } from "@digdir/designsystemet-react"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTranslation } from "react-i18next"
 import styles from "./PlanStay.module.css"
@@ -9,12 +9,28 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 
-type TabValue = "overview" | "plan"
+// The four steps of the plan flow, in order. The overview is no longer one of
+// these — it's the dashboard you advance from — but once in the flow this
+// stepper still lets you jump between the steps.
+const STEP_VIEWS = ["dates", "guests", "rooms", "review"] as const
+type StepView = (typeof STEP_VIEWS)[number]
+
+const STEP_LABELS: Record<StepView, string> = {
+  dates: "Dates",
+  guests: "Guests",
+  rooms: "Rooms",
+  review: "Review",
+}
 
 export function PlanStay() {
   const { t } = useTranslation("planstay")
   const selectedPropertyId = useSelectedPropertyId()
-  const [activeTab, setActiveTab] = useState<TabValue>("overview")
+  // The page lands on the season overview. From there you advance into the
+  // step-by-step plan flow. `inFlow` is tracked separately from `currentStep`
+  // so the flow (and its draft) stays mounted and remembers its step while the
+  // overview shows.
+  const [inFlow, setInFlow] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
 
   const help: PageHelpContent = {
     intro: t(
@@ -67,31 +83,81 @@ export function PlanStay() {
   return (
     <section className={styles.page}>
       <PageHeader title={t("Plan stay")} help={help} />
-      <Tabs
-        value={activeTab}
-        onChange={value => {
-          setActiveTab(value as TabValue)
-        }}
-      >
-        <Tabs.List>
-          <Tabs.Tab value="overview">{t("Season overview")}</Tabs.Tab>
-          <Tabs.Tab value="plan">{t("Pick dates")}</Tabs.Tab>
-        </Tabs.List>
 
-        <Tabs.Panel value="overview">
+      {!inFlow && (
+        <div className={styles.dashboard}>
+          <header className={styles.header}>
+            <div>
+              <Heading level={2} data-size="sm">
+                {t("Season overview")}
+              </Heading>
+              <Paragraph data-size="sm" className={styles.subtitle}>
+                {t(
+                  "See who's already planning to be at the cabin this season, then step through to plan your own stay.",
+                )}
+              </Paragraph>
+            </div>
+            <Button
+              type="button"
+              onClick={() => {
+                setInFlow(true)
+                setCurrentStep(1)
+              }}
+            >
+              {t("Advance to plan stay →")}
+            </Button>
+          </header>
           <QueryBoundary>
             <StaySummaryCompact propertyId={selectedPropertyId} />
           </QueryBoundary>
-        </Tabs.Panel>
+        </div>
+      )}
 
-        <Tabs.Panel value="plan">
-          <div className={styles.main}>
-            <QueryBoundary>
-              <AddStayFlow propertyId={selectedPropertyId} />
-            </QueryBoundary>
+      {inFlow && (
+        <>
+          <div>
+            <Button
+              type="button"
+              variant="tertiary"
+              data-size="sm"
+              onClick={() => {
+                setInFlow(false)
+              }}
+            >
+              {t("← Back to overview")}
+            </Button>
           </div>
-        </Tabs.Panel>
-      </Tabs>
+          <ToggleGroup
+            value={STEP_VIEWS[currentStep - 1]}
+            onChange={value => {
+              setCurrentStep(STEP_VIEWS.indexOf(value as StepView) + 1)
+            }}
+            data-toggle-group={t("Booking steps")}
+          >
+            {STEP_VIEWS.map(view => (
+              <ToggleGroup.Item key={view} value={view}>
+                {t(STEP_LABELS[view])}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup>
+        </>
+      )}
+
+      {/* Kept mounted (hidden on the overview) so the in-progress draft survives. */}
+      <div className={inFlow ? styles.main : styles.hidden}>
+        <QueryBoundary>
+          <AddStayFlow
+            propertyId={selectedPropertyId}
+            currentStep={currentStep}
+            onComplete={() => {
+              // Stay saved: drop back to the overview and reset to step 1 so the
+              // next plan starts fresh.
+              setInFlow(false)
+              setCurrentStep(1)
+            }}
+          />
+        </QueryBoundary>
+      </div>
     </section>
   )
 }

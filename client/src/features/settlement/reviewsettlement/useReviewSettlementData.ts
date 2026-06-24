@@ -75,9 +75,8 @@ export function useReviewSettlementData(settlementId: number) {
     return false
   }) as ExpenseRow[]
   const iAmHead =
-    me.is_admin ||
-    (selectedPropertyId != null &&
-      me.head_property_ids.includes(selectedPropertyId))
+    selectedPropertyId != null &&
+    me.head_property_ids.includes(selectedPropertyId)
   const editableHeadId = iAmHead ? me.id : null
 
   const mainGroupForHead = (headId: number) =>

@@ -12,3 +12,26 @@
   flex-direction: column;
   gap: 1rem;
 }
+
+.hidden {
+  display: none;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-4);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-size-3);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ds-color-neutral-text-subtle);
+}

@@ -20,7 +20,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  border-left: 1px solid var(--ds-color-neutral-border-default);
+  border-left: 1px dotted var(--ds-color-neutral-border-default);
 }
 
 .monthLabel {
@@ -30,7 +30,7 @@
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1rem;
-  color: var(--ds-color-neutral-text-subtle);
+  color: var(--ds-color-neutral-text-default);
   padding-left: 3px;
   white-space: nowrap;
 }
@@ -49,7 +49,7 @@
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1rem;
-  color: var(--ds-color-neutral-text-subtle);
+  color: var(--ds-color-neutral-text-default);
   opacity: 0.6;
   padding-right: 3px;
   white-space: nowrap;
@@ -61,7 +61,16 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  border-left: 1px dotted var(--ds-color-neutral-border-default);
+  width: 1px;
+  /* Loosely dashed vertical line: a repeating gradient lets us control dash
+     length and gap, which a `dashed` border-style can't. 5px dash, 7px gap. */
+  background-image: linear-gradient(
+    to bottom,
+    var(--ds-color-neutral-border-default) 0 5px,
+    transparent 5px 12px
+  );
+  background-size: 1px 12px;
+  background-repeat: repeat-y;
 }
 
 .weekLabel {
@@ -70,7 +79,7 @@
   left: 0;
   font-size: 0.6rem;
   line-height: 0.8rem;
-  color: var(--ds-color-neutral-text-subtle);
+  color: var(--ds-color-neutral-text-default);
   opacity: 0.7;
   padding-left: 2px;
   white-space: nowrap;
@@ -131,7 +140,7 @@
 .empty {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--ds-color-neutral-text-subtle);
+  color: var(--ds-color-neutral-text-default);
 }
 
 /* One chip per family group present in the chart. */
@@ -149,7 +158,7 @@
   align-items: center;
   gap: 0.35rem;
   font-size: 0.75rem;
-  color: var(--ds-color-neutral-text-subtle);
+  color: var(--ds-color-neutral-text-default);
 }
 
 .legendSwatch {

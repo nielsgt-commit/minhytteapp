@@ -7,7 +7,12 @@ import {
   usersTable,
 } from "../db/schema/users.schema.ts"
 import type { AuthUser, Context } from "./context.ts"
-import { createCallerFactory } from "./init.ts"
+import {
+  assertPropertyHead,
+  assertPropertyHeadOrAdmin,
+  createCallerFactory,
+  isPropertyHead,
+} from "./init.ts"
 import { appRouter } from "./routers/_app.ts"
 
 // Regression tests for the property-scoped authorization model (the app's only
@@ -159,6 +164,46 @@ describe("property-scoped read endpoints reject non-members (IDOR)", () => {
       })
     },
   )
+})
+
+// The platform-admin flag grants operator powers but must NOT, on its own,
+// make someone a "head" of a property — head-level settlement/expense
+// participation comes from real family-group membership. Operator surfaces
+// (invites, priority weeks) keep an explicit admin override via
+// assertPropertyHeadOrAdmin.
+describe("admin flag is decoupled from property-head status", () => {
+  it("isPropertyHead is false for a non-member admin, true for a real head", async () => {
+    await withRollback(async tx => {
+      const { propA, userA, userB } = await seed(tx)
+      const dbLike = tx as unknown as typeof db
+      // userB is a platform admin but belongs only to property B.
+      expect(
+        await isPropertyHead(
+          dbLike,
+          authUser(userB, { is_admin: true }),
+          propA.id,
+        ),
+      ).toBe(false)
+      // userA is a real head of property A.
+      expect(await isPropertyHead(dbLike, authUser(userA), propA.id)).toBe(true)
+    })
+  })
+
+  it("assertPropertyHeadOrAdmin still lets a non-member admin act, while the head-only gate refuses them", async () => {
+    await withRollback(async tx => {
+      const { propA, userB } = await seed(tx)
+      const dbLike = tx as unknown as typeof db
+      const admin = authUser(userB, { is_admin: true })
+      // Operator override: admins pass even without membership.
+      await expect(
+        assertPropertyHeadOrAdmin(dbLike, admin, propA.id),
+      ).resolves.toBeUndefined()
+      // Participation gate: the membership-only check refuses the same admin.
+      await expect(
+        assertPropertyHead(dbLike, admin, propA.id),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" })
+    })
+  })
 })
 
 describe("user.create privilege escalation", () => {

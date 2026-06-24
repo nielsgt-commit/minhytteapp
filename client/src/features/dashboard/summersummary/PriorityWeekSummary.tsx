@@ -138,7 +138,8 @@ export function PriorityWeekSummary({
   return (
     <div className={styles.week}>
       <Heading level={3} data-size="xs">
-        {t("Week {{weekNumber}}", { weekNumber: week })} · {formatRange(range)}
+        {t("Week {{weekNumber}}", { weekNumber: week })} ·{" "}
+        {formatRange(range, i18n.language)}
       </Heading>
       {stays.length === 0 ? (
         <EmptyState title={t("No stays this week.")} />

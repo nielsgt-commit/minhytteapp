@@ -68,7 +68,7 @@ export function ReviewBookingDays({
 
   const adjustmentsByBooking = new Map(adjustments.map(a => [a.booking_id, a]))
 
-  const iAmHead = me.is_admin || me.head_property_ids.includes(propertyId)
+  const iAmHead = me.head_property_ids.includes(propertyId)
   const allowedBookerIds = new Set<number>(
     iAmHead
       ? groups

@@ -17,7 +17,11 @@ import {
   instantFromDate,
   instantFromDateOrNull,
 } from "../../shared/temporal.ts"
-import { assertPropertyHead, headOrAdminProcedure, router } from "../init.ts"
+import {
+  assertPropertyHeadOrAdmin,
+  headOrAdminProcedure,
+  router,
+} from "../init.ts"
 
 // Wire mapping: allowed_emails timestamp columns → Temporal.Instant.
 function toWireInvite<T extends { used_at: Date | null; created_at: Date }>(
@@ -42,7 +46,7 @@ export const allowedEmailRouter = router({
     )
     .query(async ({ ctx, input }) => {
       if (input?.property_id != null) {
-        await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+        await assertPropertyHeadOrAdmin(ctx.db, ctx.user, input.property_id)
       } else if (!ctx.user.is_admin) {
         // Without a property_id this returns every invitation in the system;
         // only admins may do that. A property head must scope to a property.
@@ -106,7 +110,7 @@ export const allowedEmailRouter = router({
           })
         }
       } else {
-        await assertPropertyHead(ctx.db, ctx.user, property_id)
+        await assertPropertyHeadOrAdmin(ctx.db, ctx.user, property_id)
         if (user_group_id == null && ownership_pct == null) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -302,7 +306,7 @@ export const allowedEmailRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertPropertyHead(ctx.db, ctx.user, input.property_id)
+      await assertPropertyHeadOrAdmin(ctx.db, ctx.user, input.property_id)
       return ctx.db.transaction(async tx => {
         const invite = (
           await tx
@@ -379,7 +383,7 @@ export const allowedEmailRouter = router({
       }
 
       if (invite.property_id != null) {
-        await assertPropertyHead(ctx.db, ctx.user, invite.property_id)
+        await assertPropertyHeadOrAdmin(ctx.db, ctx.user, invite.property_id)
       } else if (!ctx.user.is_admin) {
         throw new TRPCError({
           code: "FORBIDDEN",

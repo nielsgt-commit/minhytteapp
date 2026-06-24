@@ -44,7 +44,7 @@ export function SettlementProgressSummary({
     [trpc.settlement.pathKey()],
   )
 
-  const iAmHead = me.is_admin || me.head_property_ids.includes(propertyId)
+  const iAmHead = me.head_property_ids.includes(propertyId)
   // "Added for review" means an expense is either awaiting a head's review
   // (submitted) or has already been reimbursed into this settlement. When
   // neither exists in any group, the settlement is empty and safe to scrap.

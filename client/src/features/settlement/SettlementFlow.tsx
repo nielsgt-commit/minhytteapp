@@ -35,7 +35,7 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
       <QueryBoundary>
         <CreateSettlementFlow
           propertyId={propertyId}
-          isHead={me.is_admin || me.head_property_ids.includes(propertyId)}
+          isHead={me.head_property_ids.includes(propertyId)}
         />
       </QueryBoundary>
     )

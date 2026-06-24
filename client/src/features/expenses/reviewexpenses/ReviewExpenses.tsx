@@ -76,8 +76,7 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
 
   if (selectedPropertyId == null) return null
 
-  const iAmHead =
-    me.is_admin || me.head_property_ids.includes(selectedPropertyId)
+  const iAmHead = me.head_property_ids.includes(selectedPropertyId)
   if (!iAmHead) {
     return (
       <Paragraph>
