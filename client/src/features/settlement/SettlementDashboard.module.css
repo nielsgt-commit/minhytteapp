@@ -80,6 +80,25 @@
 .table {
   width: 100%;
   font-variant-numeric: tabular-nums;
+  /* Tighter than data-size="sm": Table only types sm|md|lg, so step the font
+     and cell padding down by hand to fit the extra Days column. */
+  font-size: var(--ds-font-size-1);
+}
+
+.table :is(th, td) {
+  padding-block: var(--ds-size-1);
+  padding-inline: var(--ds-size-2);
+}
+
+/* Focusable tooltip trigger on the numeric column headers. */
+.colHeader {
+  cursor: help;
+  border-radius: var(--ds-border-radius-sm);
+}
+
+.colHeader:focus-visible {
+  outline: 2px solid var(--ds-color-focus-default, currentColor);
+  outline-offset: 2px;
 }
 
 .netPositive {

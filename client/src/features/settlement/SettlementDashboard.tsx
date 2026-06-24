@@ -6,6 +6,7 @@ import {
   Paragraph,
   Table,
   Tag,
+  Tooltip,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
@@ -23,6 +24,18 @@ type Contributor = {
   name: string
   count: number
   amount: number
+}
+
+// A column header that explains its numbers on hover/focus. The span is made
+// focusable so keyboard users reach the tooltip, not just pointer users.
+function ColHeaderTooltip({ label, hint }: { label: string; hint: string }) {
+  return (
+    <Tooltip content={hint}>
+      <span tabIndex={0} className={styles.colHeader}>
+        {label}
+      </span>
+    </Tooltip>
+  )
 }
 
 export function SettlementDashboard({
@@ -95,6 +108,9 @@ export function SettlementDashboard({
 
   const totalReimbursed = preview?.inputs.total_reimbursed ?? null
   const totalBookingDays = preview?.inputs.total_booking_days ?? null
+  // Per-group booking days only exist for occupancy-aware policies; gate the
+  // column on the same signal that drives the totals tag.
+  const showBookingDays = totalBookingDays != null
 
   return (
     <div className={styles.dashboard}>
@@ -240,14 +256,39 @@ export function SettlementDashboard({
                           <Table.HeaderCell scope="col">
                             {t("Group")}
                           </Table.HeaderCell>
+                          {showBookingDays && (
+                            <Table.HeaderCell scope="col" align="right">
+                              <ColHeaderTooltip
+                                label={t("Days")}
+                                hint={t(
+                                  "Nights this group's members stayed during the period, counted toward the split.",
+                                )}
+                              />
+                            </Table.HeaderCell>
+                          )}
                           <Table.HeaderCell scope="col" align="right">
-                            {t("Paid")}
+                            <ColHeaderTooltip
+                              label={t("Paid")}
+                              hint={t(
+                                "What this group actually paid toward the settled expenses.",
+                              )}
+                            />
                           </Table.HeaderCell>
                           <Table.HeaderCell scope="col" align="right">
-                            {t("Share")}
+                            <ColHeaderTooltip
+                              label={t("Share")}
+                              hint={t(
+                                "This group's fair portion of the total under the split policy.",
+                              )}
+                            />
                           </Table.HeaderCell>
                           <Table.HeaderCell scope="col" align="right">
-                            {t("Net")}
+                            <ColHeaderTooltip
+                              label={t("Net")}
+                              hint={t(
+                                "Paid minus Share. Positive means the group is owed money; negative means it owes.",
+                              )}
+                            />
                           </Table.HeaderCell>
                         </Table.Row>
                       </Table.Head>
@@ -255,6 +296,13 @@ export function SettlementDashboard({
                         {preview.groups.map(g => (
                           <Table.Row key={g.group_id}>
                             <Table.Cell>{g.group_name}</Table.Cell>
+                            {showBookingDays && (
+                              <Table.Cell align="right">
+                                {(g.booking_days ?? 0).toLocaleString(
+                                  i18n.language,
+                                )}
+                              </Table.Cell>
+                            )}
                             <Table.Cell align="right">
                               {fmt(g.total_paid)}
                             </Table.Cell>
