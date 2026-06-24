@@ -18,6 +18,7 @@ export function CategoryPicker({ categories, selectedIds, onAdd }: Props) {
     <Select
       aria-label={t("Add expense category")}
       data-size="sm"
+      data-width="auto"
       value=""
       onChange={e => {
         if (e.target.value === "") return

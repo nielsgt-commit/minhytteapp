@@ -1,8 +1,9 @@
-import { Select, Switch } from "@digdir/designsystemet-react"
+import { Select, Switch, Textfield } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./OccupancyCounting.module.css"
 import {
   CHILD_WEIGHTS,
+  CUSTOM_RANGE_LABEL,
   type EligibleOwner,
   type OccupancyWindow,
   type SplitPolicyOccupancy,
@@ -11,6 +12,8 @@ import {
   decodeWindow,
   describeWindow,
   encodeWindow,
+  inputDateToMd,
+  mdToInputDate,
 } from "./types"
 
 // Section 2 of the builder: how a person-day is *counted*. One shared definition
@@ -44,18 +47,34 @@ export function OccupancyCounting({
     (edit?.windowKinds.has("priority_week") ?? false) &&
     eligibleOwners.length > 0
 
+  // The two date inputs only appear while editing a manually picked range.
+  const customRange =
+    occupancy.window.kind === "custom_range" ? occupancy.window : null
+
+  const patchRange = (patch: { from_md?: string; to_md?: string }) => {
+    edit?.onPatch({
+      window: {
+        kind: "custom_range",
+        from_md: customRange?.from_md ?? "",
+        to_md: customRange?.to_md ?? "",
+        ...patch,
+      },
+    })
+  }
+
   return (
     <div className={styles.block}>
       {showLabel && (
         <span className={styles.label}>{t("Counting person-days")}</span>
       )}
+      {/* window */}
       <p className={styles.sentence}>
-        {/* window */}
         {t("Count one person-day per night a person stays")}{" "}
         {edit != null ? (
           <Select
             aria-label={t("Which stays count")}
             data-size="sm"
+            data-width="auto"
             value={encodeWindow(occupancy.window)}
             disabled={edit.pending}
             onChange={e => {
@@ -85,17 +104,59 @@ export function OccupancyCounting({
                 })}
               </Select.Optgroup>
             )}
+            {edit.windowKinds.has("custom_range") && (
+              <Select.Option value="custom_range">
+                {t(CUSTOM_RANGE_LABEL)}
+              </Select.Option>
+            )}
           </Select>
         ) : (
           <strong>{describeWindow(occupancy.window, eligibleOwners)}</strong>
         )}
-        {/* children */}
-        {". "}
+        {"."}
+      </p>
+
+      {/* manual date range — sits right under the window select it configures */}
+      {edit != null && customRange != null && (
+        <>
+          <div className={styles.dateRange}>
+            <Textfield
+              label={t("From")}
+              type="date"
+              data-size="sm"
+              value={mdToInputDate(customRange.from_md)}
+              disabled={edit.pending}
+              onChange={e => {
+                patchRange({ from_md: inputDateToMd(e.target.value) })
+              }}
+            />
+            <Textfield
+              label={t("To")}
+              type="date"
+              data-size="sm"
+              value={mdToInputDate(customRange.to_md)}
+              disabled={edit.pending}
+              onChange={e => {
+                patchRange({ to_md: inputDateToMd(e.target.value) })
+              }}
+            />
+          </div>
+          <p className={styles.note}>
+            {t(
+              "Only the month and day are used — the range applies within each settlement year.",
+            )}
+          </p>
+        </>
+      )}
+
+      {/* children */}
+      <p className={styles.sentence}>
         {t("Children count as")}{" "}
         {edit != null ? (
           <Select
             aria-label={t("Child weight")}
             data-size="sm"
+            data-width="auto"
             value={String(occupancy.child_weight)}
             disabled={edit.pending}
             onChange={e => {

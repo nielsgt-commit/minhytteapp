@@ -101,19 +101,6 @@ export function SplitPolicyBuilder() {
             >
               {isEditing ? t("Update policy") : t("Save policy")}
             </Button>
-            {!isEditing && (
-              <Button
-                type="button"
-                variant="tertiary"
-                data-size="sm"
-                disabled={pending}
-                onClick={() => {
-                  ctx.loadPreset()
-                }}
-              >
-                {t("Load occupancy_days preset")}
-              </Button>
-            )}
             <Button
               type="button"
               variant="tertiary"

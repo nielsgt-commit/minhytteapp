@@ -61,6 +61,9 @@ export type OccupancyWindow =
   | { kind: "year" }
   | { kind: "any_priority_week" }
   | { kind: "priority_week"; user_group_id: number }
+  // A manually picked month/day range (inclusive, `MM-DD`), resolved against the
+  // settlement year. `from_md > to_md` wraps across the new year.
+  | { kind: "custom_range"; from_md: string; to_md: string }
 
 export type ExceptItem =
   | { kind: "user"; user_id: number }
@@ -111,22 +114,6 @@ export const NEW_RULE: Rule = {
   who: [{ kind: "all_users" }],
   except: [],
   when: { kind: "always" },
-}
-
-export const OCCUPANCY_DAYS_PRESET: Omit<FormState, "id" | "name"> = {
-  parameters: ["booking_days"],
-  rules: [],
-  fallback: {
-    how: { kind: "weighted_by_occupancy" },
-    who: [{ kind: "main_groups" }],
-    except: [],
-    when: { kind: "always" },
-  },
-  occupancy: {
-    window: { kind: "year" },
-    include_extra_guests: true,
-    child_weight: 1,
-  },
 }
 
 export const INITIAL_FORM: FormState = {
@@ -185,8 +172,12 @@ export function deriveParameters(config: {
   )
   const usesOwnership = clauses.some(c => c.how.kind === "by_ownership_pct")
   const usesWhen = clauses.some(c => c.when.kind !== "always")
+  // Only the priority-week windows need time-conditions data; "year" and the
+  // manually picked "custom_range" stand alone.
+  const windowKind = config.occupancy.window.kind
   const usesPriorityWindow =
-    usesOccupancyHow && config.occupancy.window.kind !== "year"
+    usesOccupancyHow &&
+    (windowKind === "any_priority_week" || windowKind === "priority_week")
   const usesTimeConditions = usesWhen || usesPriorityWindow
 
   const params: SplitPolicyParameter[] = []
@@ -232,12 +223,51 @@ export function decodeWhen(v: string): When {
   return { kind: v as StaticWhen["kind"] }
 }
 
-// Static (no user_group_id) window kinds; "priority_week" is encoded with its id.
-type StaticWindow = Exclude<OccupancyWindow, { kind: "priority_week" }>
+// Window kinds carrying no extra fields, so they round-trip through a single
+// Select value. "priority_week" (id) and "custom_range" (dates) are handled
+// separately in encode/decodeWindow.
+type StaticWindow = Exclude<
+  OccupancyWindow,
+  { kind: "priority_week" } | { kind: "custom_range" }
+>
 
 export const WINDOW_LABEL: Record<StaticWindow["kind"], string> = {
   year: "all stays this year",
   any_priority_week: "stays during any priority week",
+}
+
+// Shown as the Select option for the manual-range kind; the dates themselves are
+// picked in the two date inputs that appear once it's selected.
+export const CUSTOM_RANGE_LABEL = "stays in a date range I set"
+
+// The manual range stores month/day only (resolved against the settlement year).
+// Native <input type="date"> still needs a year, so the inputs round-trip through
+// a fixed reference year — a leap year, so 02-29 stays selectable. The year is
+// never persisted or shown as meaningful.
+export const MD_REF_YEAR = "2024"
+
+// "MM-DD" <-> the "YYYY-MM-DD" value a date input expects. Empty stays empty so a
+// freshly selected range shows blank inputs.
+export function mdToInputDate(md: string): string {
+  return md === "" ? "" : `${MD_REF_YEAR}-${md}`
+}
+
+export function inputDateToMd(value: string): string {
+  return value === "" ? "" : value.slice(5)
+}
+
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+]
+
+// "07-01" -> "Jul 1" for the read-only summary; passthrough for malformed input.
+export function mdLabel(md: string): string {
+  const m = /^(\d{2})-(\d{2})$/.exec(md)
+  if (m == null) return md
+  const monthIdx = Number(m[1]) - 1
+  if (monthIdx < 0 || monthIdx >= MONTH_ABBR.length) return md
+  return `${MONTH_ABBR[monthIdx]} ${String(Number(m[2]))}`
 }
 
 export function encodeWindow(w: OccupancyWindow): string {
@@ -247,12 +277,18 @@ export function encodeWindow(w: OccupancyWindow): string {
   return w.kind
 }
 
+// Switching *to* the manual range starts with empty dates for the user to fill;
+// editing the dates of an already-selected range goes through patchOccupancy and
+// never round-trips through here.
 export function decodeWindow(v: string): OccupancyWindow {
   if (v.startsWith("priority_week:")) {
     return {
       kind: "priority_week",
       user_group_id: Number(v.slice("priority_week:".length)),
     }
+  }
+  if (v === "custom_range") {
+    return { kind: "custom_range", from_md: "", to_md: "" }
   }
   return { kind: v as StaticWindow["kind"] }
 }
@@ -474,6 +510,11 @@ export function describeWindow(
     return owner
       ? `stays during ${owner.user_group_name}'s priority week`
       : `stays during a priority week (group #${String(w.user_group_id)})`
+  }
+  if (w.kind === "custom_range") {
+    return w.from_md && w.to_md
+      ? `stays between ${mdLabel(w.from_md)} and ${mdLabel(w.to_md)} each year`
+      : "stays in a date range I set"
   }
   return WINDOW_LABEL[w.kind]
 }

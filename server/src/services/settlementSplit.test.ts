@@ -480,6 +480,131 @@ describe("computePolicySplit", () => {
     expect(sharesByGroup(result)).toEqual({ A: 100, B: 0 })
   })
 
+  it("scopes person-days to a manual month/day range in the settlement year", () => {
+    const input = makeInput({
+      bookings: [
+        {
+          booker_id: 1,
+          start_date: "2026-07-06",
+          end_date: "2026-07-12",
+          occupant_user_ids: [1],
+          extra_count: 0,
+        },
+        {
+          booker_id: 3,
+          start_date: "2026-08-01",
+          end_date: "2026-08-07",
+          occupant_user_ids: [3],
+          extra_count: 0,
+        },
+      ],
+      expenses: [expense(100, 3)],
+    })
+    // 07-01..07-31 resolves to July of the settlement year (2026), so only user
+    // 1's stay counts; group A pays all.
+    const result = computePolicySplit(
+      config(
+        {
+          how: { kind: "weighted_by_occupancy" },
+          who: [{ kind: "all_users" }],
+          except: [],
+          when: { kind: "always" },
+        },
+        [],
+        undefined,
+        {
+          window: { kind: "custom_range", from_md: "07-01", to_md: "07-31" },
+          include_extra_guests: false,
+          child_weight: 1,
+        },
+      ),
+      input,
+      ALL,
+    )
+    expect(sharesByGroup(result)).toEqual({ A: 100, B: 0 })
+  })
+
+  it("wraps a from > to manual range across the new year", () => {
+    const input = makeInput({
+      bookings: [
+        {
+          // Late-December stay, inside a 12-20..01-10 winter window.
+          booker_id: 1,
+          start_date: "2026-12-22",
+          end_date: "2026-12-28",
+          occupant_user_ids: [1],
+          extra_count: 0,
+        },
+        {
+          // July stay, outside the winter window.
+          booker_id: 3,
+          start_date: "2026-07-01",
+          end_date: "2026-07-07",
+          occupant_user_ids: [3],
+          extra_count: 0,
+        },
+      ],
+      expenses: [expense(100, 3)],
+    })
+    const result = computePolicySplit(
+      config(
+        {
+          how: { kind: "weighted_by_occupancy" },
+          who: [{ kind: "all_users" }],
+          except: [],
+          when: { kind: "always" },
+        },
+        [],
+        undefined,
+        {
+          window: { kind: "custom_range", from_md: "12-20", to_md: "01-10" },
+          include_extra_guests: false,
+          child_weight: 1,
+        },
+      ),
+      input,
+      ALL,
+    )
+    expect(sharesByGroup(result)).toEqual({ A: 100, B: 0 })
+  })
+
+  it("counts zero person-days for a malformed manual range", () => {
+    const input = makeInput({
+      bookings: [
+        {
+          booker_id: 1,
+          start_date: "2026-07-06",
+          end_date: "2026-07-12",
+          occupant_user_ids: [1],
+          extra_count: 0,
+        },
+      ],
+      expenses: [expense(100, 1)],
+    })
+    // Malformed month/day → no valid window → nobody weighs anything, so the
+    // weighted split falls back to an equal split across groups.
+    const result = computePolicySplit(
+      config(
+        {
+          how: { kind: "weighted_by_occupancy" },
+          who: [{ kind: "all_users" }],
+          except: [],
+          when: { kind: "always" },
+        },
+        [],
+        undefined,
+        {
+          window: { kind: "custom_range", from_md: "bogus", to_md: "07-31" },
+          include_extra_guests: false,
+          child_weight: 1,
+        },
+      ),
+      input,
+      ALL,
+    )
+    expect(sharesByGroup(result)).toEqual({ A: 50, B: 50 })
+  })
+
   it("scales children's person-days by child_weight", () => {
     // A: user 1 (adult) and user 2 (child), 4 days each; B: user 3, 4 days.
     const input = makeInput({

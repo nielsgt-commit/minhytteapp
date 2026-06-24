@@ -10,7 +10,6 @@ import {
   type How,
   INITIAL_FORM,
   NEW_RULE,
-  OCCUPANCY_DAYS_PRESET,
   type Rule,
   SPLIT_POLICY_PARAMETERS,
   type SplitPolicyOccupancy,
@@ -48,7 +47,7 @@ function clearRedundantPresence<T extends { how: How; when: When }>(
 }
 
 // Pure state transforms for the policy builder form: rule list ordering,
-// who/except membership and loading presets or saved policies for editing.
+// who/except membership and loading saved policies for editing.
 // `groups`/`eligibleOwners` resolve a clause's participants so exclusions that
 // fall outside the (possibly narrowed) who-set are dropped automatically.
 export function useSplitPolicyForm(
@@ -227,10 +226,6 @@ export function useSplitPolicyForm(
     })
   }
 
-  const loadPreset = () => {
-    setForm(f => ({ ...f, ...OCCUPANCY_DAYS_PRESET }))
-  }
-
   // Load a saved policy for editing. The builder exposes every option, so we
   // hold the full parameter set (the saved minimal set is re-derived on save).
   // sanitize still runs to migrate legacy occupancy/when fields via
@@ -285,7 +280,6 @@ export function useSplitPolicyForm(
     removeWhoFromRule,
     addWhoToFallback,
     removeWhoFromFallback,
-    loadPreset,
     loadForEdit,
     reset,
   }

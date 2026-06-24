@@ -3,7 +3,6 @@ import {
   type ExceptItem,
   type GroupWithMembers,
   INITIAL_FORM,
-  OCCUPANCY_DAYS_PRESET,
   type OccupancyWindow,
   PARAMETER_DESCRIPTION,
   PARAMETER_LABEL,
@@ -303,10 +302,6 @@ describe("normalizeWho", () => {
 describe("parameters", () => {
   test("INITIAL_FORM enables every parameter", () => {
     expect(INITIAL_FORM.parameters).toEqual([...SPLIT_POLICY_PARAMETERS])
-  })
-
-  test("the occupancy preset only needs booking days", () => {
-    expect(OCCUPANCY_DAYS_PRESET.parameters).toEqual(["booking_days"])
   })
 
   test("every parameter has a label and description", () => {

@@ -165,6 +165,7 @@ export function RuleSentence({
           <Select
             aria-label={t("How to split")}
             data-size="sm"
+            data-width="auto"
             value={rule.how.kind}
             disabled={edit.pending}
             onChange={e => {
@@ -238,6 +239,7 @@ export function RuleSentence({
               <Select
                 aria-label={t("When present")}
                 data-size="sm"
+                data-width="auto"
                 value={encodeWhen(rule.when)}
                 disabled={edit.pending}
                 onChange={e => {

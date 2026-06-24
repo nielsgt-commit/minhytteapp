@@ -22,6 +22,7 @@ export function WhoPicker({
     <Select
       aria-label={t("Add participant")}
       data-size="sm"
+      data-width="auto"
       value=""
       onChange={e => {
         onAdd(e.target.value)

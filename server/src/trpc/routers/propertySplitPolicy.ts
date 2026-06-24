@@ -94,12 +94,24 @@ const fallbackSchema = z.object({
   when: whenSchema,
 })
 
+// Month/day (`MM-DD`), resolved against the settlement year by the calc. 01-01
+// through 12-31; day-of-month range is loose because the real calendar bound
+// depends on the year, which the calc clamps.
+const monthDaySchema = z
+  .string()
+  .regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/)
+
 const occupancyWindowSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("year") }),
   z.object({ kind: z.literal("any_priority_week") }),
   z.object({
     kind: z.literal("priority_week"),
     user_group_id: z.number().int().positive(),
+  }),
+  z.object({
+    kind: z.literal("custom_range"),
+    from_md: monthDaySchema,
+    to_md: monthDaySchema,
   }),
 ])
 

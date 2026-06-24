@@ -132,6 +132,40 @@ function isoWeekRange(
 
 type DateRange = { start: Temporal.PlainDate; end: Temporal.PlainDate }
 
+// Resolve an `MM-DD` against a concrete year, clamping an impossible day (e.g.
+// 02-29 in a common year) to the month's last day. Returns null on malformed
+// input so the caller counts zero windowed days rather than throwing.
+function monthDayToDate(md: string, year: number): Temporal.PlainDate | null {
+  const m = /^(\d{2})-(\d{2})$/.exec(md)
+  if (m == null) return null
+  try {
+    return Temporal.PlainDate.from(
+      { year, month: Number(m[1]), day: Number(m[2]) },
+      { overflow: "constrain" },
+    )
+  } catch {
+    return null
+  }
+}
+
+// Resolve a manual month/day occupancy window into concrete ranges for the
+// settlement year. `from_md <= to_md` is a single range; `from_md > to_md` wraps
+// across the new year (Jan 1..to and from..Dec 31). Empty for malformed input.
+function customRangesForYear(
+  from_md: string,
+  to_md: string,
+  year: number,
+): DateRange[] {
+  const from = monthDayToDate(from_md, year)
+  const to = monthDayToDate(to_md, year)
+  if (from == null || to == null) return []
+  if (Temporal.PlainDate.compare(from, to) <= 0) return [{ start: from, end: to }]
+  return [
+    { start: Temporal.PlainDate.from({ year, month: 1, day: 1 }), end: to },
+    { start: from, end: Temporal.PlainDate.from({ year, month: 12, day: 31 }) },
+  ]
+}
+
 // Inclusive-day count of the part of [start, end] that falls within the union of
 // `windows`. Used to scope person-days to a priority-week window; overlapping
 // windows are merged so shared days are not double-counted.
@@ -214,6 +248,8 @@ export function computePolicySplit(
         return allPriorityRanges
       case "priority_week":
         return priorityRangesByGroup.get(w.user_group_id) ?? []
+      case "custom_range":
+        return customRangesForYear(w.from_md, w.to_md, input.year)
     }
   })(occupancy.window)
 

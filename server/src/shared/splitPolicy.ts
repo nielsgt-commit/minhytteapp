@@ -70,6 +70,11 @@ export type SplitPolicyOccupancyWindow =
   | { kind: "year" }
   | { kind: "any_priority_week" }
   | { kind: "priority_week"; user_group_id: number }
+  // A manually picked month/day range (inclusive, `MM-DD`), resolved against the
+  // settlement's year so one policy reused across years always scopes to the same
+  // calendar window. `from_md > to_md` wraps across the new year (e.g. a winter
+  // range). Independent of priority-week data, so it's always available.
+  | { kind: "custom_range"; from_md: string; to_md: string }
 
 export type SplitPolicyOccupancy = {
   window: SplitPolicyOccupancyWindow
@@ -151,12 +156,16 @@ export function allowedWhenKinds(
   return kinds
 }
 
-// Which person-day windows the parameters allow. "year" is always available;
-// priority-week windows need the time-conditions data.
+// Which person-day windows the parameters allow. "year" and a manually picked
+// "custom_range" are always available; priority-week windows need the
+// time-conditions data.
 export function allowedWindowKinds(
   parameters: readonly SplitPolicyParameter[],
 ): Set<SplitPolicyOccupancyWindow["kind"]> {
-  const kinds = new Set<SplitPolicyOccupancyWindow["kind"]>(["year"])
+  const kinds = new Set<SplitPolicyOccupancyWindow["kind"]>([
+    "year",
+    "custom_range",
+  ])
   if (parameters.includes("time_conditions")) {
     kinds.add("any_priority_week")
     kinds.add("priority_week")

@@ -22,6 +22,7 @@ export function ExceptPicker({
     <Select
       aria-label={t("Add exclude")}
       data-size="sm"
+      data-width="auto"
       value=""
       onChange={e => {
         onAdd(e.target.value)
