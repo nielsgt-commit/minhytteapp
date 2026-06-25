@@ -11,6 +11,7 @@ import {
   roomTable,
   structuresTable,
 } from "../../db/schema/property.schema.ts"
+import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
 
 type Db = typeof dbClient
 
@@ -64,6 +65,21 @@ export async function resolvePropertyIdFromEquipment(
       .limit(1)
   ).at(0)
   if (!row) throw notFound("equipment not found")
+  return row.property_id
+}
+
+export async function resolvePropertyIdFromShoppingItem(
+  db: Db,
+  shoppingItemId: number,
+): Promise<number> {
+  const row = (
+    await db
+      .select({ property_id: shoppingListItemsTable.property_id })
+      .from(shoppingListItemsTable)
+      .where(eq(shoppingListItemsTable.id, shoppingItemId))
+      .limit(1)
+  ).at(0)
+  if (!row) throw notFound("shopping list item not found")
   return row.property_id
 }
 
