@@ -7,8 +7,8 @@ import {
   FileTextFillIcon,
   HouseIcon,
   HouseFillIcon,
-  NotePencilIcon,
   PlusIcon,
+  ShoppingBasketIcon,
   WalletIcon,
   WrenchIcon,
   WrenchFillIcon,
@@ -68,17 +68,17 @@ const PlusGlyph = asIcon(PlusIcon)
 // expense action carries the wallet icon previously shown in the bottom nav
 // (its slot is now occupied by the FAB).
 const addActions = linkOptions([
-  { to: "/utlegg", label: "New expense" },
-  { to: "/handleliste", label: "New innkjøp" },
-  { to: "/oppgaver", label: "New todo" },
+  { to: "/utlegg", label: "Expense" },
+  { to: "/handleliste", label: "Handleliste" },
+  { to: "/oppgaver", label: "Todo" },
 ])
 
-type AddLabel = "New expense" | "New innkjøp" | "New todo"
+type AddLabel = "Expense" | "Handleliste" | "Todo"
 
 const addIcons: Record<AddLabel, IconComp> = {
-  "New expense": asIcon(WalletIcon),
-  "New innkjøp": asIcon(NotePencilIcon),
-  "New todo": asIcon(ClipboardCheckmarkIcon),
+  Expense: asIcon(WalletIcon),
+  Handleliste: asIcon(ShoppingBasketIcon),
+  Todo: asIcon(ClipboardCheckmarkIcon),
 }
 
 export function BottomNavBar() {
@@ -95,9 +95,9 @@ export function BottomNavBar() {
   }
 
   const addLabels: Record<AddLabel, string> = {
-    "New expense": t("New expense"),
-    "New innkjøp": t("New innkjøp"),
-    "New todo": t("New todo"),
+    Expense: t("Expense"),
+    Handleliste: t("Handleliste"),
+    Todo: t("Todo"),
   }
 
   useEffect(() => {

@@ -255,16 +255,28 @@ export function Todos() {
                   </Paragraph>
                   <div className={styles.actions}>
                     {movingId === todo.id ? (
-                      <TargetSelect
-                        value={NO_TARGET}
-                        disabled={pending}
-                        structures={structureRows}
-                        infrastructure={infrastructureRows}
-                        equipment={equipmentRows}
-                        onChange={token => {
-                          handleMove(todo.id, token)
-                        }}
-                      />
+                      <>
+                        <TargetSelect
+                          value={NO_TARGET}
+                          disabled={pending}
+                          structures={structureRows}
+                          infrastructure={infrastructureRows}
+                          equipment={equipmentRows}
+                          onChange={token => {
+                            handleMove(todo.id, token)
+                          }}
+                        />
+                        <Button
+                          variant="tertiary"
+                          data-size="sm"
+                          disabled={pending}
+                          onClick={() => {
+                            setMovingId(null)
+                          }}
+                        >
+                          {t("Cancel")}
+                        </Button>
+                      </>
                     ) : (
                       <Button
                         variant="tertiary"

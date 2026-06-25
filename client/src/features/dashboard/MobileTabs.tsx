@@ -1,6 +1,14 @@
 import { useState } from "react"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { Card, Heading, Paragraph, Tabs } from "@digdir/designsystemet-react"
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
+import {
+  Badge,
+  Card,
+  Heading,
+  Paragraph,
+  Tabs,
+} from "@digdir/designsystemet-react"
+import { ShoppingBasketIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
@@ -19,8 +27,34 @@ import { startOfSunday } from "@/utils/dateUtils"
 
 type Tab = "now" | "week" | "summer" | "year"
 
+// The shopping tab shows the basket icon with a badge of open (unchecked)
+// items and links to the shopping list rather than switching a panel.
+function ShoppingListTabIcon({ propertyId }: { propertyId: number }) {
+  const { t } = useTranslation("dashboard")
+  const trpc = useTRPC()
+  const { data: items } = useQuery(
+    trpc.shoppingItem.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const openCount = items?.filter(i => !i.checked).length ?? 0
+
+  return (
+    <Badge.Position placement="top-right">
+      {openCount > 0 && (
+        <Badge
+          count={openCount}
+          aria-label={t("{{count}} open shopping list items", {
+            count: openCount,
+          })}
+        />
+      )}
+      <ShoppingBasketIcon aria-hidden fontSize="1.5rem" />
+    </Badge.Position>
+  )
+}
+
 export function MobileTabs({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>("now")
 
   return (
@@ -28,6 +62,8 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
       className={styles.mobileTabs}
       value={tab}
       onChange={v => {
+        // The shopping tab navigates away instead of switching a panel.
+        if (v === "shopping") return
         setTab(v as Tab)
       }}
     >
@@ -44,6 +80,15 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
         </Tabs.Tab> */}
         <Tabs.Tab value="year" aria-label={t("This year")}>
           <Paragraph>{t("This year")}</Paragraph>
+        </Tabs.Tab>
+        <Tabs.Tab
+          value="shopping"
+          aria-label={t("Shopping list")}
+          onClick={() => {
+            void navigate({ to: "/handleliste" })
+          }}
+        >
+          <ShoppingListTabIcon propertyId={propertyId} />
         </Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value={tab}>
