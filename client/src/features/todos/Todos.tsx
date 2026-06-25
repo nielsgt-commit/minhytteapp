@@ -16,10 +16,12 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { SubmitButton } from "@/components/shared/SubmitButton"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
+import type { PageHelpContent } from "@/components/shared/PageHelp"
 
 type TargetKind = "structure" | "infrastructure" | "equipment"
 type Target = { kind: TargetKind; id: number }
@@ -111,6 +113,12 @@ export function Todos() {
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
   const enabled = selectedPropertyId != null
+
+  const help: PageHelpContent = {
+    intro: t(
+      "Keep a shared todo list for the cabin. Add things to do, check them off when done, or move a todo onto a building, infrastructure or equipment.",
+    ),
+  }
 
   const { data: items } = useQuery(
     trpc.todo.listForProperty.queryOptions(
@@ -219,7 +227,13 @@ export function Todos() {
     )
   }
 
-  if (!items) return <CardSkeleton />
+  if (!items)
+    return (
+      <div className={styles.wrap}>
+        <PageHeader title={t("Todos")} help={help} />
+        <CardSkeleton />
+      </div>
+    )
 
   const todos = items.slice().sort((a, b) => {
     const cmp = Temporal.Instant.compare(b.created_at, a.created_at)
@@ -229,6 +243,7 @@ export function Todos() {
 
   return (
     <div className={styles.wrap}>
+      <PageHeader title={t("Todos")} help={help} />
       <form action={handleAdd} className={styles.addRow}>
         <Textfield
           aria-label={t("New todo")}
