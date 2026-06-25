@@ -137,11 +137,11 @@ export function Todos() {
     ),
   )
 
-  // A targeted add/move lands in the maintenance views, so invalidate both.
+  // A "Move to…" lands the item in the maintenance views, so invalidate both.
   const invalidationKeys = [trpc.todo.pathKey(), trpc.maintenance.pathKey()]
   const createMutation = useMutationWithInvalidation(
     trpc.todo.create.mutationOptions(),
-    invalidationKeys,
+    [trpc.todo.pathKey()],
   )
   const updateMutation = useMutationWithInvalidation(
     trpc.todo.update.mutationOptions(),
@@ -170,17 +170,16 @@ export function Todos() {
   // Which row (if any) has its inline "Move to…" picker open.
   const [movingId, setMovingId] = useState<number | null>(null)
 
+  // New todos always start as general todos; assigning one to a building /
+  // infrastructure / equipment is done afterward via the "Move to…" action.
   const handleAdd = async (fd: FormData) => {
     if (selectedPropertyId == null) return
     const description = fdString(fd, "description").trim()
     if (!description) return
-    const targetToken = fdString(fd, "target")
-    const target = parseTargetToken(targetToken)
     try {
       await createMutation.mutateAsync({
         property_id: selectedPropertyId,
         description,
-        ...(target ? { target } : {}),
       })
     } catch {
       // Surfaced via the aggregated ErrorAlert below.
@@ -226,13 +225,6 @@ export function Todos() {
           name="description"
           placeholder={t("Add todo...")}
           disabled={createMutation.isPending || !enabled}
-        />
-        <TargetSelect
-          name="target"
-          disabled={createMutation.isPending || !enabled}
-          structures={structureRows}
-          infrastructure={infrastructureRows}
-          equipment={equipmentRows}
         />
         <SubmitButton disabled={!enabled}>{t("Add")}</SubmitButton>
       </form>
