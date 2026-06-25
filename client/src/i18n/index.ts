@@ -16,6 +16,7 @@ import enPriority from "./locales/en/priority.json"
 import enProperty from "./locales/en/property.json"
 import enSettlement from "./locales/en/settlement.json"
 import enShared from "./locales/en/shared.json"
+import enTodos from "./locales/en/todos.json"
 import enUser from "./locales/en/user.json"
 import enUsergroups from "./locales/en/usergroups.json"
 import enUsersettings from "./locales/en/usersettings.json"
@@ -34,6 +35,7 @@ import nbPriority from "./locales/nb/priority.json"
 import nbProperty from "./locales/nb/property.json"
 import nbSettlement from "./locales/nb/settlement.json"
 import nbShared from "./locales/nb/shared.json"
+import nbTodos from "./locales/nb/todos.json"
 import nbUser from "./locales/nb/user.json"
 import nbUsergroups from "./locales/nb/usergroups.json"
 import nbUsersettings from "./locales/nb/usersettings.json"
@@ -56,6 +58,7 @@ export const resources = {
     property: enProperty,
     settlement: enSettlement,
     shared: enShared,
+    todos: enTodos,
     user: enUser,
     usergroups: enUsergroups,
     usersettings: enUsersettings,
@@ -75,6 +78,7 @@ export const resources = {
     property: nbProperty,
     settlement: nbSettlement,
     shared: nbShared,
+    todos: nbTodos,
     user: nbUser,
     usergroups: nbUsergroups,
     usersettings: nbUsersettings,
@@ -104,6 +108,7 @@ void i18n
       "property",
       "settlement",
       "shared",
+      "todos",
       "user",
       "usergroups",
       "usersettings",

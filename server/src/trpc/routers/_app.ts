@@ -18,6 +18,7 @@ import { roomRouter } from "./room.ts"
 import { settlementRouter } from "./settlement.ts"
 import { stayRouter } from "./stay.ts"
 import { structureRouter } from "./structure.ts"
+import { todoRouter } from "./todo.ts"
 import { userRouter } from "./user.ts"
 import { userGroupRouter } from "./userGroup.ts"
 import { weatherRouter } from "./weather.ts"
@@ -42,6 +43,7 @@ export const appRouter = router({
   settlement: settlementRouter,
   stay: stayRouter,
   structure: structureRouter,
+  todo: todoRouter,
   user: userRouter,
   userGroup: userGroupRouter,
   weather: weatherRouter,
