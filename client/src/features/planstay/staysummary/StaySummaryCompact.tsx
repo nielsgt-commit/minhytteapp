@@ -148,6 +148,21 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     { month: "short" },
   )
 
+  // Weekend bands (Sat–Sun) shaded as subtle vertical fills, for context.
+  // Start from the Saturday on or before the window so a weekend
+  // straddling the left edge still shows its in-window Sunday; fraction() clamps
+  // the band to the visible window.
+  const weekends = useMemo(() => {
+    const out: { date: Temporal.PlainDate }[] = []
+    const back = (FOCUS_START.dayOfWeek - 6 + 7) % 7 // days back to Saturday
+    let sat = FOCUS_START.subtract({ days: back })
+    while (Temporal.PlainDate.compare(sat, FOCUS_END) < 0) {
+      out.push({ date: sat })
+      sat = sat.add({ days: 7 })
+    }
+    return out
+  }, [])
+
   // Dotted dividers on each ISO week boundary (Monday) inside the window, each
   // labelled with its week number on its leading (left) edge.
   const weeks = useMemo(() => {
@@ -169,6 +184,23 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
           <div className={styles.chart}>
             {/* Adjacent month before the window, parked in the left gutter. */}
             <span className={styles.leadLabel}>{leadLabel}</span>
+
+            {/* Weekend (Sat–Sun) fills, drawn first so everything else layers
+                on top. */}
+            {weekends.map(w => {
+              const left = fraction(w.date)
+              const right = fraction(w.date.add({ days: 2 }))
+              return (
+                <div
+                  key={w.date.toString()}
+                  className={styles.weekend}
+                  style={{
+                    left: `${String(left * 100)}%`,
+                    width: `${String(Math.max(right - left, 0) * 100)}%`,
+                  }}
+                />
+              )
+            })}
 
             {/* Dotted week dividers, drawn under the solid month lines, each
                 labelled with its ISO week number on its leading edge. */}
@@ -264,6 +296,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                   {item.label}
                 </li>
               ))}
+              {/* Weekend key, parked at the opposite (right) end of the row. */}
+              <li className={styles.legendWeekend}>
+                <span className={styles.legendWeekendSwatch} />
+                {t("Weekend")}
+              </li>
             </ul>
           )}
         </Card.Block>

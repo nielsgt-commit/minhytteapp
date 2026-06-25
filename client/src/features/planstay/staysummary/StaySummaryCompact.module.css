@@ -55,6 +55,15 @@
   white-space: nowrap;
 }
 
+/* Weekend (Sat–Sun) fill: a subtle vertical band spanning the chart height,
+   sitting under the dividers, labels and bars. */
+.weekend {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--ds-color-neutral-surface-tinted, #f4f4f5);
+}
+
 /* Each week anchor spans the full chart height: a dotted divider, with its
    ISO week number on the top label row. */
 .week {
@@ -166,4 +175,25 @@
   height: 0.6rem;
   border-radius: 2px;
   flex-shrink: 0;
+}
+
+/* Weekend key: pushed to the opposite (right) end of the legend row. */
+.legendWeekend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--ds-color-neutral-text-default);
+}
+
+/* A taller swatch so the faint fill reads as a vertical band, matching the
+   chart, rather than a solid color chip like the group swatches. */
+.legendWeekendSwatch {
+  width: 0.6rem;
+  height: 0.9rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--ds-color-neutral-surface-tinted, #f4f4f5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
 }
