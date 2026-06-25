@@ -202,7 +202,11 @@ export function Todos() {
     if (!target) return
     moveMutation.mutate(
       { property_id: selectedPropertyId, id, target },
-      { onSuccess: () => setMovingId(null) },
+      {
+        onSuccess: () => {
+          setMovingId(null)
+        },
+      },
     )
   }
 

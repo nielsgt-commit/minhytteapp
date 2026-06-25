@@ -69,14 +69,12 @@ const links = linkOptions(navItems.map(({ to }) => ({ to })))
 
 const PlusGlyph = asIcon(PlusIcon)
 
-// The drop-up "+" actions. `to` references routes added by parallel work
-// (/handleliste, /oppgaver), so they are kept as plain strings here; the
-// integrator regenerates routeTree.gen.ts after merging the real routes.
-const addActions: { to: string; label: AddLabel }[] = [
+// The drop-up "+" quick actions, each navigating to a route's add form.
+const addActions = linkOptions([
   { to: "/utlegg", label: "New expense" },
   { to: "/handleliste", label: "New innkjøp" },
   { to: "/oppgaver", label: "New todo" },
-]
+])
 
 type AddLabel = "New expense" | "New innkjøp" | "New todo"
 
@@ -142,10 +140,7 @@ export function BottomNavBar() {
             {addActions.map(action => (
               <Link
                 key={action.to}
-                // /handleliste and /oppgaver are added by parallel work and
-                // are not yet in this worktree's route tree, so the typed `to`
-                // is widened here; the integrator regenerates routeTree.gen.ts.
-                to={action.to as "/utlegg"}
+                to={action.to}
                 role="menuitem"
                 className={styles.menuItem}
                 onClick={() => {

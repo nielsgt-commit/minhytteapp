@@ -9,11 +9,8 @@ const navLinks = linkOptions([
   { to: "/planleggopphold", label: "Plan stay" },
   { to: "/vedlikehold", label: "Maintenance" },
   { to: "/utlegg", label: "Expenses" },
-  // /handleliste and /oppgaver are added by parallel work and are not yet in
-  // this worktree's route tree, so their typed `to` is widened to a known
-  // route; the integrator regenerates routeTree.gen.ts after merging.
-  { to: "/handleliste" as "/utlegg", label: "Shopping list" },
-  { to: "/oppgaver" as "/utlegg", label: "Todos" },
+  { to: "/handleliste", label: "Shopping list" },
+  { to: "/oppgaver", label: "Todos" },
   { to: "/oppgjor", label: "Settlement" },
 ])
 
