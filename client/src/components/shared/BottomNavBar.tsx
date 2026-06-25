@@ -6,11 +6,13 @@ import {
   FileTextFillIcon,
   HouseIcon,
   HouseFillIcon,
+  PlusIcon,
   WalletIcon,
   WalletFillIcon,
   WrenchIcon,
   WrenchFillIcon,
 } from "@navikt/aksel-icons"
+import { useEffect, useRef, useState } from "react"
 import type { ComponentType, SVGProps } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./BottomNavBar.module.css"
@@ -65,9 +67,24 @@ const navItems: {
 
 const links = linkOptions(navItems.map(({ to }) => ({ to })))
 
+const PlusGlyph = asIcon(PlusIcon)
+
+// The drop-up "+" actions. `to` references routes added by parallel work
+// (/handleliste, /oppgaver), so they are kept as plain strings here; the
+// integrator regenerates routeTree.gen.ts after merging the real routes.
+const addActions: { to: string; label: AddLabel }[] = [
+  { to: "/utlegg", label: "New expense" },
+  { to: "/handleliste", label: "New innkjøp" },
+  { to: "/oppgaver", label: "New todo" },
+]
+
+type AddLabel = "New expense" | "New innkjøp" | "New todo"
+
 export function BottomNavBar() {
   const { t } = useTranslation("shared")
   const { pathname } = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const fabRef = useRef<HTMLDivElement>(null)
 
   const labels: Record<NavLabel, string> = {
     Dashboard: t("Dashboard"),
@@ -76,6 +93,30 @@ export function BottomNavBar() {
     Maintenance: t("Maintenance"),
     Settlement: t("Settlement"),
   }
+
+  const addLabels: Record<AddLabel, string> = {
+    "New expense": t("New expense"),
+    "New innkjøp": t("New innkjøp"),
+    "New todo": t("New todo"),
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onMouseDown = (e: MouseEvent) => {
+      if (fabRef.current && !fabRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false)
+    }
+    document.addEventListener("mousedown", onMouseDown)
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown)
+      document.removeEventListener("keydown", onKeyDown)
+    }
+  }, [menuOpen])
 
   return (
     <nav className={styles.bar} aria-label={t("Primary")}>
@@ -95,6 +136,40 @@ export function BottomNavBar() {
           </Link>
         )
       })}
+      <div ref={fabRef} className={styles.fabWrap}>
+        {menuOpen && (
+          <div className={styles.menu} role="menu" aria-label={t("Add new")}>
+            {addActions.map(action => (
+              <Link
+                key={action.to}
+                // /handleliste and /oppgaver are added by parallel work and
+                // are not yet in this worktree's route tree, so the typed `to`
+                // is widened here; the integrator regenerates routeTree.gen.ts.
+                to={action.to as "/utlegg"}
+                role="menuitem"
+                className={styles.menuItem}
+                onClick={() => {
+                  setMenuOpen(false)
+                }}
+              >
+                {addLabels[action.label]}
+              </Link>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          className={styles.fab}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label={t("Add new")}
+          onClick={() => {
+            setMenuOpen(open => !open)
+          }}
+        >
+          <PlusGlyph aria-hidden fontSize="1.75rem" />
+        </button>
+      </div>
     </nav>
   )
 }

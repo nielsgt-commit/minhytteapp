@@ -9,6 +9,11 @@ const navLinks = linkOptions([
   { to: "/planleggopphold", label: "Plan stay" },
   { to: "/vedlikehold", label: "Maintenance" },
   { to: "/utlegg", label: "Expenses" },
+  // /handleliste and /oppgaver are added by parallel work and are not yet in
+  // this worktree's route tree, so their typed `to` is widened to a known
+  // route; the integrator regenerates routeTree.gen.ts after merging.
+  { to: "/handleliste" as "/utlegg", label: "Shopping list" },
+  { to: "/oppgaver" as "/utlegg", label: "Todos" },
   { to: "/oppgjor", label: "Settlement" },
 ])
 
@@ -21,6 +26,8 @@ export function NavTabs({ children }: { children: ReactNode }) {
     "Plan stay": t("Plan stay"),
     Maintenance: t("Maintenance"),
     Expenses: t("Expenses"),
+    "Shopping list": t("Shopping list"),
+    Todos: t("Todos"),
     Settlement: t("Settlement"),
   }
 

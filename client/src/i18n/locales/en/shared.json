@@ -2,6 +2,10 @@
   "{{label}} sections": "{{label}} sections",
   "Help: what can I do on this page?": "Help: what can I do on this page?",
   "How this connects to the rest of the app": "How this connects to the rest of the app",
+  "Add new": "Add new",
+  "New expense": "New expense",
+  "New innkjøp": "New shopping item",
+  "New todo": "New todo",
   "Plan": "Plan",
   "Plan stay": "Plan stay",
   "Dashboard": "Dashboard",
@@ -11,6 +15,8 @@
   "Primary": "Primary",
   "Sections": "Sections",
   "Settlement": "Settlement",
+  "Shopping list": "Shopping list",
   "Something went wrong": "Something went wrong",
+  "Todos": "Todos",
   "Try again": "Try again"
 }
