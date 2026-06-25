@@ -72,6 +72,9 @@ const findingSchema = z.object({
   description: z.string().min(1).max(255),
   pin: z.boolean(),
   status: z.enum(["ok", "followup"]),
+  // For a brand-new pinned step that already needs followup this cycle: the
+  // one-off todo's text, raised as a child of the step being created.
+  followup_description: z.string().min(1).max(255).optional(),
 })
 
 const completeInput = z.object({
@@ -218,19 +221,40 @@ export const inspectionRouter = router({
           const willBePinned = isAdHoc && f.pin
           const status = willBePinned ? "done" : "todo"
           const recurrence = willBePinned ? input.recurrence : "once"
-          await tx.insert(maintenanceTable).values({
-            description: f.description,
-            added_by: ctx.user.id,
-            ...findingLocation(),
-            category: "maintenance",
-            severity: "patch",
-            status,
-            recurrence,
-            is_pinned: willBePinned,
-            parent_maintenance_id: f.pinned_maintenance_id,
-            inspection_id: existing.id,
-            completed_at: status === "done" ? new Date() : null,
-          })
+          const [created] = await tx
+            .insert(maintenanceTable)
+            .values({
+              description: f.description,
+              added_by: ctx.user.id,
+              ...findingLocation(),
+              category: "maintenance",
+              severity: "patch",
+              status,
+              recurrence,
+              is_pinned: willBePinned,
+              parent_maintenance_id: f.pinned_maintenance_id,
+              inspection_id: existing.id,
+              completed_at: status === "done" ? new Date() : null,
+            })
+            .returning()
+
+          // A new pinned step flagged for followup raises a one-off todo this
+          // cycle, linked to the step just created.
+          if (willBePinned && f.followup_description != null) {
+            await tx.insert(maintenanceTable).values({
+              description: f.followup_description,
+              added_by: ctx.user.id,
+              ...findingLocation(),
+              category: "maintenance",
+              severity: "patch",
+              status: "todo",
+              recurrence: "once",
+              is_pinned: false,
+              parent_maintenance_id: created.id,
+              inspection_id: existing.id,
+              completed_at: null,
+            })
+          }
         }
 
         const [updated] = await tx
@@ -330,19 +354,40 @@ export const inspectionRouter = router({
           const willBePinned = isAdHoc && f.pin
           const status = willBePinned ? "done" : "todo"
           const recurrence = willBePinned ? input.recurrence : "once"
-          await tx.insert(maintenanceTable).values({
-            description: f.description,
-            added_by: ctx.user.id,
-            ...findingLocation(),
-            category: "maintenance",
-            severity: "patch",
-            status,
-            recurrence,
-            is_pinned: willBePinned,
-            parent_maintenance_id: f.pinned_maintenance_id,
-            inspection_id: inspection.id,
-            completed_at: status === "done" ? now : null,
-          })
+          const [created] = await tx
+            .insert(maintenanceTable)
+            .values({
+              description: f.description,
+              added_by: ctx.user.id,
+              ...findingLocation(),
+              category: "maintenance",
+              severity: "patch",
+              status,
+              recurrence,
+              is_pinned: willBePinned,
+              parent_maintenance_id: f.pinned_maintenance_id,
+              inspection_id: inspection.id,
+              completed_at: status === "done" ? now : null,
+            })
+            .returning()
+
+          // A new pinned step flagged for followup raises a one-off todo this
+          // cycle, linked to the step just created.
+          if (willBePinned && f.followup_description != null) {
+            await tx.insert(maintenanceTable).values({
+              description: f.followup_description,
+              added_by: ctx.user.id,
+              ...findingLocation(),
+              category: "maintenance",
+              severity: "patch",
+              status: "todo",
+              recurrence: "once",
+              is_pinned: false,
+              parent_maintenance_id: created.id,
+              inspection_id: inspection.id,
+              completed_at: null,
+            })
+          }
         }
 
         return toWireInspection(inspection)

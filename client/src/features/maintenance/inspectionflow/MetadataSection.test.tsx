@@ -7,30 +7,18 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
-function setup(defaultInspectedBy = "") {
-  render(<MetadataSection defaultInspectedBy={defaultInspectedBy} />)
+function setup() {
+  render(<MetadataSection />)
 }
 
 describe("MetadataSection", () => {
-  test("renders inspector textfield with the default value", () => {
-    setup("Alice")
-    expect(screen.getByLabelText("Inspected by")).toHaveValue("Alice")
+  test("does not render an inspector field (inspected-by is implicit)", () => {
+    setup()
+    expect(screen.queryByLabelText("Inspected by")).not.toBeInTheDocument()
   })
 
-  test("inspector field is uncontrolled and editable", async () => {
-    const user = userEvent.setup()
+  test("cadence is named for FormData submission", () => {
     setup()
-    const field = screen.getByLabelText("Inspected by")
-    await user.type(field, "Bob")
-    expect(field).toHaveValue("Bob")
-  })
-
-  test("fields are named for FormData submission", () => {
-    setup()
-    expect(screen.getByLabelText("Inspected by")).toHaveAttribute(
-      "name",
-      "inspected_by",
-    )
     expect(screen.getByLabelText("Cadence")).toHaveAttribute(
       "name",
       "recurrence",

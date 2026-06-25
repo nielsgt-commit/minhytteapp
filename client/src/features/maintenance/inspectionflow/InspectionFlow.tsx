@@ -25,6 +25,7 @@ import {
 } from "@/features/maintenance/inspectionflow/MetadataSection.tsx"
 import {
   ProcedureSection,
+  type NewStep,
   type ProcedureItem,
   type ProcedureState,
 } from "@/features/maintenance/inspectionflow/ProcedureSection.tsx"
@@ -109,6 +110,7 @@ function InspectionFlowForm(props: {
 
   const [notes, setNotes] = useState<PortableTextBlock[]>([])
   const [procState, setProcState] = useState<Record<number, ProcedureState>>({})
+  const [newSteps, setNewSteps] = useState<NewStep[]>([])
   const [adHocs, setAdHocs] = useState<AdHoc[]>([])
 
   const recordMutation = useMutationWithInvalidation(
@@ -150,6 +152,43 @@ function InspectionFlowForm(props: {
     })
   }
 
+  const addStep = () => {
+    setNewSteps(prev => [
+      ...prev,
+      {
+        key: crypto.randomUUID(),
+        description: "",
+        committed: false,
+        status: "ok",
+        followupDescription: "",
+      },
+    ])
+  }
+
+  const updateStep = (key: string, patch: Partial<NewStep>) => {
+    setNewSteps(prev => prev.map(s => (s.key === key ? { ...s, ...patch } : s)))
+  }
+
+  const commitStep = (key: string) => {
+    setNewSteps(prev =>
+      prev.map(s =>
+        s.key === key && s.description.trim().length > 0
+          ? { ...s, committed: true }
+          : s,
+      ),
+    )
+  }
+
+  const editStep = (key: string) => {
+    setNewSteps(prev =>
+      prev.map(s => (s.key === key ? { ...s, committed: false } : s)),
+    )
+  }
+
+  const removeStep = (key: string) => {
+    setNewSteps(prev => prev.filter(s => s.key !== key))
+  }
+
   const addAdHoc = () => {
     setAdHocs(prev => [
       ...prev,
@@ -188,7 +227,9 @@ function InspectionFlowForm(props: {
 
   const handleSubmit = async (fd: FormData) => {
     if (selectedUserId == null) return
-    const inspectedBy = fdString(fd, "inspected_by").trim()
+    // Inspected-by is implicit: the inspection is recorded as the user who
+    // submits it (see defaultInspectedBy / the server's started_by_user_id).
+    const inspectedBy = defaultInspectedBy.trim()
     if (!inspectedBy) return
     const recurrence = fdString(fd, "recurrence") as Recurrence
 
@@ -201,6 +242,23 @@ function InspectionFlowForm(props: {
         status: state.status,
       }
     })
+
+    // New steps are pinned so they join the procedure and recur next time.
+    // A step flagged "needs followup" also raises a one-off todo this cycle,
+    // linked server-side to the step it created.
+    const stepFindings = newSteps
+      .filter(s => s.description.trim().length > 0)
+      .map(s => ({
+        description: s.description.trim(),
+        pin: true,
+        status: "ok" as const,
+        ...(s.status === "followup"
+          ? {
+              followup_description:
+                s.followupDescription.trim() || s.description.trim(),
+            }
+          : {}),
+      }))
 
     const adHocFindings = adHocs
       .filter(a => a.description.trim().length > 0)
@@ -220,7 +278,7 @@ function InspectionFlowForm(props: {
         inspected_by: inspectedBy,
         recurrence,
         notes_pt: notes.length > 0 ? notes : undefined,
-        findings: [...procFindings, ...adHocFindings],
+        findings: [...procFindings, ...stepFindings, ...adHocFindings],
       })
     } catch {
       // Surfaced via the aggregated ErrorAlert below.
@@ -233,7 +291,7 @@ function InspectionFlowForm(props: {
         {t("Inspect {{name}}", { name: scope.name })}
       </Heading>
 
-      <MetadataSection defaultInspectedBy={defaultInspectedBy} />
+      <MetadataSection />
 
       <ProcedureSection
         items={procedureItems}
@@ -241,6 +299,12 @@ function InspectionFlowForm(props: {
         setProc={setProc}
         moveProcedureItem={moveProcedureItem}
         reorderPending={reorderMutation.isPending}
+        newSteps={newSteps}
+        addStep={addStep}
+        updateStep={updateStep}
+        commitStep={commitStep}
+        editStep={editStep}
+        removeStep={removeStep}
       />
 
       <FindingsSection
