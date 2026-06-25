@@ -1,5 +1,10 @@
 import { useState } from "react"
-import { Button, Heading, Paragraph, ToggleGroup } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Heading,
+  Paragraph,
+  ToggleGroup,
+} from "@digdir/designsystemet-react"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useTranslation } from "react-i18next"
 import styles from "./PlanStay.module.css"

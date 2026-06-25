@@ -115,7 +115,9 @@ export function RuleSentence({
   // picker is restricted to the people (and whole groups) the `who` resolves to —
   // e.g. "heads of this property" can't then exclude a non-head.
   const included = participantsFromWho(who, groups, eligibleOwners)
-  const excludableUsers = propertyUsers.filter(u => included.userIds.has(u.user_id))
+  const excludableUsers = propertyUsers.filter(u =>
+    included.userIds.has(u.user_id),
+  )
   const excludableGroups = groups.filter(g => included.groupIds.has(g.id))
 
   return (

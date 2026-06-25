@@ -257,8 +257,18 @@ export function inputDateToMd(value: string): string {
 }
 
 const MONTH_ABBR = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ]
 
 // "07-01" -> "Jul 1" for the read-only summary; passthrough for malformed input.
@@ -321,7 +331,9 @@ export function addCategory(w: What, id: number): What {
 
 export function removeCategory(w: What, id: number): What {
   const ids = categoryIds(w).filter(c => c !== id)
-  return ids.length > 0 ? { kind: "category", category_ids: ids } : { kind: "total" }
+  return ids.length > 0
+    ? { kind: "category", category_ids: ids }
+    : { kind: "total" }
 }
 
 export function encodeWho(w: Who): string {

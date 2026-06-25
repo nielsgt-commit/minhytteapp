@@ -59,7 +59,11 @@ export function useSplitPolicyForm(
   // Keep only exclusions that still name a current participant — a user/group in
   // the resolved who-set (kids is a cross-cutting filter, always kept).
   const pruneExcept = (who: Who[], except: ExceptItem[]): ExceptItem[] => {
-    const { userIds, groupIds } = participantsFromWho(who, groups, eligibleOwners)
+    const { userIds, groupIds } = participantsFromWho(
+      who,
+      groups,
+      eligibleOwners,
+    )
     return except.filter(
       e =>
         e.kind === "kids" ||
@@ -211,7 +215,11 @@ export function useSplitPolicyForm(
       const who = [...f.fallback.who, item]
       return {
         ...f,
-        fallback: { ...f.fallback, who, except: pruneExcept(who, f.fallback.except) },
+        fallback: {
+          ...f.fallback,
+          who,
+          except: pruneExcept(who, f.fallback.except),
+        },
       }
     })
   }
@@ -221,7 +229,11 @@ export function useSplitPolicyForm(
       const who = f.fallback.who.filter(w => encodeWho(w) !== encoded)
       return {
         ...f,
-        fallback: { ...f.fallback, who, except: pruneExcept(who, f.fallback.except) },
+        fallback: {
+          ...f.fallback,
+          who,
+          except: pruneExcept(who, f.fallback.except),
+        },
       }
     })
   }

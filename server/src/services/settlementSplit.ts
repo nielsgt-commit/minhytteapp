@@ -159,7 +159,8 @@ function customRangesForYear(
   const from = monthDayToDate(from_md, year)
   const to = monthDayToDate(to_md, year)
   if (from == null || to == null) return []
-  if (Temporal.PlainDate.compare(from, to) <= 0) return [{ start: from, end: to }]
+  if (Temporal.PlainDate.compare(from, to) <= 0)
+    return [{ start: from, end: to }]
   return [
     { start: Temporal.PlainDate.from({ year, month: 1, day: 1 }), end: to },
     { start: from, end: Temporal.PlainDate.from({ year, month: 12, day: 31 }) },
@@ -178,7 +179,8 @@ function daysWithinWindows(
   for (const w of windows) {
     const s = Temporal.PlainDate.compare(start, w.start) >= 0 ? start : w.start
     const e = Temporal.PlainDate.compare(end, w.end) <= 0 ? end : w.end
-    if (Temporal.PlainDate.compare(s, e) <= 0) clipped.push({ start: s, end: e })
+    if (Temporal.PlainDate.compare(s, e) <= 0)
+      clipped.push({ start: s, end: e })
   }
   if (clipped.length === 0) return 0
   clipped.sort((a, b) => Temporal.PlainDate.compare(a.start, b.start))
@@ -240,7 +242,9 @@ export function computePolicySplit(
 
   // The window that scopes person-day counting (occupancy.window). `null` =
   // count every night; otherwise only nights overlapping these ranges count.
-  const weightWindows = ((w: SplitPolicyOccupancyWindow): DateRange[] | null => {
+  const weightWindows = ((
+    w: SplitPolicyOccupancyWindow,
+  ): DateRange[] | null => {
     switch (w.kind) {
       case "year":
         return null
@@ -340,8 +344,9 @@ export function computePolicySplit(
         return (
           bookingsByUser
             .get(userId)
-            ?.some(s => daysWithinWindows(s.start, s.end, allPriorityRanges) > 0) ??
-          false
+            ?.some(
+              s => daysWithinWindows(s.start, s.end, allPriorityRanges) > 0,
+            ) ?? false
         )
       case "present_priority_week": {
         const ranges = priorityRangesByGroup.get(when.user_group_id) ?? []

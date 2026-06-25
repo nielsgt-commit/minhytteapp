@@ -18,11 +18,7 @@ import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { Temporal } from "temporal-polyfill"
-import {
-  formatDayMonth,
-  isoWeekNumber,
-  isoWeekYear,
-} from "@/utils/dateUtils"
+import { formatDayMonth, isoWeekNumber, isoWeekYear } from "@/utils/dateUtils"
 
 const WEEKDAY_LABELS = [
   "SUN",

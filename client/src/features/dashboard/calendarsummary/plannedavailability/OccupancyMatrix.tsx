@@ -239,9 +239,7 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
                 }`}
               >
                 {t(WEEKDAY_LABELS[d.dayOfWeek % 7])}
-                <span className={styles.dayHeadDate}>
-                  {formatDayMonth(d)}
-                </span>
+                <span className={styles.dayHeadDate}>{formatDayMonth(d)}</span>
               </Table.HeaderCell>
             ))}
           </Table.Row>

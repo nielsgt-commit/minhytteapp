@@ -227,10 +227,7 @@ describe("ChildrenSection", () => {
     linkableData = [{ id: 200, name: "Dana" }]
     const user = userEvent.setup()
     render(<ChildrenSection />)
-    await user.selectOptions(
-      screen.getByLabelText("Add another parent"),
-      "200",
-    )
+    await user.selectOptions(screen.getByLabelText("Add another parent"), "200")
     await user.click(screen.getByRole("button", { name: "Add parent" }))
     expect(addParentStub.mutate).toHaveBeenCalledWith({
       childId: 1,
@@ -262,9 +259,7 @@ describe("ChildrenSection", () => {
     ]
     render(<ChildrenSection />)
     const select = screen.getByLabelText("Add another parent")
-    expect(
-      screen.getByRole("option", { name: "Dana" }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole("option", { name: "Dana" })).toBeInTheDocument()
     // "Me" (id 100) is already a parent, so it must not be an option.
     const meOption = screen.queryByRole("option", { name: "Me" })
     expect(meOption).not.toBeInTheDocument()

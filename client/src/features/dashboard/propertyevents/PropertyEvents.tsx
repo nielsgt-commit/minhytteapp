@@ -30,8 +30,9 @@ export function PropertyEvents() {
     trpc.maintenance.listForProperty.queryOptions({ property_id: propertyId }),
   )
 
-  const inFamilySince = properties.find(p => p.id === propertyId)
-    ?.in_family_since
+  const inFamilySince = properties.find(
+    p => p.id === propertyId,
+  )?.in_family_since
   const structureName = new Map(structures.map(s => [s.id, s.name]))
 
   const events: EventItem[] = [

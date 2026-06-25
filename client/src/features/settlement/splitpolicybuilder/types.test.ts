@@ -325,7 +325,10 @@ describe("deriveParameters", () => {
   }
 
   test("a plain split-equally policy needs only categories + participants", () => {
-    expect(deriveParameters(base)).toEqual(["expense_categories", "participants"])
+    expect(deriveParameters(base)).toEqual([
+      "expense_categories",
+      "participants",
+    ])
   })
 
   test("a person-days rule adds booking_days", () => {
@@ -362,9 +365,9 @@ describe("deriveParameters", () => {
       child_weight: 1,
     }
     // Window set but no person-days rule => irrelevant, no booking_days.
-    expect(
-      deriveParameters({ ...base, occupancy: priority }),
-    ).not.toContain("time_conditions")
+    expect(deriveParameters({ ...base, occupancy: priority })).not.toContain(
+      "time_conditions",
+    )
     // With a person-days rule the window becomes meaningful.
     expect(
       deriveParameters({

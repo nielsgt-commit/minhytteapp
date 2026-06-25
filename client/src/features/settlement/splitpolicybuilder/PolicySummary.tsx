@@ -280,7 +280,10 @@ export function PolicySummary({
       </div>
 
       {usesOccupancy && edit == null && (
-        <OccupancyCounting occupancy={occupancy} eligibleOwners={eligibleOwners} />
+        <OccupancyCounting
+          occupancy={occupancy}
+          eligibleOwners={eligibleOwners}
+        />
       )}
     </>
   )

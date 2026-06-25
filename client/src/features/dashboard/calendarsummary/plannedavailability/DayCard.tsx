@@ -74,15 +74,13 @@ export function DayCard({
             <Badge.Position placement="top-right">
               <Badge data-color="warning" />
               <span>
-                <strong>{weekdayT[weekdayLabel]}</strong>{" "}
-                {formatDayMonth(date)}
+                <strong>{weekdayT[weekdayLabel]}</strong> {formatDayMonth(date)}
                 {showTodayLabel && ` · ${t("Today")}`}
               </span>
             </Badge.Position>
           ) : (
             <span>
-              <strong>{weekdayT[weekdayLabel]}</strong>{" "}
-              {formatDayMonth(date)}
+              <strong>{weekdayT[weekdayLabel]}</strong> {formatDayMonth(date)}
               {showTodayLabel && ` · ${t("Today")}`}
             </span>
           )}

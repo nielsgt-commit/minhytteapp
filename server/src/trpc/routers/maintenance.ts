@@ -29,7 +29,11 @@ import { ensureMainGroupOfProperty } from "./priority.ts"
 // Wire mapping for full maintenance rows (also used by the inspection router's
 // listFindings): timestamp columns (JS Date from drizzle) → Temporal.Instant.
 export function toWireMaintenance<
-  T extends { due_at: Date | null; created_at: Date; completed_at: Date | null },
+  T extends {
+    due_at: Date | null
+    created_at: Date
+    completed_at: Date | null
+  },
 >(
   m: T,
 ): Omit<T, "due_at" | "created_at" | "completed_at"> & {

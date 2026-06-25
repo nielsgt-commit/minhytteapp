@@ -78,10 +78,7 @@ function requireWeekField(n: number | undefined): number {
   return n
 }
 
-export function isoWeekMonday(
-  year: number,
-  week: number,
-): Temporal.PlainDate {
+export function isoWeekMonday(year: number, week: number): Temporal.PlainDate {
   // Temporal.PlainDate.from() rejects week fields as input, so keep the
   // classic Jan-4 arithmetic: Jan 4 is always in ISO week 1.
   const jan4 = Temporal.PlainDate.from({ year, month: 1, day: 4 })

@@ -179,7 +179,9 @@ export function OccupancyCounting({
       {edit != null ? (
         edit.extraGuests && (
           <Switch
-            label={t("Also count extra guest names (added to the booker's tally)")}
+            label={t(
+              "Also count extra guest names (added to the booker's tally)",
+            )}
             data-size="sm"
             checked={occupancy.include_extra_guests}
             disabled={edit.pending}

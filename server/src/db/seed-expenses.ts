@@ -237,13 +237,17 @@ async function main() {
 
   console.log("expense seed complete.")
   console.log(`  property      #${String(propertyId)} "${PROPERTY_NAME}"`)
-  console.log(`  settlement    #${String(settlementId)} (${openSettlement.phase})`)
+  console.log(
+    `  settlement    #${String(settlementId)} (${openSettlement.phase})`,
+  )
   console.log(
     `  added         ${String(COUNT)} expenses (${String(reimbursedCount)} reimbursed, ${String(COUNT - reimbursedCount)} submitted)`,
   )
   console.log(`  categories    ${categories.join(", ")}`)
   console.log(`  top payers    ${top}`)
-  console.log(`  re-run safe   all tagged "${MARKER}"; previous batch cleared first`)
+  console.log(
+    `  re-run safe   all tagged "${MARKER}"; previous batch cleared first`,
+  )
 }
 
 main()

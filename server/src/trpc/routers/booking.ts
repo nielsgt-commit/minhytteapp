@@ -46,8 +46,10 @@ const bookingFields = {
 }
 
 const dateOrder = {
-  check: (v: { start_date: Temporal.PlainDate; end_date: Temporal.PlainDate }) =>
-    Temporal.PlainDate.compare(v.start_date, v.end_date) <= 0,
+  check: (v: {
+    start_date: Temporal.PlainDate
+    end_date: Temporal.PlainDate
+  }) => Temporal.PlainDate.compare(v.start_date, v.end_date) <= 0,
   error: "start_date must be on or before end_date",
   path: ["end_date"] as const,
 }

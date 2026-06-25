@@ -184,7 +184,11 @@ describe("computePolicySplit", () => {
         { ...equallyMainGroups, how: { kind: "weighted_by_occupancy" } },
         [],
         undefined,
-        { window: { kind: "year" }, include_extra_guests: true, child_weight: 1 },
+        {
+          window: { kind: "year" },
+          include_extra_guests: true,
+          child_weight: 1,
+        },
       ),
       makeInput({ bookings, expenses: [expense(150, 1)] }),
       ALL,

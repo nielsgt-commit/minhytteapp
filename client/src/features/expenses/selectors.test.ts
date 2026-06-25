@@ -80,7 +80,12 @@ describe("selectMyExpenses", () => {
   test("sorts by STATUS_ORDER then by date ascending", () => {
     const statuses: Status[] = ["rejected", "draft", "submitted", "reimbursed"]
     const expenses = statuses.map((s, i) =>
-      makeExpense({ id: i + 1, payer_id: 7, status: s, date: pd("2026-01-01") }),
+      makeExpense({
+        id: i + 1,
+        payer_id: 7,
+        status: s,
+        date: pd("2026-01-01"),
+      }),
     )
     const order = selectMyExpenses(expenses, 7).map(e => e.status)
     expect(order).toEqual(["draft", "submitted", "reimbursed", "rejected"])
@@ -88,8 +93,18 @@ describe("selectMyExpenses", () => {
 
   test("within the same status, earlier date comes first", () => {
     const expenses = [
-      makeExpense({ id: 1, payer_id: 7, status: "draft", date: pd("2026-02-01") }),
-      makeExpense({ id: 2, payer_id: 7, status: "draft", date: pd("2026-01-01") }),
+      makeExpense({
+        id: 1,
+        payer_id: 7,
+        status: "draft",
+        date: pd("2026-02-01"),
+      }),
+      makeExpense({
+        id: 2,
+        payer_id: 7,
+        status: "draft",
+        date: pd("2026-01-01"),
+      }),
     ]
     expect(selectMyExpenses(expenses, 7).map(e => e.id)).toEqual([2, 1])
   })

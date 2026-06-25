@@ -88,7 +88,9 @@ export function SettlementForm({
               setSplitPolicyId(e.target.value)
             }}
           >
-            <Select.Option value="">{t("Choose a split policy…")}</Select.Option>
+            <Select.Option value="">
+              {t("Choose a split policy…")}
+            </Select.Option>
             {customPolicies.map(p => (
               <Select.Option key={p.id} value={String(p.id)}>
                 {t("{{name}} (by {{creator}})", {

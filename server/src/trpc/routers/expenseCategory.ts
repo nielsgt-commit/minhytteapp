@@ -5,10 +5,7 @@ import {
   expenseCategoriesTable,
   expensesTable,
 } from "../../db/schema/settlement.schema.ts"
-import {
-  type Temporal,
-  instantFromDateOrNull,
-} from "../../shared/temporal.ts"
+import { type Temporal, instantFromDateOrNull } from "../../shared/temporal.ts"
 import {
   propertyAdminProcedure,
   propertyHeadOrAdminProcedure,

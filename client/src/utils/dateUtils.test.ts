@@ -86,9 +86,7 @@ describe("formatDateRange", () => {
   })
 
   test("collapses identical ends to a single date", () => {
-    expect(formatDateRange(start, pd("2026-01-05"), "en-GB")).toBe(
-      "05/01/2026",
-    )
+    expect(formatDateRange(start, pd("2026-01-05"), "en-GB")).toBe("05/01/2026")
   })
 
   test("returns empty string when both ends are missing", () => {

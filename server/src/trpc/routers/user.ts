@@ -302,9 +302,7 @@ export const userRouter = router({
         .update(usersTable)
         .set({
           birthday:
-            input.birthday != null
-              ? plainDateToDbString(input.birthday)
-              : null,
+            input.birthday != null ? plainDateToDbString(input.birthday) : null,
         })
         .where(eq(usersTable.id, ctx.user.id))
         .returning()

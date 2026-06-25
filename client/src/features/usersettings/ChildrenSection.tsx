@@ -106,7 +106,9 @@ export function ChildrenSection() {
     parentUserId: number,
     parentName: string,
   ) => {
-    if (!window.confirm(t("Remove {{name}} as a parent?", { name: parentName })))
+    if (
+      !window.confirm(t("Remove {{name}} as a parent?", { name: parentName }))
+    )
       return
     removeParent.mutate({ childId, parentUserId })
   }

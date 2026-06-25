@@ -12,7 +12,11 @@ export type SplitPolicyWhat =
 // selection collapses to "total" (match every expense).
 export function normalizeWhat(raw: unknown): SplitPolicyWhat {
   if (raw == null || typeof raw !== "object") return { kind: "total" }
-  const w = raw as { kind?: unknown; category_id?: unknown; category_ids?: unknown }
+  const w = raw as {
+    kind?: unknown
+    category_id?: unknown
+    category_ids?: unknown
+  }
   if (w.kind !== "category") return { kind: "total" }
   const ids = Array.isArray(w.category_ids)
     ? w.category_ids
@@ -20,7 +24,9 @@ export function normalizeWhat(raw: unknown): SplitPolicyWhat {
       ? [w.category_id]
       : []
   const category_ids = [...new Set(ids.filter(id => typeof id === "number"))]
-  return category_ids.length > 0 ? { kind: "category", category_ids } : { kind: "total" }
+  return category_ids.length > 0
+    ? { kind: "category", category_ids }
+    : { kind: "total" }
 }
 
 export type SplitPolicyHow =
@@ -177,7 +183,9 @@ export function allowedWindowKinds(
 // `when`) into the new shared occupancy object, for policies saved before this
 // section existed. Reads through `unknown` because those fields are gone from the
 // current types.
-function migrateLegacyOccupancy(config: SplitPolicyConfig): SplitPolicyOccupancy {
+function migrateLegacyOccupancy(
+  config: SplitPolicyConfig,
+): SplitPolicyOccupancy {
   const clauses = [...config.rules, config.fallback] as unknown as {
     when?: { kind?: string; user_group_id?: number }
     include_extra_guests?: boolean
