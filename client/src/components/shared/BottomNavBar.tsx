@@ -13,7 +13,7 @@ import {
   WrenchIcon,
   WrenchFillIcon,
 } from "@navikt/aksel-icons"
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import type { ComponentType, SVGProps } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./BottomNavBar.module.css"
@@ -118,59 +118,71 @@ export function BottomNavBar() {
     }
   }, [menuOpen])
 
+  // The "+" sits in the middle of the bar, in the slot the Expenses tab used to
+  // occupy (after the second nav item of four).
+  const FAB_AFTER_INDEX = 1
+
   return (
     <nav className={styles.bar} aria-label={t("Primary")}>
       {navItems.map((item, i) => {
         const isActive = pathname.startsWith(item.to)
         const Glyph = isActive ? item.IconActive : item.Icon
         return (
-          <Link
-            key={item.to}
-            {...links[i]}
-            className={`${styles.item} ${isActive ? styles.active : ""}`}
-            aria-label={labels[item.label]}
-            aria-current={isActive ? "page" : undefined}
-          >
-            <Glyph aria-hidden fontSize="1.5rem" />
-            <span>{labels[item.label]}</span>
-          </Link>
-        )
-      })}
-      <div ref={fabRef} className={styles.fabWrap}>
-        {menuOpen && (
-          <div className={styles.menu} role="menu" aria-label={t("Add new")}>
-            {addActions.map(action => {
-              const Glyph = addIcons[action.label]
-              return (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  role="menuitem"
-                  className={styles.menuItem}
+          <Fragment key={item.to}>
+            <Link
+              {...links[i]}
+              className={`${styles.item} ${isActive ? styles.active : ""}`}
+              aria-label={labels[item.label]}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Glyph aria-hidden fontSize="1.5rem" />
+              <span>{labels[item.label]}</span>
+            </Link>
+            {i === FAB_AFTER_INDEX && (
+              <div ref={fabRef} className={styles.fabWrap}>
+                {menuOpen && (
+                  <div
+                    className={styles.menu}
+                    role="menu"
+                    aria-label={t("Add new")}
+                  >
+                    {addActions.map(action => {
+                      const ActionGlyph = addIcons[action.label]
+                      return (
+                        <Link
+                          key={action.to}
+                          to={action.to}
+                          role="menuitem"
+                          className={styles.menuItem}
+                          onClick={() => {
+                            setMenuOpen(false)
+                          }}
+                        >
+                          <ActionGlyph aria-hidden fontSize="1.25rem" />
+                          <span>{addLabels[action.label]}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={`${styles.item} ${styles.fab}`}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label={t("Add new")}
                   onClick={() => {
-                    setMenuOpen(false)
+                    setMenuOpen(open => !open)
                   }}
                 >
-                  <Glyph aria-hidden fontSize="1.25rem" />
-                  <span>{addLabels[action.label]}</span>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-        <button
-          type="button"
-          className={styles.fab}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          aria-label={t("Add new")}
-          onClick={() => {
-            setMenuOpen(open => !open)
-          }}
-        >
-          <PlusGlyph aria-hidden fontSize="1.75rem" />
-        </button>
-      </div>
+                  <PlusGlyph aria-hidden fontSize="1.5rem" />
+                  <span>{t("Add new")}</span>
+                </button>
+              </div>
+            )}
+          </Fragment>
+        )
+      })}
     </nav>
   )
 }

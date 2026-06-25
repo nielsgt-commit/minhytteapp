@@ -38,32 +38,22 @@
 }
 
 /* The FAB + drop-up menu live inside .bar, which is display:none above
-   900px, so they are automatically hidden on desktop. */
+   900px, so they are automatically hidden on desktop. The wrap is a normal
+   bar item that also anchors the drop-up menu. */
 .fabWrap {
-  position: absolute;
-  left: 50%;
-  bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 101;
-}
-
-.fab {
+  flex: 1;
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  border: 1px solid var(--ds-color-accent-border-strong, #0062ba);
-  background: var(--ds-color-accent-base-default, #0062ba);
-  color: var(--ds-color-accent-contrast-default, #fff);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transform: translateY(-0.75rem);
 }
 
-.fab:hover {
-  background: var(--ds-color-accent-base-hover, #00509e);
+/* The "+" button is styled like the other bar items (.item is also applied),
+   with an accent color so it reads as the primary add action. */
+.fab {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ds-color-accent-text-default, #0062ba);
 }
 
 .menu {
