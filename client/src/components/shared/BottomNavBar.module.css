@@ -47,13 +47,12 @@
 }
 
 /* The "+" button is styled like the other bar items (.item is also applied),
-   with an accent color so it reads as the primary add action. */
+   so it inherits the same subtle text color; only button-chrome is reset. */
 .fab {
   border: none;
   background: none;
   cursor: pointer;
   font: inherit;
-  color: var(--ds-color-accent-text-default, #0062ba);
 }
 
 .menu {
