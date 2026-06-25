@@ -170,6 +170,16 @@ export function Todos() {
   // Which row (if any) has its inline "Move to…" picker open.
   const [movingId, setMovingId] = useState<number | null>(null)
 
+  // Which row (if any) has its delete button armed for confirmation.
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
+    null,
+  )
+
+  const handleConfirmDelete = (id: number) => {
+    setConfirmingDeleteId(null)
+    deleteMutation.mutate({ id })
+  }
+
   // New todos always start as general todos; assigning one to a building /
   // infrastructure / equipment is done afterward via the "Move to…" action.
   const handleAdd = async (fd: FormData) => {
@@ -254,52 +264,80 @@ export function Todos() {
                     {todo.description}
                   </Paragraph>
                   <div className={styles.actions}>
-                    {movingId === todo.id ? (
+                    {confirmingDeleteId === todo.id ? (
                       <>
-                        <TargetSelect
-                          value={NO_TARGET}
-                          disabled={pending}
-                          structures={structureRows}
-                          infrastructure={infrastructureRows}
-                          equipment={equipmentRows}
-                          onChange={token => {
-                            handleMove(todo.id, token)
-                          }}
-                        />
                         <Button
                           variant="tertiary"
                           data-size="sm"
                           disabled={pending}
                           onClick={() => {
-                            setMovingId(null)
+                            setConfirmingDeleteId(null)
                           }}
                         >
                           {t("Cancel")}
                         </Button>
+                        <Button
+                          variant="primary"
+                          data-color="danger"
+                          data-size="sm"
+                          disabled={pending}
+                          onClick={() => {
+                            handleConfirmDelete(todo.id)
+                          }}
+                        >
+                          {t("Confirm delete")}
+                        </Button>
                       </>
                     ) : (
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        disabled={pending}
-                        onClick={() => {
-                          setMovingId(todo.id)
-                        }}
-                      >
-                        {t("Move to...")}
-                      </Button>
+                      <>
+                        {movingId === todo.id ? (
+                          <>
+                            <TargetSelect
+                              value={NO_TARGET}
+                              disabled={pending}
+                              structures={structureRows}
+                              infrastructure={infrastructureRows}
+                              equipment={equipmentRows}
+                              onChange={token => {
+                                handleMove(todo.id, token)
+                              }}
+                            />
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              disabled={pending}
+                              onClick={() => {
+                                setMovingId(null)
+                              }}
+                            >
+                              {t("Cancel")}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="tertiary"
+                            data-size="sm"
+                            disabled={pending}
+                            onClick={() => {
+                              setMovingId(todo.id)
+                            }}
+                          >
+                            {t("Move to...")}
+                          </Button>
+                        )}
+                        <Button
+                          variant="tertiary"
+                          data-color="danger"
+                          data-size="sm"
+                          disabled={pending}
+                          onClick={() => {
+                            setConfirmingDeleteId(todo.id)
+                          }}
+                        >
+                          {t("Delete")}
+                        </Button>
+                      </>
                     )}
-                    <Button
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      disabled={pending}
-                      onClick={() => {
-                        deleteMutation.mutate({ id: todo.id })
-                      }}
-                    >
-                      {t("Delete")}
-                    </Button>
                   </div>
                 </Card.Block>
               </li>
