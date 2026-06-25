@@ -39,9 +39,12 @@
   "Building": "Building",
   "Booked by:": "Booked by:",
   "Contacts": "Contacts",
+  "Cancel": "Cancel",
+  "Confirm delete": "Confirm delete",
   "Current weather": "Current weather",
   "Dashboard": "Dashboard",
   "Day view": "Day view",
+  "Delete stay": "Delete stay",
   "Edit stay": "Edit stay",
   "Equipment": "Equipment",
   "Forecast for today": "Forecast for today",
@@ -104,6 +107,8 @@
   "User groups": "User groups",
   "Weather today": "Weather today",
   "WED": "WED",
+  "Week": "Week",
   "Week {{weekNumber}}": "Week {{weekNumber}}",
-  "Weekday": "Weekday"
+  "Weekday": "Weekday",
+  "Year": "Year"
 }

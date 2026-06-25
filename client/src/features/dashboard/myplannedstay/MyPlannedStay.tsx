@@ -74,11 +74,14 @@ export function MyPlannedStay() {
   )
   const [openId, setOpenId] = useState<number | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const removeMeMutation = useMutationWithInvalidation(
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
+    null,
+  )
+  const updateMutation = useMutationWithInvalidation(
     trpc.booking.update.mutationOptions(),
     [trpc.booking.pathKey()],
   )
-  const { error: mutationError } = useMutationsStatus(removeMeMutation)
+  const { error: mutationError } = useMutationsStatus(updateMutation)
 
   const active = bookings.filter(b => b.status !== "cancelled")
   const myBookings = active.filter(b =>
@@ -113,9 +116,11 @@ export function MyPlannedStay() {
           const names = Array.from(otherNames)
           const isOpen = openId === b.id
           const isEditing = editingId === b.id
+          const isConfirmingDelete = confirmingDeleteId === b.id
           const canEdit = b.booker_id === me.id
           const toggle = () => {
             if (isEditing) return
+            setConfirmingDeleteId(null)
             setOpenId(prev => (prev === b.id ? null : b.id))
           }
           return (
@@ -167,25 +172,81 @@ export function MyPlannedStay() {
                       )}
                       <div className={styles.actions}>
                         {canEdit ? (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={e => {
-                              e.stopPropagation()
-                              setEditingId(b.id)
-                            }}
-                          >
-                            {t("Edit stay")}
-                          </Button>
+                          isConfirmingDelete ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="tertiary"
+                                disabled={updateMutation.isPending}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setConfirmingDeleteId(null)
+                                }}
+                              >
+                                {t("Cancel")}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="primary"
+                                data-color="danger"
+                                disabled={updateMutation.isPending}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setConfirmingDeleteId(null)
+                                  updateMutation.mutate({
+                                    id: b.id,
+                                    property_id: b.property_id,
+                                    start_date: b.start_date,
+                                    end_date: b.end_date,
+                                    status: "cancelled",
+                                    notes: b.notes,
+                                    occupants: b.occupants.map(o => ({
+                                      user_id: o.user_id,
+                                      room_id: o.room_id,
+                                      queued: o.queued,
+                                      sleeps_separately: o.sleeps_separately,
+                                    })),
+                                  })
+                                }}
+                              >
+                                {t("Confirm delete")}
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setEditingId(b.id)
+                                }}
+                              >
+                                {t("Edit stay")}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                data-color="danger"
+                                disabled={updateMutation.isPending}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setConfirmingDeleteId(b.id)
+                                }}
+                              >
+                                {t("Delete stay")}
+                              </Button>
+                            </>
+                          )
                         ) : (
                           <Button
                             type="button"
                             variant="secondary"
                             data-color="danger"
-                            disabled={removeMeMutation.isPending}
+                            disabled={updateMutation.isPending}
                             onClick={e => {
                               e.stopPropagation()
-                              removeMeMutation.mutate({
+                              updateMutation.mutate({
                                 id: b.id,
                                 property_id: b.property_id,
                                 start_date: b.start_date,

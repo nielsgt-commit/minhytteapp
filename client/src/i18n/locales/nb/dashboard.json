@@ -31,6 +31,9 @@
   "Available beds": "Ledige senger",
   "Available parking": "Ledig parkering",
   "Bedrooms": "Soverom",
+  "Cancel": "Avbryt",
+  "Confirm delete": "Bekreft sletting",
+  "Delete stay": "Slett opphold",
   "Beds (double)": "Senger (dobbel)",
   "Beds (kid)": "Senger (barn)",
   "Beds (large)": "Senger (stor)",
@@ -41,6 +44,7 @@
   "Current weather": "Været nå",
   "Dashboard": "Oversikt",
   "Day view": "Dagvisning",
+  "Edit stay": "Rediger",
   "Equipment": "Utstyr",
   "Forecast for today": "Værvarsel i dag",
   "FRI": "Fre",
@@ -98,8 +102,10 @@
   "User groups": "Brukergrupper",
   "WED": "Ons",
   "Weather today": "Været i dag",
+  "Week": "Uke",
   "Week {{weekNumber}}": "Uke {{weekNumber}}",
   "Weekday": "Ukedag",
+  "Year": "År",
   "{{vehicle}} — free": "{{vehicle}} — ledig",
   "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}"
 }

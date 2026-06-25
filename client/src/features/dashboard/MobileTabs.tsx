@@ -72,14 +72,14 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
           <Paragraph>{t("Now")} </Paragraph>
         </Tabs.Tab>
         <Tabs.Tab value="week" aria-label={t("This week")}>
-          <Paragraph>{t("This week")}</Paragraph>
+          <Paragraph>{t("Week")}</Paragraph>
         </Tabs.Tab>
         {/* Summer tab unmounted for now */}
         {/* <Tabs.Tab value="summer" aria-label={t("Summer")}>
           <Paragraph>{t("Summer")}</Paragraph>
         </Tabs.Tab> */}
         <Tabs.Tab value="year" aria-label={t("This year")}>
-          <Paragraph>{t("This year")}</Paragraph>
+          <Paragraph>{t("Year")}</Paragraph>
         </Tabs.Tab>
         <Tabs.Tab
           value="shopping"
