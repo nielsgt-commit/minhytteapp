@@ -18,7 +18,7 @@ describe("front end ↔ back end reachability", () => {
   // previous unauthenticated *.list endpoints were removed as part of the
   // tRPC lockdown.
   test("trpc base url responds", async () => {
-    const res = await fetch(API_URL.replace(/\/trpc$/, "/health"))
+    const res = await fetch(API_URL.replace(/\/api\/trpc$/, "/health"))
     expect(res.ok).toBe(true)
   })
 })

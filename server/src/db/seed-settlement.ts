@@ -187,9 +187,9 @@ async function teardown() {
 
     await delIn(
       ids =>
-        db.delete(expenseSharesTable).where(
-          inArray(expenseSharesTable.expense_id, ids),
-        ),
+        db
+          .delete(expenseSharesTable)
+          .where(inArray(expenseSharesTable.expense_id, ids)),
       expenseIds,
     )
     await delIn(
@@ -240,7 +240,9 @@ async function teardown() {
     )
     await delIn(
       ids =>
-        db.delete(bookingRoomsTable).where(inArray(bookingRoomsTable.booking_id, ids)),
+        db
+          .delete(bookingRoomsTable)
+          .where(inArray(bookingRoomsTable.booking_id, ids)),
       bookingIds,
     )
     await delIn(
@@ -256,7 +258,9 @@ async function teardown() {
     )
     await delIn(
       ids =>
-        db.delete(propertyOwnersTable).where(inArray(propertyOwnersTable.property_id, ids)),
+        db
+          .delete(propertyOwnersTable)
+          .where(inArray(propertyOwnersTable.property_id, ids)),
       propertyIds,
     )
     await delIn(
@@ -267,7 +271,8 @@ async function teardown() {
       propertyIds,
     )
     await delIn(
-      ids => db.delete(settlementsTable).where(inArray(settlementsTable.id, ids)),
+      ids =>
+        db.delete(settlementsTable).where(inArray(settlementsTable.id, ids)),
       settlementIds,
     )
     await delIn(
@@ -279,7 +284,9 @@ async function teardown() {
     )
     await delIn(
       ids =>
-        db.delete(allowedEmailsTable).where(inArray(allowedEmailsTable.property_id, ids)),
+        db
+          .delete(allowedEmailsTable)
+          .where(inArray(allowedEmailsTable.property_id, ids)),
       propertyIds,
     )
     await delIn(
@@ -368,7 +375,10 @@ async function main() {
   const categoryRows = await db
     .insert(expenseCategoriesTable)
     .values(CATEGORIES.map(name => ({ property_id: propertyId, name })))
-    .returning({ id: expenseCategoriesTable.id, name: expenseCategoriesTable.name })
+    .returning({
+      id: expenseCategoriesTable.id,
+      name: expenseCategoriesTable.name,
+    })
   const categoryIdByName = new Map(categoryRows.map(c => [c.name, c.id]))
 
   // --- groups, members, owners -------------------------------------------
@@ -463,7 +473,12 @@ async function main() {
   let customConfig: SplitPolicyConfig | null = null
   if (stromCategoryId != null) {
     customConfig = {
-      parameters: ["expense_categories", "participants", "booking_days", "ownership"],
+      parameters: [
+        "expense_categories",
+        "participants",
+        "booking_days",
+        "ownership",
+      ],
       rules: [
         {
           what: { kind: "category", category_ids: [stromCategoryId] },
@@ -519,9 +534,9 @@ async function main() {
         })
         .returning({ id: bookingTable.id })
     )[0].id
-    await db.insert(bookingOccupantsTable).values(
-      occupants.map(user_id => ({ booking_id: bookingId, user_id })),
-    )
+    await db
+      .insert(bookingOccupantsTable)
+      .values(occupants.map(user_id => ({ booking_id: bookingId, user_id })))
   }
 
   // --- expenses ----------------------------------------------------------
@@ -634,6 +649,7 @@ async function main() {
         })
         .returning({ id: settlementsTable.id })
     )[0].id
+    const closedId = closedSettlementId
 
     // Same expense shape as the open settlement so the documented custom-policy
     // numbers apply (Strøm 600 -> Alpha, Forsikring 400 -> Beta).
@@ -676,7 +692,7 @@ async function main() {
     if (result.groups.length > 0) {
       await db.insert(settlementUserGroupTotalsTable).values(
         result.groups.map(g => ({
-          settlement_id: closedSettlementId as number,
+          settlement_id: closedId,
           user_group_id: g.group_id,
           total_paid: g.total_paid,
           total_share: g.total_share,
@@ -687,7 +703,7 @@ async function main() {
     if (transfers.length > 0) {
       await db.insert(settlementTransfersTable).values(
         transfers.map(t => ({
-          settlement_id: closedSettlementId as number,
+          settlement_id: closedId,
           from_user_group_id: t.from_group_id,
           to_user_group_id: t.to_group_id,
           amount: t.amount,
@@ -710,7 +726,11 @@ async function main() {
       except: [],
       when: { kind: "always" },
     },
-    occupancy: { window: { kind: "year" }, include_extra_guests: false, child_weight: 1 },
+    occupancy: {
+      window: { kind: "year" },
+      include_extra_guests: false,
+      child_weight: 1,
+    },
   }
   const openParams = normalizeParameters(occupancyConfig.parameters)
   const openInput = await loadSplitInput(
@@ -725,16 +745,26 @@ async function main() {
   const short = (name: string) => name.replace("Familie ", "")
   const shareLine = (r: ReturnType<typeof computePolicySplit>) =>
     r.groups
-      .map(g => `${short(g.group_name)} ${g.total_share} (days ${g.booking_days ?? 0})`)
+      .map(
+        g =>
+          `${short(g.group_name)} ${String(g.total_share)} (days ${String(g.booking_days ?? 0)})`,
+      )
       .join(" / ")
   const netLine = (r: ReturnType<typeof computePolicySplit>) =>
     r.groups
-      .map(g => `${short(g.group_name)} ${g.net >= 0 ? "+" : ""}${g.net}`)
+      .map(
+        g => `${short(g.group_name)} ${g.net >= 0 ? "+" : ""}${String(g.net)}`,
+      )
       .join(" / ")
   const xferLine = (ts: ReturnType<typeof computeTransfers>) =>
     ts.length === 0
       ? "none"
-      : ts.map(t => `${short(t.from_group_name)}->${short(t.to_group_name)} ${t.amount}`).join(", ")
+      : ts
+          .map(
+            t =>
+              `${short(t.from_group_name)}->${short(t.to_group_name)} ${String(t.amount)}`,
+          )
+          .join(", ")
 
   const userCount = GROUPS.reduce((n, g) => n + g.members.length, 1) // +1 admin
   const childCount = GROUPS.reduce(
@@ -744,24 +774,42 @@ async function main() {
 
   console.log("settlement seed complete.")
   console.log(`  property      #${String(propertyId)} "${PROPERTY_NAME}"`)
-  console.log(`  log in as     ${LOGIN_EMAIL}  (admin + sole head of Familie Alpha)`)
+  console.log(
+    `  log in as     ${LOGIN_EMAIL}  (admin + sole head of Familie Alpha)`,
+  )
   console.log(
     `  users         ${String(userCount)} across 3 owner groups (${String(childCount)} children)`,
   )
-  console.log("  priority wks  Alpha=28, Beta=29, Gamma=30 (stays land in these weeks)")
-  console.log(`  total days    ${String(openResult.total_booking_days ?? 0)} person-days`)
+  console.log(
+    "  priority wks  Alpha=28, Beta=29, Gamma=30 (stays land in these weeks)",
+  )
+  console.log(
+    `  total days    ${String(openResult.total_booking_days ?? 0)} person-days`,
+  )
   console.log("")
-  console.log(`  OPEN sett.    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, collecting_expenses)`)
-  console.log("    reimbursed  Strøm 800 + Vedlikehold 1200 -> Alpha, Forsikring 500 -> Beta, Brensel 300 -> Gamma")
-  console.log("    to review   Renhold 400, Strøm 150, Vedlikehold 250 (submitted)")
+  console.log(
+    `  OPEN sett.    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, collecting_expenses)`,
+  )
+  console.log(
+    "    reimbursed  Strøm 800 + Vedlikehold 1200 -> Alpha, Forsikring 500 -> Beta, Brensel 300 -> Gamma",
+  )
+  console.log(
+    "    to review   Renhold 400, Strøm 150, Vedlikehold 250 (submitted)",
+  )
   console.log(`    shares      ${shareLine(openResult)}`)
   console.log(`    net         ${netLine(openResult)}`)
   console.log(`    transfers   ${xferLine(openTransfers)}`)
   console.log("")
   console.log('  custom policy "Strøm etter eierandel, resten etter døgn"')
-  console.log("    Strøm by ownership % (Alpha 60 / Beta 20 / Gamma 20), rest by person-days")
+  console.log(
+    "    Strøm by ownership % (Alpha 60 / Beta 20 / Gamma 20), rest by person-days",
+  )
   console.log("    edit it in Administrer -> Fordelingspolicy")
-  if (closedSettlementId != null && closedResult != null && closedTransfers != null) {
+  if (
+    closedSettlementId != null &&
+    closedResult != null &&
+    closedTransfers != null
+  ) {
     console.log(
       `  CLOSED sett.  #${String(closedSettlementId)} (${String(YEAR - 1)} summer) divided by the custom policy:`,
     )
