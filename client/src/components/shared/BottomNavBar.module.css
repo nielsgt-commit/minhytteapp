@@ -47,12 +47,16 @@
 }
 
 /* The "+" button is styled like the other bar items (.item is also applied),
-   so it inherits the same subtle text color; only button-chrome is reset. */
+   so it inherits the same subtle text color; only button-chrome is reset.
+   We inherit font family/weight but NOT size — the `font` shorthand would
+   reset font-size and override .item's 0.75rem, making the label larger
+   than the sibling nav items. */
 .fab {
   border: none;
   background: none;
   cursor: pointer;
-  font: inherit;
+  font-family: inherit;
+  font-weight: inherit;
 }
 
 .menu {
