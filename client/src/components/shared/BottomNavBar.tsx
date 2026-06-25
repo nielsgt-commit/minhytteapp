@@ -2,13 +2,14 @@ import { Link, linkOptions, useLocation } from "@tanstack/react-router"
 import {
   CalendarIcon,
   CalendarFillIcon,
+  ClipboardCheckmarkIcon,
   FileTextIcon,
   FileTextFillIcon,
   HouseIcon,
   HouseFillIcon,
+  NotePencilIcon,
   PlusIcon,
   WalletIcon,
-  WalletFillIcon,
   WrenchIcon,
   WrenchFillIcon,
 } from "@navikt/aksel-icons"
@@ -20,7 +21,7 @@ import styles from "./BottomNavBar.module.css"
 // Aksel icons are SVG components; we just need a callable component type
 // that accepts the standard SVG props plus an optional fontSize.
 type IconComp = ComponentType<SVGProps<SVGSVGElement> & { fontSize?: string }>
-type NavLabel = "Dashboard" | "Plan" | "Expenses" | "Maintenance" | "Settlement"
+type NavLabel = "Dashboard" | "Plan" | "Maintenance" | "Settlement"
 
 // typescript-eslint's project service occasionally reports the Aksel icon
 // imports as "error typed" even though `tsc` is happy with them, so we cast
@@ -46,12 +47,6 @@ const navItems: {
     IconActive: asIcon(CalendarFillIcon),
   },
   {
-    to: "/utlegg",
-    label: "Expenses",
-    Icon: asIcon(WalletIcon),
-    IconActive: asIcon(WalletFillIcon),
-  },
-  {
     to: "/vedlikehold",
     label: "Maintenance",
     Icon: asIcon(WrenchIcon),
@@ -69,7 +64,9 @@ const links = linkOptions(navItems.map(({ to }) => ({ to })))
 
 const PlusGlyph = asIcon(PlusIcon)
 
-// The drop-up "+" quick actions, each navigating to a route's add form.
+// The drop-up "+" quick actions, each navigating to a route's add form. The
+// expense action carries the wallet icon previously shown in the bottom nav
+// (its slot is now occupied by the FAB).
 const addActions = linkOptions([
   { to: "/utlegg", label: "New expense" },
   { to: "/handleliste", label: "New innkjøp" },
@@ -77,6 +74,12 @@ const addActions = linkOptions([
 ])
 
 type AddLabel = "New expense" | "New innkjøp" | "New todo"
+
+const addIcons: Record<AddLabel, IconComp> = {
+  "New expense": asIcon(WalletIcon),
+  "New innkjøp": asIcon(NotePencilIcon),
+  "New todo": asIcon(ClipboardCheckmarkIcon),
+}
 
 export function BottomNavBar() {
   const { t } = useTranslation("shared")
@@ -87,7 +90,6 @@ export function BottomNavBar() {
   const labels: Record<NavLabel, string> = {
     Dashboard: t("Dashboard"),
     Plan: t("Plan stay"),
-    Expenses: t("Expenses"),
     Maintenance: t("Maintenance"),
     Settlement: t("Settlement"),
   }
@@ -137,19 +139,23 @@ export function BottomNavBar() {
       <div ref={fabRef} className={styles.fabWrap}>
         {menuOpen && (
           <div className={styles.menu} role="menu" aria-label={t("Add new")}>
-            {addActions.map(action => (
-              <Link
-                key={action.to}
-                to={action.to}
-                role="menuitem"
-                className={styles.menuItem}
-                onClick={() => {
-                  setMenuOpen(false)
-                }}
-              >
-                {addLabels[action.label]}
-              </Link>
-            ))}
+            {addActions.map(action => {
+              const Glyph = addIcons[action.label]
+              return (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  role="menuitem"
+                  className={styles.menuItem}
+                  onClick={() => {
+                    setMenuOpen(false)
+                  }}
+                >
+                  <Glyph aria-hidden fontSize="1.25rem" />
+                  <span>{addLabels[action.label]}</span>
+                </Link>
+              )
+            })}
           </div>
         )}
         <button
