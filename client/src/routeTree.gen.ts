@@ -17,14 +17,18 @@ import { Route as OnboardingOnboardingRouteImport } from './routes/_onboarding/o
 import { Route as AuthedVedlikeholdRouteImport } from './routes/_authed/vedlikehold'
 import { Route as AuthedUtleggRouteImport } from './routes/_authed/utlegg'
 import { Route as AuthedUsersettingsRouteImport } from './routes/_authed/usersettings'
+import { Route as AuthedTodosRouteImport } from './routes/_authed/todos'
+import { Route as AuthedShoppinglistRouteImport } from './routes/_authed/shoppinglist'
 import { Route as AuthedSettlementRouteImport } from './routes/_authed/settlement'
 import { Route as AuthedPlanstayRouteImport } from './routes/_authed/planstay'
 import { Route as AuthedPlanleggoppholdRouteImport } from './routes/_authed/planleggopphold'
 import { Route as AuthedOversiktRouteImport } from './routes/_authed/oversikt'
 import { Route as AuthedOppgjorRouteImport } from './routes/_authed/oppgjor'
+import { Route as AuthedOppgaverRouteImport } from './routes/_authed/oppgaver'
 import { Route as AuthedManagepropertyRouteImport } from './routes/_authed/manageproperty'
 import { Route as AuthedMaintenanceRouteImport } from './routes/_authed/maintenance'
 import { Route as AuthedInnstillingerRouteImport } from './routes/_authed/innstillinger'
+import { Route as AuthedHandlelisteRouteImport } from './routes/_authed/handleliste'
 import { Route as AuthedExpensesRouteImport } from './routes/_authed/expenses'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedAdministrerRouteImport } from './routes/_authed/administrer'
@@ -95,6 +99,16 @@ const AuthedUsersettingsRoute = AuthedUsersettingsRouteImport.update({
   path: '/usersettings',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedTodosRoute = AuthedTodosRouteImport.update({
+  id: '/todos',
+  path: '/todos',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedShoppinglistRoute = AuthedShoppinglistRouteImport.update({
+  id: '/shoppinglist',
+  path: '/shoppinglist',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSettlementRoute = AuthedSettlementRouteImport.update({
   id: '/settlement',
   path: '/settlement',
@@ -120,6 +134,11 @@ const AuthedOppgjorRoute = AuthedOppgjorRouteImport.update({
   path: '/oppgjor',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedOppgaverRoute = AuthedOppgaverRouteImport.update({
+  id: '/oppgaver',
+  path: '/oppgaver',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedManagepropertyRoute = AuthedManagepropertyRouteImport.update({
   id: '/manageproperty',
   path: '/manageproperty',
@@ -133,6 +152,11 @@ const AuthedMaintenanceRoute = AuthedMaintenanceRouteImport.update({
 const AuthedInnstillingerRoute = AuthedInnstillingerRouteImport.update({
   id: '/innstillinger',
   path: '/innstillinger',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedHandlelisteRoute = AuthedHandlelisteRouteImport.update({
+  id: '/handleliste',
+  path: '/handleliste',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedExpensesRoute = AuthedExpensesRouteImport.update({
@@ -327,14 +351,18 @@ export interface FileRoutesByFullPath {
   '/administrer': typeof AuthedAdministrerRouteWithChildren
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
+  '/handleliste': typeof AuthedHandlelisteRoute
   '/innstillinger': typeof AuthedInnstillingerRoute
   '/maintenance': typeof AuthedMaintenanceRoute
   '/manageproperty': typeof AuthedManagepropertyRouteWithChildren
+  '/oppgaver': typeof AuthedOppgaverRoute
   '/oppgjor': typeof AuthedOppgjorRoute
   '/oversikt': typeof AuthedOversiktRoute
   '/planleggopphold': typeof AuthedPlanleggoppholdRoute
   '/planstay': typeof AuthedPlanstayRoute
   '/settlement': typeof AuthedSettlementRoute
+  '/shoppinglist': typeof AuthedShoppinglistRoute
+  '/todos': typeof AuthedTodosRoute
   '/usersettings': typeof AuthedUsersettingsRoute
   '/utlegg': typeof AuthedUtleggRoute
   '/vedlikehold': typeof AuthedVedlikeholdRoute
@@ -373,13 +401,17 @@ export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/expenses': typeof AuthedExpensesRoute
+  '/handleliste': typeof AuthedHandlelisteRoute
   '/innstillinger': typeof AuthedInnstillingerRoute
   '/maintenance': typeof AuthedMaintenanceRoute
+  '/oppgaver': typeof AuthedOppgaverRoute
   '/oppgjor': typeof AuthedOppgjorRoute
   '/oversikt': typeof AuthedOversiktRoute
   '/planleggopphold': typeof AuthedPlanleggoppholdRoute
   '/planstay': typeof AuthedPlanstayRoute
   '/settlement': typeof AuthedSettlementRoute
+  '/shoppinglist': typeof AuthedShoppinglistRoute
+  '/todos': typeof AuthedTodosRoute
   '/usersettings': typeof AuthedUsersettingsRoute
   '/utlegg': typeof AuthedUtleggRoute
   '/vedlikehold': typeof AuthedVedlikeholdRoute
@@ -421,14 +453,18 @@ export interface FileRoutesById {
   '/_authed/administrer': typeof AuthedAdministrerRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/expenses': typeof AuthedExpensesRoute
+  '/_authed/handleliste': typeof AuthedHandlelisteRoute
   '/_authed/innstillinger': typeof AuthedInnstillingerRoute
   '/_authed/maintenance': typeof AuthedMaintenanceRoute
   '/_authed/manageproperty': typeof AuthedManagepropertyRouteWithChildren
+  '/_authed/oppgaver': typeof AuthedOppgaverRoute
   '/_authed/oppgjor': typeof AuthedOppgjorRoute
   '/_authed/oversikt': typeof AuthedOversiktRoute
   '/_authed/planleggopphold': typeof AuthedPlanleggoppholdRoute
   '/_authed/planstay': typeof AuthedPlanstayRoute
   '/_authed/settlement': typeof AuthedSettlementRoute
+  '/_authed/shoppinglist': typeof AuthedShoppinglistRoute
+  '/_authed/todos': typeof AuthedTodosRoute
   '/_authed/usersettings': typeof AuthedUsersettingsRoute
   '/_authed/utlegg': typeof AuthedUtleggRoute
   '/_authed/vedlikehold': typeof AuthedVedlikeholdRoute
@@ -471,14 +507,18 @@ export interface FileRouteTypes {
     | '/administrer'
     | '/dashboard'
     | '/expenses'
+    | '/handleliste'
     | '/innstillinger'
     | '/maintenance'
     | '/manageproperty'
+    | '/oppgaver'
     | '/oppgjor'
     | '/oversikt'
     | '/planleggopphold'
     | '/planstay'
     | '/settlement'
+    | '/shoppinglist'
+    | '/todos'
     | '/usersettings'
     | '/utlegg'
     | '/vedlikehold'
@@ -517,13 +557,17 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/expenses'
+    | '/handleliste'
     | '/innstillinger'
     | '/maintenance'
+    | '/oppgaver'
     | '/oppgjor'
     | '/oversikt'
     | '/planleggopphold'
     | '/planstay'
     | '/settlement'
+    | '/shoppinglist'
+    | '/todos'
     | '/usersettings'
     | '/utlegg'
     | '/vedlikehold'
@@ -564,14 +608,18 @@ export interface FileRouteTypes {
     | '/_authed/administrer'
     | '/_authed/dashboard'
     | '/_authed/expenses'
+    | '/_authed/handleliste'
     | '/_authed/innstillinger'
     | '/_authed/maintenance'
     | '/_authed/manageproperty'
+    | '/_authed/oppgaver'
     | '/_authed/oppgjor'
     | '/_authed/oversikt'
     | '/_authed/planleggopphold'
     | '/_authed/planstay'
     | '/_authed/settlement'
+    | '/_authed/shoppinglist'
+    | '/_authed/todos'
     | '/_authed/usersettings'
     | '/_authed/utlegg'
     | '/_authed/vedlikehold'
@@ -672,6 +720,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedUsersettingsRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/todos': {
+      id: '/_authed/todos'
+      path: '/todos'
+      fullPath: '/todos'
+      preLoaderRoute: typeof AuthedTodosRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/shoppinglist': {
+      id: '/_authed/shoppinglist'
+      path: '/shoppinglist'
+      fullPath: '/shoppinglist'
+      preLoaderRoute: typeof AuthedShoppinglistRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/settlement': {
       id: '/_authed/settlement'
       path: '/settlement'
@@ -707,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedOppgjorRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/oppgaver': {
+      id: '/_authed/oppgaver'
+      path: '/oppgaver'
+      fullPath: '/oppgaver'
+      preLoaderRoute: typeof AuthedOppgaverRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/manageproperty': {
       id: '/_authed/manageproperty'
       path: '/manageproperty'
@@ -726,6 +795,13 @@ declare module '@tanstack/react-router' {
       path: '/innstillinger'
       fullPath: '/innstillinger'
       preLoaderRoute: typeof AuthedInnstillingerRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/handleliste': {
+      id: '/_authed/handleliste'
+      path: '/handleliste'
+      fullPath: '/handleliste'
+      preLoaderRoute: typeof AuthedHandlelisteRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/expenses': {
@@ -1052,14 +1128,18 @@ interface AuthedRouteChildren {
   AuthedAdministrerRoute: typeof AuthedAdministrerRouteWithChildren
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedExpensesRoute: typeof AuthedExpensesRoute
+  AuthedHandlelisteRoute: typeof AuthedHandlelisteRoute
   AuthedInnstillingerRoute: typeof AuthedInnstillingerRoute
   AuthedMaintenanceRoute: typeof AuthedMaintenanceRoute
   AuthedManagepropertyRoute: typeof AuthedManagepropertyRouteWithChildren
+  AuthedOppgaverRoute: typeof AuthedOppgaverRoute
   AuthedOppgjorRoute: typeof AuthedOppgjorRoute
   AuthedOversiktRoute: typeof AuthedOversiktRoute
   AuthedPlanleggoppholdRoute: typeof AuthedPlanleggoppholdRoute
   AuthedPlanstayRoute: typeof AuthedPlanstayRoute
   AuthedSettlementRoute: typeof AuthedSettlementRoute
+  AuthedShoppinglistRoute: typeof AuthedShoppinglistRoute
+  AuthedTodosRoute: typeof AuthedTodosRoute
   AuthedUsersettingsRoute: typeof AuthedUsersettingsRoute
   AuthedUtleggRoute: typeof AuthedUtleggRoute
   AuthedVedlikeholdRoute: typeof AuthedVedlikeholdRoute
@@ -1069,14 +1149,18 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdministrerRoute: AuthedAdministrerRouteWithChildren,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedExpensesRoute: AuthedExpensesRoute,
+  AuthedHandlelisteRoute: AuthedHandlelisteRoute,
   AuthedInnstillingerRoute: AuthedInnstillingerRoute,
   AuthedMaintenanceRoute: AuthedMaintenanceRoute,
   AuthedManagepropertyRoute: AuthedManagepropertyRouteWithChildren,
+  AuthedOppgaverRoute: AuthedOppgaverRoute,
   AuthedOppgjorRoute: AuthedOppgjorRoute,
   AuthedOversiktRoute: AuthedOversiktRoute,
   AuthedPlanleggoppholdRoute: AuthedPlanleggoppholdRoute,
   AuthedPlanstayRoute: AuthedPlanstayRoute,
   AuthedSettlementRoute: AuthedSettlementRoute,
+  AuthedShoppinglistRoute: AuthedShoppinglistRoute,
+  AuthedTodosRoute: AuthedTodosRoute,
   AuthedUsersettingsRoute: AuthedUsersettingsRoute,
   AuthedUtleggRoute: AuthedUtleggRoute,
   AuthedVedlikeholdRoute: AuthedVedlikeholdRoute,

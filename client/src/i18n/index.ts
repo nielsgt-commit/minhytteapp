@@ -17,6 +17,7 @@ import enProperty from "./locales/en/property.json"
 import enSettlement from "./locales/en/settlement.json"
 import enShared from "./locales/en/shared.json"
 import enShoppinglist from "./locales/en/shoppinglist.json"
+import enTodos from "./locales/en/todos.json"
 import enUser from "./locales/en/user.json"
 import enUsergroups from "./locales/en/usergroups.json"
 import enUsersettings from "./locales/en/usersettings.json"
@@ -36,6 +37,7 @@ import nbProperty from "./locales/nb/property.json"
 import nbSettlement from "./locales/nb/settlement.json"
 import nbShared from "./locales/nb/shared.json"
 import nbShoppinglist from "./locales/nb/shoppinglist.json"
+import nbTodos from "./locales/nb/todos.json"
 import nbUser from "./locales/nb/user.json"
 import nbUsergroups from "./locales/nb/usergroups.json"
 import nbUsersettings from "./locales/nb/usersettings.json"
@@ -59,6 +61,7 @@ export const resources = {
     settlement: enSettlement,
     shared: enShared,
     shoppinglist: enShoppinglist,
+    todos: enTodos,
     user: enUser,
     usergroups: enUsergroups,
     usersettings: enUsersettings,
@@ -79,6 +82,7 @@ export const resources = {
     settlement: nbSettlement,
     shared: nbShared,
     shoppinglist: nbShoppinglist,
+    todos: nbTodos,
     user: nbUser,
     usergroups: nbUsergroups,
     usersettings: nbUsersettings,
@@ -109,6 +113,7 @@ void i18n
       "settlement",
       "shared",
       "shoppinglist",
+      "todos",
       "user",
       "usergroups",
       "usersettings",

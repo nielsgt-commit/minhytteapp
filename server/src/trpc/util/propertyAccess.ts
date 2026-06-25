@@ -12,6 +12,7 @@ import {
   structuresTable,
 } from "../../db/schema/property.schema.ts"
 import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
+import { todosTable } from "../../db/schema/todo.schema.ts"
 
 type Db = typeof dbClient
 
@@ -80,6 +81,21 @@ export async function resolvePropertyIdFromShoppingItem(
       .limit(1)
   ).at(0)
   if (!row) throw notFound("shopping list item not found")
+  return row.property_id
+}
+
+export async function resolvePropertyIdFromTodo(
+  db: Db,
+  todoId: number,
+): Promise<number> {
+  const row = (
+    await db
+      .select({ property_id: todosTable.property_id })
+      .from(todosTable)
+      .where(eq(todosTable.id, todoId))
+      .limit(1)
+  ).at(0)
+  if (!row) throw notFound("todo not found")
   return row.property_id
 }
 
