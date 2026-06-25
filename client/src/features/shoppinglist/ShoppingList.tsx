@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Button,
@@ -65,6 +65,32 @@ export function ShoppingList() {
   )
 
   const [editingId, setEditingId] = useState<number | null>(null)
+
+  // Delete is a two-tap action: the first tap arms the item's Delete button,
+  // a second tap on the same spot confirms. The armed state auto-clears after a
+  // few seconds so a stale "Confirm delete?" can't be tapped much later.
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
+    null,
+  )
+
+  useEffect(() => {
+    if (confirmingDeleteId == null) return
+    const timer = setTimeout(() => {
+      setConfirmingDeleteId(null)
+    }, 4000)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [confirmingDeleteId])
+
+  const handleDelete = (id: number) => {
+    if (confirmingDeleteId === id) {
+      setConfirmingDeleteId(null)
+      deleteMutation.mutate({ id })
+    } else {
+      setConfirmingDeleteId(id)
+    }
+  }
 
   const sectionLabel = (section: Section) =>
     section === "food" ? t("Food") : t("Other")
@@ -211,21 +237,28 @@ export function ShoppingList() {
                                   data-size="sm"
                                   disabled={pending}
                                   onClick={() => {
+                                    setConfirmingDeleteId(null)
                                     setEditingId(item.id)
                                   }}
                                 >
                                   {t("Edit")}
                                 </Button>
                                 <Button
-                                  variant="tertiary"
+                                  variant={
+                                    confirmingDeleteId === item.id
+                                      ? "primary"
+                                      : "tertiary"
+                                  }
                                   data-color="danger"
                                   data-size="sm"
                                   disabled={pending}
                                   onClick={() => {
-                                    deleteMutation.mutate({ id: item.id })
+                                    handleDelete(item.id)
                                   }}
                                 >
-                                  {t("Delete")}
+                                  {confirmingDeleteId === item.id
+                                    ? t("Confirm delete?")
+                                    : t("Delete")}
                                 </Button>
                               </div>
                             </>
