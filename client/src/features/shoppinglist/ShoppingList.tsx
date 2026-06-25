@@ -133,7 +133,15 @@ export function ShoppingList() {
       <ErrorAlert error={error} />
       <div className={styles.sections}>
         {SECTIONS.map(section => {
-          const sectionItems = items.filter(i => i.section === section)
+          // Checked-off items sink to the bottom of their section; order is
+          // otherwise stable (by id) within the checked / unchecked groups.
+          const sectionItems = items
+            .filter(i => i.section === section)
+            .slice()
+            .sort((a, b) => {
+              if (a.checked !== b.checked) return a.checked ? 1 : -1
+              return a.id - b.id
+            })
           return (
             <div className={styles.section} key={section}>
               <Heading level={3} data-size="xs" className={styles.heading}>
