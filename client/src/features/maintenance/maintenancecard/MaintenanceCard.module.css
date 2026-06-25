@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-template-areas: "name actions inspect";
-  align-items: baseline;
+  align-items: start;
   gap: 0.5rem 1rem;
 }
 
@@ -11,8 +11,12 @@
   margin: 0;
 }
 
-.inspect {
+.inspectCol {
   grid-area: inspect;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 .divider {
@@ -28,8 +32,7 @@
 }
 
 /* Mobile layout (rendered via useIsMobile, see MaintenanceCard.tsx) */
-.mobileTopRow,
-.mobileTodosRow {
+.mobileTopRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -44,23 +47,11 @@
   white-space: nowrap;
 }
 
-.lastFinished,
-.lastFinishedEmpty {
-  margin: 0;
-  min-width: 0;
-  flex: 1;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lastFinishedEmpty {
-  color: var(--ds-color-neutral-text-subtle);
-}
-
 .mobileInspectRow {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .mobileInspectRow .inspect {

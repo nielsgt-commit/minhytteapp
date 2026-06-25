@@ -6,7 +6,6 @@ import {
   Card,
   Divider,
   Heading,
-  Paragraph,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { ClockDashedIcon } from "@navikt/aksel-icons"
@@ -58,34 +57,10 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
     i => i.status === "todo" || i.status === "doing",
   ).length
 
-  // The build/since year counts as the structure's first completed milestone, so
-  // it surfaces as "last completed" until real maintenance is logged on top of it.
-  const builtYear = scope.builtYear ?? null
-  const finished: { description: string; t: number }[] = scoped.flatMap(i =>
-    i.status === "done" && i.completed_at != null
-      ? [{ description: i.description, t: i.completed_at.epochMilliseconds }]
-      : [],
-  )
-  if (builtYear != null) {
-    finished.push({
-      description:
-        scope.kind === "infrastructure"
-          ? t("Established {{year}}", { year: builtYear })
-          : t("Built {{year}}", { year: builtYear }),
-      t: new Date(builtYear, 0, 1).getTime(),
-    })
-  }
-  finished.sort((a, b) => b.t - a.t)
-  const lastFinished = finished.length > 0 ? finished[0] : undefined
-
   const showTodos = view === "todos"
   const showHistory = view === "history"
 
-  const todosLabel = isMobile
-    ? t("Todos")
-    : showTodos
-      ? t("Hide todos")
-      : t("Show todos")
+  const todosLabel = showTodos ? t("Hide open todos") : t("Show open todos")
   const historyLabel = isMobile
     ? t("History")
     : showHistory
@@ -149,23 +124,6 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
           </Card.Block>
           {historyBlock}
           {!inspecting && (
-            <Card.Block className={styles.mobileTodosRow} data-size="sm">
-              {todosToggle}
-              {lastFinished ? (
-                <Paragraph className={styles.lastFinished} data-size="sm">
-                  {t("Last completed: {{description}}", {
-                    description: lastFinished.description,
-                  })}
-                </Paragraph>
-              ) : (
-                <Paragraph className={styles.lastFinishedEmpty} data-size="sm">
-                  {t("No completed work yet")}
-                </Paragraph>
-              )}
-            </Card.Block>
-          )}
-          {todosBlock}
-          {!inspecting && (
             <Card.Block className={styles.mobileInspectRow} data-size="sm">
               <Button
                 className={styles.inspect}
@@ -177,8 +135,10 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               >
                 {t("Start inspection")}
               </Button>
+              {todosToggle}
             </Card.Block>
           )}
+          {todosBlock}
           {inspectionBlock}
         </article>
       </Card>
@@ -193,23 +153,23 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
             {scope.name}
           </Heading>
           {!inspecting && (
-            <Button
-              className={styles.inspect}
-              variant="secondary"
-              data-size="sm"
-              onClick={() => {
-                setInspecting(true)
-              }}
-            >
-              {t("Start inspection")}
-            </Button>
+            <div className={styles.inspectCol}>
+              <Button
+                className={styles.inspect}
+                variant="secondary"
+                data-size="sm"
+                onClick={() => {
+                  setInspecting(true)
+                }}
+              >
+                {t("Start inspection")}
+              </Button>
+              {todosToggle}
+            </div>
           )}
           {!inspecting && <Divider className={styles.divider} />}
           {!inspecting && (
             <div className={styles.actions}>
-              <Button variant="tertiary" data-size="sm" onClick={toggleTodos}>
-                {todosLabel}
-              </Button>
               <Button variant="tertiary" data-size="sm" onClick={toggleHistory}>
                 <ClockDashedIcon aria-hidden fontSize="1.25rem" />
                 {historyLabel}

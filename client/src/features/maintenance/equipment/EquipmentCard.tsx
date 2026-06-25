@@ -1,5 +1,6 @@
-import { Button, Card, Divider, Paragraph } from "@digdir/designsystemet-react"
+import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { ClockDashedIcon } from "@navikt/aksel-icons"
 import styles from "./Equipment.module.css"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
@@ -39,11 +40,7 @@ export function EquipmentCard(props: {
     modalState.kind === "history" && modalState.id === item.id
   const isTodosOpen = modalState.kind === "todos" && modalState.id === item.id
 
-  const todosLabel = isMobile
-    ? t("Todos")
-    : isTodosOpen
-      ? t("Hide todos")
-      : t("Show todos")
+  const todosLabel = isTodosOpen ? t("Hide open todos") : t("Show open todos")
   const historyLabel = isMobile
     ? t("History")
     : isHistoryOpen
@@ -53,11 +50,11 @@ export function EquipmentCard(props: {
   return (
     <Card asChild>
       <article>
-        <Card.Block className={styles.row} data-size="sm">
+        <Card.Block className={styles.topRow} data-size="sm">
           <div className={styles.nameGroup}>
-            <Paragraph className={styles.name} data-size="sm">
+            <Heading level={3} data-size="xs" className={styles.name}>
               {item.name}
-            </Paragraph>
+            </Heading>
             {(item.brand ?? item.model) && (
               <Paragraph className={styles.brandModel} data-size="xs">
                 {[item.brand, item.model].filter(Boolean).join(" · ")}
@@ -68,63 +65,29 @@ export function EquipmentCard(props: {
                 {t("Acquired {{year}}", { year: item.acquired_year })}
               </Paragraph>
             )}
+            {item.category && (
+              <Paragraph className={styles.category} data-size="xs">
+                {item.category}
+              </Paragraph>
+            )}
           </div>
-          <Paragraph className={styles.category} data-size="sm">
-            {item.category ?? ""}
-          </Paragraph>
           {!isInspecting && (
             <Button
-              className={styles.inspect}
-              variant="secondary"
+              variant="tertiary"
               data-size="sm"
               onClick={() => {
-                setModalState({ kind: "inspecting", id: item.id })
+                setModalState(
+                  isHistoryOpen
+                    ? { kind: "none" }
+                    : { kind: "history", id: item.id },
+                )
               }}
             >
-              {t("Start inspection")}
+              <ClockDashedIcon aria-hidden fontSize="1.25rem" />
+              {historyLabel}
             </Button>
           )}
-          {!isInspecting && <Divider className={styles.divider} />}
-          <div className={styles.actions}>
-            {!isInspecting && (
-              <Button
-                variant="tertiary"
-                data-size="sm"
-                onClick={() => {
-                  setModalState(
-                    isTodosOpen
-                      ? { kind: "none" }
-                      : { kind: "todos", id: item.id },
-                  )
-                }}
-              >
-                {todosLabel}
-              </Button>
-            )}
-            {!isInspecting && (
-              <Button
-                variant="tertiary"
-                data-size="sm"
-                onClick={() => {
-                  setModalState(
-                    isHistoryOpen
-                      ? { kind: "none" }
-                      : { kind: "history", id: item.id },
-                  )
-                }}
-              >
-                {historyLabel}
-              </Button>
-            )}
-          </div>
         </Card.Block>
-        {isTodosOpen && !isInspecting && (
-          <Card.Block>
-            <MaintenanceTodos
-              scope={{ kind: "equipment", id: item.id, name: item.name }}
-            />
-          </Card.Block>
-        )}
         {isHistoryOpen && !isInspecting && (
           <Card.Block>
             {historyEntries.length === 0 ? (
@@ -140,6 +103,38 @@ export function EquipmentCard(props: {
                 })}
               </div>
             )}
+          </Card.Block>
+        )}
+        {!isInspecting && (
+          <Card.Block className={styles.inspectRow} data-size="sm">
+            <Button
+              className={styles.inspect}
+              variant="secondary"
+              data-size="sm"
+              onClick={() => {
+                setModalState({ kind: "inspecting", id: item.id })
+              }}
+            >
+              {t("Start inspection")}
+            </Button>
+            <Button
+              variant="tertiary"
+              data-size="sm"
+              onClick={() => {
+                setModalState(
+                  isTodosOpen ? { kind: "none" } : { kind: "todos", id: item.id },
+                )
+              }}
+            >
+              {todosLabel}
+            </Button>
+          </Card.Block>
+        )}
+        {isTodosOpen && !isInspecting && (
+          <Card.Block>
+            <MaintenanceTodos
+              scope={{ kind: "equipment", id: item.id, name: item.name }}
+            />
           </Card.Block>
         )}
         {isInspecting && (
