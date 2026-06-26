@@ -6,6 +6,7 @@ import { ChevronDownIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import {
+  useSelectedPropertyId,
   useSelectedUserId,
   useSetSelectedUserId,
 } from "@/selection/useSelection"
@@ -38,6 +39,7 @@ export function UserMenu({ showCheckIn = true }: Props) {
     trpc.userGroup.listWithMembers.queryOptions(),
   )
   const selectedId = useSelectedUserId()
+  const selectedPropertyId = useSelectedPropertyId()
   const setSelectedUserId = useSetSelectedUserId()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
@@ -56,10 +58,17 @@ export function UserMenu({ showCheckIn = true }: Props) {
 
   const name = me?.id === selectedId ? me.name || me.email : t("Select user")
 
+  // Scope the family group to the selected property: listWithMembers returns
+  // groups across every property the user belongs to, so without the
+  // property_id match the tag would show the first family group found and
+  // never update when switching property.
   const mainGroup =
-    selectedId != null && groups
+    selectedId != null && selectedPropertyId != null && groups
       ? groups.find(
-          g => g.is_family && g.members.some(m => m.user_id === selectedId),
+          g =>
+            g.is_family &&
+            g.property_id === selectedPropertyId &&
+            g.members.some(m => m.user_id === selectedId),
         )
       : undefined
 
