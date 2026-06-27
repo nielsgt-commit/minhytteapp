@@ -4,7 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Temporal } from "temporal-polyfill"
 import {
   Button,
+  Card,
   Checkbox,
+  Divider,
   Heading,
   List,
   Paragraph,
@@ -219,118 +221,121 @@ export function ShoppingList() {
     <section className={styles.page}>
       <PageHeader title={t("Shopping list")} help={help} />
       <ErrorAlert error={error} />
-      <div className={styles.sections}>
-        {SECTIONS.map(section => {
-          // Checked-off items sink to the bottom of their section; order is
-          // otherwise stable (by id) within the checked / unchecked groups.
-          const sectionItems = items
-            .filter(i => i.section === section)
-            .slice()
-            .sort((a, b) => {
-              if (a.checked !== b.checked) return a.checked ? 1 : -1
-              return a.id - b.id
-            })
-          return (
-            <div className={styles.section} key={section}>
-              <Heading level={3} data-size="xs" className={styles.heading}>
-                {sectionLabel(section)}
-              </Heading>
-              <form action={handleAdd(section)} className={styles.addRow}>
-                <Textfield
-                  aria-label={t("New item")}
-                  name="name"
-                  placeholder={t("Add item...")}
-                />
-                <SubmitButton>{t("Add")}</SubmitButton>
-              </form>
-              {sectionItems.length === 0 ? (
-                <Paragraph data-size="sm">{t("Nothing here yet.")}</Paragraph>
-              ) : (
-                <List.Unordered className={styles.list}>
-                  {sectionItems.map(item => (
-                    <List.Item className={styles.row} key={item.id}>
-                      {editingId !== item.id && (
-                        <Checkbox
-                          aria-label={item.name}
-                          checked={item.checked}
-                          onChange={() => {
-                            toggleChecked(item)
-                          }}
-                        />
-                      )}
-                      {editingId === item.id ? (
-                        <form
-                          action={handleRename(item)}
-                          className={styles.editForm}
-                        >
-                          <Textfield
-                            aria-label={t("New item")}
-                            name="name"
-                            defaultValue={item.name}
-                            disabled={updateMutation.isPending}
-                          />
-                          <SubmitButton>{t("Save")}</SubmitButton>
-                          <Button
-                            type="button"
-                            variant="tertiary"
-                            data-size="sm"
-                            onClick={() => {
-                              setEditingId(null)
+      <Card>
+        <Card.Block className={styles.sections}>
+          {SECTIONS.map((section, index) => {
+            // Checked-off items sink to the bottom of their section; order is
+            // otherwise stable (by id) within the checked / unchecked groups.
+            const sectionItems = items
+              .filter(i => i.section === section)
+              .slice()
+              .sort((a, b) => {
+                if (a.checked !== b.checked) return a.checked ? 1 : -1
+                return a.id - b.id
+              })
+            return (
+              <div className={styles.section} key={section}>
+                {index > 0 && <Divider />}
+                <Heading level={3} data-size="xs" className={styles.heading}>
+                  {sectionLabel(section)}
+                </Heading>
+                <form action={handleAdd(section)} className={styles.addRow}>
+                  <Textfield
+                    aria-label={t("New item")}
+                    name="name"
+                    placeholder={t("Add item...")}
+                  />
+                  <SubmitButton>{t("Add")}</SubmitButton>
+                </form>
+                {sectionItems.length === 0 ? (
+                  <Paragraph data-size="sm">{t("Nothing here yet.")}</Paragraph>
+                ) : (
+                  <List.Unordered className={styles.list}>
+                    {sectionItems.map(item => (
+                      <List.Item className={styles.row} key={item.id}>
+                        {editingId !== item.id && (
+                          <Checkbox
+                            aria-label={item.name}
+                            checked={item.checked}
+                            onChange={() => {
+                              toggleChecked(item)
                             }}
+                          />
+                        )}
+                        {editingId === item.id ? (
+                          <form
+                            action={handleRename(item)}
+                            className={styles.editForm}
                           >
-                            {t("Cancel")}
-                          </Button>
-                        </form>
-                      ) : (
-                        <>
-                          <Paragraph
-                            className={`${styles.name} ${
-                              item.checked ? styles.done : ""
-                            }`}
-                            data-size="sm"
-                          >
-                            {item.name}
-                          </Paragraph>
-                          <div className={styles.actions}>
+                            <Textfield
+                              aria-label={t("New item")}
+                              name="name"
+                              defaultValue={item.name}
+                              disabled={updateMutation.isPending}
+                            />
+                            <SubmitButton>{t("Save")}</SubmitButton>
                             <Button
+                              type="button"
                               variant="tertiary"
                               data-size="sm"
-                              disabled={busy}
                               onClick={() => {
-                                setConfirmingDeleteId(null)
-                                setEditingId(item.id)
+                                setEditingId(null)
                               }}
                             >
-                              {t("Edit")}
+                              {t("Cancel")}
                             </Button>
-                            <Button
-                              variant={
-                                confirmingDeleteId === item.id
-                                  ? "primary"
-                                  : "tertiary"
-                              }
-                              data-color="danger"
+                          </form>
+                        ) : (
+                          <>
+                            <Paragraph
+                              className={`${styles.name} ${
+                                item.checked ? styles.done : ""
+                              }`}
                               data-size="sm"
-                              disabled={busy}
-                              onClick={() => {
-                                handleDelete(item.id)
-                              }}
                             >
-                              {confirmingDeleteId === item.id
-                                ? t("Confirm delete?")
-                                : t("Delete")}
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </List.Item>
-                  ))}
-                </List.Unordered>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                              {item.name}
+                            </Paragraph>
+                            <div className={styles.actions}>
+                              <Button
+                                variant="tertiary"
+                                data-size="sm"
+                                disabled={busy}
+                                onClick={() => {
+                                  setConfirmingDeleteId(null)
+                                  setEditingId(item.id)
+                                }}
+                              >
+                                {t("Edit")}
+                              </Button>
+                              <Button
+                                variant={
+                                  confirmingDeleteId === item.id
+                                    ? "primary"
+                                    : "tertiary"
+                                }
+                                data-color="danger"
+                                data-size="sm"
+                                disabled={busy}
+                                onClick={() => {
+                                  handleDelete(item.id)
+                                }}
+                              >
+                                {confirmingDeleteId === item.id
+                                  ? t("Confirm delete?")
+                                  : t("Delete")}
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </List.Item>
+                    ))}
+                  </List.Unordered>
+                )}
+              </div>
+            )
+          })}
+        </Card.Block>
+      </Card>
     </section>
   )
 }

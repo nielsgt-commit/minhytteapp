@@ -4,6 +4,12 @@
   gap: 0.75rem;
 }
 
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .addRow {
   display: flex;
   align-items: center;

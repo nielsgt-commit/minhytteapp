@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
+  Card,
   Checkbox,
   List,
   Paragraph,
@@ -112,7 +113,9 @@ export function Todos() {
   const propertyId = selectedPropertyId ?? 0
   const enabled = selectedPropertyId != null
 
-  const listKey = trpc.todo.listForProperty.queryKey({ property_id: propertyId })
+  const listKey = trpc.todo.listForProperty.queryKey({
+    property_id: propertyId,
+  })
 
   const help: PageHelpContent = {
     intro: t(
@@ -321,111 +324,115 @@ export function Todos() {
   return (
     <div className={styles.wrap}>
       <PageHeader title={t("Todos")} help={help} />
-      <form action={handleAdd} className={styles.addRow}>
-        <Textfield
-          aria-label={t("New todo")}
-          name="description"
-          placeholder={t("Add todo...")}
-          disabled={!enabled}
-        />
-        <SubmitButton disabled={!enabled}>{t("Add")}</SubmitButton>
-      </form>
       <ErrorAlert error={error} />
-      {todos.length === 0 ? (
-        <EmptyState title={t("No todos yet.")} />
-      ) : (
-        <List.Unordered className={styles.list}>
-          {todos.map(todo => (
-            <List.Item className={styles.row} key={todo.id}>
-              <Checkbox
-                aria-label={t("Done")}
-                checked={todo.done}
-                onChange={() => {
-                  toggleDone(todo)
-                }}
-              />
-              <Paragraph
-                className={`${styles.description} ${
-                  todo.done ? styles.done : ""
-                }`}
-                data-size="sm"
-              >
-                {todo.description}
-              </Paragraph>
-              <div className={styles.actions}>
-                {confirmingDeleteId === todo.id ? (
-                  <>
-                    <Button
-                      variant="tertiary"
-                      data-size="sm"
-                      onClick={() => {
-                        setConfirmingDeleteId(null)
-                      }}
-                    >
-                      {t("Cancel")}
-                    </Button>
-                    <Button
-                      variant="primary"
-                      data-color="danger"
-                      data-size="sm"
-                      onClick={() => {
-                        handleConfirmDelete(todo.id)
-                      }}
-                    >
-                      {t("Confirm delete")}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    {movingId === todo.id ? (
+      <Card>
+        <Card.Block className={styles.cardBody}>
+          <form action={handleAdd} className={styles.addRow}>
+            <Textfield
+              aria-label={t("New todo")}
+              name="description"
+              placeholder={t("Add todo...")}
+              disabled={!enabled}
+            />
+            <SubmitButton disabled={!enabled}>{t("Add")}</SubmitButton>
+          </form>
+          {todos.length === 0 ? (
+            <EmptyState title={t("No todos yet.")} />
+          ) : (
+            <List.Unordered className={styles.list}>
+              {todos.map(todo => (
+                <List.Item className={styles.row} key={todo.id}>
+                  <Checkbox
+                    aria-label={t("Done")}
+                    checked={todo.done}
+                    onChange={() => {
+                      toggleDone(todo)
+                    }}
+                  />
+                  <Paragraph
+                    className={`${styles.description} ${
+                      todo.done ? styles.done : ""
+                    }`}
+                    data-size="sm"
+                  >
+                    {todo.description}
+                  </Paragraph>
+                  <div className={styles.actions}>
+                    {confirmingDeleteId === todo.id ? (
                       <>
-                        <TargetSelect
-                          value={NO_TARGET}
-                          structures={structureRows}
-                          infrastructure={infrastructureRows}
-                          equipment={equipmentRows}
-                          onChange={token => {
-                            handleMove(todo.id, token)
-                          }}
-                        />
                         <Button
                           variant="tertiary"
                           data-size="sm"
                           onClick={() => {
-                            setMovingId(null)
+                            setConfirmingDeleteId(null)
                           }}
                         >
                           {t("Cancel")}
                         </Button>
+                        <Button
+                          variant="primary"
+                          data-color="danger"
+                          data-size="sm"
+                          onClick={() => {
+                            handleConfirmDelete(todo.id)
+                          }}
+                        >
+                          {t("Confirm delete")}
+                        </Button>
                       </>
                     ) : (
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        onClick={() => {
-                          setMovingId(todo.id)
-                        }}
-                      >
-                        {t("Move to...")}
-                      </Button>
+                      <>
+                        {movingId === todo.id ? (
+                          <>
+                            <TargetSelect
+                              value={NO_TARGET}
+                              structures={structureRows}
+                              infrastructure={infrastructureRows}
+                              equipment={equipmentRows}
+                              onChange={token => {
+                                handleMove(todo.id, token)
+                              }}
+                            />
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setMovingId(null)
+                              }}
+                            >
+                              {t("Cancel")}
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="tertiary"
+                            data-size="sm"
+                            onClick={() => {
+                              setMovingId(todo.id)
+                            }}
+                          >
+                            {t("Move to...")}
+                          </Button>
+                        )}
+                        <Button
+                          variant="tertiary"
+                          data-color="danger"
+                          data-size="sm"
+                          onClick={() => {
+                            setConfirmingDeleteId(todo.id)
+                          }}
+                        >
+                          {t("Delete")}
+                        </Button>
+                      </>
                     )}
-                    <Button
-                      variant="tertiary"
-                      data-color="danger"
-                      data-size="sm"
-                      onClick={() => {
-                        setConfirmingDeleteId(todo.id)
-                      }}
-                    >
-                      {t("Delete")}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </List.Item>
-          ))}
-        </List.Unordered>
-      )}
+                  </div>
+                </List.Item>
+              ))}
+            </List.Unordered>
+          )}
+        </Card.Block>
+      </Card>
     </div>
   )
 }
