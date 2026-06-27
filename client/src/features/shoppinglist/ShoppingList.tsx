@@ -7,11 +7,13 @@ import {
   Card,
   Checkbox,
   Divider,
+  Dropdown,
   Heading,
   List,
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { MenuElipsisVerticalIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./ShoppingList.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -23,6 +25,7 @@ import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
+import { useIsMobile } from "@/hooks/useIsMobile"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 
 type Section = "food" | "other"
@@ -34,6 +37,7 @@ export function ShoppingList() {
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
+  const isMobile = useIsMobile()
 
   const listKey = trpc.shoppingItem.listForProperty.queryKey({
     property_id: selectedPropertyId ?? 0,
@@ -137,6 +141,10 @@ export function ShoppingList() {
     null,
   )
 
+  // On mobile the row actions live behind a kebab menu; this tracks which row's
+  // menu is open so the two-tap delete confirm can keep it open between taps.
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
+
   useEffect(() => {
     if (confirmingDeleteId == null) return
     const timer = setTimeout(() => {
@@ -150,6 +158,7 @@ export function ShoppingList() {
   const handleDelete = (id: number) => {
     if (confirmingDeleteId === id) {
       setConfirmingDeleteId(null)
+      setMenuOpenId(null)
       deleteMutation.mutate({ id })
     } else {
       setConfirmingDeleteId(id)
@@ -295,36 +304,90 @@ export function ShoppingList() {
                             >
                               {item.name}
                             </Paragraph>
-                            <div className={styles.actions}>
-                              <Button
-                                variant="tertiary"
-                                data-size="sm"
-                                disabled={busy}
-                                onClick={() => {
-                                  setConfirmingDeleteId(null)
-                                  setEditingId(item.id)
-                                }}
-                              >
-                                {t("Edit")}
-                              </Button>
-                              <Button
-                                variant={
-                                  confirmingDeleteId === item.id
-                                    ? "primary"
-                                    : "tertiary"
-                                }
-                                data-color="danger"
-                                data-size="sm"
-                                disabled={busy}
-                                onClick={() => {
-                                  handleDelete(item.id)
-                                }}
-                              >
-                                {confirmingDeleteId === item.id
-                                  ? t("Confirm delete?")
-                                  : t("Delete")}
-                              </Button>
-                            </div>
+                            {isMobile ? (
+                              <Dropdown.TriggerContext>
+                                <Dropdown.Trigger
+                                  variant="tertiary"
+                                  data-size="sm"
+                                  icon
+                                  aria-label={t("Item actions")}
+                                  disabled={busy}
+                                  onClick={() => {
+                                    setMenuOpenId(
+                                      menuOpenId === item.id ? null : item.id,
+                                    )
+                                    setConfirmingDeleteId(null)
+                                  }}
+                                >
+                                  <MenuElipsisVerticalIcon aria-hidden />
+                                </Dropdown.Trigger>
+                                <Dropdown
+                                  placement="bottom-end"
+                                  open={menuOpenId === item.id}
+                                  onClose={() => {
+                                    setMenuOpenId(null)
+                                    setConfirmingDeleteId(null)
+                                  }}
+                                >
+                                  <Dropdown.List>
+                                    <Dropdown.Item>
+                                      <Dropdown.Button
+                                        onClick={() => {
+                                          setMenuOpenId(null)
+                                          setConfirmingDeleteId(null)
+                                          setEditingId(item.id)
+                                        }}
+                                      >
+                                        {t("Edit")}
+                                      </Dropdown.Button>
+                                    </Dropdown.Item>
+                                    <Dropdown.Item>
+                                      <Dropdown.Button
+                                        data-color="danger"
+                                        onClick={() => {
+                                          handleDelete(item.id)
+                                        }}
+                                      >
+                                        {confirmingDeleteId === item.id
+                                          ? t("Confirm delete?")
+                                          : t("Delete")}
+                                      </Dropdown.Button>
+                                    </Dropdown.Item>
+                                  </Dropdown.List>
+                                </Dropdown>
+                              </Dropdown.TriggerContext>
+                            ) : (
+                              <div className={styles.actions}>
+                                <Button
+                                  variant="tertiary"
+                                  data-size="sm"
+                                  disabled={busy}
+                                  onClick={() => {
+                                    setConfirmingDeleteId(null)
+                                    setEditingId(item.id)
+                                  }}
+                                >
+                                  {t("Edit")}
+                                </Button>
+                                <Button
+                                  variant={
+                                    confirmingDeleteId === item.id
+                                      ? "primary"
+                                      : "tertiary"
+                                  }
+                                  data-color="danger"
+                                  data-size="sm"
+                                  disabled={busy}
+                                  onClick={() => {
+                                    handleDelete(item.id)
+                                  }}
+                                >
+                                  {confirmingDeleteId === item.id
+                                    ? t("Confirm delete?")
+                                    : t("Delete")}
+                                </Button>
+                              </div>
+                            )}
                           </>
                         )}
                       </List.Item>
