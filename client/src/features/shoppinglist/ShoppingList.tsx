@@ -3,9 +3,9 @@ import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Button,
-  Card,
   Checkbox,
   Heading,
+  List,
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
@@ -185,89 +185,87 @@ export function ShoppingList() {
               {sectionItems.length === 0 ? (
                 <Paragraph data-size="sm">{t("Nothing here yet.")}</Paragraph>
               ) : (
-                <ul className={styles.list}>
+                <List.Unordered className={styles.list}>
                   {sectionItems.map(item => (
-                    <Card asChild key={item.id}>
-                      <li>
-                        <Card.Block className={styles.row} data-size="sm">
-                          <Checkbox
-                            aria-label={item.name}
-                            checked={item.checked}
-                            disabled={pending}
-                            onChange={() => {
-                              toggleChecked(item)
-                            }}
+                    <List.Item className={styles.row} key={item.id}>
+                      {editingId !== item.id && (
+                        <Checkbox
+                          aria-label={item.name}
+                          checked={item.checked}
+                          disabled={pending}
+                          onChange={() => {
+                            toggleChecked(item)
+                          }}
+                        />
+                      )}
+                      {editingId === item.id ? (
+                        <form
+                          action={handleRename(item)}
+                          className={styles.editForm}
+                        >
+                          <Textfield
+                            aria-label={t("New item")}
+                            name="name"
+                            defaultValue={item.name}
+                            disabled={updateMutation.isPending}
                           />
-                          {editingId === item.id ? (
-                            <form
-                              action={handleRename(item)}
-                              className={styles.editForm}
+                          <SubmitButton>{t("Save")}</SubmitButton>
+                          <Button
+                            type="button"
+                            variant="tertiary"
+                            data-size="sm"
+                            onClick={() => {
+                              setEditingId(null)
+                            }}
+                          >
+                            {t("Cancel")}
+                          </Button>
+                        </form>
+                      ) : (
+                        <>
+                          <Paragraph
+                            className={`${styles.name} ${
+                              item.checked ? styles.done : ""
+                            }`}
+                            data-size="sm"
+                          >
+                            {item.name}
+                          </Paragraph>
+                          <div className={styles.actions}>
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              disabled={pending}
+                              onClick={() => {
+                                setConfirmingDeleteId(null)
+                                setEditingId(item.id)
+                              }}
                             >
-                              <Textfield
-                                aria-label={t("New item")}
-                                name="name"
-                                defaultValue={item.name}
-                                disabled={updateMutation.isPending}
-                              />
-                              <SubmitButton>{t("Save")}</SubmitButton>
-                              <Button
-                                type="button"
-                                variant="tertiary"
-                                data-size="sm"
-                                onClick={() => {
-                                  setEditingId(null)
-                                }}
-                              >
-                                {t("Cancel")}
-                              </Button>
-                            </form>
-                          ) : (
-                            <>
-                              <Paragraph
-                                className={`${styles.name} ${
-                                  item.checked ? styles.done : ""
-                                }`}
-                                data-size="sm"
-                              >
-                                {item.name}
-                              </Paragraph>
-                              <div className={styles.actions}>
-                                <Button
-                                  variant="tertiary"
-                                  data-size="sm"
-                                  disabled={pending}
-                                  onClick={() => {
-                                    setConfirmingDeleteId(null)
-                                    setEditingId(item.id)
-                                  }}
-                                >
-                                  {t("Edit")}
-                                </Button>
-                                <Button
-                                  variant={
-                                    confirmingDeleteId === item.id
-                                      ? "primary"
-                                      : "tertiary"
-                                  }
-                                  data-color="danger"
-                                  data-size="sm"
-                                  disabled={pending}
-                                  onClick={() => {
-                                    handleDelete(item.id)
-                                  }}
-                                >
-                                  {confirmingDeleteId === item.id
-                                    ? t("Confirm delete?")
-                                    : t("Delete")}
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                        </Card.Block>
-                      </li>
-                    </Card>
+                              {t("Edit")}
+                            </Button>
+                            <Button
+                              variant={
+                                confirmingDeleteId === item.id
+                                  ? "primary"
+                                  : "tertiary"
+                              }
+                              data-color="danger"
+                              data-size="sm"
+                              disabled={pending}
+                              onClick={() => {
+                                handleDelete(item.id)
+                              }}
+                            >
+                              {confirmingDeleteId === item.id
+                                ? t("Confirm delete?")
+                                : t("Delete")}
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </List.Item>
                   ))}
-                </ul>
+                </List.Unordered>
               )}
             </div>
           )
