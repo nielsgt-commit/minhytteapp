@@ -20,9 +20,6 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
 .row {
@@ -30,6 +27,13 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  padding: 0.5rem 0;
+  margin: 0;
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.row:last-child {
+  border-bottom: none;
 }
 
 .description {

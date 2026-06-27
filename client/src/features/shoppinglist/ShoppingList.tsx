@@ -1,6 +1,7 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useEffect, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { Temporal } from "temporal-polyfill"
 import {
   Button,
   Checkbox,
@@ -29,7 +30,12 @@ const SECTIONS: readonly Section[] = ["food", "other"]
 export function ShoppingList() {
   const { t } = useTranslation("shoppinglist")
   const trpc = useTRPC()
+  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
+
+  const listKey = trpc.shoppingItem.listForProperty.queryKey({
+    property_id: selectedPropertyId ?? 0,
+  })
 
   const help: PageHelpContent = {
     intro: t(
@@ -45,12 +51,63 @@ export function ShoppingList() {
   )
 
   const shoppingKeys = [trpc.shoppingItem.pathKey()]
+  // Optimistic add so the new item appears immediately. The temp id is larger
+  // than any existing id so it sorts to the bottom of the unchecked group —
+  // exactly where the real (serial) id lands, so there's no jump on refetch.
   const createMutation = useMutationWithInvalidation(
-    trpc.shoppingItem.create.mutationOptions(),
+    trpc.shoppingItem.create.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old => {
+          const nextId =
+            (old ?? []).reduce((max, i) => Math.max(max, i.id), 0) + 1
+          return [
+            ...(old ?? []),
+            {
+              id: nextId,
+              property_id: vars.property_id,
+              section: vars.section,
+              name: vars.name,
+              checked: false,
+              created_at: Temporal.Now.instant(),
+              created_by: null,
+            },
+          ]
+        })
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
     shoppingKeys,
   )
+  // Optimistic update so a checkbox toggle (and rename) takes effect instantly:
+  // the item re-sorts in place rather than waiting for the round-trip and then
+  // jumping, which read as a flicker. onSuccess (in the wrapper) still refetches.
   const updateMutation = useMutationWithInvalidation(
-    trpc.shoppingItem.update.mutationOptions(),
+    trpc.shoppingItem.update.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old =>
+          old?.map(i =>
+            i.id === vars.id
+              ? {
+                  ...i,
+                  ...(vars.checked !== undefined && { checked: vars.checked }),
+                  ...(vars.name !== undefined && { name: vars.name }),
+                }
+              : i,
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
     shoppingKeys,
   )
   const deleteMutation = useMutationWithInvalidation(
@@ -58,11 +115,16 @@ export function ShoppingList() {
     shoppingKeys,
   )
 
-  const { pending, error } = useMutationsStatus(
+  const { error } = useMutationsStatus(
     createMutation,
     updateMutation,
     deleteMutation,
   )
+
+  // A toggle/rename is optimistic, so we don't disable the list for it — that
+  // grey-out flash on every check was part of the flicker. Only a delete (an
+  // item disappearing) blocks the row actions.
+  const busy = deleteMutation.isPending
 
   const [editingId, setEditingId] = useState<number | null>(null)
 
@@ -178,7 +240,6 @@ export function ShoppingList() {
                   aria-label={t("New item")}
                   name="name"
                   placeholder={t("Add item...")}
-                  disabled={createMutation.isPending}
                 />
                 <SubmitButton>{t("Add")}</SubmitButton>
               </form>
@@ -192,7 +253,6 @@ export function ShoppingList() {
                         <Checkbox
                           aria-label={item.name}
                           checked={item.checked}
-                          disabled={pending}
                           onChange={() => {
                             toggleChecked(item)
                           }}
@@ -235,7 +295,7 @@ export function ShoppingList() {
                             <Button
                               variant="tertiary"
                               data-size="sm"
-                              disabled={pending}
+                              disabled={busy}
                               onClick={() => {
                                 setConfirmingDeleteId(null)
                                 setEditingId(item.id)
@@ -251,7 +311,7 @@ export function ShoppingList() {
                               }
                               data-color="danger"
                               data-size="sm"
-                              disabled={pending}
+                              disabled={busy}
                               onClick={() => {
                                 handleDelete(item.id)
                               }}

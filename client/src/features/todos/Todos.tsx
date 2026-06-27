@@ -1,10 +1,10 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
-  Card,
   Checkbox,
+  List,
   Paragraph,
   Select,
   Textfield,
@@ -50,7 +50,6 @@ function TargetSelect({
   name,
   value,
   onChange,
-  disabled,
   structures,
   infrastructure,
   equipment,
@@ -58,7 +57,6 @@ function TargetSelect({
   name?: string
   value?: string
   onChange?: (token: string) => void
-  disabled?: boolean
   structures: readonly NamedRow[]
   infrastructure: readonly NamedRow[]
   equipment: readonly NamedRow[]
@@ -70,7 +68,6 @@ function TargetSelect({
       name={name}
       aria-label={t("Target")}
       value={value}
-      disabled={disabled}
       onChange={e => onChange?.(e.target.value)}
     >
       <Select.Option value={NO_TARGET}>
@@ -110,9 +107,12 @@ function TargetSelect({
 export function Todos() {
   const { t } = useTranslation("todos")
   const trpc = useTRPC()
+  const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
   const enabled = selectedPropertyId != null
+
+  const listKey = trpc.todo.listForProperty.queryKey({ property_id: propertyId })
 
   const help: PageHelpContent = {
     intro: t(
@@ -147,24 +147,101 @@ export function Todos() {
 
   // A "Move to…" lands the item in the maintenance views, so invalidate both.
   const invalidationKeys = [trpc.todo.pathKey(), trpc.maintenance.pathKey()]
+
+  // Optimistic cache edits so add / toggle / delete / move take effect instantly
+  // rather than waiting for the round-trip and then re-rendering, which read as a
+  // flicker. onSuccess (in the wrapper) still refetches to reconcile.
   const createMutation = useMutationWithInvalidation(
-    trpc.todo.create.mutationOptions(),
+    trpc.todo.create.mutationOptions({
+      // A new todo sorts to the top (list is newest-first); the temp id is larger
+      // than any existing id so it also wins the id tiebreak, matching where the
+      // real serial id lands. Only general todos appear here — a targeted create
+      // becomes a maintenance task instead.
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        if (vars.target == null) {
+          qc.setQueryData(listKey, old => {
+            const nextId =
+              (old ?? []).reduce((max, td) => Math.max(max, td.id), 0) + 1
+            return [
+              {
+                id: nextId,
+                property_id: vars.property_id,
+                description: vars.description,
+                done: false,
+                created_at: Temporal.Now.instant(),
+                created_by: null,
+              },
+              ...(old ?? []),
+            ]
+          })
+        }
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
     [trpc.todo.pathKey()],
   )
   const updateMutation = useMutationWithInvalidation(
-    trpc.todo.update.mutationOptions(),
+    trpc.todo.update.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old =>
+          old?.map(td =>
+            td.id === vars.id
+              ? {
+                  ...td,
+                  ...(vars.done !== undefined && { done: vars.done }),
+                  ...(vars.description !== undefined && {
+                    description: vars.description,
+                  }),
+                }
+              : td,
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
     [trpc.todo.pathKey()],
   )
   const deleteMutation = useMutationWithInvalidation(
-    trpc.todo.delete.mutationOptions(),
+    trpc.todo.delete.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old => old?.filter(td => td.id !== vars.id))
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
     [trpc.todo.pathKey()],
   )
   const moveMutation = useMutationWithInvalidation(
-    trpc.todo.moveToMaintenance.mutationOptions(),
+    trpc.todo.moveToMaintenance.mutationOptions({
+      // The todo leaves this list and becomes a maintenance task.
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old => old?.filter(td => td.id !== vars.id))
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
     invalidationKeys,
   )
 
-  const { pending, error } = useMutationsStatus(
+  const { error } = useMutationsStatus(
     createMutation,
     updateMutation,
     deleteMutation,
@@ -249,7 +326,7 @@ export function Todos() {
           aria-label={t("New todo")}
           name="description"
           placeholder={t("Add todo...")}
-          disabled={createMutation.isPending || !enabled}
+          disabled={!enabled}
         />
         <SubmitButton disabled={!enabled}>{t("Add")}</SubmitButton>
       </form>
@@ -257,108 +334,97 @@ export function Todos() {
       {todos.length === 0 ? (
         <EmptyState title={t("No todos yet.")} />
       ) : (
-        <ul className={styles.list}>
+        <List.Unordered className={styles.list}>
           {todos.map(todo => (
-            <Card asChild key={todo.id}>
-              <li>
-                <Card.Block className={styles.row} data-size="sm">
-                  <Checkbox
-                    aria-label={t("Done")}
-                    checked={todo.done}
-                    disabled={pending}
-                    onChange={() => {
-                      toggleDone(todo)
-                    }}
-                  />
-                  <Paragraph
-                    className={`${styles.description} ${
-                      todo.done ? styles.done : ""
-                    }`}
-                    data-size="sm"
-                  >
-                    {todo.description}
-                  </Paragraph>
-                  <div className={styles.actions}>
-                    {confirmingDeleteId === todo.id ? (
+            <List.Item className={styles.row} key={todo.id}>
+              <Checkbox
+                aria-label={t("Done")}
+                checked={todo.done}
+                onChange={() => {
+                  toggleDone(todo)
+                }}
+              />
+              <Paragraph
+                className={`${styles.description} ${
+                  todo.done ? styles.done : ""
+                }`}
+                data-size="sm"
+              >
+                {todo.description}
+              </Paragraph>
+              <div className={styles.actions}>
+                {confirmingDeleteId === todo.id ? (
+                  <>
+                    <Button
+                      variant="tertiary"
+                      data-size="sm"
+                      onClick={() => {
+                        setConfirmingDeleteId(null)
+                      }}
+                    >
+                      {t("Cancel")}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      data-color="danger"
+                      data-size="sm"
+                      onClick={() => {
+                        handleConfirmDelete(todo.id)
+                      }}
+                    >
+                      {t("Confirm delete")}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {movingId === todo.id ? (
                       <>
+                        <TargetSelect
+                          value={NO_TARGET}
+                          structures={structureRows}
+                          infrastructure={infrastructureRows}
+                          equipment={equipmentRows}
+                          onChange={token => {
+                            handleMove(todo.id, token)
+                          }}
+                        />
                         <Button
                           variant="tertiary"
                           data-size="sm"
-                          disabled={pending}
                           onClick={() => {
-                            setConfirmingDeleteId(null)
+                            setMovingId(null)
                           }}
                         >
                           {t("Cancel")}
                         </Button>
-                        <Button
-                          variant="primary"
-                          data-color="danger"
-                          data-size="sm"
-                          disabled={pending}
-                          onClick={() => {
-                            handleConfirmDelete(todo.id)
-                          }}
-                        >
-                          {t("Confirm delete")}
-                        </Button>
                       </>
                     ) : (
-                      <>
-                        {movingId === todo.id ? (
-                          <>
-                            <TargetSelect
-                              value={NO_TARGET}
-                              disabled={pending}
-                              structures={structureRows}
-                              infrastructure={infrastructureRows}
-                              equipment={equipmentRows}
-                              onChange={token => {
-                                handleMove(todo.id, token)
-                              }}
-                            />
-                            <Button
-                              variant="tertiary"
-                              data-size="sm"
-                              disabled={pending}
-                              onClick={() => {
-                                setMovingId(null)
-                              }}
-                            >
-                              {t("Cancel")}
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="tertiary"
-                            data-size="sm"
-                            disabled={pending}
-                            onClick={() => {
-                              setMovingId(todo.id)
-                            }}
-                          >
-                            {t("Move to...")}
-                          </Button>
-                        )}
-                        <Button
-                          variant="tertiary"
-                          data-color="danger"
-                          data-size="sm"
-                          disabled={pending}
-                          onClick={() => {
-                            setConfirmingDeleteId(todo.id)
-                          }}
-                        >
-                          {t("Delete")}
-                        </Button>
-                      </>
+                      <Button
+                        variant="tertiary"
+                        data-size="sm"
+                        onClick={() => {
+                          setMovingId(todo.id)
+                        }}
+                      >
+                        {t("Move to...")}
+                      </Button>
                     )}
-                  </div>
-                </Card.Block>
-              </li>
-            </Card>
+                    <Button
+                      variant="tertiary"
+                      data-color="danger"
+                      data-size="sm"
+                      onClick={() => {
+                        setConfirmingDeleteId(todo.id)
+                      }}
+                    >
+                      {t("Delete")}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </List.Item>
           ))}
-        </ul>
+        </List.Unordered>
       )}
     </div>
   )

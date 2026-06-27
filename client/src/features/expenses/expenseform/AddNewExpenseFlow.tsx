@@ -64,7 +64,7 @@ export function AddNewExpenseFlow({
             {drafts.drafts.length > 0 && <Divider />}
 
             <Heading level={2} data-size="sm">
-              {t("Add expense")}
+              {t("Category")}
             </Heading>
 
             <CategoryPicker
