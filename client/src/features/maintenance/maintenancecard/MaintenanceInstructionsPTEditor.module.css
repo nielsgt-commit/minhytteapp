@@ -4,6 +4,10 @@
   gap: 0.5rem;
 }
 
+.formattingToggle {
+  align-self: flex-start;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;

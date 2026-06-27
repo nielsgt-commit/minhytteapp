@@ -17,6 +17,7 @@ import {
 } from "@portabletext/toolbar"
 import type { PortableTextBlock } from "@portabletext/types"
 import { Button } from "@digdir/designsystemet-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./MaintenanceInstructionsPTEditor.module.css"
 
@@ -229,6 +230,9 @@ export function MaintenanceInstructionsPTEditor({
   onChange: (value: PortableTextBlock[]) => void
 }) {
   const { t } = useTranslation("maintenance")
+  // Formatting toolbar is hidden by default to keep the notes area uncluttered;
+  // people who just want to type plain text never see it.
+  const [showFormatting, setShowFormatting] = useState(false)
 
   return (
     <div className={styles.root} aria-label={t("Description")}>
@@ -246,7 +250,21 @@ export function MaintenanceInstructionsPTEditor({
             }
           }}
         />
-        <Toolbar />
+        <Button
+          type="button"
+          variant="tertiary"
+          data-size="sm"
+          className={styles.formattingToggle}
+          aria-expanded={showFormatting}
+          onClick={() => {
+            setShowFormatting(s => !s)
+          }}
+        >
+          {showFormatting
+            ? t("Hide formatting options")
+            : t("Show formatting options")}
+        </Button>
+        {showFormatting && <Toolbar />}
         <PortableTextEditable
           className={styles.editable}
           renderStyle={renderStyle}
