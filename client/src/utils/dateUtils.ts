@@ -39,6 +39,14 @@ export function formatDateRange(
   return `${a} – ${b}`
 }
 
+// Locale-aware "month year" label (e.g. "June 2026") for grouping headings.
+export function formatMonthYear(
+  pd: Temporal.PlainDate,
+  locale: string,
+): string {
+  return pd.toLocaleString(locale, { year: "numeric", month: "long" })
+}
+
 // Fixed `dd/MM` for the calendar-grid day labels (format-stable across
 // locales on purpose). Sliced from the ISO string so the zero-padding
 // comes from Temporal itself.

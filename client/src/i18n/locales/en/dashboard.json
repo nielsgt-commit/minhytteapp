@@ -110,5 +110,6 @@
   "Week": "Week",
   "Week {{weekNumber}}": "Week {{weekNumber}}",
   "Weekday": "Weekday",
+  "W{{week}} priority: {{name}}": "W{{week}} priority: {{name}}",
   "Year": "Year"
 }

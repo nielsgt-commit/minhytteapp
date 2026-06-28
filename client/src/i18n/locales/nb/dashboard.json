@@ -105,6 +105,7 @@
   "Week": "Uke",
   "Week {{weekNumber}}": "Uke {{weekNumber}}",
   "Weekday": "Ukedag",
+  "W{{week}} priority: {{name}}": "U{{week}} prioritet: {{name}}",
   "Year": "År",
   "{{vehicle}} — free": "{{vehicle}} — ledig",
   "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}"

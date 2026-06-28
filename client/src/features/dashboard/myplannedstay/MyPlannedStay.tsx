@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
-import { useSuspenseQuery } from "@tanstack/react-query"
+import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
@@ -10,7 +10,11 @@ import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { Temporal } from "temporal-polyfill"
-import { formatDateRange } from "@/utils/dateUtils"
+import {
+  formatDateRange,
+  formatMonthYear,
+  isoWeekMonday,
+} from "@/utils/dateUtils"
 import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
 import { EditStayFlow } from "@/features/planstay/editstayflow/EditStayFlow.tsx"
 import styles from "./MyPlannedStay.module.css"
@@ -72,7 +76,14 @@ export function MyPlannedStay() {
       property_id: selectedPropertyId,
     }),
   )
-  const [openId, setOpenId] = useState<number | null>(null)
+  const active = bookings.filter(b => b.status !== "cancelled")
+  const myBookings = active
+    .filter(b => b.occupants.some(o => o.user_id === me.id))
+    .sort((a, b) => Temporal.PlainDate.compare(a.start_date, b.start_date))
+
+  const [openId, setOpenId] = useState<number | null>(
+    () => myBookings[0]?.id ?? null,
+  )
   const [editingId, setEditingId] = useState<number | null>(null)
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
     null,
@@ -83,221 +94,309 @@ export function MyPlannedStay() {
   )
   const { error: mutationError } = useMutationsStatus(updateMutation)
 
-  const active = bookings.filter(b => b.status !== "cancelled")
-  const myBookings = active.filter(b =>
-    b.occupants.some(o => o.user_id === me.id),
+  // Priority weeks are assigned per ISO year, so fetch the list once per
+  // distinct year the user's stays touch, then resolve overlaps client-side.
+  const priorityYears = Array.from(
+    new Set(myBookings.flatMap(b => [b.start_date.year, b.end_date.year])),
   )
+  const priorityResults = useQueries({
+    queries: priorityYears.map(year => ({
+      ...trpc.priority.list.queryOptions({
+        property_id: selectedPropertyId,
+        year,
+      }),
+      enabled: selectedPropertyId > 0,
+    })),
+  })
+  const priorityByYear = new Map(
+    priorityYears.map((year, i) => [year, priorityResults[i].data]),
+  )
+  const priorityWeeksFor = (b: (typeof myBookings)[number]) => {
+    const weeks: { iso_week: number; owner_name: string }[] = []
+    for (const year of new Set([b.start_date.year, b.end_date.year])) {
+      const data = priorityByYear.get(year)
+      if (!data) continue
+      const ownerNameById = new Map(
+        data.eligibleOwners.map(o => [o.user_group_id, o.user_group_name]),
+      )
+      for (const a of data.assignments) {
+        const weekStart = isoWeekMonday(a.year, a.iso_week)
+        const weekEnd = weekStart.add({ days: 6 })
+        if (
+          Temporal.PlainDate.compare(weekStart, b.end_date) <= 0 &&
+          Temporal.PlainDate.compare(weekEnd, b.start_date) >= 0
+        ) {
+          weeks.push({
+            iso_week: a.iso_week,
+            owner_name:
+              ownerNameById.get(a.user_group_id) ??
+              `#${String(a.user_group_id)}`,
+          })
+        }
+      }
+    }
+    return weeks
+  }
 
   if (myBookings.length === 0) {
     return <EmptyState title={t("No planned stays yet.")} />
   }
 
+  type MonthGroup = {
+    key: string
+    label: string
+    bookings: typeof myBookings
+  }
+  const monthGroups: MonthGroup[] = []
+  let currentGroup: MonthGroup | null = null
+  for (const b of myBookings) {
+    const key = b.start_date.toString().slice(0, 7) // YYYY-MM
+    if (currentGroup?.key === key) {
+      currentGroup.bookings.push(b)
+    } else {
+      currentGroup = {
+        key,
+        label: formatMonthYear(b.start_date, i18n.language),
+        bookings: [b],
+      }
+      monthGroups.push(currentGroup)
+    }
+  }
+
   return (
     <>
       <ErrorAlert error={mutationError} />
-      <ul className={styles.list}>
-        {myBookings.map(b => {
-          const otherNames = new Set<string>()
-          for (const other of active) {
-            if (
-              !rangesOverlap(
-                b.start_date,
-                b.end_date,
-                other.start_date,
-                other.end_date,
-              )
-            )
-              continue
-            for (const o of other.occupants) {
-              if (o.user_id === me.id) continue
-              otherNames.add(o.user_name ?? `#${String(o.user_id)}`)
-            }
-          }
-          const names = Array.from(otherNames)
-          const isOpen = openId === b.id
-          const isEditing = editingId === b.id
-          const isConfirmingDelete = confirmingDeleteId === b.id
-          const canEdit = b.booker_id === me.id
-          const toggle = () => {
-            if (isEditing) return
-            setConfirmingDeleteId(null)
-            setOpenId(prev => (prev === b.id ? null : b.id))
-          }
-          return (
-            <Card asChild key={b.id}>
-              <li>
-                <Card.Block
-                  role={isEditing ? undefined : "button"}
-                  tabIndex={isEditing ? undefined : 0}
-                  aria-expanded={isEditing ? undefined : isOpen}
-                  onClick={isEditing ? undefined : toggle}
-                  onKeyDown={
-                    isEditing
-                      ? undefined
-                      : e => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault()
-                            toggle()
-                          }
-                        }
+      <div className={styles.groups}>
+        {monthGroups.map(group => (
+          <section key={group.key}>
+            <h3 className={styles.monthHeading}>{group.label}</h3>
+            <ul className={styles.list}>
+              {group.bookings.map(b => {
+                const otherNames = new Set<string>()
+                for (const other of active) {
+                  if (
+                    !rangesOverlap(
+                      b.start_date,
+                      b.end_date,
+                      other.start_date,
+                      other.end_date,
+                    )
+                  )
+                    continue
+                  for (const o of other.occupants) {
+                    if (o.user_id === me.id) continue
+                    otherNames.add(o.user_name ?? `#${String(o.user_id)}`)
                   }
-                  className={styles.cardBlock}
-                >
-                  <div>
-                    {formatDateRange(b.start_date, b.end_date, i18n.language)}
-                  </div>
-                  {isOpen && !isEditing && (
-                    <>
-                      <div className={styles.companions}>
-                        {names.length > 0 ? (
-                          <>
-                            <span>{t("Accompanied by:")}</span>
-                            {names.map(n => (
-                              <Tag key={n} data-color="info">
-                                {n}
-                              </Tag>
-                            ))}
-                          </>
-                        ) : (
-                          <span>{t("Solo stay")}</span>
-                        )}
-                      </div>
-                      {!canEdit && (
-                        <div className={styles.companions}>
-                          <span>{t("Booked by:")}</span>
-                          <Tag data-color="neutral">
-                            {b.booker_name ?? `#${String(b.booker_id)}`}
-                          </Tag>
+                }
+                const names = Array.from(otherNames)
+                const isOpen = openId === b.id
+                const isEditing = editingId === b.id
+                const isConfirmingDelete = confirmingDeleteId === b.id
+                const canEdit = b.booker_id === me.id
+                const priorityWeeks = priorityWeeksFor(b)
+                const toggle = () => {
+                  if (isEditing) return
+                  setConfirmingDeleteId(null)
+                  setOpenId(prev => (prev === b.id ? null : b.id))
+                }
+                return (
+                  <Card asChild key={b.id}>
+                    <li>
+                      <Card.Block
+                        role={isEditing ? undefined : "button"}
+                        tabIndex={isEditing ? undefined : 0}
+                        aria-expanded={isEditing ? undefined : isOpen}
+                        onClick={isEditing ? undefined : toggle}
+                        onKeyDown={
+                          isEditing
+                            ? undefined
+                            : e => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault()
+                                  toggle()
+                                }
+                              }
+                        }
+                        className={styles.cardBlock}
+                      >
+                        <div className={styles.cardHead}>
+                          <span>
+                            {formatDateRange(
+                              b.start_date,
+                              b.end_date,
+                              i18n.language,
+                            )}
+                          </span>
+                          {priorityWeeks.length > 0 && (
+                            <div className={styles.priorityTags}>
+                              {priorityWeeks.map(pw => (
+                                <Tag key={pw.iso_week} data-color="warning">
+                                  {t("W{{week}} priority: {{name}}", {
+                                    week: pw.iso_week,
+                                    name: pw.owner_name,
+                                  })}
+                                </Tag>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className={styles.actions}>
-                        {canEdit ? (
-                          isConfirmingDelete ? (
-                            <>
-                              <Button
-                                type="button"
-                                variant="tertiary"
-                                disabled={updateMutation.isPending}
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  setConfirmingDeleteId(null)
-                                }}
-                              >
-                                {t("Cancel")}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="primary"
-                                data-color="danger"
-                                disabled={updateMutation.isPending}
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  setConfirmingDeleteId(null)
-                                  updateMutation.mutate({
-                                    id: b.id,
-                                    property_id: b.property_id,
-                                    start_date: b.start_date,
-                                    end_date: b.end_date,
-                                    status: "cancelled",
-                                    notes: b.notes,
-                                    occupants: b.occupants.map(o => ({
-                                      user_id: o.user_id,
-                                      room_id: o.room_id,
-                                      queued: o.queued,
-                                      sleeps_separately: o.sleeps_separately,
-                                    })),
-                                  })
-                                }}
-                              >
-                                {t("Confirm delete")}
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  setEditingId(b.id)
-                                }}
-                              >
-                                {t("Edit stay")}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                data-color="danger"
-                                disabled={updateMutation.isPending}
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  setConfirmingDeleteId(b.id)
-                                }}
-                              >
-                                {t("Delete stay")}
-                              </Button>
-                            </>
-                          )
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            data-color="danger"
-                            disabled={updateMutation.isPending}
+                        {isOpen && !isEditing && (
+                          <>
+                            <div className={styles.companions}>
+                              {names.length > 0 ? (
+                                <>
+                                  <span>{t("Accompanied by:")}</span>
+                                  {names.map(n => (
+                                    <Tag key={n} data-color="info">
+                                      {n}
+                                    </Tag>
+                                  ))}
+                                </>
+                              ) : (
+                                <span>{t("Solo stay")}</span>
+                              )}
+                            </div>
+                            {!canEdit && (
+                              <div className={styles.companions}>
+                                <span>{t("Booked by:")}</span>
+                                <Tag data-color="neutral">
+                                  {b.booker_name ?? `#${String(b.booker_id)}`}
+                                </Tag>
+                              </div>
+                            )}
+                            <div className={styles.actions}>
+                              {canEdit ? (
+                                isConfirmingDelete ? (
+                                  <>
+                                    <Button
+                                      type="button"
+                                      variant="tertiary"
+                                      disabled={updateMutation.isPending}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        setConfirmingDeleteId(null)
+                                      }}
+                                    >
+                                      {t("Cancel")}
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="primary"
+                                      data-color="danger"
+                                      disabled={updateMutation.isPending}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        setConfirmingDeleteId(null)
+                                        updateMutation.mutate({
+                                          id: b.id,
+                                          property_id: b.property_id,
+                                          start_date: b.start_date,
+                                          end_date: b.end_date,
+                                          status: "cancelled",
+                                          notes: b.notes,
+                                          occupants: b.occupants.map(o => ({
+                                            user_id: o.user_id,
+                                            room_id: o.room_id,
+                                            queued: o.queued,
+                                            sleeps_separately:
+                                              o.sleeps_separately,
+                                          })),
+                                        })
+                                      }}
+                                    >
+                                      {t("Confirm delete")}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        setEditingId(b.id)
+                                      }}
+                                    >
+                                      {t("Edit stay")}
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      data-color="danger"
+                                      disabled={updateMutation.isPending}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        setConfirmingDeleteId(b.id)
+                                      }}
+                                    >
+                                      {t("Delete stay")}
+                                    </Button>
+                                  </>
+                                )
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  data-color="danger"
+                                  disabled={updateMutation.isPending}
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    updateMutation.mutate({
+                                      id: b.id,
+                                      property_id: b.property_id,
+                                      start_date: b.start_date,
+                                      end_date: b.end_date,
+                                      status: b.status,
+                                      notes: b.notes,
+                                      occupants: b.occupants
+                                        .filter(o => o.user_id !== me.id)
+                                        .map(o => ({
+                                          user_id: o.user_id,
+                                          room_id: o.room_id,
+                                          queued: o.queued,
+                                          sleeps_separately:
+                                            o.sleeps_separately,
+                                        })),
+                                    })
+                                  }}
+                                >
+                                  {t("Remove me")}
+                                </Button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {isEditing && (
+                          <div
+                            className={styles.editPanel}
                             onClick={e => {
                               e.stopPropagation()
-                              updateMutation.mutate({
-                                id: b.id,
-                                property_id: b.property_id,
-                                start_date: b.start_date,
-                                end_date: b.end_date,
-                                status: b.status,
-                                notes: b.notes,
-                                occupants: b.occupants
-                                  .filter(o => o.user_id !== me.id)
-                                  .map(o => ({
-                                    user_id: o.user_id,
-                                    room_id: o.room_id,
-                                    queued: o.queued,
-                                    sleeps_separately: o.sleeps_separately,
-                                  })),
-                              })
+                            }}
+                            onKeyDown={e => {
+                              e.stopPropagation()
                             }}
                           >
-                            {t("Remove me")}
-                          </Button>
+                            <QueryBoundary>
+                              <EditStayFlow
+                                propertyId={b.property_id}
+                                bookingId={b.id}
+                                initialRecord={bookingToRecord(b)}
+                                onClose={() => {
+                                  setEditingId(null)
+                                }}
+                              />
+                            </QueryBoundary>
+                          </div>
                         )}
-                      </div>
-                    </>
-                  )}
-                  {isEditing && (
-                    <div
-                      className={styles.editPanel}
-                      onClick={e => {
-                        e.stopPropagation()
-                      }}
-                      onKeyDown={e => {
-                        e.stopPropagation()
-                      }}
-                    >
-                      <QueryBoundary>
-                        <EditStayFlow
-                          propertyId={b.property_id}
-                          bookingId={b.id}
-                          initialRecord={bookingToRecord(b)}
-                          onClose={() => {
-                            setEditingId(null)
-                          }}
-                        />
-                      </QueryBoundary>
-                    </div>
-                  )}
-                </Card.Block>
-              </li>
-            </Card>
-          )
-        })}
-      </ul>
+                      </Card.Block>
+                    </li>
+                  </Card>
+                )
+              })}
+            </ul>
+          </section>
+        ))}
+      </div>
     </>
   )
 }
