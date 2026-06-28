@@ -40,7 +40,11 @@
   }
 }
 
-@media (max-width: 640px) {
+/* The bottom nav bar is fixed-position from max-width 900px down (see
+   BottomNavBar.module.css), so the content must reserve room for it across the
+   same range — not just below 640px, or landscape phones (641–900px wide) get
+   their page bottom hidden behind the bar. */
+@media (max-width: 900px) {
   .main {
     padding-bottom: calc(56px + 1rem + env(safe-area-inset-bottom));
   }
