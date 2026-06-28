@@ -148,18 +148,17 @@ export function MyPlannedStay() {
     bookings: typeof myBookings
   }
   const monthGroups: MonthGroup[] = []
-  let currentGroup: MonthGroup | null = null
   for (const b of myBookings) {
     const key = b.start_date.toString().slice(0, 7) // YYYY-MM
-    if (currentGroup?.key === key) {
-      currentGroup.bookings.push(b)
+    const lastGroup = monthGroups.at(-1)
+    if (lastGroup?.key === key) {
+      lastGroup.bookings.push(b)
     } else {
-      currentGroup = {
+      monthGroups.push({
         key,
         label: formatMonthYear(b.start_date, i18n.language),
         bookings: [b],
-      }
-      monthGroups.push(currentGroup)
+      })
     }
   }
 
