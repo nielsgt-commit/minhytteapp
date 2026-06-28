@@ -1,11 +1,13 @@
-import { asc, eq, or } from "drizzle-orm"
+import { and, asc, eq, inArray, or } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import type { PortableTextBlock } from "@portabletext/types"
+import type { db as dbClient } from "../../db/client.ts"
 import {
   equipmentTable,
   inspectionsTable,
   maintenanceTable,
+  procedureStepsTable,
 } from "../../db/schema/maintenance.schema.ts"
 import {
   structuresTable,
@@ -22,6 +24,16 @@ import {
   resolvePropertyIdFromMaintenanceParent,
 } from "../util/propertyAccess.ts"
 import { toWireMaintenance } from "./maintenance.ts"
+import { toWireProcedureStep } from "./procedureStep.ts"
+
+// A db transaction handle, for the shared finding processor below.
+type Tx = Parameters<Parameters<typeof dbClient.transaction>[0]>[0]
+
+// Exactly one of these is set — the inspection's (and its findings') location.
+type Location =
+  | { structure_id: number }
+  | { infrastructure_id: number }
+  | { equipment_id: number }
 
 // Wire mapping: inspection timestamp columns → Temporal.Instant.
 function toWireInspection<
@@ -67,15 +79,33 @@ const startInput = z
   })
   .refine(targetXor.check, { error: targetXor.error })
 
-const findingSchema = z.object({
-  pinned_maintenance_id: z.number().int().positive().optional(),
-  description: z.string().min(1).max(255),
-  pin: z.boolean(),
-  status: z.enum(["ok", "followup"]),
-  // For a brand-new pinned step that already needs followup this cycle: the
-  // one-off todo's text, raised as a child of the step being created.
-  followup_description: z.string().min(1).max(255).optional(),
-})
+// A finding is one of three explicit kinds, mirroring the inspection UI:
+//  - step_result: a verdict on an existing procedure step. "followup" raises a
+//    one-off todo linked to that step; "ok" records nothing.
+//  - new_step: a step added to the procedure this inspection. An optional
+//    followup_description also raises a todo linked to the new step this cycle.
+//  - ad_hoc: a finding outside the procedure. `pin` promotes it into a new
+//    procedure step instead of raising a todo.
+const findingSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("step_result"),
+    step_id: z.number().int().positive(),
+    status: z.enum(["ok", "followup"]),
+    followup_description: z.string().min(1).max(255).optional(),
+  }),
+  z.object({
+    kind: z.literal("new_step"),
+    description: z.string().min(1).max(255),
+    followup_description: z.string().min(1).max(255).optional(),
+  }),
+  z.object({
+    kind: z.literal("ad_hoc"),
+    description: z.string().min(1).max(255),
+    pin: z.boolean(),
+  }),
+])
+
+type Finding = z.infer<typeof findingSchema>
 
 const completeInput = z.object({
   id: z.number().int().positive(),
@@ -96,6 +126,144 @@ const recordInput = z
     findings: z.array(findingSchema),
   })
   .refine(targetXor.check, { error: targetXor.error })
+
+// Narrow an inspection row / record-input's three nullable location columns to
+// the single set one.
+function inspectionLocation(row: {
+  structure_id?: number | null
+  infrastructure_id?: number | null
+  equipment_id?: number | null
+}): Location {
+  if (row.infrastructure_id != null)
+    return { infrastructure_id: row.infrastructure_id }
+  if (row.equipment_id != null) return { equipment_id: row.equipment_id }
+  if (row.structure_id != null) return { structure_id: row.structure_id }
+  throw new TRPCError({
+    code: "BAD_REQUEST",
+    message: "one of structure_id, infrastructure_id, or equipment_id required",
+  })
+}
+
+// Shared insert shape for a one-off todo raised by a finding.
+function todoValues(
+  description: string,
+  location: Location,
+  inspectionId: number,
+  userId: number,
+  sourceStepId: number | null,
+) {
+  return {
+    description,
+    added_by: userId,
+    ...location,
+    category: "maintenance" as const,
+    severity: "patch" as const,
+    status: "todo" as const,
+    recurrence: "once" as const,
+    source_step_id: sourceStepId,
+    inspection_id: inspectionId,
+    completed_at: null,
+  }
+}
+
+// Apply an inspection's findings: create procedure steps for pinned ad-hocs and
+// new steps, and raise one-off todos for followups. Shared by record/complete.
+async function processFindings(
+  tx: Tx,
+  opts: {
+    findings: Finding[]
+    location: Location
+    inspectionId: number
+    userId: number
+  },
+) {
+  const { findings, location, inspectionId, userId } = opts
+
+  // Validate referenced steps belong to this inspection's location before
+  // linking todos to them (app-layer authz — a step_id from elsewhere must not
+  // be linkable across the location/property boundary).
+  const stepIds = findings
+    .filter(f => f.kind === "step_result")
+    .map(f => f.step_id)
+  const validStepIds = new Set<number>()
+  if (stepIds.length > 0) {
+    const [[col, value]] = Object.entries(location) as [
+      [keyof Location, number],
+    ]
+    const rows = await tx
+      .select({ id: procedureStepsTable.id })
+      .from(procedureStepsTable)
+      .where(
+        and(
+          inArray(procedureStepsTable.id, stepIds),
+          eq(procedureStepsTable[col], value),
+        ),
+      )
+    for (const r of rows) validStepIds.add(r.id)
+  }
+
+  for (const f of findings) {
+    if (f.kind === "step_result") {
+      if (f.status !== "followup") continue
+      if (!validStepIds.has(f.step_id)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "procedure step does not belong to this inspection",
+        })
+      }
+      await tx
+        .insert(maintenanceTable)
+        .values(
+          todoValues(
+            f.followup_description ?? "Followup",
+            location,
+            inspectionId,
+            userId,
+            f.step_id,
+          ),
+        )
+    } else if (f.kind === "new_step") {
+      const [step] = await tx
+        .insert(procedureStepsTable)
+        .values({
+          description: f.description,
+          ...location,
+          added_by: userId,
+          created_in_inspection_id: inspectionId,
+        })
+        .returning()
+      if (f.followup_description != null) {
+        await tx
+          .insert(maintenanceTable)
+          .values(
+            todoValues(
+              f.followup_description,
+              location,
+              inspectionId,
+              userId,
+              step.id,
+            ),
+          )
+      }
+    } else {
+      // ad_hoc
+      if (f.pin) {
+        await tx.insert(procedureStepsTable).values({
+          description: f.description,
+          ...location,
+          added_by: userId,
+          created_in_inspection_id: inspectionId,
+        })
+      } else {
+        await tx
+          .insert(maintenanceTable)
+          .values(
+            todoValues(f.description, location, inspectionId, userId, null),
+          )
+      }
+    }
+  }
+}
 
 export const inspectionRouter = router({
   listForProperty: protectedProcedure
@@ -136,12 +304,22 @@ export const inspectionRouter = router({
         input.inspection_id,
       )
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      const rows = await ctx.db
+      const findings = await ctx.db
         .select()
         .from(maintenanceTable)
         .where(eq(maintenanceTable.inspection_id, input.inspection_id))
         .orderBy(asc(maintenanceTable.created_at))
-      return rows.map(toWireMaintenance)
+      const stepsAdded = await ctx.db
+        .select()
+        .from(procedureStepsTable)
+        .where(
+          eq(procedureStepsTable.created_in_inspection_id, input.inspection_id),
+        )
+        .orderBy(asc(procedureStepsTable.created_at))
+      return {
+        findings: findings.map(toWireMaintenance),
+        stepsAdded: stepsAdded.map(toWireProcedureStep),
+      }
     }),
 
   start: protectedProcedure
@@ -192,70 +370,12 @@ export const inspectionRouter = router({
           })
         }
 
-        const findingLocation = () => {
-          if (existing.infrastructure_id != null) {
-            return { infrastructure_id: existing.infrastructure_id }
-          }
-          if (existing.equipment_id != null) {
-            return { equipment_id: existing.equipment_id }
-          }
-          if (existing.structure_id == null) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message:
-                "inspection has no associated structure/infrastructure/equipment",
-            })
-          }
-          return { structure_id: existing.structure_id }
-        }
-
-        const toInsert = input.findings.filter(
-          f => f.status === "followup" || f.pin,
-        )
-
-        for (const f of toInsert) {
-          const isAdHoc = f.pinned_maintenance_id == null
-          // Ad-hoc + pin: pin the new item to the procedure, mark done now.
-          // Ad-hoc no pin: create a one-off todo for followup later.
-          // Existing pinned + followup: create a one-off todo linked to parent.
-          const willBePinned = isAdHoc && f.pin
-          const status = willBePinned ? "done" : "todo"
-          const recurrence = willBePinned ? input.recurrence : "once"
-          const [created] = await tx
-            .insert(maintenanceTable)
-            .values({
-              description: f.description,
-              added_by: ctx.user.id,
-              ...findingLocation(),
-              category: "maintenance",
-              severity: "patch",
-              status,
-              recurrence,
-              is_pinned: willBePinned,
-              parent_maintenance_id: f.pinned_maintenance_id,
-              inspection_id: existing.id,
-              completed_at: status === "done" ? new Date() : null,
-            })
-            .returning()
-
-          // A new pinned step flagged for followup raises a one-off todo this
-          // cycle, linked to the step just created.
-          if (willBePinned && f.followup_description != null) {
-            await tx.insert(maintenanceTable).values({
-              description: f.followup_description,
-              added_by: ctx.user.id,
-              ...findingLocation(),
-              category: "maintenance",
-              severity: "patch",
-              status: "todo",
-              recurrence: "once",
-              is_pinned: false,
-              parent_maintenance_id: created.id,
-              inspection_id: existing.id,
-              completed_at: null,
-            })
-          }
-        }
+        await processFindings(tx, {
+          findings: input.findings,
+          location: inspectionLocation(existing),
+          inspectionId: existing.id,
+          userId: ctx.user.id,
+        })
 
         const [updated] = await tx
           .update(inspectionsTable)
@@ -330,65 +450,12 @@ export const inspectionRouter = router({
           })
           .returning()
 
-        const findingLocation = () => {
-          if (input.infrastructure_id != null)
-            return { infrastructure_id: input.infrastructure_id }
-          if (input.equipment_id != null)
-            return { equipment_id: input.equipment_id }
-          if (input.structure_id == null) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message:
-                "one of structure_id, infrastructure_id, or equipment_id is required",
-            })
-          }
-          return { structure_id: input.structure_id }
-        }
-
-        const toInsert = input.findings.filter(
-          f => f.status === "followup" || f.pin,
-        )
-
-        for (const f of toInsert) {
-          const isAdHoc = f.pinned_maintenance_id == null
-          const willBePinned = isAdHoc && f.pin
-          const status = willBePinned ? "done" : "todo"
-          const recurrence = willBePinned ? input.recurrence : "once"
-          const [created] = await tx
-            .insert(maintenanceTable)
-            .values({
-              description: f.description,
-              added_by: ctx.user.id,
-              ...findingLocation(),
-              category: "maintenance",
-              severity: "patch",
-              status,
-              recurrence,
-              is_pinned: willBePinned,
-              parent_maintenance_id: f.pinned_maintenance_id,
-              inspection_id: inspection.id,
-              completed_at: status === "done" ? now : null,
-            })
-            .returning()
-
-          // A new pinned step flagged for followup raises a one-off todo this
-          // cycle, linked to the step just created.
-          if (willBePinned && f.followup_description != null) {
-            await tx.insert(maintenanceTable).values({
-              description: f.followup_description,
-              added_by: ctx.user.id,
-              ...findingLocation(),
-              category: "maintenance",
-              severity: "patch",
-              status: "todo",
-              recurrence: "once",
-              is_pinned: false,
-              parent_maintenance_id: created.id,
-              inspection_id: inspection.id,
-              completed_at: null,
-            })
-          }
-        }
+        await processFindings(tx, {
+          findings: input.findings,
+          location: inspectionLocation(input),
+          inspectionId: inspection.id,
+          userId: ctx.user.id,
+        })
 
         return toWireInspection(inspection)
       })

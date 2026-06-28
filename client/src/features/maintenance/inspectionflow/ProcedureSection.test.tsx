@@ -20,6 +20,9 @@ const items: ProcedureItem[] = [
 function setup(opts?: {
   state?: Record<number, ProcedureState>
   reorderPending?: boolean
+  disabled?: boolean
+  stagedDescriptions?: Record<number, string>
+  removedItemIds?: number[]
   items?: ProcedureItem[]
   newSteps?: NewStep[]
 }) {
@@ -30,6 +33,9 @@ function setup(opts?: {
   )
   const setProc = vi.fn()
   const moveProcedureItem = vi.fn()
+  const editProcedureItem = vi.fn()
+  const removeProcedureItem = vi.fn()
+  const restoreProcedureItem = vi.fn()
   const addStep = vi.fn()
   const updateStep = vi.fn()
   const commitStep = vi.fn()
@@ -42,6 +48,12 @@ function setup(opts?: {
       setProc={setProc}
       moveProcedureItem={moveProcedureItem}
       reorderPending={opts?.reorderPending ?? false}
+      editProcedureItem={editProcedureItem}
+      removeProcedureItem={removeProcedureItem}
+      restoreProcedureItem={restoreProcedureItem}
+      stagedDescriptions={opts?.stagedDescriptions ?? {}}
+      removedItemIds={opts?.removedItemIds ?? []}
+      disabled={opts?.disabled ?? false}
       newSteps={opts?.newSteps ?? []}
       addStep={addStep}
       updateStep={updateStep}
@@ -54,6 +66,9 @@ function setup(opts?: {
     getProc,
     setProc,
     moveProcedureItem,
+    editProcedureItem,
+    removeProcedureItem,
+    restoreProcedureItem,
     addStep,
     updateStep,
     commitStep,
@@ -191,6 +206,94 @@ describe("ProcedureSection", () => {
   test("description textfield appears only when status is followup", () => {
     setup({ state: { 1: { status: "followup", description: "rusted" } } })
     expect(screen.getByLabelText("Followup description")).toHaveValue("rusted")
+  })
+
+  test("each existing item exposes Edit and Remove buttons", () => {
+    setup()
+    expect(screen.getAllByRole("button", { name: "Edit" })).toHaveLength(2)
+    expect(screen.getAllByRole("button", { name: "Remove" })).toHaveLength(2)
+  })
+
+  test("clicking Remove on an existing item stages removal via removeProcedureItem", async () => {
+    const user = userEvent.setup()
+    const { removeProcedureItem } = setup()
+    await user.click(screen.getAllByRole("button", { name: "Remove" })[0])
+    expect(removeProcedureItem).toHaveBeenCalledWith(1)
+  })
+
+  test("editing an existing item's title stages it via editProcedureItem on Save", async () => {
+    const user = userEvent.setup()
+    const { editProcedureItem } = setup()
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0])
+    const field = screen.getByLabelText("Description")
+    await user.clear(field)
+    await user.type(field, "Check smoke alarm battery")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+    expect(editProcedureItem).toHaveBeenCalledWith(1, "Check smoke alarm battery")
+  })
+
+  test("an unchanged title does not call editProcedureItem on Save", async () => {
+    const user = userEvent.setup()
+    const { editProcedureItem } = setup()
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0])
+    await user.click(screen.getByRole("button", { name: "Save" }))
+    expect(editProcedureItem).not.toHaveBeenCalled()
+  })
+
+  test("Cancel exits edit mode without staging", async () => {
+    const user = userEvent.setup()
+    const { editProcedureItem } = setup()
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0])
+    const field = screen.getByLabelText("Description")
+    await user.clear(field)
+    await user.type(field, "Something else")
+    await user.click(screen.getByRole("button", { name: "Cancel" }))
+    expect(editProcedureItem).not.toHaveBeenCalled()
+    expect(screen.getByText("Check smoke alarm")).toBeInTheDocument()
+  })
+
+  test("a staged rename is shown as the item title", () => {
+    setup({ stagedDescriptions: { 1: "Check smoke alarm battery" } })
+    expect(screen.getByText("Check smoke alarm battery")).toBeInTheDocument()
+    expect(screen.queryByText("Check smoke alarm")).not.toBeInTheDocument()
+  })
+
+  test("re-saving a staged rename back to the original is a no-op", async () => {
+    const user = userEvent.setup()
+    const { editProcedureItem } = setup({
+      stagedDescriptions: { 1: "Check smoke alarm battery" },
+    })
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0])
+    const field = screen.getByLabelText("Description")
+    await user.clear(field)
+    await user.type(field, "Check smoke alarm battery")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+    expect(editProcedureItem).not.toHaveBeenCalled()
+  })
+
+  test("a staged-for-removal item shows 'Will be removed' and a Restore button", () => {
+    setup({ removedItemIds: [1] })
+    expect(screen.getByText("Will be removed")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Restore" })).toBeInTheDocument()
+    // The status radios are hidden for a step that's being removed.
+    expect(screen.getAllByLabelText("OK")).toHaveLength(1)
+  })
+
+  test("clicking Restore on a staged-for-removal item calls restoreProcedureItem", async () => {
+    const user = userEvent.setup()
+    const { restoreProcedureItem } = setup({ removedItemIds: [1] })
+    await user.click(screen.getByRole("button", { name: "Restore" }))
+    expect(restoreProcedureItem).toHaveBeenCalledWith(1)
+  })
+
+  test("disabled disables Edit, Remove and Restore buttons", () => {
+    setup({ disabled: true, removedItemIds: [2] })
+    const buttons = [
+      ...screen.getAllByRole("button", { name: "Edit" }),
+      ...screen.getAllByRole("button", { name: "Remove" }),
+      ...screen.getAllByRole("button", { name: "Restore" }),
+    ]
+    expect(buttons.every(b => (b as HTMLButtonElement).disabled)).toBe(true)
   })
 
   test("reorderPending disables all move buttons", () => {

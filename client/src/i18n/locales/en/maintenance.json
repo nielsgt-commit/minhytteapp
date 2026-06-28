@@ -9,7 +9,6 @@
   "Run an inspection": "Run an inspection",
   "Start an inspection to walk through your check list, note any findings, and record who inspected it. The inspection is saved to the history too.": "Start an inspection to walk through your check list, note any findings, and record who inspected it. The inspection is saved to the history too.",
   "The Structures, Infrastructure and Equipment shown here are set up under Manage Property. A short summary of upcoming and recent upkeep can also appear on the Dashboard, so the others can see how the cabin is being looked after.": "The Structures, Infrastructure and Equipment shown here are set up under Manage Property. A short summary of upcoming and recent upkeep can also appear on the Dashboard, so the others can see how the cabin is being looked after.",
-  " (pinned)": " (pinned)",
   "Due": "Due",
   "Due date": "Due date",
   "Dugnad": "Dugnad",
@@ -101,6 +100,7 @@
   "Planned {{when}}": "Planned {{when}}",
   "Procedure": "Procedure",
   "Remove": "Remove",
+  "Restore": "Restore",
   "Save": "Save",
   "Select a property to see its equipment.": "Select a property to see its equipment.",
   "Severity: {{label}} (click to change)": "Severity: {{label}} (click to change)",
@@ -112,6 +112,8 @@
   "Show todos": "Show todos",
   "Start inspection": "Start inspection",
   "Status": "Status",
+  "Steps added to procedure ({{count}})_one": "Steps added to procedure ({{count}})",
+  "Steps added to procedure ({{count}})_other": "Steps added to procedure ({{count}})",
   "Structures": "Structures",
   "Task": "Task",
   "Task actions": "Task actions",
@@ -119,5 +121,6 @@
   "Type <0>{{description}}</0> to confirm:": "Type <0>{{description}}</0> to confirm:",
   "Type description to confirm deletion": "Type description to confirm deletion",
   "URL": "URL",
+  "Will be removed": "Will be removed",
   "Yearly": "Yearly"
 }

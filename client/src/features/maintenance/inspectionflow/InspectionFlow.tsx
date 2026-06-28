@@ -49,8 +49,8 @@ export function InspectionFlow(props: {
   const selectedUserId = useSelectedUserId()
   const selectedPropertyId = useSelectedPropertyId()
 
-  const { data: maintenanceItems } = useQuery(
-    trpc.maintenance.listForProperty.queryOptions(
+  const { data: procedureSteps } = useQuery(
+    trpc.procedureStep.listForProperty.queryOptions(
       { property_id: selectedPropertyId ?? 0 },
       { enabled: open && selectedPropertyId != null },
     ),
@@ -67,22 +67,19 @@ export function InspectionFlow(props: {
   if (!open) return null
   // Mount the form only once its data is in, so the inspector default can be
   // plain initial state instead of an effect resyncing it later.
-  if (maintenanceItems == null || users == null) return <CardSkeleton />
+  if (procedureSteps == null || users == null) return <CardSkeleton />
 
-  const procedureItems = maintenanceItems
-    .filter(m => {
-      if (!m.is_pinned) return false
-      if (scope.kind === "structure") {
-        return m.structure_id === scope.id && m.equipment_id == null
-      }
+  const procedureItems = procedureSteps
+    .filter(s => {
+      if (scope.kind === "structure") return s.structure_id === scope.id
       if (scope.kind === "infrastructure")
-        return m.infrastructure_id === scope.id
-      return m.equipment_id === scope.id
+        return s.infrastructure_id === scope.id
+      return s.equipment_id === scope.id
     })
     .slice()
     .sort((a, b) => {
-      const aP = a.procedure_position ?? Number.MAX_SAFE_INTEGER
-      const bP = b.procedure_position ?? Number.MAX_SAFE_INTEGER
+      const aP = a.position ?? Number.MAX_SAFE_INTEGER
+      const bP = b.position ?? Number.MAX_SAFE_INTEGER
       if (aP !== bP) return aP - bP
       return Temporal.Instant.compare(a.created_at, b.created_at)
     })
@@ -112,6 +109,10 @@ function InspectionFlowForm(props: {
   const [procState, setProcState] = useState<Record<number, ProcedureState>>({})
   const [newSteps, setNewSteps] = useState<NewStep[]>([])
   const [adHocs, setAdHocs] = useState<AdHoc[]>([])
+  // Staged procedure-template edits — renames and removals are not persisted
+  // until the inspection is completed (see handleSubmit).
+  const [renamedSteps, setRenamedSteps] = useState<Record<number, string>>({})
+  const [removedStepIds, setRemovedStepIds] = useState<number[]>([])
 
   const recordMutation = useMutationWithInvalidation(
     trpc.inspection.record.mutationOptions({
@@ -120,15 +121,37 @@ function InspectionFlowForm(props: {
         onClose()
       },
     }),
-    [trpc.inspection.pathKey(), trpc.maintenance.pathKey()],
+    [
+      trpc.inspection.pathKey(),
+      trpc.maintenance.pathKey(),
+      trpc.procedureStep.pathKey(),
+    ],
   )
 
   const reorderMutation = useMutationWithInvalidation(
-    trpc.maintenance.setProcedureOrder.mutationOptions(),
-    [trpc.maintenance.pathKey()],
+    trpc.procedureStep.setOrder.mutationOptions(),
+    [trpc.procedureStep.pathKey()],
   )
 
-  const { pending, error } = useMutationsStatus(recordMutation, reorderMutation)
+  const renameMutation = useMutationWithInvalidation(
+    trpc.procedureStep.rename.mutationOptions(),
+    [trpc.procedureStep.pathKey()],
+  )
+
+  // "Remove from procedure" archives the step: it stops recurring in future
+  // inspections but its history (raised followups, originating inspection) is
+  // preserved.
+  const archiveMutation = useMutationWithInvalidation(
+    trpc.procedureStep.archive.mutationOptions(),
+    [trpc.procedureStep.pathKey()],
+  )
+
+  const { pending, error } = useMutationsStatus(
+    recordMutation,
+    reorderMutation,
+    renameMutation,
+    archiveMutation,
+  )
 
   const moveProcedureItem = (id: number, direction: -1 | 1) => {
     const ids = procedureItems.map(p => p.id)
@@ -139,6 +162,18 @@ function InspectionFlowForm(props: {
     next[idx] = ids[target]
     next[target] = id
     reorderMutation.mutate({ ids: next })
+  }
+
+  const editProcedureItem = (id: number, description: string) => {
+    setRenamedSteps(prev => ({ ...prev, [id]: description }))
+  }
+
+  const removeProcedureItem = (id: number) => {
+    setRemovedStepIds(prev => (prev.includes(id) ? prev : [...prev, id]))
+  }
+
+  const restoreProcedureItem = (id: number) => {
+    setRemovedStepIds(prev => prev.filter(x => x !== id))
   }
 
   const getProc = (id: number, fallback: string): ProcedureState =>
@@ -233,25 +268,33 @@ function InspectionFlowForm(props: {
     if (!inspectedBy) return
     const recurrence = fdString(fd, "recurrence") as Recurrence
 
-    const procFindings = procedureItems.map(item => {
-      const state = getProc(item.id, item.description)
-      return {
-        pinned_maintenance_id: item.id,
-        description: state.description.trim() || item.description,
-        pin: false,
-        status: state.status,
-      }
-    })
+    // Steps staged for removal are dropped from this inspection's findings and
+    // archived below, so they neither recur nor raise a followup this cycle.
+    const procFindings = procedureItems
+      .filter(item => !removedStepIds.includes(item.id))
+      .map(item => {
+        const state = getProc(item.id, item.description)
+        return {
+          kind: "step_result" as const,
+          step_id: item.id,
+          status: state.status,
+          ...(state.status === "followup"
+            ? {
+                followup_description:
+                  state.description.trim() || item.description,
+              }
+            : {}),
+        }
+      })
 
-    // New steps are pinned so they join the procedure and recur next time.
-    // A step flagged "needs followup" also raises a one-off todo this cycle,
-    // linked server-side to the step it created.
+    // New steps join the procedure and recur next time. A step flagged "needs
+    // followup" also raises a one-off todo this cycle, linked server-side to
+    // the step it created.
     const stepFindings = newSteps
       .filter(s => s.description.trim().length > 0)
       .map(s => ({
+        kind: "new_step" as const,
         description: s.description.trim(),
-        pin: true,
-        status: "ok" as const,
         ...(s.status === "followup"
           ? {
               followup_description:
@@ -263,12 +306,26 @@ function InspectionFlowForm(props: {
     const adHocFindings = adHocs
       .filter(a => a.description.trim().length > 0)
       .map(a => ({
+        kind: "ad_hoc" as const,
         description: a.description.trim(),
         pin: a.pin,
-        status: "followup" as const,
       }))
 
     try {
+      // Apply staged procedure-template edits before recording the inspection.
+      // Renames that match the original (e.g. edited then reverted) and renames
+      // of removed steps are skipped; removals are archived so they stop
+      // recurring while the inspection-history record is preserved.
+      for (const [idStr, description] of Object.entries(renamedSteps)) {
+        const id = Number(idStr)
+        if (removedStepIds.includes(id)) continue
+        const original = procedureItems.find(p => p.id === id)?.description
+        if (original == null || description === original) continue
+        await renameMutation.mutateAsync({ id, description })
+      }
+      for (const id of removedStepIds) {
+        await archiveMutation.mutateAsync({ id })
+      }
       await recordMutation.mutateAsync({
         ...(scope.kind === "structure" ? { structure_id: scope.id } : {}),
         ...(scope.kind === "infrastructure"
@@ -299,6 +356,12 @@ function InspectionFlowForm(props: {
         setProc={setProc}
         moveProcedureItem={moveProcedureItem}
         reorderPending={reorderMutation.isPending}
+        editProcedureItem={editProcedureItem}
+        removeProcedureItem={removeProcedureItem}
+        restoreProcedureItem={restoreProcedureItem}
+        stagedDescriptions={renamedSteps}
+        removedItemIds={removedStepIds}
+        disabled={pending}
         newSteps={newSteps}
         addStep={addStep}
         updateStep={updateStep}

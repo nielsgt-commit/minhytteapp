@@ -20,6 +20,12 @@
   flex: 1;
 }
 
+.removedTitle {
+  flex: 1;
+  text-decoration: line-through;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
 .procActions {
   display: flex;
   gap: 1rem;

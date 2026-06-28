@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm"
 import {
   type AnyPgColumn,
-  boolean,
   check,
   integer,
   jsonb,
@@ -91,10 +90,11 @@ export const maintenanceTable = pgTable(
     equipment_id: integer("equipment_id").references(() => equipmentTable.id, {
       onDelete: "cascade",
     }),
-    is_pinned: boolean("is_pinned").notNull().default(false),
-    procedure_position: integer("procedure_position"),
-    parent_maintenance_id: integer("parent_maintenance_id").references(
-      (): AnyPgColumn => maintenanceTable.id,
+    // The recurring procedure step this work item was raised from, if any (a
+    // "needs followup" during an inspection). Null for plain todos and ad-hoc
+    // findings. Replaces the former self-referential parent_maintenance_id.
+    source_step_id: integer("source_step_id").references(
+      (): AnyPgColumn => procedureStepsTable.id,
       { onDelete: "set null" },
     ),
     inspection_id: integer("inspection_id").references(
@@ -169,6 +169,54 @@ export const inspectionsTable = pgTable(
   t => [
     check(
       "inspection_target_exclusive",
+      sql`(
+        (CASE WHEN ${t.structure_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.infrastructure_id} IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN ${t.equipment_id} IS NOT NULL THEN 1 ELSE 0 END)
+      ) = 1`,
+    ),
+  ],
+)
+
+// A recurring checklist step for a location's inspection procedure. Distinct
+// from maintenanceTable (one-off work with a todo→done lifecycle): a step is a
+// template that surfaces every inspection. The two convert into each other —
+// a todo is promoted into a step, and a step marked "needs followup" raises a
+// todo (maintenanceTable.source_step_id). "Removing" a step archives it
+// (archived_at) so inspection history is preserved.
+export const procedureStepsTable = pgTable(
+  "procedure_steps",
+  {
+    id: serial("id").primaryKey(),
+    structure_id: integer("structure_id").references(() => structuresTable.id, {
+      onDelete: "cascade",
+    }),
+    infrastructure_id: integer("infrastructure_id").references(
+      () => infrastructureTable.id,
+      { onDelete: "cascade" },
+    ),
+    equipment_id: integer("equipment_id").references(() => equipmentTable.id, {
+      onDelete: "cascade",
+    }),
+    description: varchar("description", { length: 255 }).notNull(),
+    instructions_pt: jsonb("instructions_pt").$type<PortableTextBlock[]>(),
+    position: integer("position"),
+    added_by: integer("added_by")
+      .notNull()
+      .references(() => usersTable.id),
+    // The inspection during which this step was first added, for history
+    // display ("steps added this inspection"). Null for steps seeded outside an
+    // inspection or whose originating inspection was later deleted.
+    created_in_inspection_id: integer("created_in_inspection_id").references(
+      (): AnyPgColumn => inspectionsTable.id,
+      { onDelete: "set null" },
+    ),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    archived_at: timestamp("archived_at"),
+  },
+  t => [
+    check(
+      "procedure_step_location_xor",
       sql`(
         (CASE WHEN ${t.structure_id} IS NOT NULL THEN 1 ELSE 0 END)
         + (CASE WHEN ${t.infrastructure_id} IS NOT NULL THEN 1 ELSE 0 END)

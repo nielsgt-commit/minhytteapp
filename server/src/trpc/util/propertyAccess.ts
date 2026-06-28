@@ -5,6 +5,7 @@ import {
   equipmentTable,
   inspectionsTable,
   maintenanceTable,
+  procedureStepsTable,
 } from "../../db/schema/maintenance.schema.ts"
 import {
   infrastructureTable,
@@ -172,6 +173,42 @@ export async function resolvePropertyIdFromMaintenance(
     row.infrastructure_property_id ??
     row.equipment_property_id
   if (propertyId == null) throw notFound("maintenance not found")
+  return propertyId
+}
+
+export async function resolvePropertyIdFromProcedureStep(
+  db: Db,
+  stepId: number,
+): Promise<number> {
+  const row = (
+    await db
+      .select({
+        structure_property_id: structuresTable.property_id,
+        infrastructure_property_id: infrastructureTable.property_id,
+        equipment_property_id: equipmentTable.property_id,
+      })
+      .from(procedureStepsTable)
+      .leftJoin(
+        structuresTable,
+        eq(structuresTable.id, procedureStepsTable.structure_id),
+      )
+      .leftJoin(
+        infrastructureTable,
+        eq(infrastructureTable.id, procedureStepsTable.infrastructure_id),
+      )
+      .leftJoin(
+        equipmentTable,
+        eq(equipmentTable.id, procedureStepsTable.equipment_id),
+      )
+      .where(eq(procedureStepsTable.id, stepId))
+      .limit(1)
+  ).at(0)
+  if (!row) throw notFound("procedure step not found")
+  const propertyId =
+    row.structure_property_id ??
+    row.infrastructure_property_id ??
+    row.equipment_property_id
+  if (propertyId == null) throw notFound("procedure step not found")
   return propertyId
 }
 

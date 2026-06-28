@@ -56,12 +56,14 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
     })
   }
 
-  const { data: findings = [] } = useQuery(
+  const { data } = useQuery(
     trpc.inspection.listFindings.queryOptions(
       { inspection_id: inspection.id },
       { enabled: expanded },
     ),
   )
+  const findings = data?.findings ?? []
+  const stepsAdded = data?.stepsAdded ?? []
 
   const updateMutation = useMutationWithInvalidation(
     trpc.maintenance.update.mutationOptions(),
@@ -90,8 +92,8 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
 
   const completedLabel = formatDate(inspection.completed_at, i18n.language)
 
-  const followups = findings.filter(f => f.parent_maintenance_id != null)
-  const adHocs = findings.filter(f => f.parent_maintenance_id == null)
+  const followups = findings.filter(f => f.source_step_id != null)
+  const adHocs = findings.filter(f => f.source_step_id == null)
 
   return (
     <Card asChild>
@@ -196,10 +198,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                             }}
                             disabled={updateMutation.isPending}
                           />
-                          <Paragraph data-size="sm">
-                            {f.description}
-                            {f.is_pinned ? t(" (pinned)") : ""}
-                          </Paragraph>
+                          <Paragraph data-size="sm">{f.description}</Paragraph>
                           {hasInstructions && (
                             <Chip.Button
                               type="button"
@@ -228,7 +227,27 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                 </ul>
               </>
             )}
-            {findings.length === 0 && (
+            {stepsAdded.length > 0 && (
+              <>
+                <Paragraph data-size="sm">
+                  <strong>
+                    {t("Steps added to procedure ({{count}})", {
+                      count: stepsAdded.length,
+                    })}
+                  </strong>
+                </Paragraph>
+                <ul>
+                  {stepsAdded.map(s => (
+                    <li key={s.id} className={styles.findingItem}>
+                      <div className={styles.finding}>
+                        <Paragraph data-size="sm">{s.description}</Paragraph>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {findings.length === 0 && stepsAdded.length === 0 && (
               <Paragraph data-size="sm">{t("No findings recorded.")}</Paragraph>
             )}
           </Card.Block>

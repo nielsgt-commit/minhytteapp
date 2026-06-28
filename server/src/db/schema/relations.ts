@@ -8,6 +8,7 @@ import {
   equipmentTable,
   inspectionsTable,
   maintenanceTable,
+  procedureStepsTable,
 } from "./maintenance.schema.ts"
 import {
   infrastructureTable,
@@ -296,12 +297,10 @@ export const maintenanceRelations = relations(
       fields: [maintenanceTable.equipment_id],
       references: [equipmentTable.id],
     }),
-    parent: one(maintenanceTable, {
-      fields: [maintenanceTable.parent_maintenance_id],
-      references: [maintenanceTable.id],
-      relationName: "maintenance_parent",
+    sourceStep: one(procedureStepsTable, {
+      fields: [maintenanceTable.source_step_id],
+      references: [procedureStepsTable.id],
     }),
-    followups: many(maintenanceTable, { relationName: "maintenance_parent" }),
     inspection: one(inspectionsTable, {
       fields: [maintenanceTable.inspection_id],
       references: [inspectionsTable.id],
@@ -312,6 +311,34 @@ export const maintenanceRelations = relations(
       relationName: "maintenance_due_priority_group",
     }),
     expenses: many(expensesTable),
+  }),
+)
+
+export const procedureStepsRelations = relations(
+  procedureStepsTable,
+  ({ one, many }) => ({
+    structure: one(structuresTable, {
+      fields: [procedureStepsTable.structure_id],
+      references: [structuresTable.id],
+    }),
+    infrastructure: one(infrastructureTable, {
+      fields: [procedureStepsTable.infrastructure_id],
+      references: [infrastructureTable.id],
+    }),
+    equipment: one(equipmentTable, {
+      fields: [procedureStepsTable.equipment_id],
+      references: [equipmentTable.id],
+    }),
+    addedByUser: one(usersTable, {
+      fields: [procedureStepsTable.added_by],
+      references: [usersTable.id],
+    }),
+    createdInInspection: one(inspectionsTable, {
+      fields: [procedureStepsTable.created_in_inspection_id],
+      references: [inspectionsTable.id],
+    }),
+    // Todos raised from this step via a "needs followup" during inspections.
+    followups: many(maintenanceTable),
   }),
 )
 
@@ -335,6 +362,7 @@ export const inspectionsRelations = relations(
       references: [usersTable.id],
     }),
     findings: many(maintenanceTable),
+    stepsAdded: many(procedureStepsTable),
   }),
 )
 
