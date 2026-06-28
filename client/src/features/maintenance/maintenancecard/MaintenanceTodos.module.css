@@ -55,3 +55,58 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.mobileBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobileTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.faceLabel {
+  font-size: var(--ds-font-size-1);
+  font-weight: var(--ds-font-weight-medium);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.whenRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.planned {
+  margin: 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.editDue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}

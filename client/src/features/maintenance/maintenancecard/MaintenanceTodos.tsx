@@ -8,10 +8,13 @@ import {
   Button,
   Card,
   Chip,
+  Dropdown,
   Paragraph,
   Textfield,
 } from "@digdir/designsystemet-react"
+import { MenuElipsisVerticalIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
+import type { PortableTextBlock } from "@portabletext/types"
 import styles from "./MaintenanceTodos.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
@@ -21,10 +24,16 @@ import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
+import { useIsMobile } from "@/hooks/useIsMobile"
 import { Temporal } from "temporal-polyfill"
-import { isoWeekYear, startOfSunday } from "@/utils/dateUtils"
+import { formatDate, isoWeekYear, startOfSunday } from "@/utils/dateUtils"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceInstructionsPT } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPT.tsx"
+import { MaintenanceInstructionsPTEditor } from "@/features/maintenance/maintenancecard/MaintenanceInstructionsPTEditor.tsx"
+import {
+  MaintenanceTodoEditForm,
+  type MaintenanceTodoEditValues,
+} from "@/features/maintenance/maintenancecard/MaintenanceTodoEditForm.tsx"
 import {
   SeverityTag,
   cycleSeverity,
@@ -33,10 +42,11 @@ import { MaintenanceDueSelect } from "@/features/maintenance/due/MaintenanceDueS
 import type { DueSelection } from "@/features/maintenance/due/maintenanceDue.ts"
 
 export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
-  const { t } = useTranslation("maintenance")
+  const { t, i18n } = useTranslation("maintenance")
   const trpc = useTRPC()
   const selectedPropertyId = useSelectedPropertyId()
   const selectedUserId = useSelectedUserId()
+  const isMobile = useIsMobile()
 
   const { data: items } = useQuery(
     trpc.maintenance.listForProperty.queryOptions(
@@ -78,6 +88,17 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
   )
 
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
+
+  // Task being walked through the "mark done" confirm step, where the user can
+  // record a summary of the work performed (or leave it for later).
+  const [confirming, setConfirming] = useState<{ id: number } | null>(null)
+  const [summaryPT, setSummaryPT] = useState<PortableTextBlock[]>([])
+
+  // Which row's kebab actions menu (Edit / Done / Delete) is open.
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
+
+  // Which row (if any) is open in the inline full edit form.
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   // Ids checked off but not yet confirmed by the server: the row disappears
   // instantly and reappears (with the error surfaced below) if the save fails,
@@ -153,12 +174,21 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     due_at: item.due_at ?? undefined,
   })
 
-  const markDone = (item: (typeof todos)[number]) => {
+  const startDone = (item: (typeof todos)[number]) => {
+    // Seed the editor with any existing execution notes so the summary builds
+    // on them rather than discarding them.
+    setSummaryPT(item.instructions_pt ?? [])
+    setConfirming({ id: item.id })
+  }
+
+  const confirmDone = (item: (typeof todos)[number]) => {
+    setConfirming(null)
     startTransition(async () => {
       addOptimisticDoneId(item.id)
       try {
         await updateMutation.mutateAsync({
           ...baseUpdate(item),
+          instructions_pt: summaryPT.length > 0 ? summaryPT : null,
           status: "done",
         })
       } catch {
@@ -186,6 +216,25 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       due_at: selection.due_at,
     })
   }
+
+  const handleEditSubmit =
+    (item: (typeof todos)[number]) => (values: MaintenanceTodoEditValues) => {
+      updateMutation.mutate(
+        {
+          ...baseUpdate(item),
+          description: values.description,
+          instructions_pt: values.instructions_pt,
+          due_kind: values.due.due_kind,
+          due_priority_group_id: values.due.due_priority_group_id,
+          due_at: values.due.due_at,
+        },
+        {
+          onSuccess: () => {
+            setEditingId(null)
+          },
+        },
+      )
+    }
 
   const toggleExpanded = (id: number) => {
     setExpanded(prev => {
@@ -218,76 +267,250 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
             const hasInstructions =
               todo.instructions_pt != null && todo.instructions_pt.length > 0
             const isExpanded = expanded.has(todo.id)
-            return (
-              <Card asChild key={todo.id}>
-                <li>
-                  <Card.Block className={styles.row} data-size="sm">
-                    <SeverityTag
-                      severity={todo.severity}
-                      onCycle={() => {
-                        cycleItemSeverity(todo)
-                      }}
-                      disabled={pending}
-                    />
-                    <Paragraph className={styles.description} data-size="sm">
-                      {todo.description}
-                    </Paragraph>
-                    <div className={styles.actions}>
-                      <MaintenanceDueSelect
-                        // Keyed by due_at so external changes (save/refetch)
-                        // remount the select with a fresh date draft.
-                        key={`${String(todo.id)}-${todo.due_at?.toString() ?? ""}`}
-                        value={{
-                          due_kind: todo.due_kind,
-                          due_priority_group_id: todo.due_priority_group_id,
-                          due_at: todo.due_at,
-                        }}
-                        owners={owners}
-                        disabled={pending}
-                        onChange={selection => {
-                          setItemDue(todo, selection)
-                        }}
-                      />
-                      {hasInstructions && (
-                        <Chip.Button
-                          type="button"
-                          data-size="sm"
-                          aria-expanded={isExpanded}
-                          onClick={() => {
-                            toggleExpanded(todo.id)
-                          }}
-                        >
-                          {isExpanded
-                            ? t("Hide execution")
-                            : t("Show execution")}
-                        </Chip.Button>
-                      )}
-                      <Button
-                        variant="tertiary"
-                        data-size="sm"
-                        disabled={pending}
+            const isConfirming = confirming?.id === todo.id
+            const isEditing = editingId === todo.id
+            // A concrete calendar date gets a static "planned" label; every
+            // other due kind keeps the inline picker so it can be changed.
+            const hasDate = todo.due_kind === "date" && todo.due_at != null
+
+            const severityTag = (
+              <SeverityTag
+                severity={todo.severity}
+                onCycle={() => {
+                  cycleItemSeverity(todo)
+                }}
+                disabled={pending}
+              />
+            )
+
+            const dueSelect = (
+              <MaintenanceDueSelect
+                // Keyed by due_at so external changes (save/refetch)
+                // remount the select with a fresh date draft.
+                key={`${String(todo.id)}-${todo.due_at?.toString() ?? ""}`}
+                value={{
+                  due_kind: todo.due_kind,
+                  due_priority_group_id: todo.due_priority_group_id,
+                  due_at: todo.due_at,
+                }}
+                owners={owners}
+                disabled={pending}
+                onChange={selection => {
+                  setItemDue(todo, selection)
+                }}
+              />
+            )
+
+            const executionChip = hasInstructions && (
+              <Chip.Button
+                type="button"
+                data-size="sm"
+                aria-expanded={isExpanded}
+                onClick={() => {
+                  toggleExpanded(todo.id)
+                }}
+              >
+                {isExpanded ? t("Hide execution") : t("Show execution")}
+              </Chip.Button>
+            )
+
+            const kebab = (
+              <Dropdown.TriggerContext>
+                <Dropdown.Trigger
+                  variant="tertiary"
+                  data-size="sm"
+                  icon
+                  aria-label={t("Task actions")}
+                  disabled={pending || isConfirming}
+                  onClick={() => {
+                    setMenuOpenId(menuOpenId === todo.id ? null : todo.id)
+                  }}
+                >
+                  <MenuElipsisVerticalIcon aria-hidden />
+                </Dropdown.Trigger>
+                <Dropdown
+                  placement="bottom-end"
+                  open={menuOpenId === todo.id}
+                  onClose={() => {
+                    setMenuOpenId(null)
+                  }}
+                >
+                  <Dropdown.List>
+                    <Dropdown.Item>
+                      <Dropdown.Button
                         onClick={() => {
-                          markDone(todo)
+                          setMenuOpenId(null)
+                          setEditingId(todo.id)
+                        }}
+                      >
+                        {t("Edit")}
+                      </Dropdown.Button>
+                    </Dropdown.Item>
+                    <Dropdown.Item>
+                      <Dropdown.Button
+                        onClick={() => {
+                          setMenuOpenId(null)
+                          startDone(todo)
                         }}
                       >
                         {t("Done")}
-                      </Button>
-                      <Button
-                        variant="tertiary"
+                      </Dropdown.Button>
+                    </Dropdown.Item>
+                    <Dropdown.Item>
+                      <Dropdown.Button
                         data-color="danger"
-                        data-size="sm"
-                        disabled={pending}
                         onClick={() => {
+                          setMenuOpenId(null)
                           deleteMutation.mutate({ id: todo.id })
                         }}
                       >
                         {t("Delete")}
-                      </Button>
-                    </div>
-                  </Card.Block>
-                  {hasInstructions && isExpanded && (
+                      </Dropdown.Button>
+                    </Dropdown.Item>
+                  </Dropdown.List>
+                </Dropdown>
+              </Dropdown.TriggerContext>
+            )
+
+            if (isEditing) {
+              return (
+                <Card asChild key={todo.id}>
+                  <li>
+                    <Card.Block data-size="sm">
+                      <MaintenanceTodoEditForm
+                        item={todo}
+                        owners={owners}
+                        pending={pending}
+                        onSubmit={handleEditSubmit(todo)}
+                        onCancel={() => {
+                          setEditingId(null)
+                        }}
+                      />
+                    </Card.Block>
+                  </li>
+                </Card>
+              )
+            }
+
+            return (
+              <Card asChild key={todo.id}>
+                <li>
+                  {isMobile ? (
+                    <Card.Block className={styles.mobileBody} data-size="sm">
+                      <div className={styles.mobileTop}>
+                        {severityTag}
+                        {kebab}
+                      </div>
+                      <div className={styles.field}>
+                        <span className={styles.faceLabel}>{t("Task")}</span>
+                        <Paragraph
+                          className={styles.description}
+                          data-size="sm"
+                        >
+                          {todo.description}
+                        </Paragraph>
+                      </div>
+                      {executionChip && (
+                        <div className={styles.field}>
+                          <div className={styles.whenRow}>{executionChip}</div>
+                          {isExpanded && (
+                            <MaintenanceInstructionsPT
+                              value={todo.instructions_pt}
+                            />
+                          )}
+                        </div>
+                      )}
+                      <div className={styles.field}>
+                        <span className={styles.faceLabel}>{t("Due")}</span>
+                        <div className={styles.whenRow}>
+                          {hasDate ? (
+                            <Paragraph
+                              className={styles.planned}
+                              data-size="sm"
+                            >
+                              {t("Planned {{when}}", {
+                                when: formatDate(todo.due_at, i18n.language),
+                              })}
+                            </Paragraph>
+                          ) : (
+                            dueSelect
+                          )}
+                        </div>
+                      </div>
+                    </Card.Block>
+                  ) : (
+                    <Card.Block className={styles.row} data-size="sm">
+                      {severityTag}
+                      <Paragraph className={styles.description} data-size="sm">
+                        {todo.description}
+                      </Paragraph>
+                      <div className={styles.actions}>
+                        {dueSelect}
+                        {executionChip}
+                        <Button
+                          variant="tertiary"
+                          data-size="sm"
+                          disabled={pending || isConfirming}
+                          onClick={() => {
+                            startDone(todo)
+                          }}
+                        >
+                          {t("Done")}
+                        </Button>
+                        <Button
+                          variant="tertiary"
+                          data-color="danger"
+                          data-size="sm"
+                          disabled={pending}
+                          onClick={() => {
+                            deleteMutation.mutate({ id: todo.id })
+                          }}
+                        >
+                          {t("Delete")}
+                        </Button>
+                      </div>
+                    </Card.Block>
+                  )}
+                  {!isMobile && hasInstructions && isExpanded && (
                     <Card.Block>
                       <MaintenanceInstructionsPT value={todo.instructions_pt} />
+                    </Card.Block>
+                  )}
+                  {isConfirming && (
+                    <Card.Block>
+                      <div className={styles.confirm}>
+                        <Paragraph data-size="sm">
+                          {t(
+                            "Mark this task as done. Add a summary of the work now, or leave it blank and add it later from the History tab.",
+                          )}
+                        </Paragraph>
+                        <MaintenanceInstructionsPTEditor
+                          key={`done-${String(todo.id)}`}
+                          initialValue={todo.instructions_pt ?? undefined}
+                          onChange={setSummaryPT}
+                        />
+                        <div className={styles.confirmActions}>
+                          <Button
+                            variant="secondary"
+                            data-size="sm"
+                            disabled={pending}
+                            onClick={() => {
+                              setConfirming(null)
+                            }}
+                          >
+                            {t("Cancel")}
+                          </Button>
+                          <Button
+                            data-size="sm"
+                            disabled={pending}
+                            onClick={() => {
+                              confirmDone(todo)
+                            }}
+                          >
+                            {t("Mark done")}
+                          </Button>
+                        </div>
+                      </div>
                     </Card.Block>
                   )}
                 </li>
