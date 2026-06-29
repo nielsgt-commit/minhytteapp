@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import type { Temporal } from "temporal-polyfill"
 import { formatDate } from "@/utils/dateUtils"
 import { InspectionCard } from "@/features/maintenance/inspectionflow/InspectionCard.tsx"
+import type { Cadence } from "@/features/maintenance/inspectionflow/inspectionCadence.ts"
 
 type MaintenanceEntry = {
   kind: "maintenance"
@@ -24,7 +25,8 @@ type InspectionEntry = {
     infrastructure_id: number | null
     equipment_id: number | null
     inspected_by: string
-    recurrence: "yearly" | "5year" | "spring" | "fall"
+    recurrence: Cadence
+    cadence_priority_group_name: string | null
     notes_pt: PortableTextBlock[] | null
     started_at: Temporal.Instant
     completed_at: Temporal.Instant | null

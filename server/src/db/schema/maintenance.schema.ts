@@ -158,10 +158,27 @@ export const inspectionsTable = pgTable(
       .notNull()
       .references(() => usersTable.id),
     inspected_by: varchar("inspected_by", { length: 255 }).notNull(),
+    // Cadence. "yearly" is legacy-only (older rows; "5year" was migrated to it)
+    // — new inspections pick spring/fall/dugnad/opening/closing or a family
+    // group's priority_week. Mirrors the maintenance due taxonomy.
     recurrence: varchar("recurrence", {
-      length: 6,
-      enum: ["yearly", "5year", "spring", "fall"],
+      length: 13,
+      enum: [
+        "yearly",
+        "spring",
+        "fall",
+        "dugnad",
+        "opening",
+        "closing",
+        "priority_week",
+      ],
     }).notNull(),
+    // Set iff recurrence = 'priority_week': the family group whose priority week
+    // this inspection's cadence follows.
+    cadence_priority_group_id: integer("cadence_priority_group_id").references(
+      () => userGroupsTable.id,
+      { onDelete: "set null" },
+    ),
     notes_pt: jsonb("notes_pt").$type<PortableTextBlock[]>(),
     started_at: timestamp("started_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"),
@@ -174,6 +191,10 @@ export const inspectionsTable = pgTable(
         + (CASE WHEN ${t.infrastructure_id} IS NOT NULL THEN 1 ELSE 0 END)
         + (CASE WHEN ${t.equipment_id} IS NOT NULL THEN 1 ELSE 0 END)
       ) = 1`,
+    ),
+    check(
+      "inspection_cadence_group_shape",
+      sql`(${t.recurrence} = 'priority_week') = (${t.cadence_priority_group_id} IS NOT NULL)`,
     ),
   ],
 )

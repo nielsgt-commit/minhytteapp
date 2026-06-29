@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
-  Chip,
+  Details,
   Dropdown,
   Paragraph,
   Textfield,
@@ -86,8 +86,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
     trpc.maintenance.delete.mutationOptions(),
     maintenanceKeys,
   )
-
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
 
   // Task being walked through the "mark done" confirm step, where the user can
   // record a summary of the work performed (or leave it for later).
@@ -236,15 +234,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
       )
     }
 
-  const toggleExpanded = (id: number) => {
-    setExpanded(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
   return (
     <div className={styles.wrap}>
       <form action={handleAdd} className={styles.addRow}>
@@ -266,7 +255,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
           {todos.map(todo => {
             const hasInstructions =
               todo.instructions_pt != null && todo.instructions_pt.length > 0
-            const isExpanded = expanded.has(todo.id)
             const isConfirming = confirming?.id === todo.id
             const isEditing = editingId === todo.id
             // A concrete calendar date gets a static "planned" label; every
@@ -301,17 +289,13 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
               />
             )
 
-            const executionChip = hasInstructions && (
-              <Chip.Button
-                type="button"
-                data-size="sm"
-                aria-expanded={isExpanded}
-                onClick={() => {
-                  toggleExpanded(todo.id)
-                }}
-              >
-                {isExpanded ? t("Hide execution") : t("Show execution")}
-              </Chip.Button>
+            const executionDetails = hasInstructions && (
+              <Details data-size="sm">
+                <Details.Summary>{t("Execution")}</Details.Summary>
+                <Details.Content className={styles.instructions}>
+                  <MaintenanceInstructionsPT value={todo.instructions_pt} />
+                </Details.Content>
+              </Details>
             )
 
             const kebab = (
@@ -410,16 +394,7 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                           {todo.description}
                         </Paragraph>
                       </div>
-                      {executionChip && (
-                        <div className={styles.field}>
-                          <div className={styles.whenRow}>{executionChip}</div>
-                          {isExpanded && (
-                            <MaintenanceInstructionsPT
-                              value={todo.instructions_pt}
-                            />
-                          )}
-                        </div>
-                      )}
+                      {executionDetails}
                       <div className={styles.field}>
                         <span className={styles.faceLabel}>{t("Due")}</span>
                         <div className={styles.whenRow}>
@@ -446,7 +421,6 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                       </Paragraph>
                       <div className={styles.actions}>
                         {dueSelect}
-                        {executionChip}
                         <Button
                           variant="tertiary"
                           data-size="sm"
@@ -471,10 +445,8 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                       </div>
                     </Card.Block>
                   )}
-                  {!isMobile && hasInstructions && isExpanded && (
-                    <Card.Block>
-                      <MaintenanceInstructionsPT value={todo.instructions_pt} />
-                    </Card.Block>
+                  {!isMobile && executionDetails && (
+                    <Card.Block>{executionDetails}</Card.Block>
                   )}
                   {isConfirming && (
                     <Card.Block>

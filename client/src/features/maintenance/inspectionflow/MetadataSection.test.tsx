@@ -2,13 +2,21 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
 import { MetadataSection } from "./MetadataSection.tsx"
+import type { CadenceValue } from "./inspectionCadence.ts"
+import type { PriorityOwner } from "@/features/maintenance/due/MaintenanceDueSelect.tsx"
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
-function setup() {
-  render(<MetadataSection />)
+const owners: PriorityOwner[] = [
+  { user_group_id: 7, user_group_name: "Hansen" },
+]
+
+function setup(value: CadenceValue = { recurrence: "spring" }) {
+  const onChange = vi.fn()
+  render(<MetadataSection value={value} owners={owners} onChange={onChange} />)
+  return { onChange }
 }
 
 describe("MetadataSection", () => {
@@ -17,27 +25,47 @@ describe("MetadataSection", () => {
     expect(screen.queryByLabelText("Inspected by")).not.toBeInTheDocument()
   })
 
-  test("cadence is named for FormData submission", () => {
-    setup()
-    expect(screen.getByLabelText("Cadence")).toHaveAttribute(
-      "name",
-      "recurrence",
-    )
-  })
-
-  test("cadence defaults to yearly and can be changed", async () => {
-    const user = userEvent.setup()
-    setup()
-    const select = screen.getByLabelText("Cadence")
-    expect(select).toHaveValue("yearly")
-    await user.selectOptions(select, "5year")
-    expect(select).toHaveValue("5year")
-  })
-
-  test("renders all four cadence options", () => {
+  test("offers the seasonal + event cadences and each family group's week", () => {
     setup()
     const select = screen.getByLabelText("Cadence") as HTMLSelectElement
     const values = Array.from(select.options).map(o => o.value)
-    expect(values).toEqual(["yearly", "5year", "spring", "fall"])
+    expect(values).toEqual([
+      "spring",
+      "fall",
+      "dugnad",
+      "opening",
+      "closing",
+      "group:7",
+    ])
+  })
+
+  test("does not offer the legacy yearly cadence", () => {
+    setup()
+    const select = screen.getByLabelText("Cadence") as HTMLSelectElement
+    const values = Array.from(select.options).map(o => o.value)
+    expect(values).not.toContain("yearly")
+    expect(values).not.toContain("5year")
+  })
+
+  test("reflects the current value", () => {
+    setup({ recurrence: "opening" })
+    expect(screen.getByLabelText("Cadence")).toHaveValue("opening")
+  })
+
+  test("emits the selected static cadence", async () => {
+    const user = userEvent.setup()
+    const { onChange } = setup()
+    await user.selectOptions(screen.getByLabelText("Cadence"), "dugnad")
+    expect(onChange).toHaveBeenCalledWith({ recurrence: "dugnad" })
+  })
+
+  test("emits a priority_week cadence with the group id", async () => {
+    const user = userEvent.setup()
+    const { onChange } = setup()
+    await user.selectOptions(screen.getByLabelText("Cadence"), "group:7")
+    expect(onChange).toHaveBeenCalledWith({
+      recurrence: "priority_week",
+      cadence_priority_group_id: 7,
+    })
   })
 })

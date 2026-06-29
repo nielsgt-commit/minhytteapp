@@ -14,15 +14,14 @@ import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
-import { fdString } from "@/utils/formData"
+import { isoWeekYear, startOfSunday } from "@/utils/dateUtils"
 import {
   FindingsSection,
   type AdHoc,
 } from "@/features/maintenance/inspectionflow/FindingsSection.tsx"
-import {
-  MetadataSection,
-  type Recurrence,
-} from "@/features/maintenance/inspectionflow/MetadataSection.tsx"
+import { MetadataSection } from "@/features/maintenance/inspectionflow/MetadataSection.tsx"
+import type { PriorityOwner } from "@/features/maintenance/due/MaintenanceDueSelect.tsx"
+import type { CadenceSelection } from "@/features/maintenance/inspectionflow/inspectionCadence.ts"
 import {
   ProcedureSection,
   type NewStep,
@@ -61,6 +60,19 @@ export function InspectionFlow(props: {
       { enabled: open && selectedPropertyId != null },
     ),
   )
+  // Family groups eligible for a priority-week cadence. Shares its cache key
+  // with MaintenanceTodos' priority query (same refYear); only eligibleOwners
+  // is consumed here.
+  const priorityYear = isoWeekYear(
+    startOfSunday(Temporal.Now.plainDateISO()).add({ days: 3 }),
+  )
+  const { data: priority } = useQuery(
+    trpc.priority.list.queryOptions(
+      { property_id: selectedPropertyId ?? 0, year: priorityYear },
+      { enabled: open && selectedPropertyId != null },
+    ),
+  )
+  const owners = priority?.eligibleOwners ?? []
 
   const currentUser = users?.find(u => u.id === selectedUserId)
 
@@ -89,6 +101,7 @@ export function InspectionFlow(props: {
       scope={scope}
       onClose={onClose}
       procedureItems={procedureItems}
+      owners={owners}
       defaultInspectedBy={currentUser?.name ?? ""}
     />
   )
@@ -98,14 +111,18 @@ function InspectionFlowForm(props: {
   scope: InspectionScope
   onClose: () => void
   procedureItems: readonly ProcedureItem[]
+  owners: readonly PriorityOwner[]
   defaultInspectedBy: string
 }) {
   const { t } = useTranslation("maintenance")
-  const { scope, onClose, procedureItems, defaultInspectedBy } = props
+  const { scope, onClose, procedureItems, owners, defaultInspectedBy } = props
   const trpc = useTRPC()
   const selectedUserId = useSelectedUserId()
 
   const [notes, setNotes] = useState<PortableTextBlock[]>([])
+  const [cadence, setCadence] = useState<CadenceSelection>({
+    recurrence: "spring",
+  })
   const [procState, setProcState] = useState<Record<number, ProcedureState>>({})
   const [newSteps, setNewSteps] = useState<NewStep[]>([])
   const [adHocs, setAdHocs] = useState<AdHoc[]>([])
@@ -260,13 +277,12 @@ function InspectionFlowForm(props: {
     )
   }
 
-  const handleSubmit = async (fd: FormData) => {
+  const handleSubmit = async () => {
     if (selectedUserId == null) return
     // Inspected-by is implicit: the inspection is recorded as the user who
     // submits it (see defaultInspectedBy / the server's started_by_user_id).
     const inspectedBy = defaultInspectedBy.trim()
     if (!inspectedBy) return
-    const recurrence = fdString(fd, "recurrence") as Recurrence
 
     // Steps staged for removal are dropped from this inspection's findings and
     // archived below, so they neither recur nor raise a followup this cycle.
@@ -333,7 +349,8 @@ function InspectionFlowForm(props: {
           : {}),
         ...(scope.kind === "equipment" ? { equipment_id: scope.id } : {}),
         inspected_by: inspectedBy,
-        recurrence,
+        recurrence: cadence.recurrence,
+        cadence_priority_group_id: cadence.cadence_priority_group_id,
         notes_pt: notes.length > 0 ? notes : undefined,
         findings: [...procFindings, ...stepFindings, ...adHocFindings],
       })
@@ -348,7 +365,12 @@ function InspectionFlowForm(props: {
         {t("Inspect {{name}}", { name: scope.name })}
       </Heading>
 
-      <MetadataSection />
+      <MetadataSection
+        value={cadence}
+        owners={owners}
+        disabled={pending}
+        onChange={setCadence}
+      />
 
       <ProcedureSection
         items={procedureItems}

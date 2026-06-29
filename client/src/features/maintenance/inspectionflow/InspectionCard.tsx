@@ -4,7 +4,7 @@ import {
   Tag,
   Button,
   Card,
-  Chip,
+  Details,
   Paragraph,
 } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
@@ -21,6 +21,11 @@ import {
   SeverityTag,
   cycleSeverity,
 } from "@/features/maintenance/severity/SeverityTag.tsx"
+import {
+  type Cadence,
+  cadenceLabel,
+  priorityGroupLabel,
+} from "./inspectionCadence.ts"
 
 type Inspection = {
   id: number
@@ -28,7 +33,8 @@ type Inspection = {
   infrastructure_id: number | null
   equipment_id: number | null
   inspected_by: string
-  recurrence: "yearly" | "5year" | "spring" | "fall"
+  recurrence: Cadence
+  cadence_priority_group_name: string | null
   notes_pt: PortableTextBlock[] | null
   started_at: Temporal.Instant
   completed_at: Temporal.Instant | null
@@ -36,25 +42,14 @@ type Inspection = {
 
 export function InspectionCard({ inspection }: { inspection: Inspection }) {
   const { t, i18n } = useTranslation("maintenance")
-  const cadenceLabel: Record<Inspection["recurrence"], string> = {
-    yearly: t("Yearly"),
-    "5year": t("Every 5 years"),
-    spring: t("Every spring"),
-    fall: t("Every fall"),
-  }
+  const cadenceText =
+    inspection.recurrence === "priority_week"
+      ? inspection.cadence_priority_group_name != null
+        ? priorityGroupLabel(t, inspection.cadence_priority_group_name)
+        : t("Priority week")
+      : cadenceLabel(t, inspection.recurrence)
   const trpc = useTRPC()
   const [expanded, setExpanded] = useState(false)
-  const [expandedFindings, setExpandedFindings] = useState<Set<number>>(
-    new Set(),
-  )
-  const toggleFindingExpanded = (id: number) => {
-    setExpandedFindings(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
 
   const { data } = useQuery(
     trpc.inspection.listFindings.queryOptions(
@@ -104,9 +99,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
           <Paragraph data-size="sm" className={styles.inspector}>
             {inspection.inspected_by}
           </Paragraph>
-          <Paragraph data-size="sm">
-            {cadenceLabel[inspection.recurrence]}
-          </Paragraph>
+          <Paragraph data-size="sm">{cadenceText}</Paragraph>
           <Button
             variant="tertiary"
             data-size="sm"
@@ -136,7 +129,6 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                   {followups.map(f => {
                     const hasInstructions =
                       f.instructions_pt != null && f.instructions_pt.length > 0
-                    const isExpanded = expandedFindings.has(f.id)
                     return (
                       <li key={f.id} className={styles.findingItem}>
                         <div className={styles.finding}>
@@ -148,27 +140,18 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                             disabled={updateMutation.isPending}
                           />
                           <Paragraph data-size="sm">{f.description}</Paragraph>
-                          {hasInstructions && (
-                            <Chip.Button
-                              type="button"
-                              data-size="sm"
-                              aria-expanded={isExpanded}
-                              onClick={() => {
-                                toggleFindingExpanded(f.id)
-                              }}
-                            >
-                              {isExpanded
-                                ? t("Hide execution")
-                                : t("Show execution")}
-                            </Chip.Button>
-                          )}
                         </div>
-                        {hasInstructions && isExpanded && (
-                          <div className={styles.instructions}>
-                            <MaintenanceInstructionsPT
-                              value={f.instructions_pt}
-                            />
-                          </div>
+                        {hasInstructions && (
+                          <Details data-size="sm">
+                            <Details.Summary>
+                              {t("Execution")}
+                            </Details.Summary>
+                            <Details.Content className={styles.instructions}>
+                              <MaintenanceInstructionsPT
+                                value={f.instructions_pt}
+                              />
+                            </Details.Content>
+                          </Details>
                         )}
                       </li>
                     )
@@ -187,7 +170,6 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                   {adHocs.map(f => {
                     const hasInstructions =
                       f.instructions_pt != null && f.instructions_pt.length > 0
-                    const isExpanded = expandedFindings.has(f.id)
                     return (
                       <li key={f.id} className={styles.findingItem}>
                         <div className={styles.finding}>
@@ -199,27 +181,18 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                             disabled={updateMutation.isPending}
                           />
                           <Paragraph data-size="sm">{f.description}</Paragraph>
-                          {hasInstructions && (
-                            <Chip.Button
-                              type="button"
-                              data-size="sm"
-                              aria-expanded={isExpanded}
-                              onClick={() => {
-                                toggleFindingExpanded(f.id)
-                              }}
-                            >
-                              {isExpanded
-                                ? t("Hide execution")
-                                : t("Show execution")}
-                            </Chip.Button>
-                          )}
                         </div>
-                        {hasInstructions && isExpanded && (
-                          <div className={styles.instructions}>
-                            <MaintenanceInstructionsPT
-                              value={f.instructions_pt}
-                            />
-                          </div>
+                        {hasInstructions && (
+                          <Details data-size="sm">
+                            <Details.Summary>
+                              {t("Execution")}
+                            </Details.Summary>
+                            <Details.Content className={styles.instructions}>
+                              <MaintenanceInstructionsPT
+                                value={f.instructions_pt}
+                              />
+                            </Details.Content>
+                          </Details>
                         )}
                       </li>
                     )

@@ -13,6 +13,7 @@ import {
   structuresTable,
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
+import { userGroupsTable } from "../../db/schema/users.schema.ts"
 import {
   type Temporal,
   instantFromDate,
@@ -24,6 +25,7 @@ import {
   resolvePropertyIdFromMaintenanceParent,
 } from "../util/propertyAccess.ts"
 import { toWireMaintenance } from "./maintenance.ts"
+import { ensureMainGroupOfProperty } from "./priority.ts"
 import { toWireProcedureStep } from "./procedureStep.ts"
 
 // A db transaction handle, for the shared finding processor below.
@@ -63,7 +65,40 @@ const targetXor = {
     "exactly one of structure_id, infrastructure_id, equipment_id must be set",
 }
 
-const recurrenceEnum = z.enum(["yearly", "5year", "spring", "fall"])
+// New inspections pick from these cadences; "yearly"/"5year" are legacy-only
+// (still stored/read, never offered). priority_week additionally needs a group.
+const recurrenceEnum = z.enum([
+  "spring",
+  "fall",
+  "dugnad",
+  "opening",
+  "closing",
+  "priority_week",
+])
+
+const cadenceShape = {
+  check: (v: {
+    recurrence: z.infer<typeof recurrenceEnum>
+    cadence_priority_group_id?: number
+  }) => v.recurrence !== "priority_week" || v.cadence_priority_group_id != null,
+  error: "cadence_priority_group_id is required for recurrence 'priority_week'",
+  path: ["cadence_priority_group_id"] as const,
+}
+
+// Null the group unless the cadence is priority_week, so a stray id can't slip
+// past the DB CHECK on a non-priority_week cadence.
+function normalizeCadence(v: {
+  recurrence: z.infer<typeof recurrenceEnum>
+  cadence_priority_group_id?: number
+}) {
+  return {
+    recurrence: v.recurrence,
+    cadence_priority_group_id:
+      v.recurrence === "priority_week"
+        ? (v.cadence_priority_group_id ?? null)
+        : null,
+  }
+}
 
 const notesPtSchema = z
   .custom<PortableTextBlock[]>(v => v == null || Array.isArray(v))
@@ -76,8 +111,13 @@ const startInput = z
     equipment_id: z.number().int().positive().optional(),
     inspected_by: z.string().min(1).max(255),
     recurrence: recurrenceEnum,
+    cadence_priority_group_id: z.number().int().positive().optional(),
   })
   .refine(targetXor.check, { error: targetXor.error })
+  .refine(cadenceShape.check, {
+    error: cadenceShape.error,
+    path: [...cadenceShape.path],
+  })
 
 // A finding is one of three explicit kinds, mirroring the inspection UI:
 //  - step_result: a verdict on an existing procedure step. "followup" raises a
@@ -107,13 +147,19 @@ const findingSchema = z.discriminatedUnion("kind", [
 
 type Finding = z.infer<typeof findingSchema>
 
-const completeInput = z.object({
-  id: z.number().int().positive(),
-  inspected_by: z.string().min(1).max(255),
-  recurrence: recurrenceEnum,
-  notes_pt: notesPtSchema,
-  findings: z.array(findingSchema),
-})
+const completeInput = z
+  .object({
+    id: z.number().int().positive(),
+    inspected_by: z.string().min(1).max(255),
+    recurrence: recurrenceEnum,
+    cadence_priority_group_id: z.number().int().positive().optional(),
+    notes_pt: notesPtSchema,
+    findings: z.array(findingSchema),
+  })
+  .refine(cadenceShape.check, {
+    error: cadenceShape.error,
+    path: [...cadenceShape.path],
+  })
 
 const recordInput = z
   .object({
@@ -122,10 +168,15 @@ const recordInput = z
     equipment_id: z.number().int().positive().optional(),
     inspected_by: z.string().min(1).max(255),
     recurrence: recurrenceEnum,
+    cadence_priority_group_id: z.number().int().positive().optional(),
     notes_pt: notesPtSchema,
     findings: z.array(findingSchema),
   })
   .refine(targetXor.check, { error: targetXor.error })
+  .refine(cadenceShape.check, {
+    error: cadenceShape.error,
+    path: [...cadenceShape.path],
+  })
 
 // Narrow an inspection row / record-input's three nullable location columns to
 // the single set one.
@@ -271,7 +322,10 @@ export const inspectionRouter = router({
     .query(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       const rows = await ctx.db
-        .select({ i: inspectionsTable })
+        .select({
+          i: inspectionsTable,
+          cadence_priority_group_name: userGroupsTable.name,
+        })
         .from(inspectionsTable)
         .leftJoin(
           structuresTable,
@@ -285,6 +339,10 @@ export const inspectionRouter = router({
           equipmentTable,
           eq(equipmentTable.id, inspectionsTable.equipment_id),
         )
+        .leftJoin(
+          userGroupsTable,
+          eq(userGroupsTable.id, inspectionsTable.cadence_priority_group_id),
+        )
         .where(
           or(
             eq(structuresTable.property_id, input.property_id),
@@ -293,7 +351,10 @@ export const inspectionRouter = router({
           ),
         )
         .orderBy(asc(inspectionsTable.started_at))
-      return rows.map(r => toWireInspection(r.i))
+      return rows.map(r => ({
+        ...toWireInspection(r.i),
+        cadence_priority_group_name: r.cadence_priority_group_name,
+      }))
     }),
 
   listFindings: protectedProcedure
@@ -330,6 +391,16 @@ export const inspectionRouter = router({
         input,
       )
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      if (
+        input.recurrence === "priority_week" &&
+        input.cadence_priority_group_id != null
+      ) {
+        await ensureMainGroupOfProperty(
+          ctx.db,
+          input.cadence_priority_group_id,
+          propertyId,
+        )
+      }
       const [created] = await ctx.db
         .insert(inspectionsTable)
         .values({
@@ -338,7 +409,7 @@ export const inspectionRouter = router({
           equipment_id: input.equipment_id,
           started_by_user_id: ctx.user.id,
           inspected_by: input.inspected_by,
-          recurrence: input.recurrence,
+          ...normalizeCadence(input),
         })
         .returning()
       return toWireInspection(created)
@@ -349,6 +420,16 @@ export const inspectionRouter = router({
     .mutation(async ({ ctx, input }) => {
       const propertyId = await resolvePropertyIdFromInspection(ctx.db, input.id)
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      if (
+        input.recurrence === "priority_week" &&
+        input.cadence_priority_group_id != null
+      ) {
+        await ensureMainGroupOfProperty(
+          ctx.db,
+          input.cadence_priority_group_id,
+          propertyId,
+        )
+      }
       return ctx.db.transaction(async tx => {
         const existing = (
           await tx
@@ -381,7 +462,7 @@ export const inspectionRouter = router({
           .update(inspectionsTable)
           .set({
             inspected_by: input.inspected_by,
-            recurrence: input.recurrence,
+            ...normalizeCadence(input),
             notes_pt: input.notes_pt,
             completed_at: new Date(),
           })
@@ -417,6 +498,16 @@ export const inspectionRouter = router({
         input,
       )
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      if (
+        input.recurrence === "priority_week" &&
+        input.cadence_priority_group_id != null
+      ) {
+        await ensureMainGroupOfProperty(
+          ctx.db,
+          input.cadence_priority_group_id,
+          propertyId,
+        )
+      }
       return ctx.db.transaction(async tx => {
         if (input.equipment_id != null) {
           const found = (
@@ -443,7 +534,7 @@ export const inspectionRouter = router({
             equipment_id: input.equipment_id,
             started_by_user_id: ctx.user.id,
             inspected_by: input.inspected_by,
-            recurrence: input.recurrence,
+            ...normalizeCadence(input),
             notes_pt: input.notes_pt,
             started_at: now,
             completed_at: now,
