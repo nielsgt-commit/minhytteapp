@@ -14,12 +14,15 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .addRow > :first-child {
-  flex: 1 1 12rem;
+  flex: 1 1 auto;
   min-width: 0;
+}
+
+.addRow > :last-child {
+  flex: 0 0 auto;
 }
 
 .list {
@@ -59,4 +62,17 @@
   flex: 0 0 auto;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.editForm {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.editForm > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
 }

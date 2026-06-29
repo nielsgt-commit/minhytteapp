@@ -27,6 +27,24 @@
     flex: 0 0 88%;
     scroll-snap-align: start;
   }
+
+  /* Full-width "page" mode: each child fills the viewport with no peek or edge
+     padding, for swiping between whole pages rather than cards in a row. The
+     extra bottom padding keeps the last content clear of the floating dots. */
+  .cards.fullWidth {
+    scroll-padding-inline: 0;
+    padding-inline: 0;
+    padding-bottom: 4rem;
+    /* Height is set inline to the active page's height (see CardGallery.tsx) so
+       short pages don't inherit the tallest page's empty space. Clip the taller
+       off-screen pages to that height and ease the change as you swipe. */
+    overflow-y: hidden;
+    transition: height 0.2s ease;
+  }
+
+  .cards.fullWidth > * {
+    flex-basis: 100%;
+  }
 }
 
 /* Granular control for the smallest phones (360/375). Space is tight here, so
@@ -41,6 +59,15 @@
   .cards > * {
     flex-basis: 92%;
   }
+
+  .cards.fullWidth {
+    scroll-padding-inline: 0;
+    padding-inline: 0;
+  }
+
+  .cards.fullWidth > * {
+    flex-basis: 100%;
+  }
 }
 
 /* Dot pagination. Only rendered on mobile (gated in the component), so no
@@ -52,6 +79,23 @@
   margin-top: 0.75rem;
   /* Shrink DigDir's auto-injected prev/next chevrons to sit with the dots. */
   --dsc-pagination-icon-size: 1.25rem;
+}
+
+/* Keep the chevron arrows and the dot buttons on one vertical centre line —
+   the injected chevron icon and the dot glyph are different sizes, so the list
+   row must centre its items rather than align them to a shared baseline. */
+.dots ul,
+.dots li {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* DigDir's Pagination.List wraps by default; with enough cards the dot row
+   would break onto a second line. Keep it a single row — the dots are compact
+   and the gallery is mobile-only, so one row stays comfortably in view. */
+.dots ul {
+  flex-wrap: nowrap;
 }
 
 /* Two-class selectors win over the library's single-class .ds-button rules so
@@ -95,4 +139,27 @@
 .dots .dot[aria-current="page"] .dotGlyph {
   background: var(--ds-color-accent-base-default);
   transform: scale(1.15);
+}
+
+/* Full-width page galleries (the swipable dashboard) float their dots as a
+   centred pill fixed just above the mobile bottom nav bar, so the pager stays
+   visible while the page scrolls. The nav bar is content-box (no global
+   border-box reset), so its real height is 56px item content + 0.5rem item
+   padding top/bottom + 0.5rem bar padding top/bottom = 88px, plus the safe-area
+   inset; we add a 0.5rem gap on top. Only rendered on mobile — the dots
+   themselves are gated to mobile in the component. */
+@media (max-width: 640px) {
+  .dots.floating {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(88px + env(safe-area-inset-bottom) + 0.5rem);
+    z-index: 99;
+    width: fit-content;
+    margin-top: 0;
+    padding: 0.25rem 0.5rem;
+    background: var(--ds-color-background-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: 999px;
+  }
 }

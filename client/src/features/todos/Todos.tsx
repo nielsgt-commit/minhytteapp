@@ -271,6 +271,9 @@ export function Todos() {
   // menu is open.
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
 
+  // Which row (if any) is being edited inline.
+  const [editingId, setEditingId] = useState<number | null>(null)
+
   const handleConfirmDelete = (id: number) => {
     setConfirmingDeleteId(null)
     deleteMutation.mutate({ id })
@@ -299,6 +302,14 @@ export function Todos() {
       id: todo.id,
       done: !todo.done,
     })
+  }
+
+  const handleEdit = (id: number, fd: FormData) => {
+    if (selectedPropertyId == null) return
+    const description = fdString(fd, "description").trim()
+    if (!description) return
+    updateMutation.mutate({ property_id: selectedPropertyId, id, description })
+    setEditingId(null)
   }
 
   const handleMove = (id: number, token: string) => {
@@ -350,136 +361,184 @@ export function Todos() {
             <List.Unordered className={styles.list}>
               {todos.map(todo => (
                 <List.Item className={styles.row} key={todo.id}>
-                  <Checkbox
-                    aria-label={t("Done")}
-                    checked={todo.done}
-                    onChange={() => {
-                      toggleDone(todo)
-                    }}
-                  />
-                  <Paragraph
-                    className={`${styles.description} ${
-                      todo.done ? styles.done : ""
-                    }`}
-                    data-size="sm"
-                  >
-                    {todo.description}
-                  </Paragraph>
-                  <div className={styles.actions}>
-                    {confirmingDeleteId === todo.id ? (
-                      <>
-                        <Button
-                          variant="tertiary"
-                          data-size="sm"
-                          onClick={() => {
-                            setConfirmingDeleteId(null)
-                          }}
-                        >
-                          {t("Cancel")}
-                        </Button>
-                        <Button
-                          variant="primary"
-                          data-color="danger"
-                          data-size="sm"
-                          onClick={() => {
-                            handleConfirmDelete(todo.id)
-                          }}
-                        >
-                          {t("Confirm delete")}
-                        </Button>
-                      </>
-                    ) : movingId === todo.id ? (
-                      <>
-                        <TargetSelect
-                          value={NO_TARGET}
-                          structures={structureRows}
-                          infrastructure={infrastructureRows}
-                          equipment={equipmentRows}
-                          onChange={token => {
-                            handleMove(todo.id, token)
-                          }}
-                        />
-                        <Button
-                          variant="tertiary"
-                          data-size="sm"
-                          onClick={() => {
-                            setMovingId(null)
-                          }}
-                        >
-                          {t("Cancel")}
-                        </Button>
-                      </>
-                    ) : isMobile ? (
-                      <Dropdown.TriggerContext>
-                        <Dropdown.Trigger
-                          variant="tertiary"
-                          data-size="sm"
-                          icon
-                          aria-label={t("Todo actions")}
-                          onClick={() => {
-                            setMenuOpenId(
-                              menuOpenId === todo.id ? null : todo.id,
-                            )
-                          }}
-                        >
-                          <MenuElipsisVerticalIcon aria-hidden />
-                        </Dropdown.Trigger>
-                        <Dropdown
-                          placement="bottom-end"
-                          open={menuOpenId === todo.id}
-                          onClose={() => {
-                            setMenuOpenId(null)
-                          }}
-                        >
-                          <Dropdown.List>
-                            <Dropdown.Item>
-                              <Dropdown.Button
-                                onClick={() => {
-                                  setMenuOpenId(null)
-                                  setMovingId(todo.id)
-                                }}
-                              >
-                                {t("Move to...")}
-                              </Dropdown.Button>
-                            </Dropdown.Item>
-                            <Dropdown.Item>
-                              <Dropdown.Button
-                                data-color="danger"
-                                onClick={() => {
-                                  setMenuOpenId(null)
-                                  setConfirmingDeleteId(todo.id)
-                                }}
-                              >
-                                {t("Delete")}
-                              </Dropdown.Button>
-                            </Dropdown.Item>
-                          </Dropdown.List>
-                        </Dropdown>
-                      </Dropdown.TriggerContext>
-                    ) : (
-                      <>
-                        <Button
-                          variant="tertiary"
-                          data-size="sm"
-                          onClick={() => {
-                            setMovingId(todo.id)
-                          }}
-                        >
-                          {t("Move to...")}
-                        </Button>
-                        <Button
-                          variant="tertiary"
-                          data-color="danger"
-                          data-size="sm"
-                          onClick={() => {
-                            setConfirmingDeleteId(todo.id)
-                          }}
-                        >
-                          {t("Delete")}
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                  {editingId === todo.id ? (
+                    <form
+                      action={fd => {
+                        handleEdit(todo.id, fd)
+                      }}
+                      className={styles.editForm}
+                    >
+                      <Textfield
+                        aria-label={t("Edit todo")}
+                        name="description"
+                        defaultValue={todo.description}
+                        autoFocus
+                      />
+                      <SubmitButton data-size="sm">{t("Save")}</SubmitButton>
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        data-size="sm"
+                        onClick={() => {
+                          setEditingId(null)
+                        }}
+                      >
+                        {t("Cancel")}
+                      </Button>
+                    </form>
+                  ) : (
+                    <>
+                      <Checkbox
+                        aria-label={t("Done")}
+                        checked={todo.done}
+                        onChange={() => {
+                          toggleDone(todo)
+                        }}
+                      />
+                      <Paragraph
+                        className={`${styles.description} ${
+                          todo.done ? styles.done : ""
+                        }`}
+                        data-size="sm"
+                      >
+                        {todo.description}
+                      </Paragraph>
+                      <div className={styles.actions}>
+                        {confirmingDeleteId === todo.id ? (
+                          <>
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setConfirmingDeleteId(null)
+                              }}
+                            >
+                              {t("Cancel")}
+                            </Button>
+                            <Button
+                              variant="primary"
+                              data-color="danger"
+                              data-size="sm"
+                              onClick={() => {
+                                handleConfirmDelete(todo.id)
+                              }}
+                            >
+                              {t("Confirm delete")}
+                            </Button>
+                          </>
+                        ) : movingId === todo.id ? (
+                          <>
+                            <TargetSelect
+                              value={NO_TARGET}
+                              structures={structureRows}
+                              infrastructure={infrastructureRows}
+                              equipment={equipmentRows}
+                              onChange={token => {
+                                handleMove(todo.id, token)
+                              }}
+                            />
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setMovingId(null)
+                              }}
+                            >
+                              {t("Cancel")}
+                            </Button>
+                          </>
+                        ) : isMobile ? (
+                          <Dropdown.TriggerContext>
+                            <Dropdown.Trigger
+                              variant="tertiary"
+                              data-size="sm"
+                              icon
+                              aria-label={t("Todo actions")}
+                              onClick={() => {
+                                setMenuOpenId(
+                                  menuOpenId === todo.id ? null : todo.id,
+                                )
+                              }}
+                            >
+                              <MenuElipsisVerticalIcon aria-hidden />
+                            </Dropdown.Trigger>
+                            <Dropdown
+                              placement="bottom-end"
+                              open={menuOpenId === todo.id}
+                              onClose={() => {
+                                setMenuOpenId(null)
+                              }}
+                            >
+                              <Dropdown.List>
+                                <Dropdown.Item>
+                                  <Dropdown.Button
+                                    onClick={() => {
+                                      setMenuOpenId(null)
+                                      setEditingId(todo.id)
+                                    }}
+                                  >
+                                    {t("Edit")}
+                                  </Dropdown.Button>
+                                </Dropdown.Item>
+                                <Dropdown.Item>
+                                  <Dropdown.Button
+                                    onClick={() => {
+                                      setMenuOpenId(null)
+                                      setMovingId(todo.id)
+                                    }}
+                                  >
+                                    {t("Move to...")}
+                                  </Dropdown.Button>
+                                </Dropdown.Item>
+                                <Dropdown.Item>
+                                  <Dropdown.Button
+                                    data-color="danger"
+                                    onClick={() => {
+                                      setMenuOpenId(null)
+                                      setConfirmingDeleteId(todo.id)
+                                    }}
+                                  >
+                                    {t("Delete")}
+                                  </Dropdown.Button>
+                                </Dropdown.Item>
+                              </Dropdown.List>
+                            </Dropdown>
+                          </Dropdown.TriggerContext>
+                        ) : (
+                          <>
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setEditingId(todo.id)
+                              }}
+                            >
+                              {t("Edit")}
+                            </Button>
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setMovingId(todo.id)
+                              }}
+                            >
+                              {t("Move to...")}
+                            </Button>
+                            <Button
+                              variant="tertiary"
+                              data-color="danger"
+                              data-size="sm"
+                              onClick={() => {
+                                setConfirmingDeleteId(todo.id)
+                              }}
+                            >
+                              {t("Delete")}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </List.Item>
               ))}
             </List.Unordered>

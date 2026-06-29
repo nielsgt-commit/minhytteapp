@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Avatar,
   EXPERIMENTAL_AvatarStack as AvatarStack,
+  Tooltip,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
@@ -59,11 +60,9 @@ export function AtPropertyNow() {
         className={`${styles.stack} ${styles.clickable}`}
       >
         {guests.slice(0, VISIBLE_LIMIT).map(g => (
-          <Avatar
-            key={g.user_id}
-            aria-label={g.name}
-            data-initials={initials(g.name)}
-          />
+          <Tooltip key={g.user_id} content={g.name}>
+            <Avatar aria-label={g.name} data-initials={initials(g.name)} />
+          </Tooltip>
         ))}
       </AvatarStack>
     )
@@ -86,11 +85,9 @@ export function AtPropertyNow() {
         className={styles.expandedList}
       >
         {guests.map(g => (
-          <Avatar
-            key={g.user_id}
-            aria-label={g.name}
-            data-initials={initials(g.name)}
-          />
+          <Tooltip key={g.user_id} content={g.name}>
+            <Avatar aria-label={g.name} data-initials={initials(g.name)} />
+          </Tooltip>
         ))}
       </div>
     )
@@ -103,11 +100,9 @@ export function AtPropertyNow() {
       className={styles.stack}
     >
       {guests.map(g => (
-        <Avatar
-          key={g.user_id}
-          aria-label={g.name}
-          data-initials={initials(g.name)}
-        />
+        <Tooltip key={g.user_id} content={g.name}>
+          <Avatar aria-label={g.name} data-initials={initials(g.name)} />
+        </Tooltip>
       ))}
     </AvatarStack>
   )
