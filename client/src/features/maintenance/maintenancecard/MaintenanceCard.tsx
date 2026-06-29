@@ -4,11 +4,10 @@ import {
   Badge,
   Button,
   Card,
-  Divider,
   Heading,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { ClockDashedIcon } from "@navikt/aksel-icons"
+import { ClipboardCheckmarkIcon, ClockDashedIcon } from "@navikt/aksel-icons"
 import styles from "./MaintenanceCard.module.css"
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 import { MaintenanceHistory } from "@/features/maintenance/maintenancecard/MaintenanceHistory.tsx"
@@ -60,7 +59,6 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   const showTodos = view === "todos"
   const showHistory = view === "history"
 
-  const todosLabel = showTodos ? t("Hide open todos") : t("Show open todos")
   const historyLabel = isMobile
     ? t("History")
     : showHistory
@@ -74,11 +72,19 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
     setView(v => (v === "history" ? "none" : "history"))
   }
 
+  const historyToggle = (
+    <Button variant="tertiary" data-size="sm" onClick={toggleHistory}>
+      <ClockDashedIcon aria-hidden fontSize="1.25rem" />
+      {historyLabel}
+    </Button>
+  )
+
   const todosToggle = (
     <Badge.Position placement="top-right">
       {openTodosCount > 0 && <Badge count={openTodosCount} />}
       <Button variant="tertiary" data-size="sm" onClick={toggleTodos}>
-        {todosLabel}
+        <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
+        {t("Todos")}
       </Button>
     </Badge.Position>
   )
@@ -116,13 +122,12 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               {scope.name}
             </Heading>
             {!inspecting && (
-              <Button variant="tertiary" data-size="sm" onClick={toggleHistory}>
-                <ClockDashedIcon aria-hidden fontSize="1.25rem" />
-                {historyLabel}
-              </Button>
+              <div className={styles.mobileActions}>
+                {historyToggle}
+                {todosToggle}
+              </div>
             )}
           </Card.Block>
-          {historyBlock}
           {!inspecting && (
             <Card.Block className={styles.mobileInspectRow} data-size="sm">
               <Button
@@ -135,10 +140,10 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
               >
                 {t("Start inspection")}
               </Button>
-              {todosToggle}
             </Card.Block>
           )}
           {todosBlock}
+          {historyBlock}
           {inspectionBlock}
         </article>
       </Card>
@@ -152,29 +157,19 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
           <Heading level={3} data-size="xs" className={styles.name}>
             {scope.name}
           </Heading>
+          {!inspecting && historyToggle}
+          {!inspecting && todosToggle}
           {!inspecting && (
-            <div className={styles.inspectCol}>
-              <Button
-                className={styles.inspect}
-                variant="secondary"
-                data-size="sm"
-                onClick={() => {
-                  setInspecting(true)
-                }}
-              >
-                {t("Start inspection")}
-              </Button>
-              {todosToggle}
-            </div>
-          )}
-          {!inspecting && <Divider className={styles.divider} />}
-          {!inspecting && (
-            <div className={styles.actions}>
-              <Button variant="tertiary" data-size="sm" onClick={toggleHistory}>
-                <ClockDashedIcon aria-hidden fontSize="1.25rem" />
-                {historyLabel}
-              </Button>
-            </div>
+            <Button
+              className={styles.inspect}
+              variant="secondary"
+              data-size="sm"
+              onClick={() => {
+                setInspecting(true)
+              }}
+            >
+              {t("Start inspection")}
+            </Button>
           )}
         </Card.Block>
         {todosBlock}

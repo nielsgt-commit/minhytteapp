@@ -1,34 +1,20 @@
 .row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  grid-template-areas: "name actions inspect";
-  align-items: start;
-  gap: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .name {
-  grid-area: name;
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.inspectCol {
-  grid-area: inspect;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.5rem;
-}
-
-.divider {
-  grid-area: divider;
-  display: none;
-}
-
-.actions {
-  grid-area: actions;
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+/* Push the inspection button to the far right of the row. */
+.inspect {
+  margin-left: auto;
 }
 
 /* Mobile layout (rendered via useIsMobile, see MaintenanceCard.tsx) */
@@ -40,11 +26,17 @@
 }
 
 .nameTag {
-  /* Keep a long structure name from pushing the history toggle off-row. */
+  /* Keep a long structure name from pushing the toggles off-row. */
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mobileActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .mobileInspectRow {
@@ -56,22 +48,5 @@
 
 .mobileInspectRow .inspect {
   width: 100%;
-}
-
-@media (max-width: 640px) {
-  .row {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "name    inspect"
-      "divider divider"
-      "actions actions";
-    row-gap: 0.5rem;
-  }
-  .divider {
-    display: block;
-  }
-  .actions {
-    justify-self: stretch;
-    justify-content: flex-end;
-  }
+  margin-left: 0;
 }

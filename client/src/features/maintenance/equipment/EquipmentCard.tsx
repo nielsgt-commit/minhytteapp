@@ -1,6 +1,6 @@
 import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { ClockDashedIcon } from "@navikt/aksel-icons"
+import { ClipboardCheckmarkIcon, ClockDashedIcon } from "@navikt/aksel-icons"
 import styles from "./Equipment.module.css"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
@@ -40,118 +40,158 @@ export function EquipmentCard(props: {
     modalState.kind === "history" && modalState.id === item.id
   const isTodosOpen = modalState.kind === "todos" && modalState.id === item.id
 
-  const todosLabel = isTodosOpen ? t("Hide open todos") : t("Show open todos")
   const historyLabel = isMobile
     ? t("History")
     : isHistoryOpen
       ? t("Hide history")
       : t("Show history")
 
-  return (
-    <Card asChild>
-      <article>
-        <Card.Block className={styles.topRow} data-size="sm">
-          <div className={styles.nameGroup}>
-            <Heading level={3} data-size="xs" className={styles.name}>
-              {item.name}
-            </Heading>
-            {(item.brand ?? item.model) && (
-              <Paragraph className={styles.brandModel} data-size="xs">
-                {[item.brand, item.model].filter(Boolean).join(" · ")}
-              </Paragraph>
-            )}
-            {item.acquired_year != null && (
-              <Paragraph className={styles.brandModel} data-size="xs">
-                {t("Acquired {{year}}", { year: item.acquired_year })}
-              </Paragraph>
-            )}
-            {item.category && (
-              <Paragraph className={styles.category} data-size="xs">
-                {item.category}
-              </Paragraph>
-            )}
-          </div>
-          {!isInspecting && (
-            <Button
-              variant="tertiary"
-              data-size="sm"
-              onClick={() => {
-                setModalState(
-                  isHistoryOpen
-                    ? { kind: "none" }
-                    : { kind: "history", id: item.id },
-                )
-              }}
-            >
-              <ClockDashedIcon aria-hidden fontSize="1.25rem" />
-              {historyLabel}
-            </Button>
-          )}
-        </Card.Block>
-        {isHistoryOpen && !isInspecting && (
-          <Card.Block>
-            {historyEntries.length === 0 ? (
-              <EmptyState title={t("No history yet.")} />
-            ) : (
-              <div className={styles.list}>
-                {historyEntries.map(entry => {
-                  const key =
-                    entry.kind === "inspection"
-                      ? `i-${String(entry.i.id)}`
-                      : `m-${String(entry.m.id)}`
-                  return <EquipmentHistoryEntry key={key} entry={entry} />
-                })}
+  const nameGroup = (
+    <div className={styles.nameGroup}>
+      <Heading level={3} data-size="xs" className={styles.name}>
+        {item.name}
+      </Heading>
+      {(item.brand ?? item.model) && (
+        <Paragraph className={styles.brandModel} data-size="xs">
+          {[item.brand, item.model].filter(Boolean).join(" · ")}
+        </Paragraph>
+      )}
+      {item.acquired_year != null && (
+        <Paragraph className={styles.brandModel} data-size="xs">
+          {t("Acquired {{year}}", { year: item.acquired_year })}
+        </Paragraph>
+      )}
+      {item.category && (
+        <Paragraph className={styles.category} data-size="xs">
+          {item.category}
+        </Paragraph>
+      )}
+    </div>
+  )
+
+  const historyToggle = (
+    <Button
+      variant="tertiary"
+      data-size="sm"
+      onClick={() => {
+        setModalState(
+          isHistoryOpen ? { kind: "none" } : { kind: "history", id: item.id },
+        )
+      }}
+    >
+      <ClockDashedIcon aria-hidden fontSize="1.25rem" />
+      {historyLabel}
+    </Button>
+  )
+
+  const todosToggle = (
+    <Button
+      variant="tertiary"
+      data-size="sm"
+      onClick={() => {
+        setModalState(
+          isTodosOpen ? { kind: "none" } : { kind: "todos", id: item.id },
+        )
+      }}
+    >
+      <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
+      {t("Todos")}
+    </Button>
+  )
+
+  const inspectButton = (
+    <Button
+      className={styles.inspect}
+      variant="secondary"
+      data-size="sm"
+      onClick={() => {
+        setModalState({ kind: "inspecting", id: item.id })
+      }}
+    >
+      {t("Start inspection")}
+    </Button>
+  )
+
+  const historyBlock = isHistoryOpen && !isInspecting && (
+    <Card.Block>
+      {historyEntries.length === 0 ? (
+        <EmptyState title={t("No history yet.")} />
+      ) : (
+        <div className={styles.list}>
+          {historyEntries.map(entry => {
+            const key =
+              entry.kind === "inspection"
+                ? `i-${String(entry.i.id)}`
+                : `m-${String(entry.m.id)}`
+            return <EquipmentHistoryEntry key={key} entry={entry} />
+          })}
+        </div>
+      )}
+    </Card.Block>
+  )
+
+  const todosBlock = isTodosOpen && !isInspecting && (
+    <Card.Block>
+      <MaintenanceTodos
+        scope={{ kind: "equipment", id: item.id, name: item.name }}
+      />
+    </Card.Block>
+  )
+
+  const inspectionBlock = isInspecting && (
+    <Card.Block>
+      <InspectionFlow
+        scope={{
+          kind: "equipment",
+          id: item.id,
+          name: item.name,
+        }}
+        open={isInspecting}
+        onClose={() => {
+          setModalState({ kind: "none" })
+        }}
+      />
+    </Card.Block>
+  )
+
+  if (isMobile) {
+    return (
+      <Card asChild>
+        <article>
+          <Card.Block className={styles.topRow} data-size="sm">
+            {nameGroup}
+            {!isInspecting && (
+              <div className={styles.mobileActions}>
+                {historyToggle}
+                {todosToggle}
               </div>
             )}
           </Card.Block>
-        )}
-        {!isInspecting && (
-          <Card.Block className={styles.inspectRow} data-size="sm">
-            <Button
-              className={styles.inspect}
-              variant="secondary"
-              data-size="sm"
-              onClick={() => {
-                setModalState({ kind: "inspecting", id: item.id })
-              }}
-            >
-              {t("Start inspection")}
-            </Button>
-            <Button
-              variant="tertiary"
-              data-size="sm"
-              onClick={() => {
-                setModalState(
-                  isTodosOpen ? { kind: "none" } : { kind: "todos", id: item.id },
-                )
-              }}
-            >
-              {todosLabel}
-            </Button>
-          </Card.Block>
-        )}
-        {isTodosOpen && !isInspecting && (
-          <Card.Block>
-            <MaintenanceTodos
-              scope={{ kind: "equipment", id: item.id, name: item.name }}
-            />
-          </Card.Block>
-        )}
-        {isInspecting && (
-          <Card.Block>
-            <InspectionFlow
-              scope={{
-                kind: "equipment",
-                id: item.id,
-                name: item.name,
-              }}
-              open={isInspecting}
-              onClose={() => {
-                setModalState({ kind: "none" })
-              }}
-            />
-          </Card.Block>
-        )}
+          {!isInspecting && (
+            <Card.Block className={styles.inspectRow} data-size="sm">
+              {inspectButton}
+            </Card.Block>
+          )}
+          {historyBlock}
+          {todosBlock}
+          {inspectionBlock}
+        </article>
+      </Card>
+    )
+  }
+
+  return (
+    <Card asChild>
+      <article>
+        <Card.Block className={styles.row} data-size="sm">
+          {nameGroup}
+          {!isInspecting && historyToggle}
+          {!isInspecting && todosToggle}
+          {!isInspecting && inspectButton}
+        </Card.Block>
+        {historyBlock}
+        {todosBlock}
+        {inspectionBlock}
       </article>
     </Card>
   )

@@ -11,6 +11,22 @@
   gap: 0.5rem;
 }
 
+/* Desktop: name group, toggles, then inspection button pushed to the far right. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.row .inspect {
+  margin-left: auto;
+}
+
+.mobileActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .nameGroup {
   display: flex;
   flex-direction: column;
