@@ -1,6 +1,17 @@
-import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
+import { useState } from "react"
+import {
+  Button,
+  Card,
+  Dropdown,
+  Heading,
+  Paragraph,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { ClipboardCheckmarkIcon, ClockDashedIcon } from "@navikt/aksel-icons"
+import {
+  ClipboardCheckmarkIcon,
+  ClockDashedIcon,
+  MenuElipsisVerticalIcon,
+} from "@navikt/aksel-icons"
 import styles from "./Equipment.module.css"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
@@ -32,6 +43,7 @@ export function EquipmentCard(props: {
 }) {
   const { t } = useTranslation("maintenance")
   const isMobile = useIsMobile()
+  const [menuOpen, setMenuOpen] = useState(false)
   const { item, historyEntries, modalState, setModalState } = props
 
   const isInspecting =
@@ -99,6 +111,64 @@ export function EquipmentCard(props: {
     </Button>
   )
 
+  // On the narrowest phones the History/Todos labels stop fitting next to the
+  // name, so collapse them into a kebab menu in the top-right corner instead.
+  const kebabMenu = (
+    <Dropdown.TriggerContext>
+      <Dropdown.Trigger
+        variant="tertiary"
+        data-size="sm"
+        icon
+        aria-label={t("More actions")}
+      >
+        <MenuElipsisVerticalIcon aria-hidden fontSize="1.25rem" />
+      </Dropdown.Trigger>
+      <Dropdown
+        placement="bottom-end"
+        open={menuOpen}
+        onOpen={() => {
+          setMenuOpen(true)
+        }}
+        onClose={() => {
+          setMenuOpen(false)
+        }}
+      >
+        <Dropdown.List>
+          <Dropdown.Item>
+            <Dropdown.Button
+              className={styles.menuItem}
+              onClick={() => {
+                setModalState(
+                  isTodosOpen ? { kind: "none" } : { kind: "todos", id: item.id },
+                )
+                setMenuOpen(false)
+              }}
+            >
+              <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
+              {t("Todos")}
+            </Dropdown.Button>
+          </Dropdown.Item>
+          <Dropdown.Item>
+            <Dropdown.Button
+              className={styles.menuItem}
+              onClick={() => {
+                setModalState(
+                  isHistoryOpen
+                    ? { kind: "none" }
+                    : { kind: "history", id: item.id },
+                )
+                setMenuOpen(false)
+              }}
+            >
+              <ClockDashedIcon aria-hidden fontSize="1.25rem" />
+              {t("History")}
+            </Dropdown.Button>
+          </Dropdown.Item>
+        </Dropdown.List>
+      </Dropdown>
+    </Dropdown.TriggerContext>
+  )
+
   const inspectButton = (
     <Button
       className={styles.inspect}
@@ -160,12 +230,7 @@ export function EquipmentCard(props: {
         <article>
           <Card.Block className={styles.topRow} data-size="sm">
             {nameGroup}
-            {!isInspecting && (
-              <div className={styles.mobileActions}>
-                {historyToggle}
-                {todosToggle}
-              </div>
-            )}
+            {!isInspecting && kebabMenu}
           </Card.Block>
           {!isInspecting && (
             <Card.Block className={styles.inspectRow} data-size="sm">

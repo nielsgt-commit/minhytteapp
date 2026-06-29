@@ -9,8 +9,24 @@ import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import type { MaintenanceScope } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { MaintenanceCard } from "@/features/maintenance/maintenancecard/MaintenanceCard.tsx"
 import { Equipment } from "@/features/maintenance/equipment/Equipment.tsx"
+import { CardGallery } from "@/components/shared/CardGallery/CardGallery.tsx"
 
 type TabValue = "structures" | "infrastructure" | "equipment"
+
+type StructureCategory = "habitable" | "non_habitable"
+
+// Habitable buildings are the ones with bedrooms; keep this order in the filter.
+const STRUCTURE_CATEGORY_ORDER: StructureCategory[] = [
+  "habitable",
+  "non_habitable",
+]
+
+function toggle<T>(set: Set<T>, value: T): Set<T> {
+  const next = new Set(set)
+  if (next.has(value)) next.delete(value)
+  else next.add(value)
+  return next
+}
 
 export function StructureStats() {
   const { t } = useTranslation("maintenance")
@@ -29,26 +45,24 @@ export function StructureStats() {
   )
 
   const [activeTab, setActiveTab] = useState<TabValue>("structures")
-  const [structureFilter, setStructureFilter] = useState<Set<number>>(new Set())
-  const [infrastructureFilter, setInfrastructureFilter] = useState<Set<number>>(
-    new Set(),
-  )
+  const [structureCategoryFilter, setStructureCategoryFilter] = useState<
+    Set<StructureCategory>
+  >(new Set())
 
-  const toggle = (set: Set<number>, id: number): Set<number> => {
-    const next = new Set(set)
-    if (next.has(id)) next.delete(id)
-    else next.add(id)
-    return next
+  const categoryLabels: Record<StructureCategory, string> = {
+    habitable: t("Habitable"),
+    non_habitable: t("Non-habitable"),
   }
 
+  // Only offer the building types actually present on this property.
+  const presentCategories = STRUCTURE_CATEGORY_ORDER.filter(c =>
+    structures.some(b => b.category === c),
+  )
+
   const visibleStructures =
-    structureFilter.size === 0
+    structureCategoryFilter.size === 0
       ? structures
-      : structures.filter(b => structureFilter.has(b.id))
-  const visibleInfrastructure =
-    infrastructureFilter.size === 0
-      ? infrastructure
-      : infrastructure.filter(p => infrastructureFilter.has(p.id))
+      : structures.filter(b => structureCategoryFilter.has(b.category))
 
   return (
     <Tabs
@@ -70,26 +84,28 @@ export function StructureStats() {
               <EmptyState title={t("No Structures yet.")} />
             ) : (
               <div className={styles.wrap}>
-                <div
-                  className={styles.filter}
-                  role="group"
-                  aria-label={t("Filter Structures")}
-                >
-                  {structures.map(b => (
-                    <Chip.Checkbox
-                      key={b.id}
-                      name="structure-filter"
-                      value={String(b.id)}
-                      checked={structureFilter.has(b.id)}
-                      onChange={() => {
-                        setStructureFilter(prev => toggle(prev, b.id))
-                      }}
-                    >
-                      {b.name}
-                    </Chip.Checkbox>
-                  ))}
-                </div>
-                <div className={styles.cards}>
+                {presentCategories.length > 1 && (
+                  <div
+                    className={styles.filter}
+                    role="group"
+                    aria-label={t("Filter building types")}
+                  >
+                    {presentCategories.map(c => (
+                      <Chip.Checkbox
+                        key={c}
+                        name="structure-category-filter"
+                        value={c}
+                        checked={structureCategoryFilter.has(c)}
+                        onChange={() => {
+                          setStructureCategoryFilter(prev => toggle(prev, c))
+                        }}
+                      >
+                        {categoryLabels[c]}
+                      </Chip.Checkbox>
+                    ))}
+                  </div>
+                )}
+                <CardGallery ariaLabel={t("Browse Structures")}>
                   {visibleStructures.map(b => {
                     const scope: MaintenanceScope = {
                       kind: "structure",
@@ -99,7 +115,7 @@ export function StructureStats() {
                     }
                     return <MaintenanceCard key={b.id} scope={scope} />
                   })}
-                </div>
+                </CardGallery>
               </div>
             )}
           </section>
@@ -112,38 +128,18 @@ export function StructureStats() {
             {infrastructure.length === 0 ? (
               <EmptyState title={t("No Infrastructure yet.")} />
             ) : (
-              <div className={styles.wrap}>
-                <div
-                  className={styles.filter}
-                  role="group"
-                  aria-label={t("Filter Infrastructure")}
-                >
-                  {infrastructure.map(p => (
-                    <Chip.Checkbox
-                      key={p.id}
-                      name="infrastructure-filter"
-                      value={String(p.id)}
-                      checked={infrastructureFilter.has(p.id)}
-                      onChange={() => {
-                        setInfrastructureFilter(prev => toggle(prev, p.id))
-                      }}
-                    >
-                      {p.name}
-                    </Chip.Checkbox>
-                  ))}
-                </div>
-                <div className={styles.cards}>
-                  {visibleInfrastructure.map(p => {
-                    const scope: MaintenanceScope = {
-                      kind: "infrastructure",
-                      id: p.id,
-                      name: p.name,
-                      builtYear: p.since_year,
-                    }
-                    return <MaintenanceCard key={p.id} scope={scope} />
-                  })}
-                </div>
-              </div>
+              // Filter group intentionally unmounted for now — to be reworked.
+              <CardGallery ariaLabel={t("Browse Infrastructure")}>
+                {infrastructure.map(p => {
+                  const scope: MaintenanceScope = {
+                    kind: "infrastructure",
+                    id: p.id,
+                    name: p.name,
+                    builtYear: p.since_year,
+                  }
+                  return <MaintenanceCard key={p.id} scope={scope} />
+                })}
+              </CardGallery>
             )}
           </section>
         )}

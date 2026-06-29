@@ -33,12 +33,6 @@
   white-space: nowrap;
 }
 
-.mobileActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .mobileInspectRow {
   display: flex;
   flex-direction: column;
@@ -49,4 +43,15 @@
 .mobileInspectRow .inspect {
   width: 100%;
   margin-left: 0;
+}
+
+/* Dropdown menu items: icon, label, then an optional count pushed to the end. */
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.menuItem .menuCount {
+  margin-left: auto;
 }

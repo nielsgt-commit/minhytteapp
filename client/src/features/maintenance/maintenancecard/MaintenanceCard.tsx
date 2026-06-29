@@ -4,10 +4,15 @@ import {
   Badge,
   Button,
   Card,
+  Dropdown,
   Heading,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { ClipboardCheckmarkIcon, ClockDashedIcon } from "@navikt/aksel-icons"
+import {
+  ClipboardCheckmarkIcon,
+  ClockDashedIcon,
+  MenuElipsisVerticalIcon,
+} from "@navikt/aksel-icons"
 import styles from "./MaintenanceCard.module.css"
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 import { MaintenanceHistory } from "@/features/maintenance/maintenancecard/MaintenanceHistory.tsx"
@@ -33,6 +38,7 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
   const selectedPropertyId = useSelectedPropertyId()
   const [view, setView] = useState<"none" | "todos" | "history">("none")
   const [inspecting, setInspecting] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const isMobile = useIsMobile()
 
   // Shares its cache key with MaintenanceTodos/MaintenanceHistory, so this only
@@ -89,6 +95,68 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
     </Badge.Position>
   )
 
+  // On the narrowest phones the History/Todos labels stop fitting next to the
+  // name, so collapse them into a kebab menu in the top-right corner instead.
+  const kebabMenu = (
+    <Dropdown.TriggerContext>
+      <Dropdown.Trigger
+        variant="tertiary"
+        data-size="sm"
+        icon
+        aria-label={t("More actions")}
+      >
+        <Badge.Position placement="top-right">
+          {openTodosCount > 0 && <Badge count={openTodosCount} />}
+          <MenuElipsisVerticalIcon aria-hidden fontSize="1.25rem" />
+        </Badge.Position>
+      </Dropdown.Trigger>
+      <Dropdown
+        placement="bottom-end"
+        open={menuOpen}
+        onOpen={() => {
+          setMenuOpen(true)
+        }}
+        onClose={() => {
+          setMenuOpen(false)
+        }}
+      >
+        <Dropdown.List>
+          <Dropdown.Item>
+            <Dropdown.Button
+              className={styles.menuItem}
+              onClick={() => {
+                toggleTodos()
+                setMenuOpen(false)
+              }}
+            >
+              <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
+              {t("Todos")}
+              {openTodosCount > 0 && (
+                <Badge
+                  className={styles.menuCount}
+                  count={openTodosCount}
+                  data-color="accent"
+                />
+              )}
+            </Dropdown.Button>
+          </Dropdown.Item>
+          <Dropdown.Item>
+            <Dropdown.Button
+              className={styles.menuItem}
+              onClick={() => {
+                toggleHistory()
+                setMenuOpen(false)
+              }}
+            >
+              <ClockDashedIcon aria-hidden fontSize="1.25rem" />
+              {t("History")}
+            </Dropdown.Button>
+          </Dropdown.Item>
+        </Dropdown.List>
+      </Dropdown>
+    </Dropdown.TriggerContext>
+  )
+
   const todosBlock = showTodos && !inspecting && (
     <Card.Block>
       <MaintenanceTodos scope={scope} />
@@ -121,12 +189,7 @@ export function MaintenanceCard({ scope }: { scope: MaintenanceScope }) {
             <Heading level={3} data-size="xs" className={styles.nameTag}>
               {scope.name}
             </Heading>
-            {!inspecting && (
-              <div className={styles.mobileActions}>
-                {historyToggle}
-                {todosToggle}
-              </div>
-            )}
+            {!inspecting && kebabMenu}
           </Card.Block>
           {!inspecting && (
             <Card.Block className={styles.mobileInspectRow} data-size="sm">

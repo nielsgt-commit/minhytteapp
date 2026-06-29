@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react"
 
-const MOBILE_QUERY = "(max-width: 640px)"
-
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia(MOBILE_QUERY).matches,
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(
+    () => window.matchMedia(query).matches,
   )
   useEffect(() => {
-    const mq = window.matchMedia(MOBILE_QUERY)
+    const mq = window.matchMedia(query)
     const onChange = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches)
+      setMatches(e.matches)
     }
+    setMatches(mq.matches)
     mq.addEventListener("change", onChange)
     return () => {
       mq.removeEventListener("change", onChange)
     }
-  }, [])
-  return isMobile
+  }, [query])
+  return matches
+}
+
+export function useIsMobile() {
+  return useMediaQuery("(max-width: 640px)")
 }

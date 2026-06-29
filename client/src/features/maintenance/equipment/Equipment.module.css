@@ -4,6 +4,25 @@
   gap: 0.75rem;
 }
 
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Category filter chips: a single non-wrapping, horizontally scrollable row. */
+.filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.filter > * {
+  flex: 0 0 auto;
+}
+
 .topRow {
   display: flex;
   align-items: center;
@@ -19,12 +38,6 @@
 }
 .row .inspect {
   margin-left: auto;
-}
-
-.mobileActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .nameGroup {
@@ -52,4 +65,11 @@
 }
 .inspectRow .inspect {
   width: 100%;
+}
+
+/* Kebab dropdown menu items: icon then label. */
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

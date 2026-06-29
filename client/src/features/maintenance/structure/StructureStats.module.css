@@ -31,12 +31,6 @@
   flex: 0 0 auto;
 }
 
-.cards {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
 @media (max-width: 640px) {
   /* Drop digdir's tabpanel horizontal padding on mobile to reclaim space,
      but keep top padding so the filter chips don't crowd the tabs. */
