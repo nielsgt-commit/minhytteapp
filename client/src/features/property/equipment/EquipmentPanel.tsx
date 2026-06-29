@@ -164,7 +164,11 @@ export function EquipmentPanel({ propertyId }: Props) {
     return (
       <Field>
         <Label>{t("Category")}</Label>
-        <Select name="category" defaultValue={current ?? ""} disabled={disabled}>
+        <Select
+          name="category"
+          defaultValue={current ?? ""}
+          disabled={disabled}
+        >
           <Select.Option value="">{t("(no category)")}</Select.Option>
           {options.map(name => (
             <Select.Option key={name} value={name}>

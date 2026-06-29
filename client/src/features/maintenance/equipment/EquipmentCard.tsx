@@ -139,7 +139,9 @@ export function EquipmentCard(props: {
               className={styles.menuItem}
               onClick={() => {
                 setModalState(
-                  isTodosOpen ? { kind: "none" } : { kind: "todos", id: item.id },
+                  isTodosOpen
+                    ? { kind: "none" }
+                    : { kind: "todos", id: item.id },
                 )
                 setMenuOpen(false)
               }}

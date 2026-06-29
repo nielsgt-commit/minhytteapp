@@ -143,9 +143,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                         </div>
                         {hasInstructions && (
                           <Details data-size="sm">
-                            <Details.Summary>
-                              {t("Execution")}
-                            </Details.Summary>
+                            <Details.Summary>{t("Execution")}</Details.Summary>
                             <Details.Content className={styles.instructions}>
                               <MaintenanceInstructionsPT
                                 value={f.instructions_pt}
@@ -184,9 +182,7 @@ export function InspectionCard({ inspection }: { inspection: Inspection }) {
                         </div>
                         {hasInstructions && (
                           <Details data-size="sm">
-                            <Details.Summary>
-                              {t("Execution")}
-                            </Details.Summary>
+                            <Details.Summary>{t("Execution")}</Details.Summary>
                             <Details.Content className={styles.instructions}>
                               <MaintenanceInstructionsPT
                                 value={f.instructions_pt}

@@ -229,7 +229,10 @@ describe("ProcedureSection", () => {
     await user.clear(field)
     await user.type(field, "Check smoke alarm battery")
     await user.click(screen.getByRole("button", { name: "Save" }))
-    expect(editProcedureItem).toHaveBeenCalledWith(1, "Check smoke alarm battery")
+    expect(editProcedureItem).toHaveBeenCalledWith(
+      1,
+      "Check smoke alarm battery",
+    )
   })
 
   test("an unchanged title does not call editProcedureItem on Save", async () => {
