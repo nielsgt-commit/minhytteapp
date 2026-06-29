@@ -3,9 +3,12 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
   Card,
+  Field,
   Fieldset,
+  Label,
   List,
   Paragraph,
+  Select,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
@@ -19,6 +22,7 @@ import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import section from "@/features/property/managePropertySection.module.css"
+import { ManageEquipmentCategories } from "./ManageEquipmentCategories"
 import styles from "./EquipmentPanel.module.css"
 
 type Props = {
@@ -51,6 +55,9 @@ export function EquipmentPanel({ propertyId }: Props) {
 
   const { data: equipment } = useSuspenseQuery(
     trpc.equipment.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const { data: categories } = useSuspenseQuery(
+    trpc.equipmentCategory.list.queryOptions({ property_id: propertyId }),
   )
 
   const equipmentKeys = [
@@ -148,6 +155,27 @@ export function EquipmentPanel({ propertyId }: Props) {
     )
   }
 
+  const renderCategoryField = (current: string | null, disabled: boolean) => {
+    const names = categories.map(c => c.name)
+    // Keep an already-assigned but since-removed (archived) category selectable
+    // so editing other fields doesn't silently drop it.
+    const options =
+      current && !names.includes(current) ? [current, ...names] : names
+    return (
+      <Field>
+        <Label>{t("Category")}</Label>
+        <Select name="category" defaultValue={current ?? ""} disabled={disabled}>
+          <Select.Option value="">{t("(no category)")}</Select.Option>
+          {options.map(name => (
+            <Select.Option key={name} value={name}>
+              {name}
+            </Select.Option>
+          ))}
+        </Select>
+      </Field>
+    )
+  }
+
   const renderEditForm = (item: Equipment) => (
     <form
       action={handleSave(item)}
@@ -178,14 +206,7 @@ export function EquipmentPanel({ propertyId }: Props) {
           defaultValue={item.model ?? ""}
           disabled={updateEquipment.isPending}
         />
-        <Textfield
-          label={t("Category")}
-          name="category"
-          maxLength={32}
-          placeholder={t("appliance, tool, boat…")}
-          defaultValue={item.category ?? ""}
-          disabled={updateEquipment.isPending}
-        />
+        {renderCategoryField(item.category, updateEquipment.isPending)}
         <Textfield
           label={t("Notes")}
           name="notes"
@@ -223,6 +244,13 @@ export function EquipmentPanel({ propertyId }: Props) {
     <div className={section.column}>
       <ErrorAlert error={lastError} />
 
+      {canEdit && (
+        <ManageEquipmentCategories
+          categories={categories}
+          propertyId={propertyId}
+        />
+      )}
+
       <List.Unordered className={styles.list}>
         {canEdit && (
           <Card asChild key="__add">
@@ -255,13 +283,7 @@ export function EquipmentPanel({ propertyId }: Props) {
                           maxLength={64}
                           disabled={createEquipment.isPending}
                         />
-                        <Textfield
-                          label={t("Category")}
-                          name="category"
-                          maxLength={32}
-                          placeholder={t("appliance, tool, boat…")}
-                          disabled={createEquipment.isPending}
-                        />
+                        {renderCategoryField(null, createEquipment.isPending)}
                         <Textfield
                           label={t("Notes")}
                           name="notes"

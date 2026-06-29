@@ -7,6 +7,7 @@ import {
   pgTable,
   serial,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
 import type { PortableTextBlock } from "@portabletext/types"
@@ -37,6 +38,27 @@ export const equipmentTable = pgTable(
       "equipment_acquired_year_range",
       sql`${t.acquired_year} IS NULL OR (${t.acquired_year} BETWEEN 1500 AND 2100)`,
     ),
+  ],
+)
+
+// The set of category labels available when tagging equipment for a property.
+// equipmentTable.category stores the chosen label by name (denormalized), so
+// "removing" a category archives it (archived_at) rather than deleting — any
+// equipment already tagged with it keeps its label. Mirrors expense_categories.
+export const equipmentCategoriesTable = pgTable(
+  "equipment_categories",
+  {
+    id: serial("id").primaryKey(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    name: varchar("name", { length: 32 }).notNull(),
+    archived_at: timestamp("archived_at"),
+  },
+  t => [
+    uniqueIndex("equipment_categories_property_name_active")
+      .on(t.property_id, t.name)
+      .where(sql`${t.archived_at} IS NULL`),
   ],
 )
 

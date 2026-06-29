@@ -23,6 +23,13 @@ export const Route = createFileRoute("/_authed/administrer/utstyr")({
               property_id: selectedPropertyId,
             }),
           ),
+      selectedPropertyId == null
+        ? undefined
+        : context.queryClient.ensureQueryData(
+            trpc.equipmentCategory.list.queryOptions({
+              property_id: selectedPropertyId,
+            }),
+          ),
     ])
   },
   component: EquipmentRoute,
