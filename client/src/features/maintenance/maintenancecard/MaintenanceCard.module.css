@@ -4,6 +4,14 @@
   gap: 0.5rem;
 }
 
+/* These rows lay out horizontally with `gap`, but @digdir's card styles add a
+   top margin to every non-first child of a Card.Block (`>*+*`). In a centered
+   flex row that asymmetric margin shifts the trailing items down, so reset it. */
+.row > *,
+.mobileTopRow > * {
+  margin-block: 0;
+}
+
 .name {
   margin: 0;
   min-width: 0;
