@@ -8,7 +8,10 @@ import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useSingleDateFlatpickr } from "../hooks/useSingleDateFlatpickr.ts"
 import { useBookingForm } from "../hooks/useBookingForm.ts"
 import { useOccupancyData } from "../hooks/useOccupancyData.ts"
+import { useOverlappingPriorityWeeks } from "../hooks/useOverlappingPriorityWeeks.ts"
 import { StartEndDate } from "./StartEndDate.tsx"
+import { StayAvailabilityPanel } from "./StayAvailabilityPanel.tsx"
+import { StepQuestion } from "./StepQuestion.tsx"
 import { StepGuests } from "../addstayflow/stepguests/StepGuests.tsx"
 import { StepRooms } from "../addstayflow/steprooms/StepRooms.tsx"
 import { StepConfirm } from "../addstayflow/stepconfirm/StepConfirm.tsx"
@@ -94,6 +97,11 @@ function PlanStayFlowContent({
     conflicts,
   })
 
+  const overlappingPriorityWeeks = useOverlappingPriorityWeeks(
+    propertyId,
+    draft,
+  )
+
   return (
     <form
       className={styles.stack}
@@ -109,58 +117,81 @@ function PlanStayFlowContent({
 
       <StartEndDate startInputRef={startInputRef} endInputRef={endInputRef} />
 
-      <StepGuests
-        isActive
-        users={users}
-        otherUsers={otherUsers}
-        selectedUserId={selectedUserId}
-        draft={draft}
-        dispatch={dispatch}
-        guestInputRef={guestInputRef}
-        stepClass=""
-        stepActiveClass=""
+      <StayAvailabilityPanel
+        totalBeds={occupancy.totalBeds}
+        occupiedBeds={occupancy.occupiedBeds}
+        overlappingBookings={occupancy.overlappingBookings}
+        overlappingPriorityWeeks={overlappingPriorityWeeks}
+        hasStartDate={draft.start_date != null}
       />
 
-      <StepRooms
-        isActive
-        isFetching={isFetching}
-        propertyStructures={propertyStructures}
-        propertyRooms={propertyRooms}
-        users={users}
-        occupantsByRoom={occupancy.occupantsByRoom}
-        existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
-        adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
-        unassigned={occupancy.unassigned}
-        tent={occupancy.tent}
-        draft={draft}
-        dispatch={dispatch}
-        selectedUserId={selectedUserId}
-        expandedRoomId={expandedRoomId}
-        setExpandedRoomId={setExpandedRoomId}
-        conflicts={conflicts}
-        stepClass=""
-        stepActiveClass=""
-      />
+      <StepQuestion
+        question={t("Who's coming?")}
+        description={t("Add the people joining you.")}
+      >
+        <StepGuests
+          isActive
+          users={users}
+          otherUsers={otherUsers}
+          selectedUserId={selectedUserId}
+          draft={draft}
+          dispatch={dispatch}
+          guestInputRef={guestInputRef}
+          stepClass=""
+          stepActiveClass=""
+        />
+      </StepQuestion>
 
-      <StepConfirm
-        isActive
-        draft={draft}
-        dispatch={dispatch}
-        users={users}
-        propertyStructures={propertyStructures}
-        propertyRooms={propertyRooms}
-        occupantsByRoom={occupancy.occupantsByRoom}
-        unassigned={occupancy.unassigned}
-        conflicts={conflicts}
-        submitState={submitState}
-        submit={submit}
-        hasWarnings={hasWarnings}
-        canSubmit={canSubmit}
-        isPending={isPending}
-        roomOverCapacityDays={occupancy.roomOverCapacityDays}
-        stepClass=""
-        stepActiveClass=""
-      />
+      <StepQuestion
+        question={t("Where will everyone sleep?")}
+        description={t("Assign your group to rooms and beds.")}
+      >
+        <StepRooms
+          isActive
+          isFetching={isFetching}
+          propertyStructures={propertyStructures}
+          propertyRooms={propertyRooms}
+          users={users}
+          occupantsByRoom={occupancy.occupantsByRoom}
+          existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
+          adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
+          unassigned={occupancy.unassigned}
+          tent={occupancy.tent}
+          draft={draft}
+          dispatch={dispatch}
+          selectedUserId={selectedUserId}
+          expandedRoomId={expandedRoomId}
+          setExpandedRoomId={setExpandedRoomId}
+          conflicts={conflicts}
+          stepClass=""
+          stepActiveClass=""
+        />
+      </StepQuestion>
+
+      <StepQuestion
+        question={t("Ready to confirm?")}
+        description={t("Check the summary and confirm your stay.")}
+      >
+        <StepConfirm
+          isActive
+          draft={draft}
+          dispatch={dispatch}
+          users={users}
+          propertyStructures={propertyStructures}
+          propertyRooms={propertyRooms}
+          occupantsByRoom={occupancy.occupantsByRoom}
+          unassigned={occupancy.unassigned}
+          conflicts={conflicts}
+          submitState={submitState}
+          submit={submit}
+          hasWarnings={hasWarnings}
+          canSubmit={canSubmit}
+          isPending={isPending}
+          roomOverCapacityDays={occupancy.roomOverCapacityDays}
+          stepClass=""
+          stepActiveClass=""
+        />
+      </StepQuestion>
     </form>
   )
 }
