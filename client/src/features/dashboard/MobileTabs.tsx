@@ -15,7 +15,7 @@ import { AtPropertyNow } from "@/features/dashboard/capacitysummary/userschecked
 import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
 import { RoomAvailabilityIndicator } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
-import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
+import { MyPlannedStay } from "@/features/planstay/myplannedstay/MyPlannedStay.tsx"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { Temporal } from "temporal-polyfill"
 import { startOfSunday } from "@/utils/dateUtils"

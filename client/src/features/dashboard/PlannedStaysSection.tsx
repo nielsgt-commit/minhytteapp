@@ -3,7 +3,7 @@ import { Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
-import { MyPlannedStay } from "@/features/dashboard/myplannedstay/MyPlannedStay.tsx"
+import { MyPlannedStay } from "@/features/planstay/myplannedstay/MyPlannedStay.tsx"
 import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import styles from "./PlannedStaysSection.module.css"
 

@@ -46,6 +46,7 @@
   "Close": "Close",
   "Confirm": "Confirm",
   "Confirmed": "Confirmed",
+  "Continue to add stay →": "Continue to add stay →",
   "Dates": "Dates",
   "Dates not selected": "Dates not selected",
   "Details": "Details",
@@ -60,6 +61,7 @@
   "No occupants yet": "No occupants yet",
   "No other planned stays in this period.": "No other planned stays in this period.",
   "No user selected — pick one from the header.": "No user selected — pick one from the header.",
+  "My stays": "My stays",
   "Notes": "Notes",
   "Overview": "Overview",
   "Over capacity by {{count}}_one": "Over capacity by {{count}}",
@@ -97,5 +99,6 @@
   "Weekend": "Weekend",
   "When": "When",
   "Where": "Where",
-  "Who": "Who"
+  "Who": "Who",
+  "Who's coming": "Who's coming"
 }

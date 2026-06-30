@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next"
 import styles from "./PlanStay.module.css"
 import { AddStayFlow } from "@/features/planstay/addstayflow/AddStayFlow.tsx"
 import { StaySummaryCompact } from "@/features/planstay/staysummary/StaySummaryCompact.tsx"
+import { MyPlannedStay } from "@/features/planstay/myplannedstay/MyPlannedStay.tsx"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
@@ -36,6 +37,7 @@ export function PlanStay() {
   // overview shows.
   const [inFlow, setInFlow] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
+  const [overviewView, setOverviewView] = useState<"season" | "mine">("season")
 
   const help: PageHelpContent = {
     intro: t(
@@ -102,19 +104,42 @@ export function PlanStay() {
                 )}
               </Paragraph>
             </div>
-            <Button
-              type="button"
-              onClick={() => {
-                setInFlow(true)
-                setCurrentStep(1)
-              }}
-            >
-              {t("Advance to plan stay →")}
-            </Button>
           </header>
-          <QueryBoundary>
-            <StaySummaryCompact propertyId={selectedPropertyId} />
-          </QueryBoundary>
+          <ToggleGroup
+            value={overviewView}
+            onChange={value => {
+              setOverviewView(value as "season" | "mine")
+            }}
+            data-toggle-group={t("Overview")}
+          >
+            <ToggleGroup.Item value="season">
+              {t("Who's coming")}
+            </ToggleGroup.Item>
+            <ToggleGroup.Item value="mine">{t("My stays")}</ToggleGroup.Item>
+          </ToggleGroup>
+          {overviewView === "season" ? (
+            <QueryBoundary>
+              <StaySummaryCompact propertyId={selectedPropertyId} />
+            </QueryBoundary>
+          ) : (
+            <>
+              <div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setInFlow(true)
+                    setCurrentStep(1)
+                  }}
+                >
+                  {t("Continue to add stay →")}
+                </Button>
+              </div>
+              <QueryBoundary>
+                <MyPlannedStay />
+              </QueryBoundary>
+            </>
+          )}
         </div>
       )}
 

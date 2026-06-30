@@ -44,6 +44,7 @@
   "Checking conflicts…": "Sjekker konflikter…",
   "Confirm": "Bekreft",
   "Confirmed": "Bekreftet",
+  "Continue to add stay →": "Fortsett til å legge til opphold →",
   "Dates": "Datoer",
   "Dates not selected": "Datoer ikke valgt",
   "Details": "Detaljer",
@@ -62,6 +63,7 @@
   "No occupants yet": "Ingen deltakere ennå",
   "No other planned stays in this period.": "Ingen andre planlagte opphold i denne perioden.",
   "No user selected — pick one from the header.": "Ingen bruker valgt — velg en fra toppmenyen.",
+  "My stays": "Mine opphold",
   "Notes": "Notater",
   "Overview": "Oversikt",
   "Over capacity by {{count}}": "Over kapasitet med {{count}}",
@@ -101,5 +103,6 @@
   "Weekend": "Helg",
   "When": "Når",
   "Where": "Hvor",
-  "Who": "Hvem"
+  "Who": "Hvem",
+  "Who's coming": "Hvem kommer"
 }
