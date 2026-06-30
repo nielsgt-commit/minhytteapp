@@ -1,3 +1,9 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--ds-size-2);
+}
+
 .groups {
   display: flex;
   flex-direction: column;

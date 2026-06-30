@@ -17,6 +17,7 @@ import {
 } from "@/utils/dateUtils"
 import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
 import { EditStayFlow } from "@/features/planstay/editstayflow/EditStayFlow.tsx"
+import { PlanStayFlowSheet } from "@/features/planstay/planstayflowsheet/PlanStayFlowSheet.tsx"
 import styles from "./MyPlannedStay.module.css"
 
 function rangesOverlap(
@@ -81,6 +82,7 @@ export function MyPlannedStay() {
     .filter(b => b.occupants.some(o => o.user_id === me.id))
     .sort((a, b) => Temporal.PlainDate.compare(a.start_date, b.start_date))
 
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [openId, setOpenId] = useState<number | null>(
     () => myBookings[0]?.id ?? null,
   )
@@ -138,8 +140,40 @@ export function MyPlannedStay() {
     return weeks
   }
 
+  // Temporary entry point for the alternative bottom-sheet flow. Rendered in
+  // both the empty and populated states so it's reachable with zero stays.
+  const flowSheet = (
+    <>
+      <div className={styles.toolbar}>
+        <Button
+          type="button"
+          variant="secondary"
+          data-size="sm"
+          aria-label={t("Plan a stay")}
+          onClick={() => {
+            setSheetOpen(true)
+          }}
+        >
+          +
+        </Button>
+      </div>
+      <PlanStayFlowSheet
+        propertyId={selectedPropertyId}
+        open={sheetOpen}
+        onClose={() => {
+          setSheetOpen(false)
+        }}
+      />
+    </>
+  )
+
   if (myBookings.length === 0) {
-    return <EmptyState title={t("No planned stays yet.")} />
+    return (
+      <>
+        {flowSheet}
+        <EmptyState title={t("No planned stays yet.")} />
+      </>
+    )
   }
 
   type MonthGroup = {
@@ -164,6 +198,7 @@ export function MyPlannedStay() {
 
   return (
     <>
+      {flowSheet}
       <ErrorAlert error={mutationError} />
       <div className={styles.groups}>
         {monthGroups.map(group => (

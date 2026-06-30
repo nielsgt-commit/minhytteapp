@@ -1,0 +1,55 @@
+/* The calendar opens as an absolutely-positioned popup (flatpickr `static`) that
+   overlaps the steps stacked below. Give the whole dates card its own stacking
+   context above those later steps so the open calendar — and clicks on it —
+   land on top of the guest panel instead of behind it. `overflow: visible`
+   defeats digdir Card's default `overflow: clip`, which would otherwise crop the
+   popup where it extends past the card. */
+.fieldset {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+.row {
+  display: flex;
+  gap: var(--ds-size-6);
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-1);
+  min-width: 12rem;
+}
+
+.field :global(.ds-input) {
+  width: 100%;
+}
+
+/* flatpickr's `static` mode wraps the input in `.flatpickr-wrapper`, which is
+   inline-block by default and would otherwise shrink the field. Keep it (and
+   the input it now nests) full-width so the field matches a normal Textfield.
+   The nesting also moves the input out from under digdir's `.ds-field > *`
+   width rule, so re-assert it here. */
+.field :global(.flatpickr-wrapper) {
+  display: block;
+  width: 100%;
+}
+
+.field :global(.flatpickr-wrapper) > input {
+  width: 100%;
+}
+
+/* Make the popup a solid, opaque, elevated panel. We target `.static` — the
+   class flatpickr always keeps on a `static` popup calendar — instead of an
+   ancestor of ours. An ancestor-scoped rule stops matching the moment flatpickr
+   re-positions or re-appends the calendar on a redraw (which is what made it go
+   see-through again a few seconds after opening). The inline range calendar
+   uses `.inline`, so it is untouched. Day fills (selected/today/range) are left
+   alone so they still highlight. */
+:global(.flatpickr-calendar.static) {
+  background: var(--ds-color-neutral-surface-default);
+  border: 1px solid var(--ds-color-neutral-border-default);
+  box-shadow: var(--ds-shadow-md);
+}
