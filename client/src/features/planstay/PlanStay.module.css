@@ -35,3 +35,17 @@
   margin: 0;
   color: var(--ds-color-neutral-text-subtle);
 }
+
+/* On mobile, let the Who's coming / My stays toggle fill the row with two
+   equal-width segments instead of hugging its content. */
+@media (max-width: 639px) {
+  .overviewToggle {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .overviewToggle > label {
+    flex: 1;
+    width: auto;
+  }
+}

@@ -149,12 +149,11 @@ export function MyPlannedStay() {
           type="button"
           variant="secondary"
           data-size="sm"
-          aria-label={t("Plan a stay")}
           onClick={() => {
             setSheetOpen(true)
           }}
         >
-          +
+          {t("+ Add stay")}
         </Button>
       </div>
       <PlanStayFlowSheet

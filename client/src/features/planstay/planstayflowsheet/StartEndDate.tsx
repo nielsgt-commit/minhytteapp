@@ -30,7 +30,7 @@ function StartEndDateImpl({
       <Card.Block>
         <Fieldset>
           <Fieldset.Legend data-size="lg">
-            {t("How long will you be away?")}
+            {t("How long will you stay?")}
           </Fieldset.Legend>
           <Fieldset.Description>
             {t("Provide a start and end date")}

@@ -2,15 +2,6 @@
   width: 100%;
   max-width: 56rem;
   max-height: 88vh;
-
-  /* digdir inputs use `neutral-surface-default` as their background — the same
-     token the Dialog uses for its own surface — so on a default sheet the
-     fields (and calendar) share the sheet's colour and look transparent. Put
-     the sheet on the *tinted* surface instead: it differs from the input
-     surface in BOTH light (#e8e8e9 vs #fff) and dark (#2c2e31 vs #26282b)
-     mode, so the fields read as distinct boxes. Overriding the dialog's own
-     custom property (not `background`) stays robust against `.ds-dialog`. */
-  --dsc-dialog-background: var(--ds-color-neutral-surface-tinted);
 }
 
 .stack {

@@ -52,7 +52,25 @@ function PlanStayFlowContent({
     }),
   )
 
-  const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null)
+  const propertyStructures = structures.filter(
+    b => b.property_id === propertyId,
+  )
+  const propertyStructureIds = new Set(propertyStructures.map(b => b.id))
+  const propertyRooms = rooms.filter(r =>
+    propertyStructureIds.has(r.structure_id),
+  )
+  const otherUsers = users.filter(u => u.id !== selectedUserId)
+
+  // Default the Rooms panel open on the first room of the first building that
+  // has any rooms — matching how StepRooms renders (it skips empty buildings).
+  const defaultExpandedRoomId =
+    propertyStructures
+      .map(s => propertyRooms.find(r => r.structure_id === s.id))
+      .find(r => r != null)?.id ?? null
+
+  const [expandedRoomId, setExpandedRoomId] = useState<number | null>(
+    () => defaultExpandedRoomId,
+  )
   const guestInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -79,15 +97,6 @@ function PlanStayFlowContent({
     dispatch,
     dotsByDay,
   )
-
-  const propertyStructures = structures.filter(
-    b => b.property_id === propertyId,
-  )
-  const propertyStructureIds = new Set(propertyStructures.map(b => b.id))
-  const propertyRooms = rooms.filter(r =>
-    propertyStructureIds.has(r.structure_id),
-  )
-  const otherUsers = users.filter(u => u.id !== selectedUserId)
 
   const occupancy = useOccupancyData({
     bookings,

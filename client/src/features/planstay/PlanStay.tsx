@@ -106,6 +106,7 @@ export function PlanStay() {
             </div>
           </header>
           <ToggleGroup
+            className={styles.overviewToggle}
             value={overviewView}
             onChange={value => {
               setOverviewView(value as "season" | "mine")
@@ -122,23 +123,9 @@ export function PlanStay() {
               <StaySummaryCompact propertyId={selectedPropertyId} />
             </QueryBoundary>
           ) : (
-            <>
-              <div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setInFlow(true)
-                    setCurrentStep(1)
-                  }}
-                >
-                  {t("Continue to add stay →")}
-                </Button>
-              </div>
-              <QueryBoundary>
-                <MyPlannedStay />
-              </QueryBoundary>
-            </>
+            <QueryBoundary>
+              <MyPlannedStay />
+            </QueryBoundary>
           )}
         </div>
       )}
