@@ -1,49 +1,52 @@
-.cards {
+/* Desktop: the viewport is a passthrough and the track lays the children out as
+   a plain vertical stack. */
+.track {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
 @media (max-width: 640px) {
-  /* Mobile: lay the cards out as a swipable one-row gallery. Each card takes
-     most of the viewport so the next one peeks at the edge, hinting it scrolls.
-     scroll-snap keeps swipes settling neatly on a card. */
-  .cards {
+  /* Mobile: the viewport is a fixed window that clips the track, which holds the
+     cards in one row and is translated to page between them (see CardGallery.tsx
+     — paging is transform-based, not native scroll, so one swipe = one page).
+     Each card takes most of the viewport so the next one peeks at the edge,
+     hinting it scrolls. */
+  .viewport {
+    overflow-x: clip;
+  }
+
+  .track {
     flex-direction: row;
     align-items: flex-start;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 1rem;
     padding-inline: 1rem;
-    /* Hide the scrollbar — the pagination dots are the affordance. */
-    scrollbar-width: none;
+    /* Let the browser handle vertical page scrolling; we own the horizontal. */
+    touch-action: pan-y;
   }
 
-  .cards::-webkit-scrollbar {
-    display: none;
-  }
-
-  .cards > * {
+  .track > * {
     flex: 0 0 88%;
-    scroll-snap-align: start;
   }
 
   /* Full-width "page" mode: each child fills the viewport with no peek or edge
      padding, for swiping between whole pages rather than cards in a row. The
-     extra bottom padding keeps the last content clear of the floating dots. */
-  .cards.fullWidth {
-    scroll-padding-inline: 0;
-    padding-inline: 0;
-    padding-bottom: 4rem;
+     extra bottom padding on each page keeps the last content clear of the
+     floating dots (and is included in the measured page height below). */
+  .viewport.fullWidth {
     /* Height is set inline to the active page's height (see CardGallery.tsx) so
        short pages don't inherit the tallest page's empty space. Clip the taller
        off-screen pages to that height and ease the change as you swipe. */
-    overflow-y: hidden;
+    overflow: hidden;
     transition: height 0.2s ease;
   }
 
-  .cards.fullWidth > * {
+  .viewport.fullWidth .track {
+    padding-inline: 0;
+  }
+
+  .viewport.fullWidth .track > * {
     flex-basis: 100%;
+    padding-bottom: 4rem;
   }
 }
 
@@ -51,21 +54,19 @@
    trim the edge padding and let each card claim a little more width while still
    leaving the next card peeking. Adjust independently of the wider mobile rule. */
 @media (max-width: 375px) {
-  .cards {
-    scroll-padding-inline: 0.75rem;
+  .track {
     padding-inline: 0.75rem;
   }
 
-  .cards > * {
+  .track > * {
     flex-basis: 92%;
   }
 
-  .cards.fullWidth {
-    scroll-padding-inline: 0;
+  .viewport.fullWidth .track {
     padding-inline: 0;
   }
 
-  .cards.fullWidth > * {
+  .viewport.fullWidth .track > * {
     flex-basis: 100%;
   }
 }
