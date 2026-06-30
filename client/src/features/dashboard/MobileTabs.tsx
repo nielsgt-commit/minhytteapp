@@ -15,7 +15,7 @@ import { AtPropertyNow } from "@/features/dashboard/capacitysummary/userschecked
 import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
 import { RoomAvailabilityIndicator } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
-import { MyPlannedStay } from "@/features/planstay/myplannedstay/MyPlannedStay.tsx"
+import { PriorityWeeksPanel } from "./PriorityWeeksPanel"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { Temporal } from "temporal-polyfill"
 import { startOfSunday } from "@/utils/dateUtils"
@@ -67,7 +67,7 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
           <MobileNowPanel propertyId={propertyId} />
         </QueryBoundary>
         <MobileWeekPanel />
-        <MobileYearPanel />
+        <MobileYearPanel propertyId={propertyId} />
       </CardGallery>
       <ShoppingBasketFab propertyId={propertyId} />
     </>
@@ -151,7 +151,7 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
   )
 }
 
-function MobileYearPanel() {
+function MobileYearPanel({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
 
   return (
@@ -160,11 +160,8 @@ function MobileYearPanel() {
         {t("This year")}
       </Heading>
       <div className={styles.nowSection}>
-        <Heading level={2} data-size="xs">
-          {t("My planned stays")}
-        </Heading>
         <QueryBoundary>
-          <MyPlannedStay />
+          <PriorityWeeksPanel propertyId={propertyId} />
         </QueryBoundary>
       </div>
       <QueryBoundary>

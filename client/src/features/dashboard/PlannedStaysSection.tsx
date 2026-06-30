@@ -3,8 +3,8 @@ import { Card, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
-import { MyPlannedStay } from "@/features/planstay/myplannedstay/MyPlannedStay.tsx"
 import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
+import { PriorityWeeksPanel } from "./PriorityWeeksPanel"
 import styles from "./PlannedStaysSection.module.css"
 
 export function PlannedStaysSection({ propertyId }: { propertyId: number }) {
@@ -22,11 +22,8 @@ export function PlannedStaysSection({ propertyId }: { propertyId: number }) {
       <Card asChild>
         <section>
           <Card.Block>
-            <Heading level={2} data-size="xs">
-              {t("My planned stays")}
-            </Heading>
             <QueryBoundary>
-              <MyPlannedStay />
+              <PriorityWeeksPanel propertyId={propertyId} />
             </QueryBoundary>
           </Card.Block>
         </section>
