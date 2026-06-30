@@ -12,6 +12,17 @@ import { useTranslation } from "react-i18next"
 import styles from "./CardGallery.module.css"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 
+// Snap tuning. Speeds are px/ms (a relaxed swipe is ~0.3–0.8, a sharp flick
+// >1.5). Above FLICK_SPEED a release pages in the flick's direction regardless
+// of distance; above MIN_SNAP_SPEED the snap duration tracks that speed so the
+// page coasts to rest instead of using a fixed time, clamped to [MIN,MAX]_SNAP.
+// TAP_SNAP_MS is the fixed ease for dots/arrows and near-still releases.
+const FLICK_SPEED = 0.5
+const MIN_SNAP_SPEED = 0.05
+const MIN_SNAP_MS = 120
+const MAX_SNAP_MS = 400
+const TAP_SNAP_MS = 250
+
 /**
  * Renders its children as a vertical stack on desktop and as a swipable
  * one-row gallery on mobile, with DigDir Pagination dots tracking and driving
@@ -49,9 +60,17 @@ export function CardGallery({
   const dragStartY = useRef(0)
   const dragBase = useRef(0)
   const dragAxis = useRef<"x" | "y" | undefined>(undefined)
-  // Whether the next active-driven transform should animate. Mount and resize
-  // jump instantly; user-driven page changes (swipe commit, dots, arrows) ease.
-  const animateNext = useRef(false)
+  // Live translate during a drag, and a small velocity sampler (px/ms, signed —
+  // negative is leftward) used to make the release snap match the flick speed.
+  const dragTranslate = useRef(0)
+  const lastMoveX = useRef(0)
+  const lastMoveT = useRef(0)
+  const velocity = useRef(0)
+  // Duration (ms) the next active-driven transform should animate over. Mount,
+  // resize and item-count changes re-park instantly (0); user-driven page
+  // changes set this first — a fixed ease for dots/arrows, a velocity-derived
+  // time for swipes — so the snap continues the gesture's own momentum.
+  const nextTransitionMs = useRef(0)
 
   // Pixel offset that brings page `i` to rest, derived from the children's own
   // layout so it works for both peek (partial width + gap) and full-width pages
@@ -65,10 +84,12 @@ export function CardGallery({
     return -(target.offsetLeft - first.offsetLeft)
   }, [])
 
-  const applyTransform = useCallback((px: number, animate: boolean) => {
+  // durationMs of 0 parks instantly (used mid-drag and for layout re-parks).
+  const applyTransform = useCallback((px: number, durationMs: number) => {
     const el = trackRef.current
     if (!el) return
-    el.style.transition = animate ? "transform 0.25s ease" : "none"
+    el.style.transition =
+      durationMs > 0 ? `transform ${String(durationMs)}ms ease-out` : "none"
     el.style.transform = `translate3d(${String(px)}px, 0, 0)`
   }, [])
 
@@ -80,13 +101,13 @@ export function CardGallery({
     if (!isMobile) {
       el.style.transition = ""
       el.style.transform = ""
-      animateNext.current = false
+      nextTransitionMs.current = 0
       return
     }
-    applyTransform(translateForIndex(active), animateNext.current)
-    animateNext.current = true
+    applyTransform(translateForIndex(active), nextTransitionMs.current)
+    nextTransitionMs.current = 0
     const onResize = () => {
-      applyTransform(translateForIndex(active), false)
+      applyTransform(translateForIndex(active), 0)
     }
     window.addEventListener("resize", onResize)
     return () => {
@@ -134,6 +155,7 @@ export function CardGallery({
   // eased move once `active` changes.
   const goTo = (i: number) => {
     if (i < 0 || i >= count || i === active) return
+    nextTransitionMs.current = TAP_SNAP_MS
     setActive(i)
   }
 
@@ -142,12 +164,17 @@ export function CardGallery({
     dragStartX.current = e.touches[0].clientX
     dragStartY.current = e.touches[0].clientY
     dragBase.current = translateForIndex(active)
+    dragTranslate.current = dragBase.current
     dragAxis.current = undefined
+    lastMoveX.current = e.touches[0].clientX
+    lastMoveT.current = e.timeStamp
+    velocity.current = 0
   }
 
   const onTouchMove = (e: TouchEvent) => {
     if (dragStartX.current == null) return
-    const dx = e.touches[0].clientX - dragStartX.current
+    const x = e.touches[0].clientX
+    const dx = x - dragStartX.current
     const dy = e.touches[0].clientY - dragStartY.current
 
     // Lock the gesture to one axis on the first decisive movement. A vertical
@@ -162,6 +189,12 @@ export function CardGallery({
     }
     if (dragAxis.current !== "x") return
 
+    // Sample instantaneous velocity from the last move, for the release snap.
+    const dt = e.timeStamp - lastMoveT.current
+    if (dt > 0) velocity.current = (x - lastMoveX.current) / dt
+    lastMoveX.current = x
+    lastMoveT.current = e.timeStamp
+
     // Clamp the drag to at most one page in either direction so no more than the
     // current page and one neighbour are ever in view mid-swipe.
     const toNext =
@@ -171,7 +204,8 @@ export function CardGallery({
     const toPrev =
       active > 0 ? translateForIndex(active - 1) - translateForIndex(active) : 0
     const clamped = Math.min(toPrev, Math.max(toNext, dx))
-    applyTransform(dragBase.current + clamped, false)
+    dragTranslate.current = dragBase.current + clamped
+    applyTransform(dragTranslate.current, 0)
   }
 
   const onTouchEnd = (e: TouchEvent) => {
@@ -179,14 +213,36 @@ export function CardGallery({
     dragStartX.current = null
     if (startX == null || dragAxis.current !== "x") return
     const dx = e.changedTouches[0].clientX - startX
-    // Commit to the neighbour once the drag passes a fifth of the viewport;
-    // otherwise spring back to the current page.
+    const speed = Math.abs(velocity.current)
+
+    // A fast flick pages in its own direction even if the finger barely moved;
+    // a slow drag must instead pass a fifth of the viewport to commit.
     const vw = viewportRef.current?.clientWidth ?? 1
-    const dir = dx <= -vw * 0.2 ? 1 : dx >= vw * 0.2 ? -1 : 0
+    const dir =
+      speed > FLICK_SPEED
+        ? velocity.current < 0
+          ? 1
+          : -1
+        : dx <= -vw * 0.2
+          ? 1
+          : dx >= vw * 0.2
+            ? -1
+            : 0
     const target = Math.max(0, Math.min(count - 1, active + dir))
+
+    // Time the snap so the page keeps travelling at the finger's release speed,
+    // clamped to a sane range; a near-still release uses the default ease.
+    const targetPx = translateForIndex(target)
+    const distance = Math.abs(targetPx - dragTranslate.current)
+    const duration =
+      speed > MIN_SNAP_SPEED
+        ? Math.max(MIN_SNAP_MS, Math.min(MAX_SNAP_MS, distance / speed))
+        : TAP_SNAP_MS
+
     if (target === active) {
-      applyTransform(translateForIndex(active), true)
+      applyTransform(targetPx, duration)
     } else {
+      nextTransitionMs.current = duration
       setActive(target)
     }
   }
