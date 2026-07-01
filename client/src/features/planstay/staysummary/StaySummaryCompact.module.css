@@ -1,6 +1,18 @@
 /* Border, radius, background and padding now come from the Digdir Card /
    Card.Block. Internal headroom above the dividers is handled by .chart. */
 
+/* Focus toggle row: pushes the segmented control to the top-right corner of
+   the panel, above the chart. */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Keep the segmented control from stretching; it hugs its labels. */
+.focusToggle {
+  flex: none;
+}
+
 /* Positioning context for the absolutely placed month dividers + lanes.
    Side gutters reserve room for the adjacent-month labels (may / aug) that
    sit just outside the capped June–July window. */
@@ -64,6 +76,32 @@
   background: var(--ds-color-neutral-surface-tinted, #f4f4f5);
 }
 
+/* Faint solid gridline on each weekday boundary, shown only in the zoomed peak
+   view. Sits under the dotted week dividers so those stay the primary grid. */
+.day {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ds-color-neutral-border-subtle);
+  opacity: 0.6;
+}
+
+/* First letter of each day, centred over its column in the peak-view day grid.
+   Sits below the month labels (which end ~1.85rem); .lanesPeak widens the band
+   below so these clear the first lane. */
+.dayLetter {
+  position: absolute;
+  top: 2.1rem;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  line-height: 0.8rem;
+  font-weight: 600;
+  color: var(--ds-color-neutral-text-subtle);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* Each week anchor spans the full chart height: a dotted divider, with its
    ISO week number on the top label row. */
 .week {
@@ -101,6 +139,12 @@
   gap: 3px;
   /* Clear the week-number + month-name label rows above. */
   margin-top: 2.2rem;
+}
+
+/* Peak view adds a day-letter row below the month names, so the band needs to
+   be taller to keep the letters off the first lane. */
+.lanesPeak {
+  margin-top: 3rem;
 }
 
 /* One person per lane. 8px-tall bars for a slim Gantt look. */
@@ -144,6 +188,39 @@
   height: 8px;
   min-width: 1px;
   border-radius: 2px;
+  /* The bar opens a booking-details popover on click. */
+  cursor: pointer;
+  padding: 0;
+  border: none;
+}
+
+/* Booking-details popover opened by clicking a bar. */
+.barPopover {
+  max-width: 18rem;
+  font-size: 0.8rem;
+}
+
+.popName {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+  color: var(--ds-color-neutral-text-default);
+}
+
+.popList {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.6rem;
+  margin: 0.5rem 0 0;
+}
+
+.popList dt {
+  font-weight: 600;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.popList dd {
+  margin: 0;
+  color: var(--ds-color-neutral-text-default);
 }
 
 .empty {

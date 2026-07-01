@@ -1,38 +1,68 @@
-import { Fragment, useMemo } from "react"
-import { Card, Paragraph } from "@digdir/designsystemet-react"
+import { Fragment, useMemo, useState } from "react"
+import {
+  Card,
+  Paragraph,
+  Popover,
+  Tag,
+  ToggleGroup,
+} from "@digdir/designsystemet-react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc.ts"
+import { formatDateRange, isoWeekMonday } from "@/utils/dateUtils"
 import { groupColor } from "@/features/usergroups/groupColors"
+import { PEAK_WEEKS } from "@/routes/_authed/manageproperty/-priority/priorityUtils"
 import { YEAR } from "../constants.ts"
 import styles from "./StaySummaryCompact.module.css"
 
 // No family group → a neutral bar, matching the calendar dots.
 const NO_GROUP_COLOR = "var(--ds-color-neutral-base-default)"
 
-// The axis is capped to the two focus months, June and July. Stays bleeding
-// into May or August are clipped at the edges; the adjacent month names are
-// still shown in the side gutters for context.
-const FOCUS_START = Temporal.PlainDate.from({ year: YEAR, month: 6, day: 1 })
-const FOCUS_END = Temporal.PlainDate.from({ year: YEAR, month: 8, day: 1 }) // exclusive
-const SPAN_DAYS = FOCUS_START.until(FOCUS_END).days
+// Two focus windows the panel can zoom to:
+//  - "season": the two focus months, June and July. Stays bleeding into May or
+//    August are clipped at the edges; the adjacent month names are still shown
+//    in the side gutters for context.
+//  - "peak": just the peak priority weeks (28–30), so the lanes and bars are
+//    big enough to read on a phone. Clipping and gutter labels work the same,
+//    now relative to the tighter window.
+type FocusMode = "season" | "peak"
 
-// Fraction 0..1 of where a date sits across the focus window.
-function fraction(date: Temporal.PlainDate): number {
-  const d = FOCUS_START.until(date).days / SPAN_DAYS
-  return Math.max(0, Math.min(1, d))
-}
+const SEASON_START = Temporal.PlainDate.from({ year: YEAR, month: 6, day: 1 })
+const SEASON_END = Temporal.PlainDate.from({ year: YEAR, month: 8, day: 1 }) // exclusive
 
-function pct(date: Temporal.PlainDate): string {
-  return `${String(fraction(date) * 100)}%`
-}
+// Monday of the first peak week to the Monday after the last, so the window
+// covers the full run of peak weeks (28–30) and ends exclusively.
+const PEAK_START = isoWeekMonday(YEAR, PEAK_WEEKS[0])
+const PEAK_END = isoWeekMonday(YEAR, PEAK_WEEKS[PEAK_WEEKS.length - 1]).add({
+  days: 7,
+}) // exclusive
+
+const FOCUS: Record<FocusMode, { start: Temporal.PlainDate; end: Temporal.PlainDate }> =
+  {
+    season: { start: SEASON_START, end: SEASON_END },
+    peak: { start: PEAK_START, end: PEAK_END },
+  }
 
 type Bar = {
   bookingId: number
   start: Temporal.PlainDate
   end: Temporal.PlainDate
   queued: boolean
+  // Booking details for the click-to-open popover. Carried on the bar so the
+  // popover needs no second lookup back into the raw booking list.
+  bookerName: string
+  status: "pending" | "confirmed" | "cancelled"
+  notes: string | null
+  occupants: {
+    name: string
+    queued: boolean
+    // Where this person sleeps: a room id, or a tent (sleeps separately), or
+    // nothing assigned yet. Resolved to a label at render time so it tracks
+    // the active language.
+    roomId: number | null
+    sleepsSeparately: boolean
+  }[]
 }
 
 type Lane = {
@@ -47,6 +77,20 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
   const { t, i18n } = useTranslation("planstay")
   const trpc = useTRPC()
 
+  const [mode, setMode] = useState<FocusMode>("season")
+  const focusStart = FOCUS[mode].start
+  const focusEnd = FOCUS[mode].end
+  const spanDays = focusStart.until(focusEnd).days
+
+  // Fraction 0..1 of where a date sits across the active focus window, and its
+  // percentage form for inline positioning. Closures so they track the toggle.
+  const fraction = (date: Temporal.PlainDate): number => {
+    const d = focusStart.until(date).days / spanDays
+    return Math.max(0, Math.min(1, d))
+  }
+  const pct = (date: Temporal.PlainDate): string =>
+    `${String(fraction(date) * 100)}%`
+
   const { data: bookings } = useSuspenseQuery(
     trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
@@ -55,6 +99,16 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
       property_id: propertyId,
     }),
   )
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+
+  // room id → "Building · Room" label, for the popover's "Where" list.
+  const roomLabelById = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const r of rooms) map.set(r.id, `${r.structure_name} · ${r.name}`)
+    return map
+  }, [rooms])
 
   // user_id → family-group id, mirroring the calendar dots' coloring.
   const familyGroupByUser = useMemo(() => {
@@ -70,10 +124,10 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     const byUser = new Map<number, Lane>()
     for (const b of bookings) {
       if (b.status === "cancelled") continue
-      // Skip bookings entirely outside the focus window (June–July).
+      // Skip bookings entirely outside the active focus window.
       if (
-        Temporal.PlainDate.compare(b.end_date, FOCUS_START) < 0 ||
-        Temporal.PlainDate.compare(b.start_date, FOCUS_END) >= 0
+        Temporal.PlainDate.compare(b.end_date, focusStart) < 0 ||
+        Temporal.PlainDate.compare(b.start_date, focusEnd) >= 0
       )
         continue
       for (const o of b.occupants) {
@@ -92,6 +146,15 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
           start: b.start_date,
           end: b.end_date,
           queued: o.queued,
+          bookerName: b.booker_name ?? `#${String(b.booker_id)}`,
+          status: b.status,
+          notes: b.notes,
+          occupants: b.occupants.map(x => ({
+            name: x.user_name ?? `#${String(x.user_id)}`,
+            queued: x.queued,
+            roomId: x.room_id,
+            sleepsSeparately: x.sleeps_separately,
+          })),
         })
       }
     }
@@ -99,7 +162,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     return [...byUser.values()].sort(
       (a, b) => a.groupId - b.groupId || a.name.localeCompare(b.name),
     )
-  }, [bookings, familyGroupByUser])
+  }, [bookings, familyGroupByUser, focusStart, focusEnd])
 
   // Legend: one chip per family group that actually appears in the chart,
   // plus an "Other" chip when ungrouped people have stays. Order matches the
@@ -126,12 +189,12 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     return out
   }, [lanes, userGroups, t])
 
-  // Dotted dividers sit on each month boundary within the focus window
-  // (Jun 1 at the left edge, Jul 1 in the middle, Aug 1 at the right edge);
-  // each carries the name of the month that begins there, to its right.
+  // Dotted dividers sit on each month boundary the window touches (e.g. in the
+  // season view: Jun 1 at the left edge, Jul 1 in the middle, Aug 1 at the right
+  // edge); each carries the name of the month that begins there, to its right.
   const boundaries = useMemo(() => {
     const out: { date: Temporal.PlainDate; label: string }[] = []
-    for (let m = FOCUS_START.month; m <= FOCUS_END.month; m++) {
+    for (let m = focusStart.month; m <= focusEnd.month; m++) {
       const date = Temporal.PlainDate.from({ year: YEAR, month: m, day: 1 })
       out.push({
         date,
@@ -139,11 +202,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
       })
     }
     return out
-  }, [i18n.language])
+  }, [i18n.language, focusStart, focusEnd])
 
-  // The clipped-off month just before the window (May), shown in the left
-  // gutter so the edges read as "…mai ¦ jun … jul … ¦ aug".
-  const leadLabel = FOCUS_START.subtract({ months: 1 }).toLocaleString(
+  // The clipped-off month just before the window (May in the season view), shown
+  // in the left gutter so the edges read as "…mai ¦ jun … jul … ¦ aug".
+  const leadLabel = focusStart.subtract({ months: 1 }).toLocaleString(
     i18n.language,
     { month: "short" },
   )
@@ -154,33 +217,67 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
   // the band to the visible window.
   const weekends = useMemo(() => {
     const out: { date: Temporal.PlainDate }[] = []
-    const back = (FOCUS_START.dayOfWeek - 6 + 7) % 7 // days back to Saturday
-    let sat = FOCUS_START.subtract({ days: back })
-    while (Temporal.PlainDate.compare(sat, FOCUS_END) < 0) {
+    const back = (focusStart.dayOfWeek - 6 + 7) % 7 // days back to Saturday
+    let sat = focusStart.subtract({ days: back })
+    while (Temporal.PlainDate.compare(sat, focusEnd) < 0) {
       out.push({ date: sat })
       sat = sat.add({ days: 7 })
     }
     return out
-  }, [])
+  }, [focusStart, focusEnd])
 
   // Dotted dividers on each ISO week boundary (Monday) inside the window, each
   // labelled with its week number on its leading (left) edge.
   const weeks = useMemo(() => {
     const out: { date: Temporal.PlainDate; week: number }[] = []
     // First Monday on or after the window start.
-    const offset = (8 - FOCUS_START.dayOfWeek) % 7
-    let cur = FOCUS_START.add({ days: offset })
-    while (Temporal.PlainDate.compare(cur, FOCUS_END) < 0) {
+    const offset = (8 - focusStart.dayOfWeek) % 7
+    let cur = focusStart.add({ days: offset })
+    while (Temporal.PlainDate.compare(cur, focusEnd) < 0) {
       out.push({ date: cur, week: cur.weekOfYear ?? 0 })
       cur = cur.add({ days: 7 })
     }
     return out
-  }, [])
+  }, [focusStart, focusEnd])
+
+  // In the zoomed peak view, a day grid: a faint gridline on each weekday
+  // boundary plus that day's first letter centred over its column. Skipped in
+  // the season view (far too dense at ~60 days). The narrow weekday name is
+  // localized (e.g. "M T O T F L S" in Norwegian).
+  const days = useMemo(() => {
+    if (mode !== "peak") return []
+    const out: { date: Temporal.PlainDate; letter: string }[] = []
+    let cur = focusStart
+    while (Temporal.PlainDate.compare(cur, focusEnd) < 0) {
+      out.push({
+        date: cur,
+        letter: cur.toLocaleString(i18n.language, { weekday: "narrow" }),
+      })
+      cur = cur.add({ days: 1 })
+    }
+    return out
+  }, [mode, focusStart, focusEnd, i18n.language])
 
   return (
     <Card asChild>
       <section aria-label={t("Season overview")}>
         <Card.Block>
+          {/* Focus toggle, parked top-right: zoom the axis between the whole
+              season and just the peak priority weeks. */}
+          <div className={styles.toolbar}>
+            <ToggleGroup
+              value={mode}
+              onChange={value => {
+                setMode(value as FocusMode)
+              }}
+              data-size="sm"
+              data-toggle-group={t("Focus")}
+              className={styles.focusToggle}
+            >
+              <ToggleGroup.Item value="season">{t("Season")}</ToggleGroup.Item>
+              <ToggleGroup.Item value="peak">{t("Peak weeks")}</ToggleGroup.Item>
+            </ToggleGroup>
+          </div>
           <div className={styles.chart}>
             {/* Adjacent month before the window, parked in the left gutter. */}
             <span className={styles.leadLabel}>{leadLabel}</span>
@@ -202,6 +299,33 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
               )
             })}
 
+            {/* Per-day grid (peak view only): a faint gridline on each day's
+                start edge, drawn under the week/month dividers, plus the day's
+                first letter centred over its column. The window-start edge and
+                Mondays get no line — the labelled week divider already sits
+                there. */}
+            {days.map(d => {
+              const start = fraction(d.date)
+              const end = fraction(d.date.add({ days: 1 }))
+              const isMonday = d.date.dayOfWeek === 1
+              return (
+                <Fragment key={d.date.toString()}>
+                  {start > 0 && !isMonday && (
+                    <span
+                      className={styles.day}
+                      style={{ left: `${String(start * 100)}%` }}
+                    />
+                  )}
+                  <span
+                    className={styles.dayLetter}
+                    style={{ left: `${String(((start + end) / 2) * 100)}%` }}
+                  >
+                    {d.letter}
+                  </span>
+                </Fragment>
+              )
+            })}
+
             {/* Dotted week dividers, drawn under the solid month lines, each
                 labelled with its ISO week number on its leading edge. */}
             {weeks.map(w => (
@@ -219,7 +343,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
             {boundaries.map(m => {
               // The trailing boundary (Aug 1) is just out-of-range context.
               const outOfRange =
-                Temporal.PlainDate.compare(m.date, FOCUS_END) >= 0
+                Temporal.PlainDate.compare(m.date, focusEnd) >= 0
               return (
                 <div
                   key={m.label}
@@ -239,7 +363,13 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
               )
             })}
 
-            <div className={styles.lanes}>
+            <div
+              className={
+                mode === "peak"
+                  ? `${styles.lanes} ${styles.lanesPeak}`
+                  : styles.lanes
+              }
+            >
               {lanes.length === 0 && (
                 <Paragraph className={styles.empty}>
                   {t("No stays booked this season.")}
@@ -255,18 +385,54 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                         ? groupColor(lane.groupId)
                         : NO_GROUP_COLOR
                     const key = `${String(bar.bookingId)}-${String(i)}`
+                    const nights = bar.start.until(bar.end, {
+                      largestUnit: "days",
+                    }).days
+                    // Group this booking's occupants by where they sleep.
+                    const whereByKey = new Map<
+                      string,
+                      { label: string; names: string[] }
+                    >()
+                    for (const o of bar.occupants) {
+                      let groupKey: string
+                      let label: string
+                      if (o.sleepsSeparately) {
+                        groupKey = "tent"
+                        label = t("Tent")
+                      } else if (o.roomId != null) {
+                        groupKey = `room-${String(o.roomId)}`
+                        label = roomLabelById.get(o.roomId) ?? t("Unassigned")
+                      } else {
+                        groupKey = "unassigned"
+                        label = t("Unassigned")
+                      }
+                      const entry = whereByKey.get(groupKey) ?? {
+                        label,
+                        names: [],
+                      }
+                      entry.names.push(o.name)
+                      whereByKey.set(groupKey, entry)
+                    }
+                    const whereGroups = [...whereByKey.entries()]
                     return (
-                      <Fragment key={key}>
-                        <span
-                          className={bar.queued ? styles.barQueued : styles.bar}
-                          style={{
-                            left: `${String(left * 100)}%`,
-                            width: `${String(Math.max(right - left, 0) * 100)}%`,
-                            // backgroundColor (not the `background` shorthand) so
-                            // the queued bar's hatch background-image survives.
-                            backgroundColor: color,
-                          }}
-                        />
+                      <Popover.TriggerContext key={key}>
+                        {/* The thin bar is the trigger; Popover.Trigger injects
+                            the button role, focus and keyboard handling. */}
+                        <Popover.Trigger asChild>
+                          <span
+                            className={
+                              bar.queued ? styles.barQueued : styles.bar
+                            }
+                            style={{
+                              left: `${String(left * 100)}%`,
+                              width: `${String(Math.max(right - left, 0) * 100)}%`,
+                              // backgroundColor (not the `background` shorthand)
+                              // so the queued bar's hatch background-image
+                              // survives.
+                              backgroundColor: color,
+                            }}
+                          />
+                        </Popover.Trigger>
                         {/* Label is a SIBLING of the bar, not a child: a child
                             inside the bar would be hard to keep readable over the
                             queued hatch. Positioned at the bar's start. */}
@@ -277,7 +443,60 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                         >
                           {lane.name}
                         </span>
-                      </Fragment>
+                        <Popover
+                          placement="top"
+                          data-color="neutral"
+                          className={styles.barPopover}
+                        >
+                          <p className={styles.popName}>{bar.bookerName}</p>
+                          <Tag
+                            data-size="sm"
+                            data-color={
+                              bar.status === "confirmed" ? "success" : "warning"
+                            }
+                          >
+                            {bar.status === "confirmed"
+                              ? t("Confirmed")
+                              : t("Pending")}
+                          </Tag>
+                          <dl className={styles.popList}>
+                            <dt>{t("Dates")}</dt>
+                            <dd>
+                              {formatDateRange(
+                                bar.start,
+                                bar.end,
+                                i18n.language,
+                              )}
+                              {" · "}
+                              {t("{{count}} night", { count: nights })}
+                            </dd>
+                            <dt>{t("Guests")}</dt>
+                            <dd>
+                              {bar.occupants
+                                .map(o =>
+                                  o.queued
+                                    ? `${o.name}${t(" (queued)")}`
+                                    : o.name,
+                                )
+                                .join(", ")}
+                            </dd>
+                            <dt>{t("Where")}</dt>
+                            <dd>
+                              {whereGroups.map(([groupKey, g]) => (
+                                <div key={groupKey}>
+                                  {g.label}: {g.names.join(", ")}
+                                </div>
+                              ))}
+                            </dd>
+                            {bar.notes && (
+                              <>
+                                <dt>{t("Notes")}</dt>
+                                <dd>{bar.notes}</dd>
+                              </>
+                            )}
+                          </dl>
+                        </Popover>
+                      </Popover.TriggerContext>
                     )
                   })}
                 </div>
