@@ -8,7 +8,6 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
-import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { Temporal } from "temporal-polyfill"
 import {
   formatDateRange,
@@ -16,7 +15,6 @@ import {
   isoWeekMonday,
 } from "@/utils/dateUtils"
 import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
-import { EditStayFlow } from "@/features/planstay/editstayflow/EditStayFlow.tsx"
 import { PlanStayFlowSheet } from "@/features/planstay/planstayflowsheet/PlanStayFlowSheet.tsx"
 import styles from "./MyPlannedStay.module.css"
 
@@ -82,11 +80,13 @@ export function MyPlannedStay() {
     .filter(b => b.occupants.some(o => o.user_id === me.id))
     .sort((a, b) => Temporal.PlainDate.compare(a.start_date, b.start_date))
 
-  const [sheetOpen, setSheetOpen] = useState(false)
+  type SheetTarget =
+    | { kind: "create" }
+    | { kind: "edit"; booking: (typeof myBookings)[number] }
+  const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
   const [openId, setOpenId] = useState<number | null>(
     () => myBookings[0]?.id ?? null,
   )
-  const [editingId, setEditingId] = useState<number | null>(null)
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
     null,
   )
@@ -150,18 +150,30 @@ export function MyPlannedStay() {
           variant="secondary"
           data-size="sm"
           onClick={() => {
-            setSheetOpen(true)
+            setSheetTarget({ kind: "create" })
           }}
         >
           {t("+ Add stay")}
         </Button>
       </div>
       <PlanStayFlowSheet
-        propertyId={selectedPropertyId}
-        open={sheetOpen}
+        propertyId={
+          sheetTarget?.kind === "edit"
+            ? sheetTarget.booking.property_id
+            : selectedPropertyId
+        }
+        open={sheetTarget != null}
         onClose={() => {
-          setSheetOpen(false)
+          setSheetTarget(null)
         }}
+        edit={
+          sheetTarget?.kind === "edit"
+            ? {
+                bookingId: sheetTarget.booking.id,
+                initialRecord: bookingToRecord(sheetTarget.booking),
+              }
+            : undefined
+        }
       />
     </>
   )
@@ -223,12 +235,10 @@ export function MyPlannedStay() {
                 }
                 const names = Array.from(otherNames)
                 const isOpen = openId === b.id
-                const isEditing = editingId === b.id
                 const isConfirmingDelete = confirmingDeleteId === b.id
                 const canEdit = b.booker_id === me.id
                 const priorityWeeks = priorityWeeksFor(b)
                 const toggle = () => {
-                  if (isEditing) return
                   setConfirmingDeleteId(null)
                   setOpenId(prev => (prev === b.id ? null : b.id))
                 }
@@ -236,20 +246,16 @@ export function MyPlannedStay() {
                   <Card asChild key={b.id}>
                     <li>
                       <Card.Block
-                        role={isEditing ? undefined : "button"}
-                        tabIndex={isEditing ? undefined : 0}
-                        aria-expanded={isEditing ? undefined : isOpen}
-                        onClick={isEditing ? undefined : toggle}
-                        onKeyDown={
-                          isEditing
-                            ? undefined
-                            : e => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault()
-                                  toggle()
-                                }
-                              }
-                        }
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isOpen}
+                        onClick={toggle}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            toggle()
+                          }
+                        }}
                         className={styles.cardBlock}
                       >
                         <div className={styles.cardHead}>
@@ -273,7 +279,7 @@ export function MyPlannedStay() {
                             </div>
                           )}
                         </div>
-                        {isOpen && !isEditing && (
+                        {isOpen && (
                           <>
                             <div className={styles.companions}>
                               {names.length > 0 ? (
@@ -347,7 +353,10 @@ export function MyPlannedStay() {
                                       variant="secondary"
                                       onClick={e => {
                                         e.stopPropagation()
-                                        setEditingId(b.id)
+                                        setSheetTarget({
+                                          kind: "edit",
+                                          booking: b,
+                                        })
                                       }}
                                     >
                                       {t("Edit stay")}
@@ -398,28 +407,6 @@ export function MyPlannedStay() {
                               )}
                             </div>
                           </>
-                        )}
-                        {isEditing && (
-                          <div
-                            className={styles.editPanel}
-                            onClick={e => {
-                              e.stopPropagation()
-                            }}
-                            onKeyDown={e => {
-                              e.stopPropagation()
-                            }}
-                          >
-                            <QueryBoundary>
-                              <EditStayFlow
-                                propertyId={b.property_id}
-                                bookingId={b.id}
-                                initialRecord={bookingToRecord(b)}
-                                onClose={() => {
-                                  setEditingId(null)
-                                }}
-                              />
-                            </QueryBoundary>
-                          </div>
                         )}
                       </Card.Block>
                     </li>

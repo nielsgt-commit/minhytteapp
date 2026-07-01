@@ -1,9 +1,15 @@
 import { useMemo, useRef, useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Dialog, Heading, Paragraph } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Dialog,
+  Heading,
+  Paragraph,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useSelectedUserId } from "@/selection/useSelection"
+import type { BookingDraftRecord } from "@/features/planstay/booking-logic"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useSingleDateFlatpickr } from "../hooks/useSingleDateFlatpickr.ts"
 import { useBookingForm } from "../hooks/useBookingForm.ts"
@@ -18,21 +24,29 @@ import { StepConfirm } from "../addstayflow/stepconfirm/StepConfirm.tsx"
 import { buildOccupantDots } from "../occupantDots.ts"
 import styles from "./PlanStayFlowSheet.module.css"
 
+type EditTarget = { bookingId: number; initialRecord: BookingDraftRecord }
+
 // The stacked variant of the plan-stay flow. Where AddStayFlow paginates the
 // four steps behind a stepper, this renders them all at once (dates → guests →
 // rooms → review) so the whole flow scrolls inside one bottom sheet. The step
 // components are reused as-is; passing empty step classes keeps every section
-// visible instead of toggling on `isActive`.
+// visible instead of toggling on `isActive`. When `edit` is supplied the same
+// layout drives an existing booking instead of a fresh draft.
 function PlanStayFlowContent({
   propertyId,
+  edit,
   onComplete,
 }: {
   propertyId: number
+  edit?: EditTarget
   onComplete: () => void
 }) {
   const { t } = useTranslation("planstay")
   const trpc = useTRPC()
   const selectedUserId = useSelectedUserId()
+  // In edit mode the booking's own booker drives the flow, not the header
+  // selection; in create mode we follow whoever is selected in the header.
+  const effectiveUserId = edit ? edit.initialRecord.booker_id : selectedUserId
 
   const { data: users } = useSuspenseQuery(
     trpc.user.listForProperty.queryOptions({ property_id: propertyId }),
@@ -59,7 +73,7 @@ function PlanStayFlowContent({
   const propertyRooms = rooms.filter(r =>
     propertyStructureIds.has(r.structure_id),
   )
-  const otherUsers = users.filter(u => u.id !== selectedUserId)
+  const otherUsers = users.filter(u => u.id !== effectiveUserId)
 
   // Default the Rooms panel open on the first room of the first building that
   // has any rooms — matching how StepRooms renders (it skips empty buildings).
@@ -83,13 +97,29 @@ function PlanStayFlowContent({
     submit,
     isPending,
     canSubmit,
-  } = useBookingForm(propertyId, selectedUserId, { kind: "create" }, () => {
-    onComplete()
-  })
+  } = useBookingForm(
+    propertyId,
+    effectiveUserId,
+    edit
+      ? {
+          kind: "edit",
+          bookingId: edit.bookingId,
+          initialRecord: edit.initialRecord,
+        }
+      : { kind: "create" },
+    () => {
+      onComplete()
+    },
+  )
 
+  // Calendar dots show who else is around; exclude the stay being edited so
+  // its own (possibly changing) dates don't double-count.
   const dotsByDay = useMemo(
-    () => buildOccupantDots(bookings, userGroups),
-    [bookings, userGroups],
+    () =>
+      buildOccupantDots(bookings, userGroups, {
+        excludeBookingId: edit?.bookingId,
+      }),
+    [bookings, userGroups, edit?.bookingId],
   )
 
   const { startInputRef, endInputRef } = useSingleDateFlatpickr(
@@ -99,7 +129,7 @@ function PlanStayFlowContent({
   )
 
   const occupancy = useOccupancyData({
-    bookings,
+    bookings: edit ? bookings.filter(b => b.id !== edit.bookingId) : bookings,
     draft,
     propertyRooms,
     propertyStructures,
@@ -118,10 +148,14 @@ function PlanStayFlowContent({
         submit({ kind: "submit" })
       }}
     >
-      {selectedUserId == null && (
+      {effectiveUserId == null && (
         <Paragraph role="alert">
           {t("No user selected — pick one from the header.")}
         </Paragraph>
+      )}
+
+      {draft.status === "cancelled" && (
+        <Paragraph role="alert">{t("This stay is cancelled.")}</Paragraph>
       )}
 
       <StartEndDate startInputRef={startInputRef} endInputRef={endInputRef} />
@@ -142,7 +176,7 @@ function PlanStayFlowContent({
           isActive
           users={users}
           otherUsers={otherUsers}
-          selectedUserId={selectedUserId}
+          selectedUserId={effectiveUserId}
           draft={draft}
           dispatch={dispatch}
           guestInputRef={guestInputRef}
@@ -168,7 +202,7 @@ function PlanStayFlowContent({
           tent={occupancy.tent}
           draft={draft}
           dispatch={dispatch}
-          selectedUserId={selectedUserId}
+          selectedUserId={effectiveUserId}
           expandedRoomId={expandedRoomId}
           setExpandedRoomId={setExpandedRoomId}
           conflicts={conflicts}
@@ -199,6 +233,26 @@ function PlanStayFlowContent({
           roomOverCapacityDays={occupancy.roomOverCapacityDays}
           stepClass=""
           stepActiveClass=""
+          submitLabel={edit ? t("Save changes") : undefined}
+          submitWarningsLabel={
+            edit ? t("Save changes (warnings present)") : undefined
+          }
+          submitPendingLabel={edit ? t("Saving…") : undefined}
+          extraActions={
+            edit && draft.status !== "cancelled" ? (
+              <Button
+                type="button"
+                variant="secondary"
+                data-color="danger"
+                disabled={isPending}
+                onClick={() => {
+                  submit({ kind: "cancel-stay" })
+                }}
+              >
+                {t("Cancel stay")}
+              </Button>
+            ) : undefined
+          }
         />
       </StepQuestion>
     </form>
@@ -209,10 +263,12 @@ export function PlanStayFlowSheet({
   propertyId,
   open,
   onClose,
+  edit,
 }: {
   propertyId: number
   open: boolean
   onClose: () => void
+  edit?: EditTarget
 }) {
   const { t } = useTranslation("planstay")
   return (
@@ -224,14 +280,18 @@ export function PlanStayFlowSheet({
     >
       <Dialog.Block>
         <Heading level={2} data-size="sm">
-          {t("Plan a stay")}
+          {edit ? t("Edit stay") : t("Plan a stay")}
         </Heading>
       </Dialog.Block>
       <Dialog.Block>
         {/* Mounted only while open so each opening starts from a fresh draft. */}
         {open && (
           <QueryBoundary>
-            <PlanStayFlowContent propertyId={propertyId} onComplete={onClose} />
+            <PlanStayFlowContent
+              propertyId={propertyId}
+              edit={edit}
+              onComplete={onClose}
+            />
           </QueryBoundary>
         )}
       </Dialog.Block>
