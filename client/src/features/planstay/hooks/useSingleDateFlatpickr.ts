@@ -124,6 +124,11 @@ export function useSingleDateFlatpickr(
       // flatpickr appends its calendar to <body>, where it renders behind the
       // dialog and is unclickable. `static` keeps it inline under the input.
       static: true,
+      // On touch devices flatpickr defaults to swapping in the OS-native date
+      // input, which on iOS is a single-date wheel that ignores our season
+      // bounds, occupant dots, and start/end clamping. Force our own calendar
+      // so mobile matches desktop (the whole point of this hook).
+      disableMobile: true,
       // Leave the input typeable so flatpickr does NOT set a `readonly`
       // attribute — digdir paints a lock icon on any field that has one
       // (`.ds-field:has([readonly]) label`), regardless of the React prop.
@@ -147,6 +152,7 @@ export function useSingleDateFlatpickr(
       mode: "single",
       locale,
       static: true,
+      disableMobile: true,
       allowInput: true,
       minDate: SEASON_MIN,
       maxDate: SEASON_MAX,
