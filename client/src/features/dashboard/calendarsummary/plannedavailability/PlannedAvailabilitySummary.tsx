@@ -12,7 +12,11 @@ import {
   Tag,
   ToggleGroup,
 } from "@digdir/designsystemet-react"
-import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
+import {
+  ArrowsCirclepathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./PlannedAvailabilitySummary.module.css"
 import { DayCard } from "./DayCard"
@@ -23,7 +27,12 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
 import { Temporal } from "temporal-polyfill"
-import { formatDayMonth, isoWeekNumber, isoWeekYear } from "@/utils/dateUtils"
+import {
+  formatDayMonth,
+  isoWeekNumber,
+  isoWeekYear,
+  startOfSunday,
+} from "@/utils/dateUtils"
 
 const WEEKDAY_LABELS = [
   "SUN",
@@ -147,6 +156,9 @@ export function PlannedAvailabilitySummary({
   const thursday = weekStart.add({ days: 4 })
   const weekNumber = isoWeekNumber(thursday)
   const weekYear = isoWeekYear(thursday)
+  const isCurrentWeek = weekStart.equals(
+    startOfSunday(Temporal.Now.plainDateISO()),
+  )
 
   const { data: priority } = useSuspenseQuery(
     trpc.priority.list.queryOptions({
@@ -285,8 +297,9 @@ export function PlannedAvailabilitySummary({
       <div className={styles.weekNav}>
         <div className={styles.weekNavLeft}>
           <Button
-            variant="tertiary"
+            variant="secondary"
             icon
+            className={styles.weekNavButton}
             aria-label={t("Previous week")}
             onClick={() => {
               onWeekStartChange(weekStart.subtract({ days: 7 }))
@@ -294,10 +307,20 @@ export function PlannedAvailabilitySummary({
           >
             <ChevronLeftIcon aria-hidden />
           </Button>
-          <Paragraph>{t("Week {{weekNumber}}", { weekNumber })}</Paragraph>
           <Button
-            variant="tertiary"
+            variant="secondary"
+            className={styles.weekNavButton}
+            onClick={() => {
+              onWeekStartChange(startOfSunday(Temporal.Now.plainDateISO()))
+            }}
+          >
+            {!isCurrentWeek && <ArrowsCirclepathIcon aria-hidden />}
+            {t("Week {{weekNumber}}", { weekNumber })}
+          </Button>
+          <Button
+            variant="secondary"
             icon
+            className={styles.weekNavButton}
             aria-label={t("Next week")}
             onClick={() => {
               onWeekStartChange(weekStart.add({ days: 7 }))

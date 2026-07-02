@@ -230,9 +230,18 @@ function MobileWeekPanel() {
           onWeekStartChange={setWeekStart}
         />
       </QueryBoundary>
-      <QueryBoundary>
-        <PlannedMaintenanceSummary mode="this-week" weekStart={weekStart} />
-      </QueryBoundary>
+      <Card asChild>
+        <section>
+          <Card.Block className={styles.nowSection}>
+            <QueryBoundary>
+              <PlannedMaintenanceSummary
+                mode="this-week"
+                weekStart={weekStart}
+              />
+            </QueryBoundary>
+          </Card.Block>
+        </section>
+      </Card>
     </div>
   )
 }

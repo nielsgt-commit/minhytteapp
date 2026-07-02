@@ -23,6 +23,22 @@
   justify-content: flex-end;
 }
 
+/* Mobile: the prev/next pair fills the row and grows evenly, which keeps the
+   week number centered between them. */
+@media (max-width: 640px) {
+  .weekNav {
+    flex-wrap: wrap;
+  }
+
+  .weekNavLeft {
+    flex: 1 1 100%;
+  }
+
+  .weekNavButton {
+    flex: 1;
+  }
+}
+
 .dayList {
   list-style: none;
   padding: 0;
