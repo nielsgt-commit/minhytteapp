@@ -5,10 +5,9 @@ import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc"
 import type { Temporal } from "temporal-polyfill"
 import {
+  type WeekRange,
   formatRange,
-  peakWeekRange,
-} from "@/routes/_authed/manageproperty/-priority/priorityUtils"
-import type { PeakWeek } from "@/routes/_authed/manageproperty/-priority/priorityUtils"
+} from "@/routes/_authed/administrer/-priority/priorityUtils"
 import type { SortMode } from "./SummerSummary"
 import styles from "./SummerSummary.module.css"
 
@@ -67,19 +66,19 @@ type StayRow = {
 
 export function PriorityWeekSummary({
   propertyId,
-  year,
   week,
+  range,
   sort,
 }: {
   propertyId: number
-  year: number
-  week: PeakWeek
+  week: number
+  // Resolved by the caller (season-aware for cross-year seasons).
+  range: WeekRange
   sort: SortMode
 }) {
   const { t, i18n } = useTranslation("dashboard")
   const trpc = useTRPC()
 
-  const range = peakWeekRange(year, week)
   const days = weekDays(range.start, i18n.language)
   const weekStart = days[0].iso
   const weekEnd = days[6].iso

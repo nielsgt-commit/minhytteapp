@@ -5,12 +5,28 @@
    the panel, above the chart. */
 .toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Keep the segmented control from stretching; it hugs its labels. */
+/* Season chevrons sit top-left; hidden entirely with a single season. */
+.seasonNav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.seasonName {
+  font-weight: 500;
+  min-width: 4.5rem;
+  text-align: center;
+}
+
+/* Keep the segmented control from stretching; it hugs its labels and stays
+   pinned to the right edge whether or not the season nav is shown. */
 .focusToggle {
   flex: none;
+  margin-left: auto;
 }
 
 /* Positioning context for the absolutely placed month dividers + lanes.

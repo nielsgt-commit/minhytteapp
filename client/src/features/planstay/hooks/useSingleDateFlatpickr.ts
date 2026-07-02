@@ -7,7 +7,7 @@ import "flatpickr/dist/flatpickr.min.css"
 import "../flatpickr-digdir.css"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
-import { SEASON_MIN, SEASON_MAX } from "../constants"
+import { BOOKING_MIN, BOOKING_MAX } from "../constants"
 import { setDates } from "@/features/planstay/booking-logic"
 import type {
   BookingDraft,
@@ -133,8 +133,8 @@ export function useSingleDateFlatpickr(
       // attribute — digdir paints a lock icon on any field that has one
       // (`.ds-field:has([readonly]) label`), regardless of the React prop.
       allowInput: true,
-      minDate: SEASON_MIN,
-      maxDate: SEASON_MAX,
+      minDate: BOOKING_MIN,
+      maxDate: BOOKING_MAX,
       defaultDate: draftRef.current.start_date ?? undefined,
       onDayCreate,
       onChange(selectedDates) {
@@ -154,8 +154,8 @@ export function useSingleDateFlatpickr(
       static: true,
       disableMobile: true,
       allowInput: true,
-      minDate: SEASON_MIN,
-      maxDate: SEASON_MAX,
+      minDate: BOOKING_MIN,
+      maxDate: BOOKING_MAX,
       defaultDate: draftRef.current.end_date ?? undefined,
       onDayCreate,
       onChange(selectedDates) {

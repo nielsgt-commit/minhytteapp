@@ -92,11 +92,19 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
+    "/administrer/sesonger",
+    {
+      title: "Seasons",
+      description:
+        "Recurring seasons for this property — each has a date range and priority weeks, used by the season overview and priority picking.",
+    },
+  ],
+  [
     "/administrer/prioritet",
     {
       title: "Priority weeks",
       description:
-        "Each main owner group picks one peak week. You can only edit your own column; everyone else's choices are visible but read-only.",
+        "Each main owner group picks one priority week per season. You can only edit your own column; everyone else's choices are visible but read-only.",
     },
   ],
   [
@@ -155,6 +163,7 @@ const NAV_GROUPS = [
     label: "Policies",
     items: [
       { to: "/administrer/fordelingspolicy", label: "Split policy" },
+      { to: "/administrer/sesonger", label: "Seasons" },
       { to: "/administrer/prioritet", label: "Priority weeks" },
       { to: "/administrer/utgiftskategorier", label: "Expense categories" },
       { to: "/administrer/innstillinger", label: "Settings" },
@@ -204,7 +213,7 @@ export function ManageProperty() {
       {
         title: t("Rules & money"),
         body: t(
-          "Split policy sets how shared costs are divided, Priority weeks let each main owner group claim one of the peak summer weeks (28–30), Expense categories label spending, and Settings holds per-cabin preferences.",
+          "Split policy sets how shared costs are divided, Seasons define the property's recurring seasons and their priority weeks, Priority weeks let each main owner group claim one priority week per season, Expense categories label spending, and Settings holds per-cabin preferences.",
         ),
       },
     ],

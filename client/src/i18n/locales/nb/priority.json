@@ -24,5 +24,9 @@
   "W{{week}} – {{name}}": "U{{week}} – {{name}}",
   "Week": "Uke",
   "Year": "År",
-  "You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings.": "Du har ingen redigerbar kolonne her. Enten er du ikke eier av denne eiendommen, eller så har du ikke markert deg selv som husstandsoverhode i brukerinnstillingene."
+  "You don't have an editable column here. Either you're not an owner of this property, or you haven't flagged yourself as a household head in user settings.": "Du har ingen redigerbar kolonne her. Enten er du ikke eier av denne eiendommen, eller så har du ikke markert deg selv som husstandsoverhode i brukerinnstillingene.",
+  "{{name}} {{year}}": "{{name}} {{year}}",
+  "{{name}} {{fromYear}}/{{toYear}}": "{{name}} {{fromYear}}/{{toYear}}",
+  "No priority weeks configured for this season.": "Ingen prioritetsuker er satt opp for denne sesongen.",
+  "{{name}} has a legacy pick of W{{week}} outside all configured seasons.": "{{name}} har et eldre valg av U{{week}} utenfor alle oppsatte sesonger."
 }

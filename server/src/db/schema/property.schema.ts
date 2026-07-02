@@ -7,6 +7,7 @@ import {
   pgTable,
   primaryKey,
   timestamp,
+  unique,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
@@ -137,6 +138,50 @@ export const infrastructureTable = pgTable(
   ],
 )
 
+// A recurring season for a property: a month+day range that repeats every
+// year (a range wrapping the year boundary, e.g. Dec 1 – Feb 28, is encoded
+// as end < start) plus the ISO weeks that count as priority weeks within it.
+// Soft-deleted via archived_at because priority picks reference seasons.
+export const propertySeasonsTable = pgTable(
+  "property_seasons",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    property_id: integer("property_id")
+      .notNull()
+      .references(() => propertyTable.id),
+    name: varchar("name", { length: 64 }).notNull(),
+    start_month: integer("start_month").notNull(),
+    start_day: integer("start_day").notNull(),
+    end_month: integer("end_month").notNull(),
+    end_day: integer("end_day").notNull(),
+    priority_weeks: integer("priority_weeks")
+      .array()
+      .notNull()
+      .default(sql`'{}'::integer[]`),
+    archived_at: timestamp("archived_at"),
+    created_at: timestamp("created_at").notNull().defaultNow(),
+    updated_at: timestamp("updated_at").notNull().defaultNow(),
+  },
+  t => [
+    check(
+      "property_seasons_start_month_range",
+      sql`${t.start_month} BETWEEN 1 AND 12`,
+    ),
+    check(
+      "property_seasons_end_month_range",
+      sql`${t.end_month} BETWEEN 1 AND 12`,
+    ),
+    check(
+      "property_seasons_start_day_range",
+      sql`${t.start_day} BETWEEN 1 AND 31`,
+    ),
+    check("property_seasons_end_day_range", sql`${t.end_day} BETWEEN 1 AND 31`),
+    uniqueIndex("property_seasons_property_name_active")
+      .on(t.property_id, t.name)
+      .where(sql`${t.archived_at} IS NULL`),
+  ],
+)
+
 export const propertyPriorityWeeksTable = pgTable(
   "property_priority_weeks",
   {
@@ -149,12 +194,20 @@ export const propertyPriorityWeeksTable = pgTable(
       .references(() => userGroupsTable.id),
     year: integer("year").notNull(),
     iso_week: integer("iso_week").notNull(),
+    // NULL = a pick made under the built-in Summer fallback (weeks 28–30),
+    // before the property configured any seasons. Which weeks are valid for a
+    // season is enforced in the priority router, not by a CHECK.
+    season_id: integer("season_id").references(() => propertySeasonsTable.id),
     created_at: timestamp("created_at").notNull().defaultNow(),
     updated_at: timestamp("updated_at").notNull().defaultNow(),
   },
   t => [
-    check("priority_week_peak_only", sql`${t.iso_week} IN (28, 29, 30)`),
-    uniqueIndex("priority_week_uq_group_year").on(t.user_group_id, t.year),
+    check("priority_week_valid", sql`${t.iso_week} BETWEEN 1 AND 53`),
+    // NULLS NOT DISTINCT: one pick per group per year per season, and legacy
+    // NULL-season rows keep the old one-per-group-per-year semantics.
+    unique("priority_week_uq_group_year_season")
+      .on(t.user_group_id, t.year, t.season_id)
+      .nullsNotDistinct(),
   ],
 )
 

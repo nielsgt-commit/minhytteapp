@@ -1,7 +1,10 @@
 import { TRPCError } from "@trpc/server"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm"
 import { z } from "zod"
-import { propertyPriorityWeeksTable } from "../../db/schema/property.schema.ts"
+import {
+  propertyPriorityWeeksTable,
+  propertySeasonsTable,
+} from "../../db/schema/property.schema.ts"
 import { userGroupsTable } from "../../db/schema/users.schema.ts"
 import { instantFromDate } from "../../shared/temporal.ts"
 import { isPropertyHead, propertyAdminProcedure, router } from "../init.ts"
@@ -11,7 +14,39 @@ import type { db as dbClient } from "../../db/client.ts"
 type Db = typeof dbClient
 
 const yearField = z.number().int().min(2000).max(2100)
-const peakWeek = z.union([z.literal(28), z.literal(29), z.literal(30)])
+// Which weeks are pickable is enforced per season (or against the built-in
+// fallback weeks when season_id is null), not by the input schema.
+const weekField = z.number().int().min(1).max(53)
+
+// Weeks a group may pick when the property has no seasons configured — the
+// pre-seasons behavior, kept for properties that never set up seasons.
+export const FALLBACK_PEAK_WEEKS = [28, 29, 30]
+
+// Resolve a season for a mutation: must exist, belong to the property, and be
+// active. Returns its normalized priority weeks.
+async function loadSeasonForEdit(db: Db, seasonId: number, propertyId: number) {
+  const season = (
+    await db
+      .select({
+        id: propertySeasonsTable.id,
+        property_id: propertySeasonsTable.property_id,
+        archived_at: propertySeasonsTable.archived_at,
+        priority_weeks: propertySeasonsTable.priority_weeks,
+      })
+      .from(propertySeasonsTable)
+      .where(eq(propertySeasonsTable.id, seasonId))
+  ).at(0)
+  if (season?.property_id !== propertyId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "season not found" })
+  }
+  if (season.archived_at != null) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "season is archived",
+    })
+  }
+  return season
+}
 
 async function ensureCanEdit(db: Db, user: AuthUser, propertyId: number) {
   // Priority weeks are an operator surface: a platform admin may edit any
@@ -77,6 +112,7 @@ export const priorityRouter = router({
           user_group_id: propertyPriorityWeeksTable.user_group_id,
           year: propertyPriorityWeeksTable.year,
           iso_week: propertyPriorityWeeksTable.iso_week,
+          season_id: propertyPriorityWeeksTable.season_id,
         })
         .from(propertyPriorityWeeksTable)
         .where(
@@ -94,7 +130,9 @@ export const priorityRouter = router({
       z.object({
         user_group_id: z.number().int().positive(),
         year: yearField,
-        iso_week: peakWeek,
+        iso_week: weekField,
+        // null/undefined = the built-in fallback (no seasons configured).
+        season_id: z.number().int().positive().nullish(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -105,15 +143,47 @@ export const priorityRouter = router({
         input.property_id,
       )
 
+      const seasonId = input.season_id ?? null
+      const season =
+        seasonId == null
+          ? null
+          : await loadSeasonForEdit(ctx.db, seasonId, input.property_id)
+      const allowedWeeks = season?.priority_weeks ?? FALLBACK_PEAK_WEEKS
+      if (!allowedWeeks.includes(input.iso_week)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "week is not a priority week of this season",
+        })
+      }
+
+      const groupYear = and(
+        eq(propertyPriorityWeeksTable.user_group_id, input.user_group_id),
+        eq(propertyPriorityWeeksTable.year, input.year),
+      )
+      // Replace this group's pick for the target season. The season path also
+      // sweeps up a legacy NULL-season pick sitting inside this season's
+      // weeks, so a group never holds both a legacy and a season row for the
+      // same weeks (adoption = delete-then-insert; settlement reads raw rows
+      // and must never see duplicates).
+      const replaced =
+        season == null
+          ? and(groupYear, isNull(propertyPriorityWeeksTable.season_id))
+          : and(
+              groupYear,
+              or(
+                eq(propertyPriorityWeeksTable.season_id, season.id),
+                and(
+                  isNull(propertyPriorityWeeksTable.season_id),
+                  inArray(
+                    propertyPriorityWeeksTable.iso_week,
+                    season.priority_weeks,
+                  ),
+                ),
+              ),
+            )
+
       return ctx.db.transaction(async tx => {
-        await tx
-          .delete(propertyPriorityWeeksTable)
-          .where(
-            and(
-              eq(propertyPriorityWeeksTable.user_group_id, input.user_group_id),
-              eq(propertyPriorityWeeksTable.year, input.year),
-            ),
-          )
+        await tx.delete(propertyPriorityWeeksTable).where(replaced)
         const [created] = await tx
           .insert(propertyPriorityWeeksTable)
           .values({
@@ -121,6 +191,7 @@ export const priorityRouter = router({
             user_group_id: input.user_group_id,
             year: input.year,
             iso_week: input.iso_week,
+            season_id: seasonId,
           })
           .returning()
         return {
@@ -136,6 +207,7 @@ export const priorityRouter = router({
       z.object({
         user_group_id: z.number().int().positive(),
         year: yearField,
+        season_id: z.number().int().positive().nullish(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -146,15 +218,41 @@ export const priorityRouter = router({
         input.property_id,
       )
 
+      const seasonId = input.season_id ?? null
+      const season =
+        seasonId == null
+          ? null
+          : await loadSeasonForEdit(ctx.db, seasonId, input.property_id)
+
+      const groupYear = and(
+        eq(propertyPriorityWeeksTable.user_group_id, input.user_group_id),
+        eq(propertyPriorityWeeksTable.property_id, input.property_id),
+        eq(propertyPriorityWeeksTable.year, input.year),
+      )
+      // Same predicate as `set`: clearing a season also clears a legacy
+      // NULL-season pick that the UI shows adopted into that season.
+      const clearWhere =
+        season == null
+          ? and(groupYear, isNull(propertyPriorityWeeksTable.season_id))
+          : and(
+              groupYear,
+              or(
+                eq(propertyPriorityWeeksTable.season_id, season.id),
+                season.priority_weeks.length > 0
+                  ? and(
+                      isNull(propertyPriorityWeeksTable.season_id),
+                      inArray(
+                        propertyPriorityWeeksTable.iso_week,
+                        season.priority_weeks,
+                      ),
+                    )
+                  : undefined,
+              ),
+            )
+
       const rows = await ctx.db
         .delete(propertyPriorityWeeksTable)
-        .where(
-          and(
-            eq(propertyPriorityWeeksTable.user_group_id, input.user_group_id),
-            eq(propertyPriorityWeeksTable.property_id, input.property_id),
-            eq(propertyPriorityWeeksTable.year, input.year),
-          ),
-        )
+        .where(clearWhere)
         .returning()
       const cleared = rows.at(0)
       return cleared

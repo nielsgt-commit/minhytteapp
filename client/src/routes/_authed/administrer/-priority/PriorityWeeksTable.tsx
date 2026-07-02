@@ -1,27 +1,28 @@
 import { Table } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import {
-  PEAK_WEEKS,
-  type EligibleOwner,
-  type OwnerLookups,
-  type PeakWeek,
-} from "./priorityUtils"
+import { type Season, weekRangeForSeason } from "@/features/seasons/seasonUtils"
+import { type EligibleOwner, type OwnerLookups } from "./priorityUtils"
 import { PriorityWeekRow } from "./PriorityWeekRow"
 import { ConflictRow } from "./ConflictRow"
 
 type PriorityWeeksTableProps = {
   year: number
+  // null = the built-in fallback (no seasons configured for the property).
+  season: Season | null
+  weeks: readonly number[]
   eligibleOwners: readonly EligibleOwner[]
   lookups: OwnerLookups
   myGroupId: number | null
   isAdmin: boolean
   pending: boolean
-  onAssign: (groupId: number, week: PeakWeek) => void
+  onAssign: (groupId: number, week: number) => void
   onClear: (groupId: number) => void
 }
 
 export function PriorityWeeksTable({
   year,
+  season,
+  weeks,
   eligibleOwners,
   lookups,
   myGroupId,
@@ -50,11 +51,11 @@ export function PriorityWeeksTable({
         </Table.Row>
       </Table.Head>
       <Table.Body>
-        {PEAK_WEEKS.map(week => (
+        {weeks.map(week => (
           <PriorityWeekRow
             key={week}
             week={week}
-            year={year}
+            range={weekRangeForSeason(season, year, week)}
             eligibleOwners={eligibleOwners}
             ownersForWeek={ownersByWeek.get(week) ?? []}
             myGroupId={myGroupId}
@@ -64,7 +65,7 @@ export function PriorityWeeksTable({
             onClear={onClear}
           />
         ))}
-        {PEAK_WEEKS.flatMap(week => {
+        {weeks.flatMap(week => {
           const ownersForWeek = ownersByWeek.get(week) ?? []
           if (ownersForWeek.length <= 1) return []
           const names = ownersForWeek.map(

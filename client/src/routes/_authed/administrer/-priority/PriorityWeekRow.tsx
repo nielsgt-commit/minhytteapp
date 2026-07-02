@@ -2,26 +2,25 @@ import { Button, Radio, Table } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import {
   type EligibleOwner,
-  type PeakWeek,
+  type WeekRange,
   formatRange,
-  peakWeekRange,
 } from "./priorityUtils"
 
 type PriorityWeekRowProps = {
-  week: PeakWeek
-  year: number
+  week: number
+  range: WeekRange
   eligibleOwners: readonly EligibleOwner[]
   ownersForWeek: readonly number[]
   myGroupId: number | null
   isAdmin: boolean
   pending: boolean
-  onAssign: (groupId: number, week: PeakWeek) => void
+  onAssign: (groupId: number, week: number) => void
   onClear: (groupId: number) => void
 }
 
 export function PriorityWeekRow({
   week,
-  year,
+  range,
   eligibleOwners,
   ownersForWeek,
   myGroupId,
@@ -31,7 +30,6 @@ export function PriorityWeekRow({
   onClear,
 }: PriorityWeekRowProps) {
   const { t, i18n } = useTranslation("priority")
-  const range = peakWeekRange(year, week)
   const showClear =
     ownersForWeek.length > 0 &&
     (isAdmin || (myGroupId != null && ownersForWeek.includes(myGroupId)))

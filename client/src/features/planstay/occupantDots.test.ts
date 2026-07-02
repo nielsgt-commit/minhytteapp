@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { Temporal } from "temporal-polyfill"
 import { buildOccupantDots } from "./occupantDots.ts"
+import { BOOKING_MAX, BOOKING_MIN } from "./constants.ts"
 
 const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
-// All dates kept inside the season window (May–Aug) so they aren't clamped.
+// All dates kept inside the bookable window so they aren't clamped.
 const groups = [
   { id: 7, is_family: true, members: [{ user_id: 1 }, { user_id: 2 }] },
   { id: 9, is_family: true, members: [{ user_id: 3 }] },
@@ -86,21 +87,22 @@ describe("buildOccupantDots", () => {
     expect(dots.get("2026-07-10")).toEqual([9])
   })
 
-  test("ranges are clamped to the season window", () => {
+  test("ranges are clamped to the bookable window", () => {
+    const min = pd(BOOKING_MIN)
+    const max = pd(BOOKING_MAX)
     const dots = buildOccupantDots(
       [
         booking({
-          start_date: pd("2026-01-01"),
-          end_date: pd("2026-12-31"),
+          start_date: min.subtract({ days: 30 }),
+          end_date: max.add({ days: 30 }),
           occupants: [{ user_id: 1, queued: false }],
         }),
       ],
       groups,
     )
-    expect(dots.has("2026-01-01")).toBe(false)
-    expect(dots.has("2026-04-30")).toBe(false)
-    expect(dots.get("2026-05-01")).toEqual([7])
-    expect(dots.get("2026-08-31")).toEqual([7])
-    expect(dots.has("2026-09-01")).toBe(false)
+    expect(dots.has(min.subtract({ days: 1 }).toString())).toBe(false)
+    expect(dots.get(min.toString())).toEqual([7])
+    expect(dots.get(max.toString())).toEqual([7])
+    expect(dots.has(max.add({ days: 1 }).toString())).toBe(false)
   })
 })
