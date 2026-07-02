@@ -59,7 +59,7 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
   const { data: priority } = useSuspenseQuery(
     trpc.priority.list.queryOptions({ property_id: propertyId, year: refYear }),
   )
-  const { ownerNameById, weekByGroup } = buildOwnerLookups(
+  const { ownerNameById, weeksByGroup } = buildOwnerLookups(
     priority.eligibleOwners,
     priority.assignments,
   )
@@ -75,7 +75,9 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
       return d >= wkStart.toString() && d < wkEnd.toString()
     }
     if (i.due_kind === "priority_week" && i.due_priority_group_id != null) {
-      return weekByGroup.get(i.due_priority_group_id) === refWeek
+      return (
+        weeksByGroup.get(i.due_priority_group_id)?.includes(refWeek) ?? false
+      )
     }
     return false
   }
@@ -123,7 +125,7 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
             pending.filter(i => !inDisplayedWeek(i)),
             renderStructureTags,
             ownerNameById,
-            weekByGroup,
+            weeksByGroup,
             t,
           )}
     </>
@@ -155,7 +157,7 @@ function renderRest<Item extends DueItem>(
   rest: Item[],
   renderStructureTags: (list: Item[]) => ReactNode,
   ownerNameById: Map<number, string>,
-  weekByGroup: Map<number, number>,
+  weeksByGroup: Map<number, number[]>,
   t: TFunction,
 ) {
   type Bucket = { items: Item[]; label: string; order: number }
@@ -171,11 +173,16 @@ function renderRest<Item extends DueItem>(
     if (it.due_kind === "priority_week" && it.due_priority_group_id != null) {
       const gid = it.due_priority_group_id
       const name = ownerNameById.get(gid) ?? t("Unknown group")
-      const week = weekByGroup.get(gid)
-      const label = week
-        ? `${priorityGroupLabel(t, name)} (${t("week {{week}}", { week })})`
-        : priorityGroupLabel(t, name)
-      add(`group:${String(gid)}`, label, week ?? 99, it)
+      // A group can hold one pick per season; show them all in the label and
+      // order by its earliest week.
+      const weeks = weeksByGroup.get(gid) ?? []
+      const label =
+        weeks.length > 0
+          ? `${priorityGroupLabel(t, name)} (${t("week {{week}}", {
+              week: [...weeks].sort((a, b) => a - b).join(", "),
+            })})`
+          : priorityGroupLabel(t, name)
+      add(`group:${String(gid)}`, label, Math.min(...weeks, 99), it)
     } else if (
       it.due_kind === "dugnad" ||
       it.due_kind === "opening" ||

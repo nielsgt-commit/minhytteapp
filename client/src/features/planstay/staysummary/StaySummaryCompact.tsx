@@ -1,48 +1,55 @@
 import { Fragment, useMemo, useState } from "react"
 import {
+  Button,
   Card,
   Paragraph,
   Popover,
   Tag,
   ToggleGroup,
 } from "@digdir/designsystemet-react"
+import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc.ts"
-import { formatDateRange, isoWeekMonday } from "@/utils/dateUtils"
+import { formatDateRange } from "@/utils/dateUtils"
 import { groupColor } from "@/features/usergroups/groupColors"
-import { PEAK_WEEKS } from "@/routes/_authed/manageproperty/-priority/priorityUtils"
+import {
+  FALLBACK_SEASON,
+  peakWindow,
+  seasonInstanceYear,
+  seasonWindow,
+  type DateWindow,
+  type Season,
+} from "@/features/seasons/seasonUtils"
 import { YEAR } from "../constants.ts"
 import styles from "./StaySummaryCompact.module.css"
 
 // No family group → a neutral bar, matching the calendar dots.
 const NO_GROUP_COLOR = "var(--ds-color-neutral-base-default)"
 
-// Two focus windows the panel can zoom to:
-//  - "season": the two focus months, June and July. Stays bleeding into May or
-//    August are clipped at the edges; the adjacent month names are still shown
-//    in the side gutters for context.
-//  - "peak": just the peak priority weeks (28–30), so the lanes and bars are
-//    big enough to read on a phone. Clipping and gutter labels work the same,
+// Two focus windows the panel can zoom to, per season:
+//  - "season": the whole season window. Stays bleeding out of it are clipped
+//    at the edges; the adjacent month names are still shown in the side
+//    gutters for context.
+//  - "peak": just the season's priority weeks, so the lanes and bars are big
+//    enough to read on a phone. Clipping and gutter labels work the same,
 //    now relative to the tighter window.
 type FocusMode = "season" | "peak"
 
-const SEASON_START = Temporal.PlainDate.from({ year: YEAR, month: 6, day: 1 })
-const SEASON_END = Temporal.PlainDate.from({ year: YEAR, month: 8, day: 1 }) // exclusive
+// One selectable entry in the season toggle: a season (configured, or the
+// built-in fallback) resolved to concrete windows for its current-or-next
+// occurrence.
+type SeasonModel = {
+  key: string
+  season: Season
+  window: DateWindow
+  peak: DateWindow | null
+}
 
-// Monday of the first peak week to the Monday after the last, so the window
-// covers the full run of peak weeks (28–30) and ends exclusively.
-const PEAK_START = isoWeekMonday(YEAR, PEAK_WEEKS[0])
-const PEAK_END = isoWeekMonday(YEAR, PEAK_WEEKS[PEAK_WEEKS.length - 1]).add({
-  days: 7,
-}) // exclusive
-
-const FOCUS: Record<FocusMode, { start: Temporal.PlainDate; end: Temporal.PlainDate }> =
-  {
-    season: { start: SEASON_START, end: SEASON_END },
-    peak: { start: PEAK_START, end: PEAK_END },
-  }
+// Longest peak window that still gets the per-day letter grid; beyond this
+// the letters would collide.
+const DAY_GRID_MAX_DAYS = 35
 
 type Bar = {
   bookingId: number
@@ -77,9 +84,65 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
   const { t, i18n } = useTranslation("planstay")
   const trpc = useTRPC()
 
+  const { data: seasons } = useSuspenseQuery(
+    trpc.season.list.queryOptions({ property_id: propertyId }),
+  )
+
+  // Fixed per mount so the memos below don't churn; a chart doesn't need to
+  // notice midnight.
+  const [today] = useState(() => Temporal.Now.plainDateISO())
+
+  // Configured seasons resolved to concrete windows; without any, the
+  // built-in fallback reproduces the original hardcoded summer view (Jun 1 –
+  // Aug 1, peak weeks 28–30, pinned to the YEAR roll-over heuristic).
+  const models = useMemo<SeasonModel[]>(() => {
+    if (seasons.length === 0) {
+      const window = seasonWindow(FALLBACK_SEASON, YEAR)
+      return [
+        {
+          key: "fallback",
+          season: FALLBACK_SEASON,
+          window,
+          peak: peakWindow(FALLBACK_SEASON, YEAR),
+        },
+      ]
+    }
+    return seasons.map(s => {
+      const year = seasonInstanceYear(s, today)
+      return {
+        key: String(s.id),
+        season: s,
+        window: seasonWindow(s, year),
+        peak: peakWindow(s, year),
+      }
+    })
+  }, [seasons, today])
+
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  // Default season: the one we're in right now, else the next to start.
+  // (Every model's window ends after today by construction.)
+  const active =
+    models.find(m => m.key === selectedKey) ??
+    models.find(m => Temporal.PlainDate.compare(m.window.start, today) <= 0) ??
+    models.reduce((a, b) =>
+      Temporal.PlainDate.compare(a.window.start, b.window.start) <= 0 ? a : b,
+    )
+
+  // Step through the seasons in chronological order, wrapping at the ends
+  // (after Vinter comes Vår again).
+  const stepSeason = (delta: number) => {
+    const index = models.indexOf(active)
+    const next = models[(index + delta + models.length) % models.length]
+    setSelectedKey(next.key)
+  }
+
   const [mode, setMode] = useState<FocusMode>("season")
-  const focusStart = FOCUS[mode].start
-  const focusEnd = FOCUS[mode].end
+  // A season without priority weeks has no peak window to zoom to.
+  const effectiveMode: FocusMode = active.peak ? mode : "season"
+  const focus =
+    effectiveMode === "peak" && active.peak ? active.peak : active.window
+  const focusStart = focus.start
+  const focusEnd = focus.end
   const spanDays = focusStart.until(focusEnd).days
 
   // Fraction 0..1 of where a date sits across the active focus window, and its
@@ -192,24 +255,26 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
   // Dotted dividers sit on each month boundary the window touches (e.g. in the
   // season view: Jun 1 at the left edge, Jul 1 in the middle, Aug 1 at the right
   // edge); each carries the name of the month that begins there, to its right.
+  // A PlainDate cursor rather than a month-number loop, so windows crossing
+  // New Year (a Dec–Feb season) keep working.
   const boundaries = useMemo(() => {
     const out: { date: Temporal.PlainDate; label: string }[] = []
-    for (let m = focusStart.month; m <= focusEnd.month; m++) {
-      const date = Temporal.PlainDate.from({ year: YEAR, month: m, day: 1 })
+    let cur = focusStart.with({ day: 1 })
+    while (Temporal.PlainDate.compare(cur, focusEnd) <= 0) {
       out.push({
-        date,
-        label: date.toLocaleString(i18n.language, { month: "short" }),
+        date: cur,
+        label: cur.toLocaleString(i18n.language, { month: "short" }),
       })
+      cur = cur.add({ months: 1 })
     }
     return out
   }, [i18n.language, focusStart, focusEnd])
 
   // The clipped-off month just before the window (May in the season view), shown
   // in the left gutter so the edges read as "…mai ¦ jun … jul … ¦ aug".
-  const leadLabel = focusStart.subtract({ months: 1 }).toLocaleString(
-    i18n.language,
-    { month: "short" },
-  )
+  const leadLabel = focusStart
+    .subtract({ months: 1 })
+    .toLocaleString(i18n.language, { month: "short" })
 
   // Weekend bands (Sat–Sun) shaded as subtle vertical fills, for context.
   // Start from the Saturday on or before the window so a weekend
@@ -242,10 +307,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
 
   // In the zoomed peak view, a day grid: a faint gridline on each weekday
   // boundary plus that day's first letter centred over its column. Skipped in
-  // the season view (far too dense at ~60 days). The narrow weekday name is
-  // localized (e.g. "M T O T F L S" in Norwegian).
+  // the season view (far too dense at ~60 days) and for long peak windows
+  // where the letters would collide. The narrow weekday name is localized
+  // (e.g. "M T O T F L S" in Norwegian).
   const days = useMemo(() => {
-    if (mode !== "peak") return []
+    if (effectiveMode !== "peak" || spanDays > DAY_GRID_MAX_DAYS) return []
     const out: { date: Temporal.PlainDate; letter: string }[] = []
     let cur = focusStart
     while (Temporal.PlainDate.compare(cur, focusEnd) < 0) {
@@ -256,17 +322,51 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
       cur = cur.add({ days: 1 })
     }
     return out
-  }, [mode, focusStart, focusEnd, i18n.language])
+  }, [effectiveMode, spanDays, focusStart, focusEnd, i18n.language])
 
   return (
     <Card asChild>
       <section aria-label={t("Season overview")}>
         <Card.Block>
-          {/* Focus toggle, parked top-right: zoom the axis between the whole
-              season and just the peak priority weeks. */}
+          {/* Toolbar: season chevrons top-left (hidden with a single season)
+              step through the configured seasons; the zoom toggle top-right
+              switches between the whole season and just its priority weeks. */}
           <div className={styles.toolbar}>
+            {models.length >= 2 && (
+              <div className={styles.seasonNav}>
+                <Button
+                  type="button"
+                  variant="tertiary"
+                  icon
+                  data-size="sm"
+                  aria-label={t("Previous season")}
+                  onClick={() => {
+                    stepSeason(-1)
+                  }}
+                >
+                  <ChevronLeftIcon aria-hidden />
+                </Button>
+                <Paragraph asChild data-size="sm">
+                  <output className={styles.seasonName}>
+                    {active.season.name}
+                  </output>
+                </Paragraph>
+                <Button
+                  type="button"
+                  variant="tertiary"
+                  icon
+                  data-size="sm"
+                  aria-label={t("Next season")}
+                  onClick={() => {
+                    stepSeason(1)
+                  }}
+                >
+                  <ChevronRightIcon aria-hidden />
+                </Button>
+              </div>
+            )}
             <ToggleGroup
-              value={mode}
+              value={effectiveMode}
               onChange={value => {
                 setMode(value as FocusMode)
               }}
@@ -275,7 +375,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
               className={styles.focusToggle}
             >
               <ToggleGroup.Item value="season">{t("Season")}</ToggleGroup.Item>
-              <ToggleGroup.Item value="peak">{t("Peak weeks")}</ToggleGroup.Item>
+              {active.peak && (
+                <ToggleGroup.Item value="peak">
+                  {t("Peak weeks")}
+                </ToggleGroup.Item>
+              )}
             </ToggleGroup>
           </div>
           <div className={styles.chart}>
@@ -346,7 +450,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                 Temporal.PlainDate.compare(m.date, focusEnd) >= 0
               return (
                 <div
-                  key={m.label}
+                  key={m.date.toString()}
                   className={styles.month}
                   style={{ left: pct(m.date) }}
                 >
@@ -365,7 +469,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
 
             <div
               className={
-                mode === "peak"
+                effectiveMode === "peak"
                   ? `${styles.lanes} ${styles.lanesPeak}`
                   : styles.lanes
               }

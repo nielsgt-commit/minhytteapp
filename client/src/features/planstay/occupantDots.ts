@@ -1,5 +1,5 @@
 import { Temporal } from "temporal-polyfill"
-import { SEASON_MIN, SEASON_MAX } from "./constants.ts"
+import { BOOKING_MIN, BOOKING_MAX } from "./constants.ts"
 
 type DotBooking = {
   id: number
@@ -18,8 +18,9 @@ type DotGroup = {
 /**
  * Build the calendar's per-day occupant dots: ISO date ("YYYY-MM-DD") → one
  * family-group id per person staying that night (0 = no family group). One
- * entry per occupant, so the dot count is the headcount. Bounded to the season
- * so the map stays small. Cancelled bookings and queued occupants are ignored.
+ * entry per occupant, so the dot count is the headcount. Bounded to the
+ * pickers' bookable window so the map stays small. Cancelled bookings and
+ * queued occupants are ignored.
  */
 export function buildOccupantDots(
   bookings: DotBooking[],
@@ -45,8 +46,8 @@ export function buildOccupantDots(
 
     const startIso = b.start_date.toString()
     const endIso = b.end_date.toString()
-    const start = startIso < SEASON_MIN ? SEASON_MIN : startIso
-    const end = endIso > SEASON_MAX ? SEASON_MAX : endIso
+    const start = startIso < BOOKING_MIN ? BOOKING_MIN : startIso
+    const end = endIso > BOOKING_MAX ? BOOKING_MAX : endIso
     if (start > end) continue
 
     let cur = Temporal.PlainDate.from(start)

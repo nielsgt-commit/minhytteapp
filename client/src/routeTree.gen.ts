@@ -48,6 +48,7 @@ import { Route as AuthedManagepropertyEquipmentRouteImport } from './routes/_aut
 import { Route as AuthedManagepropertyContactsRouteImport } from './routes/_authed/manageproperty/contacts'
 import { Route as AuthedAdministrerUtstyrRouteImport } from './routes/_authed/administrer/utstyr'
 import { Route as AuthedAdministrerUtgiftskategorierRouteImport } from './routes/_authed/administrer/utgiftskategorier'
+import { Route as AuthedAdministrerSesongerRouteImport } from './routes/_authed/administrer/sesonger'
 import { Route as AuthedAdministrerPrioritetRouteImport } from './routes/_authed/administrer/prioritet'
 import { Route as AuthedAdministrerKontakterRouteImport } from './routes/_authed/administrer/kontakter'
 import { Route as AuthedAdministrerInvitasjonerRouteImport } from './routes/_authed/administrer/invitasjoner'
@@ -268,6 +269,12 @@ const AuthedAdministrerUtgiftskategorierRoute =
     path: '/utgiftskategorier',
     getParentRoute: () => AuthedAdministrerRoute,
   } as any)
+const AuthedAdministrerSesongerRoute =
+  AuthedAdministrerSesongerRouteImport.update({
+    id: '/sesonger',
+    path: '/sesonger',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
 const AuthedAdministrerPrioritetRoute =
   AuthedAdministrerPrioritetRouteImport.update({
     id: '/prioritet',
@@ -378,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
   '/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
   '/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
+  '/administrer/sesonger': typeof AuthedAdministrerSesongerRoute
   '/administrer/utgiftskategorier': typeof AuthedAdministrerUtgiftskategorierRoute
   '/administrer/utstyr': typeof AuthedAdministrerUtstyrRoute
   '/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
@@ -426,6 +434,7 @@ export interface FileRoutesByTo {
   '/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
   '/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
   '/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
+  '/administrer/sesonger': typeof AuthedAdministrerSesongerRoute
   '/administrer/utgiftskategorier': typeof AuthedAdministrerUtgiftskategorierRoute
   '/administrer/utstyr': typeof AuthedAdministrerUtstyrRoute
   '/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
@@ -481,6 +490,7 @@ export interface FileRoutesById {
   '/_authed/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
   '/_authed/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
   '/_authed/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
+  '/_authed/administrer/sesonger': typeof AuthedAdministrerSesongerRoute
   '/_authed/administrer/utgiftskategorier': typeof AuthedAdministrerUtgiftskategorierRoute
   '/_authed/administrer/utstyr': typeof AuthedAdministrerUtstyrRoute
   '/_authed/manageproperty/contacts': typeof AuthedManagepropertyContactsRoute
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/administrer/invitasjoner'
     | '/administrer/kontakter'
     | '/administrer/prioritet'
+    | '/administrer/sesonger'
     | '/administrer/utgiftskategorier'
     | '/administrer/utstyr'
     | '/manageproperty/contacts'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/administrer/invitasjoner'
     | '/administrer/kontakter'
     | '/administrer/prioritet'
+    | '/administrer/sesonger'
     | '/administrer/utgiftskategorier'
     | '/administrer/utstyr'
     | '/manageproperty/contacts'
@@ -636,6 +648,7 @@ export interface FileRouteTypes {
     | '/_authed/administrer/invitasjoner'
     | '/_authed/administrer/kontakter'
     | '/_authed/administrer/prioritet'
+    | '/_authed/administrer/sesonger'
     | '/_authed/administrer/utgiftskategorier'
     | '/_authed/administrer/utstyr'
     | '/_authed/manageproperty/contacts'
@@ -937,6 +950,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdministrerUtgiftskategorierRouteImport
       parentRoute: typeof AuthedAdministrerRoute
     }
+    '/_authed/administrer/sesonger': {
+      id: '/_authed/administrer/sesonger'
+      path: '/sesonger'
+      fullPath: '/administrer/sesonger'
+      preLoaderRoute: typeof AuthedAdministrerSesongerRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
     '/_authed/administrer/prioritet': {
       id: '/_authed/administrer/prioritet'
       path: '/prioritet'
@@ -1061,6 +1081,7 @@ interface AuthedAdministrerRouteChildren {
   AuthedAdministrerInvitasjonerRoute: typeof AuthedAdministrerInvitasjonerRoute
   AuthedAdministrerKontakterRoute: typeof AuthedAdministrerKontakterRoute
   AuthedAdministrerPrioritetRoute: typeof AuthedAdministrerPrioritetRoute
+  AuthedAdministrerSesongerRoute: typeof AuthedAdministrerSesongerRoute
   AuthedAdministrerUtgiftskategorierRoute: typeof AuthedAdministrerUtgiftskategorierRoute
   AuthedAdministrerUtstyrRoute: typeof AuthedAdministrerUtstyrRoute
   AuthedAdministrerIndexRoute: typeof AuthedAdministrerIndexRoute
@@ -1079,6 +1100,7 @@ const AuthedAdministrerRouteChildren: AuthedAdministrerRouteChildren = {
   AuthedAdministrerInvitasjonerRoute: AuthedAdministrerInvitasjonerRoute,
   AuthedAdministrerKontakterRoute: AuthedAdministrerKontakterRoute,
   AuthedAdministrerPrioritetRoute: AuthedAdministrerPrioritetRoute,
+  AuthedAdministrerSesongerRoute: AuthedAdministrerSesongerRoute,
   AuthedAdministrerUtgiftskategorierRoute:
     AuthedAdministrerUtgiftskategorierRoute,
   AuthedAdministrerUtstyrRoute: AuthedAdministrerUtstyrRoute,

@@ -18,6 +18,7 @@ import { propertyContactRouter } from "./propertyContact.ts"
 import { propertyOwnerRouter } from "./propertyOwner.ts"
 import { propertySplitPolicyRouter } from "./propertySplitPolicy.ts"
 import { roomRouter } from "./room.ts"
+import { seasonRouter } from "./season.ts"
 import { settlementRouter } from "./settlement.ts"
 import { shoppingItemRouter } from "./shoppingItem.ts"
 import { stayRouter } from "./stay.ts"
@@ -47,6 +48,7 @@ export const appRouter = router({
   propertyOwner: propertyOwnerRouter,
   propertySplitPolicy: propertySplitPolicyRouter,
   room: roomRouter,
+  season: seasonRouter,
   settlement: settlementRouter,
   shoppingItem: shoppingItemRouter,
   stay: stayRouter,

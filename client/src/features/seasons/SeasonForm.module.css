@@ -1,0 +1,30 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rangeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dayField {
+  width: 5rem;
+}
+
+.rangeDash {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.preview {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

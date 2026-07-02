@@ -1,12 +1,13 @@
 import { Temporal } from "temporal-polyfill"
 import { isoWeekMonday } from "@/utils/dateUtils"
 
-export type PeakWeek = 28 | 29 | 30
-export const PEAK_WEEKS: PeakWeek[] = [28, 29, 30]
+// The built-in fallback weeks, used when a property has no seasons
+// configured (the original hardcoded behavior).
+export const PEAK_WEEKS: number[] = [28, 29, 30]
 
 export type WeekRange = { start: Temporal.PlainDate; end: Temporal.PlainDate }
 
-export function peakWeekRange(year: number, week: PeakWeek): WeekRange {
+export function peakWeekRange(year: number, week: number): WeekRange {
   const start = isoWeekMonday(year, week)
   return { start, end: start.add({ days: 6 }) }
 }
@@ -38,26 +39,27 @@ export type PriorityAssignment = {
 }
 
 export type OwnerLookups = {
-  ownersByWeek: Map<PeakWeek, number[]>
+  ownersByWeek: Map<number, number[]>
   ownerNameById: Map<number, string>
-  // group id → its assigned ISO week (inverse of ownersByWeek). Used by readers
-  // that bucket items by group, e.g. PlannedMaintenanceSummary.
-  weekByGroup: Map<number, number>
+  // group id → its assigned ISO weeks (inverse of ownersByWeek). A group can
+  // hold one pick per season, so this is a list. Used by readers that bucket
+  // items by group, e.g. PlannedMaintenanceSummary.
+  weeksByGroup: Map<number, number[]>
 }
 
 export function buildOwnerLookups(
   eligibleOwners: readonly EligibleOwner[],
   assignments: readonly PriorityAssignment[],
 ): OwnerLookups {
-  const ownersByWeek = new Map<PeakWeek, number[]>()
-  const weekByGroup = new Map<number, number>()
+  const ownersByWeek = new Map<number, number[]>()
+  const weeksByGroup = new Map<number, number[]>()
   for (const a of assignments) {
-    weekByGroup.set(a.user_group_id, a.iso_week)
-    if (a.iso_week === 28 || a.iso_week === 29 || a.iso_week === 30) {
-      const list = ownersByWeek.get(a.iso_week) ?? []
-      list.push(a.user_group_id)
-      ownersByWeek.set(a.iso_week, list)
-    }
+    const weeks = weeksByGroup.get(a.user_group_id) ?? []
+    weeks.push(a.iso_week)
+    weeksByGroup.set(a.user_group_id, weeks)
+    const list = ownersByWeek.get(a.iso_week) ?? []
+    list.push(a.user_group_id)
+    ownersByWeek.set(a.iso_week, list)
   }
 
   const ownerNameById = new Map<number, string>()
@@ -65,5 +67,5 @@ export function buildOwnerLookups(
     ownerNameById.set(o.user_group_id, o.user_group_name)
   }
 
-  return { ownersByWeek, ownerNameById, weekByGroup }
+  return { ownersByWeek, ownerNameById, weeksByGroup }
 }

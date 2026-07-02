@@ -575,6 +575,13 @@
       "when": 1782985205074,
       "tag": "0081_high_micromax",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1783021073510,
+      "tag": "0082_gorgeous_fixer",
+      "breakpoints": true
     }
   ]
 }

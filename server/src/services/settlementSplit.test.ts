@@ -403,6 +403,48 @@ describe("computePolicySplit", () => {
     expect(sharesByGroup(result)).toEqual({ A: 100, B: 0 })
   })
 
+  it("counts every pick when a group holds one priority week per season", () => {
+    // With per-season priority weeks a group can hold several rows for the
+    // same year (e.g. summer week 28 and winter week 2); presence in ANY of
+    // them satisfies present_priority_week for that group.
+    const input = makeInput({
+      priorityWeeks: [
+        { user_group_id: 10, iso_week: 28 },
+        { user_group_id: 10, iso_week: 2 },
+      ],
+      bookings: [
+        {
+          // ISO week 2 of 2026 starts Monday 2026-01-05 — the winter pick.
+          booker_id: 1,
+          start_date: "2026-01-05",
+          end_date: "2026-01-11",
+          occupant_user_ids: [1],
+          extra_count: 0,
+        },
+        {
+          booker_id: 3,
+          start_date: "2026-08-01",
+          end_date: "2026-08-07",
+          occupant_user_ids: [3],
+          extra_count: 0,
+        },
+      ],
+      expenses: [expense(100, 3)],
+    })
+    const result = computePolicySplit(
+      config({
+        how: { kind: "equally" },
+        who: [{ kind: "all_users" }],
+        except: [],
+        when: { kind: "present_priority_week", user_group_id: 10 },
+      }),
+      input,
+      ALL,
+    )
+    // Only user 1's stay overlaps one of group 10's picks → A pays it all.
+    expect(sharesByGroup(result)).toEqual({ A: 100, B: 0 })
+  })
+
   it("filters participants by presence during any priority week", () => {
     const input = makeInput({
       priorityWeeks: [{ user_group_id: 20, iso_week: 28 }],

@@ -7,8 +7,13 @@ function seasonYear() {
 }
 
 export const YEAR = seasonYear()
-export const SEASON_MIN = `${String(YEAR)}-05-01`
-export const SEASON_MAX = `${String(YEAR)}-08-31`
+
+// Bookable window for the date pickers (and the occupancy-dot map they show):
+// stays can land in any season, so this spans from the start of the current
+// year (past stays can still be logged) through the end of next year.
+const CURRENT_YEAR = Temporal.Now.plainDateISO().year
+export const BOOKING_MIN = `${String(CURRENT_YEAR)}-01-01`
+export const BOOKING_MAX = `${String(CURRENT_YEAR + 1)}-12-31`
 
 export const BED_LABELS: Record<string, string> = {
   travel_cot: "Travel cot",
