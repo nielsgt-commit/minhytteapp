@@ -70,6 +70,10 @@
   align-items: center;
 }
 
+.dayEmphasis {
+  font-weight: var(--ds-font-weight-medium);
+}
+
 .dayCount {
   color: var(--ds-color-neutral-text-subtle);
 }
@@ -79,7 +83,66 @@
   align-items: center;
   gap: 0.35rem;
   color: var(--ds-color-neutral-text-subtle);
-  font-size: var(--ds-body-sm-font-size);
+}
+
+/* Dinner-responsible strip at the card foot. Slim padding so the kebab button
+   doesn't inflate the card in the narrow week-grid columns. */
+.dinnerBlock {
+  padding-block: var(--ds-size-1);
+  cursor: default;
+}
+
+.dinnerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-size-1);
+}
+
+.dinnerText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dinnerLabel {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* Wide enough that the pill cloud wraps without any scrollbars. */
+.dinnerMenu {
+  --dsc-popover-max-width: min(22rem, 90vw);
+}
+
+.dinnerChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-1);
+}
+
+/* Pure name-pills: hide the checkbox square inside Chip.Checkbox (the checked
+   fill comes from .ds-chip:has(input:checked), which still applies) and restore
+   the round pill radius that the checkbox variant switches off. */
+.dinnerChips :global(.ds-chip) > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dinnerChips :global(.ds-chip):has(input[type="checkbox"]) {
+  border-radius: var(--ds-border-radius-full);
+  padding-inline: var(--ds-size-3);
+}
+
+/* Names truncate instead of stretching the narrow week-grid columns; the full
+   list lives in the title attribute and the kebab menu. */
+.dinnerNames {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .guestList {
@@ -100,12 +163,15 @@
   gap: var(--ds-size-1);
 }
 
-.daySummaryWhere {
+.daySummaryBuilding {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--ds-size-2);
+}
+
+.daySummaryBuildingName {
+  color: var(--ds-color-neutral-text-subtle);
+  font-weight: var(--ds-font-weight-medium);
 }
 
 .daySummaryRoom {

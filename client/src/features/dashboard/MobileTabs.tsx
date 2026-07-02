@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Badge, Card, Divider, Heading } from "@digdir/designsystemet-react"
@@ -15,6 +15,7 @@ import { AtPropertyNow } from "@/features/dashboard/capacitysummary/userschecked
 import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
 import { RoomAvailabilityIndicator } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
+import { DinnerToday } from "@/features/dashboard/dinner/DinnerToday.tsx"
 import { PriorityWeeksPanel } from "./PriorityWeeksPanel"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { Temporal } from "temporal-polyfill"
@@ -56,13 +57,32 @@ function ShoppingBasketFab({ propertyId }: { propertyId: number }) {
   )
 }
 
+// Fired by the bottom nav's Dashboard tab; a mounted MobileTabs answers by
+// snapping the gallery back to the first ("Now") page.
+export const DASHBOARD_HOME_EVENT = "minhytte:dashboard-home"
+
 export function MobileTabs({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
+  const [homeSignal, setHomeSignal] = useState(0)
+
+  useEffect(() => {
+    const onHome = () => {
+      setHomeSignal(s => s + 1)
+    }
+    window.addEventListener(DASHBOARD_HOME_EVENT, onHome)
+    return () => {
+      window.removeEventListener(DASHBOARD_HOME_EVENT, onHome)
+    }
+  }, [])
 
   // Today, week and year are swipable full-width pages with dot pagination.
   return (
     <>
-      <CardGallery fullWidth ariaLabel={t("Dashboard pages")}>
+      <CardGallery
+        fullWidth
+        ariaLabel={t("Dashboard pages")}
+        resetSignal={homeSignal}
+      >
         <QueryBoundary>
           <MobileNowPanel propertyId={propertyId} />
         </QueryBoundary>
@@ -142,6 +162,19 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
               </Heading>
               <Divider className={styles.divider} />
               <RoomAvailabilityIndicator rooms={rooms} />
+            </Card.Block>
+          </section>
+        </Card>
+        <Card asChild>
+          <section>
+            <Card.Block className={styles.nowSection}>
+              <Heading level={3} data-size="xs">
+                {t("Dinner")}
+              </Heading>
+              <Divider className={styles.divider} />
+              <QueryBoundary fallback={<CardSkeleton lines={1} />}>
+                <DinnerToday />
+              </QueryBoundary>
             </Card.Block>
           </section>
         </Card>

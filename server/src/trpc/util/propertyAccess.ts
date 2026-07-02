@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { eq } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import type { db as dbClient } from "../../db/client.ts"
 import {
   equipmentTable,
@@ -9,16 +9,62 @@ import {
 } from "../../db/schema/maintenance.schema.ts"
 import {
   infrastructureTable,
+  propertyOwnersTable,
   roomTable,
   structuresTable,
 } from "../../db/schema/property.schema.ts"
 import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
 import { todosTable } from "../../db/schema/todo.schema.ts"
+import {
+  userGroupMembersTable,
+  userGroupsTable,
+} from "../../db/schema/users.schema.ts"
 
 type Db = typeof dbClient
 
 function notFound(message: string): TRPCError {
   return new TRPCError({ code: "NOT_FOUND", message })
+}
+
+// Unlike assertPropertyMember (which authorizes the CALLER and lets global
+// admins through), this validates an arbitrary target user by strict group
+// membership — for mutations that assign another user to a property.
+// A group counts as the property's if it is linked (user_groups.property_id)
+// OR owning (property_owners.user_group_id) — the same population
+// relevantGroupIdsForProperty/user.listForProperty expose; legacy owner
+// groups can have property_id NULL.
+export async function assertUserIsPropertyMember(
+  db: Db,
+  userId: number,
+  propertyId: number,
+): Promise<void> {
+  const link = await db
+    .select({ id: userGroupsTable.id })
+    .from(userGroupMembersTable)
+    .innerJoin(
+      userGroupsTable,
+      eq(userGroupsTable.id, userGroupMembersTable.user_group_id),
+    )
+    .leftJoin(
+      propertyOwnersTable,
+      eq(propertyOwnersTable.user_group_id, userGroupsTable.id),
+    )
+    .where(
+      and(
+        eq(userGroupMembersTable.user_id, userId),
+        or(
+          eq(userGroupsTable.property_id, propertyId),
+          eq(propertyOwnersTable.property_id, propertyId),
+        ),
+      ),
+    )
+    .limit(1)
+  if (link.length === 0) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "user is not a member of this property",
+    })
+  }
 }
 
 export async function resolvePropertyIdFromStructure(

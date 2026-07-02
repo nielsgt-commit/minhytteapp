@@ -10,6 +10,17 @@
   min-width: 12rem;
 }
 
+/* Weather + dinner share one flex cell, stacked. */
+.stackedCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-size-4);
+}
+
+.stackedCell > * {
+  flex: 1;
+}
+
 .cardStack {
   display: flex;
   flex-direction: column;

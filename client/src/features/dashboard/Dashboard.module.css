@@ -65,10 +65,11 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Weather (first) and available beds (last) span the full width; the two
-     middle sections (at property now / available parking) sit side by side. */
+  /* Weather (first), available beds and dinner (4th onward) span the full
+     width; the two middle sections (at property now / available parking) sit
+     side by side. */
   .nowCard > :first-child,
-  .nowCard > :last-child {
+  .nowCard > :nth-child(n + 4) {
     grid-column: 1 / -1;
   }
 }

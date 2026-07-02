@@ -1,6 +1,7 @@
 import { router } from "../init.ts"
 import { allowedEmailRouter } from "./allowedEmail.ts"
 import { bookingRouter } from "./booking.ts"
+import { dinnerRouter } from "./dinner.ts"
 import { equipmentRouter } from "./equipment.ts"
 import { equipmentCategoryRouter } from "./equipmentCategory.ts"
 import { eventRouter } from "./event.ts"
@@ -29,6 +30,7 @@ import { weatherRouter } from "./weather.ts"
 export const appRouter = router({
   allowedEmail: allowedEmailRouter,
   booking: bookingRouter,
+  dinner: dinnerRouter,
   equipment: equipmentRouter,
   equipmentCategory: equipmentCategoryRouter,
   event: eventRouter,

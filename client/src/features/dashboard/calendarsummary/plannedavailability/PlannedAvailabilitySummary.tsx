@@ -1,6 +1,10 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useEffect, useState, type CSSProperties } from "react"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import {
   Button,
   Card,
@@ -17,6 +21,7 @@ import { OccupancyMatrix } from "./OccupancyMatrix"
 import { roomGroupsForDay } from "./daySummaryUtils"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
 import { Temporal } from "temporal-polyfill"
 import { formatDayMonth, isoWeekNumber, isoWeekYear } from "@/utils/dateUtils"
 
@@ -41,6 +46,7 @@ export function PlannedAvailabilitySummary({
 }: Props) {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
+  const qc = useQueryClient()
   const propertyId = useSelectedPropertyId() ?? 0
   const isMobile = useIsMobile()
   const { data: bookings } = useSuspenseQuery(
@@ -63,6 +69,78 @@ export function PlannedAvailabilitySummary({
   )
   const forecastByIso = new Map(
     (weather?.days ?? []).map(d => [d.iso.toString(), d]),
+  )
+
+  const dinnerInput = {
+    property_id: propertyId,
+    start: weekStart,
+    end: weekStart.add({ days: 6 }),
+  }
+  const { data: dinnerRows } = useSuspenseQuery(
+    trpc.dinner.listForProperty.queryOptions(dinnerInput),
+  )
+  const dinnerKey = trpc.dinner.listForProperty.queryKey(dinnerInput)
+
+  // Optimistic add/remove so toggling a name in the kebab menu reflects
+  // instantly; onSuccess (in the wrapper) refetches to reconcile — including
+  // the today-panel query, which shares the dinner pathKey.
+  const setDinner = useMutationWithInvalidation(
+    trpc.dinner.set.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: dinnerKey })
+        const previous = qc.getQueryData(dinnerKey)
+        qc.setQueryData(dinnerKey, old => {
+          const rows = old ?? []
+          if (
+            rows.some(
+              r =>
+                r.user_id === vars.user_id &&
+                r.date.toString() === vars.date.toString(),
+            )
+          ) {
+            return rows
+          }
+          const nextId = rows.reduce((max, r) => Math.max(max, r.id), 0) + 1
+          return [
+            ...rows,
+            {
+              id: nextId,
+              property_id: vars.property_id,
+              user_id: vars.user_id,
+              date: vars.date,
+              created_at: Temporal.Now.instant(),
+            },
+          ]
+        })
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(dinnerKey, ctx.previous)
+      },
+    }),
+    [trpc.dinner.pathKey()],
+  )
+  const removeDinner = useMutationWithInvalidation(
+    trpc.dinner.remove.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: dinnerKey })
+        const previous = qc.getQueryData(dinnerKey)
+        qc.setQueryData(dinnerKey, old =>
+          old?.filter(
+            r =>
+              !(
+                r.user_id === vars.user_id &&
+                r.date.toString() === vars.date.toString()
+              ),
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(dinnerKey, ctx.previous)
+      },
+    }),
+    [trpc.dinner.pathKey()],
   )
 
   const days = Array.from({ length: 7 }, (_, i) => weekStart.add({ days: i }))
@@ -149,6 +227,22 @@ export function PlannedAvailabilitySummary({
   const selectedDate = selectedIndex >= 0 ? days[selectedIndex] : null
 
   const userById = new Map(users.map(u => [u.id, u]))
+
+  const dinnerUsers = users.map(u => ({ id: u.id, name: u.name }))
+  const dinnerFor = (d: Temporal.PlainDate) => {
+    const iso = d.toString()
+    return {
+      users: dinnerUsers,
+      responsibleIds: dinnerRows
+        .filter(r => r.date.toString() === iso)
+        .map(r => r.user_id),
+      onToggle: (userId: number, next: boolean) => {
+        const vars = { property_id: propertyId, date: d, user_id: userId }
+        if (next) setDinner.mutate(vars)
+        else removeDinner.mutate(vars)
+      },
+    }
+  }
 
   const todayIso = Temporal.Now.plainDateISO().toString()
 
@@ -291,6 +385,7 @@ export function PlannedAvailabilitySummary({
                     popover={usePopover}
                     buildingDividers={useRows}
                     forecast={forecastByIso.get(iso)}
+                    dinner={dinnerFor(d)}
                     onToggle={toggle}
                   />
                 )

@@ -17,6 +17,7 @@ import { Fragment, useEffect, useRef, useState } from "react"
 import type { ComponentType, SVGProps } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./BottomNavBar.module.css"
+import { DASHBOARD_HOME_EVENT } from "@/features/dashboard/MobileTabs"
 
 // Aksel icons are SVG components; we just need a callable component type
 // that accepts the standard SVG props plus an optional fontSize.
@@ -134,6 +135,16 @@ export function BottomNavBar() {
               className={`${styles.item} ${isActive ? styles.active : ""}`}
               aria-label={labels[item.label]}
               aria-current={isActive ? "page" : undefined}
+              onClick={
+                item.label === "Dashboard"
+                  ? () => {
+                      // Re-tapping Home while already on the dashboard is a
+                      // no-op navigation; tell the gallery to snap back to
+                      // its first ("Now") page instead.
+                      window.dispatchEvent(new Event(DASHBOARD_HOME_EVENT))
+                    }
+                  : undefined
+              }
             >
               <Glyph aria-hidden fontSize="1.5rem" />
               <span>{labels[item.label]}</span>

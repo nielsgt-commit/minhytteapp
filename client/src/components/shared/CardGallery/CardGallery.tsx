@@ -36,15 +36,21 @@ const TAP_SNAP_MS = 250
  * is clamped to a single page, and releasing snaps to at most one neighbour.
  * This guarantees one page per swipe — a fast flick can never coast past the
  * next page the way native `scroll-snap` momentum can.
+ *
+ * `resetSignal` lets a parent snap the gallery back to the first page from
+ * outside (e.g. re-tapping the bottom nav's Dashboard tab): every change of
+ * the value eases the gallery home.
  */
 export function CardGallery({
   children,
   ariaLabel,
   fullWidth = false,
+  resetSignal,
 }: {
   children: ReactNode
   ariaLabel: string
   fullWidth?: boolean
+  resetSignal?: number
 }) {
   const { t } = useTranslation("maintenance")
   const isMobile = useIsMobile()
@@ -150,6 +156,17 @@ export function CardGallery({
       mo.disconnect()
     }
   }, [isMobile, fullWidth, active, count])
+
+  // An external reset (changed `resetSignal`) eases the gallery back to the
+  // first page, same as tapping its dot. The initial value must not trigger a
+  // move, so only react to changes after mount.
+  const seenResetSignal = useRef(resetSignal)
+  useEffect(() => {
+    if (resetSignal === seenResetSignal.current) return
+    seenResetSignal.current = resetSignal
+    nextTransitionMs.current = TAP_SNAP_MS
+    setActive(0)
+  }, [resetSignal])
 
   // Jump to an arbitrary page (dots/arrows). The layout effect performs the
   // eased move once `active` changes.

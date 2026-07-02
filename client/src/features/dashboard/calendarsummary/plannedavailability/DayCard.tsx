@@ -1,4 +1,13 @@
-import { Badge, Card, Popover } from "@digdir/designsystemet-react"
+import {
+  Badge,
+  Card,
+  Chip,
+  Divider,
+  Paragraph,
+  Popover,
+} from "@digdir/designsystemet-react"
+import { MenuElipsisHorizontalIcon } from "@navikt/aksel-icons"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Temporal } from "temporal-polyfill"
 import { formatDayMonth } from "@/utils/dateUtils"
@@ -11,6 +20,14 @@ type Forecast = {
   min_c: number
   max_c: number
   symbol_code: string | null
+}
+
+// Everything the per-day dinner-responsible control needs; the mutation
+// plumbing stays in PlannedAvailabilitySummary so the card stays presentational.
+export type DinnerControl = {
+  users: { id: number; name: string }[]
+  responsibleIds: number[]
+  onToggle: (userId: number, next: boolean) => void
 }
 
 type WeekdayLabel = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT"
@@ -28,6 +45,7 @@ type Props = {
   popover?: boolean
   buildingDividers?: boolean
   forecast?: Forecast
+  dinner?: DinnerControl
   onToggle: () => void
 }
 
@@ -43,9 +61,11 @@ export function DayCard({
   popover = false,
   buildingDividers = false,
   forecast,
+  dinner,
   onToggle,
 }: Props) {
   const { t } = useTranslation("dashboard")
+  const [dinnerMenuOpen, setDinnerMenuOpen] = useState(false)
   const weekdayT = {
     SUN: t("SUN"),
     MON: t("MON"),
@@ -69,42 +89,120 @@ export function DayCard({
   const inner = (
     <>
       <div className={styles.dayRow}>
-        <div className={styles.dayLabel}>
+        <Paragraph className={styles.dayLabel}>
           {hasBirthday ? (
             <Badge.Position placement="top-right">
               <Badge data-color="warning" />
               <span>
-                <strong>{weekdayT[weekdayLabel]}</strong> {formatDayMonth(date)}
+                <span className={styles.dayEmphasis}>
+                  {weekdayT[weekdayLabel]}
+                </span>{" "}
+                {formatDayMonth(date)}
                 {showTodayLabel && ` · ${t("Today")}`}
               </span>
             </Badge.Position>
           ) : (
             <span>
-              <strong>{weekdayT[weekdayLabel]}</strong> {formatDayMonth(date)}
+              <span className={styles.dayEmphasis}>
+                {weekdayT[weekdayLabel]}
+              </span>{" "}
+              {formatDayMonth(date)}
               {showTodayLabel && ` · ${t("Today")}`}
             </span>
           )}
-        </div>
-        <div className={styles.dayCount}>
+        </Paragraph>
+        <Paragraph className={styles.dayCount}>
           {count > 0 ? (
-            <strong>{t("{{count}} guest", { count })}</strong>
+            <span className={styles.dayEmphasis}>
+              {t("{{count}} guest", { count })}
+            </span>
           ) : (
             <span>{t("No guests")}</span>
           )}
-        </div>
+        </Paragraph>
       </div>
       {forecast && (
-        <div className={styles.dayWeather}>
+        <Paragraph data-size="sm" className={styles.dayWeather}>
           <WeatherSymbol code={forecast.symbol_code} size={18} />
           <span>
             {Math.round(forecast.min_c)}° / {Math.round(forecast.max_c)}°
           </span>
-        </div>
+        </Paragraph>
       )}
       {isSelected && expandInline && (
-        <DaySummary groups={groups} buildingDividers={buildingDividers} />
+        <>
+          {forecast && <Divider />}
+          <DaySummary groups={groups} buildingDividers={buildingDividers} />
+        </>
       )}
     </>
+  )
+
+  const dinnerNames = dinner
+    ? dinner.users
+        .filter(u => dinner.responsibleIds.includes(u.id))
+        .map(u => u.name)
+    : []
+
+  // Own Card.Block so the checkbox dropdown never nests inside the clickable
+  // (or Popover.Trigger) block above it.
+  const dinnerBlock = dinner && (
+    <Card.Block className={styles.dinnerBlock}>
+      <div className={styles.dinnerRow}>
+        <div className={styles.dinnerText}>
+          <Paragraph data-size="sm" className={styles.dinnerLabel}>
+            {t("Dinner")}
+          </Paragraph>
+          {dinnerNames.length > 0 && (
+            <Paragraph
+              data-size="sm"
+              className={styles.dinnerNames}
+              title={dinnerNames.join(", ")}
+            >
+              {dinnerNames.join(", ")}
+            </Paragraph>
+          )}
+        </div>
+        <Popover.TriggerContext>
+          <Popover.Trigger
+            variant="tertiary"
+            data-size="sm"
+            icon
+            aria-label={t("Set dinner responsible")}
+          >
+            <MenuElipsisHorizontalIcon aria-hidden fontSize="1.25rem" />
+          </Popover.Trigger>
+          <Popover
+            placement="bottom-end"
+            data-color="neutral"
+            className={styles.dinnerMenu}
+            open={dinnerMenuOpen}
+            onOpen={() => {
+              setDinnerMenuOpen(true)
+            }}
+            onClose={() => {
+              setDinnerMenuOpen(false)
+            }}
+          >
+            <div className={styles.dinnerChips}>
+              {dinner.users.map(u => (
+                <Chip.Checkbox
+                  key={u.id}
+                  data-size="sm"
+                  data-color="accent"
+                  checked={dinner.responsibleIds.includes(u.id)}
+                  onChange={e => {
+                    dinner.onToggle(u.id, e.target.checked)
+                  }}
+                >
+                  {u.name}
+                </Chip.Checkbox>
+              ))}
+            </div>
+          </Popover>
+        </Popover.TriggerContext>
+      </div>
+    </Card.Block>
   )
 
   // Popover mode: the card itself is the trigger; Popover.Trigger injects the
@@ -121,6 +219,7 @@ export function DayCard({
                 {inner}
               </Card.Block>
             </Popover.Trigger>
+            {dinnerBlock}
             <Popover
               placement="bottom"
               data-color="neutral"
@@ -162,6 +261,7 @@ export function DayCard({
         >
           {inner}
         </Card.Block>
+        {dinnerBlock}
       </li>
     </Card>
   )
