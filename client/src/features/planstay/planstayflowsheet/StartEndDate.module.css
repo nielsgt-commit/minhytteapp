@@ -53,3 +53,58 @@
   border: 1px solid var(--ds-color-neutral-border-default);
   box-shadow: var(--ds-shadow-md);
 }
+
+/* Month header. flatpickr absolutely-positions the prev/next chevrons and the
+   month label, sized for its default 34px-tall row — but our heading-sized
+   `.flatpickr-current-month` overflows that, and `.flatpickr-month`'s
+   `overflow: hidden` then clips the label's descenders (g, j, p) behind the day
+   grid. Lay the three out as a plain centered flex row instead so the label
+   gets its full height and the chevrons align to it. Scoped to `.static` so the
+   inline range calendar's header is left as-is. */
+:global(.flatpickr-calendar.static .flatpickr-months) {
+  display: flex;
+  align-items: center;
+}
+
+:global(.flatpickr-calendar.static .flatpickr-month) {
+  height: auto;
+  overflow: visible;
+}
+
+:global(.flatpickr-calendar.static .flatpickr-current-month) {
+  position: static;
+  left: auto;
+  width: auto;
+  height: auto;
+  padding: 0.25rem 0;
+}
+
+:global(.flatpickr-calendar.static .flatpickr-prev-month),
+:global(.flatpickr-calendar.static .flatpickr-next-month) {
+  position: static;
+  height: auto;
+}
+
+/* Mobile: give each date field its own full-width row and make the calendar
+   fluid so it fills the sheet instead of flatpickr's hardcoded ~308px popup
+   (whose width is otherwise independent of the input). Mirrors the inline
+   calendar's mobile rules, scoped to the `.static` popup. */
+@media (max-width: 639px) {
+  .field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  :global(.flatpickr-calendar.static),
+  :global(.flatpickr-calendar.static .flatpickr-days),
+  :global(.flatpickr-calendar.static .flatpickr-weekdaycontainer),
+  :global(.flatpickr-calendar.static .dayContainer) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :global(.flatpickr-calendar.static .flatpickr-day) {
+    max-width: none;
+  }
+}
