@@ -52,15 +52,34 @@
   gap: var(--ds-size-4);
 }
 
-/* The "Now" tab's four sections share one Card, stacked vertically. */
+/* The "Now" tab's four sections. Stacked in a single column on the smallest
+   phones (<=375px); two columns once there's a bit more width. */
 .nowCard {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--ds-size-4);
+}
+
+@media (min-width: 376px) {
+  .nowCard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Weather (first) and available beds (last) span the full width; the two
+     middle sections (at property now / available parking) sit side by side. */
+  .nowCard > :first-child,
+  .nowCard > :last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 .nowSection {
   display: flex;
   flex-direction: column;
   gap: var(--ds-size-2);
+}
+
+/* Full-width rule under a card title; vertical rhythm comes from the section gap. */
+.divider {
+  align-self: stretch;
 }

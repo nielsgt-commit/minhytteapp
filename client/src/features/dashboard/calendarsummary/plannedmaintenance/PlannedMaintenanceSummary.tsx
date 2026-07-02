@@ -109,7 +109,7 @@ export function PlannedMaintenanceSummary({ mode, weekStart }: Props) {
 
   return (
     <>
-      <Heading level={6} data-size="sm">
+      <Heading level={6} data-size="xs">
         {t("Planned Maintenance")}
       </Heading>
       <Divider className={styles.divider} />

@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Heading, Table, Tag } from "@digdir/designsystemet-react"
+import { Divider, Heading, Table, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import {
@@ -9,6 +9,7 @@ import {
   formatRange,
   peakWeekRange,
 } from "@/routes/_authed/administrer/-priority/priorityUtils"
+import styles from "./PriorityWeeksPanel.module.css"
 
 // Read-only dashboard view of which owner group holds each peak week.
 // Editing lives under Manage property → Priority weeks.
@@ -32,6 +33,7 @@ export function PriorityWeeksPanel({ propertyId }: { propertyId: number }) {
       <Heading level={2} data-size="xs">
         {t("Priority weeks {{year}}", { year })}
       </Heading>
+      <Divider className={styles.divider} />
       <Table data-size="sm">
         <Table.Head>
           <Table.Row>
@@ -49,7 +51,7 @@ export function PriorityWeeksPanel({ propertyId }: { propertyId: number }) {
             )
             return (
               <Table.Row key={week}>
-                <Table.Cell>{t("W{{week}}", { week })}</Table.Cell>
+                <Table.Cell>{week}</Table.Cell>
                 <Table.Cell>{formatRange(range, i18n.language)}</Table.Cell>
                 <Table.Cell>
                   {names.length === 0 ? (

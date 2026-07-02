@@ -16,3 +16,8 @@
   gap: var(--ds-size-3);
   align-items: flex-start;
 }
+
+/* Full-width rule under the card title; vertical rhythm comes from the stack gap. */
+.divider {
+  align-self: stretch;
+}

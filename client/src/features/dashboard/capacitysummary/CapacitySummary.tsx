@@ -1,6 +1,6 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Card, Heading } from "@digdir/designsystemet-react"
+import { Card, Divider, Heading } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
@@ -33,6 +33,7 @@ export function CapacitySummary() {
               <Heading level={6} data-size="xs">
                 {t("Weather today")}
               </Heading>
+              <Divider className={styles.divider} />
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
                 <NowWeather />
               </QueryBoundary>
@@ -45,8 +46,9 @@ export function CapacitySummary() {
           <Card.Block>
             <div className={styles.cardStack}>
               <Heading level={6} data-size="xs">
-                {t("At property now")}
+                {t("Checked in")}
               </Heading>
+              <Divider className={styles.divider} />
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
                 <AtPropertyNow />
               </QueryBoundary>
@@ -59,8 +61,9 @@ export function CapacitySummary() {
           <Card.Block>
             <div className={styles.cardStack}>
               <Heading level={6} data-size="xs">
-                {t("Available parking")}
+                {t("Parking")}
               </Heading>
+              <Divider className={styles.divider} />
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
                 <AvailableParking />
               </QueryBoundary>
@@ -75,6 +78,7 @@ export function CapacitySummary() {
               <Heading level={6} data-size="xs">
                 {t("Available beds")}
               </Heading>
+              <Divider className={styles.divider} />
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
                 <AvailableBeds />
               </QueryBoundary>

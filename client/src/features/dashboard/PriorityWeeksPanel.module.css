@@ -1,0 +1,4 @@
+/* Rule between the panel title and the weeks table. */
+.divider {
+  margin-block: var(--ds-size-3);
+}
