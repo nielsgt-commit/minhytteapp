@@ -143,12 +143,15 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
 
   // Fullscreen-landscape mode: the whole card goes fullscreen via the
   // Fullscreen API, with a best-effort orientation lock to landscape
-  // (honored on Android phones; a lock failure elsewhere is ignored. iOS has
-  // no Fullscreen API on iPhone, so the button is hidden there via the
-  // fullscreenEnabled check).
+  // (honored on Android phones; a lock failure elsewhere is ignored).
+  // iPhone Safari has no element Fullscreen API at all, so there the button
+  // falls back to "pseudo" fullscreen: the card is pinned over the viewport
+  // with position:fixed. Orientation can't be locked either — rotating the
+  // phone is up to the user.
   const sectionRef = useRef<HTMLElement>(null)
-  const canFullscreen = document.fullscreenEnabled
+  const canNativeFullscreen = document.fullscreenEnabled
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false)
   useEffect(() => {
     const onChange = () => {
       setIsFullscreen(document.fullscreenElement === sectionRef.current)
@@ -159,7 +162,24 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     }
   }, [])
 
+  // While pseudo-fullscreen the card covers the page, but the page itself
+  // must not scroll underneath it.
+  useEffect(() => {
+    if (!isPseudoFullscreen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isPseudoFullscreen])
+
+  const fullscreenActive = isFullscreen || isPseudoFullscreen
+
   const toggleFullscreen = () => {
+    if (!canNativeFullscreen) {
+      setIsPseudoFullscreen(v => !v)
+      return
+    }
     if (document.fullscreenElement) {
       void document.exitFullscreen()
       return
@@ -384,7 +404,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     <Card asChild>
       <section
         ref={sectionRef}
-        className={styles.host}
+        className={
+          isPseudoFullscreen
+            ? `${styles.host} ${styles.hostPseudoFullscreen}`
+            : styles.host
+        }
         aria-label={t("Season overview")}
       >
         <Card.Block>
@@ -441,27 +465,25 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                 </ToggleGroup.Item>
               )}
             </ToggleGroup>
-            {canFullscreen && (
-              <Button
-                type="button"
-                variant="tertiary"
-                icon
-                data-size="sm"
-                className={styles.fullscreenButton}
-                aria-label={
-                  isFullscreen
-                    ? t("Exit fullscreen")
-                    : t("Fullscreen landscape")
-                }
-                onClick={toggleFullscreen}
-              >
-                {isFullscreen ? (
-                  <ShrinkIcon aria-hidden />
-                ) : (
-                  <ExpandIcon aria-hidden />
-                )}
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="tertiary"
+              icon
+              data-size="sm"
+              className={styles.fullscreenButton}
+              aria-label={
+                fullscreenActive
+                  ? t("Exit fullscreen")
+                  : t("Fullscreen landscape")
+              }
+              onClick={toggleFullscreen}
+            >
+              {fullscreenActive ? (
+                <ShrinkIcon aria-hidden />
+              ) : (
+                <ExpandIcon aria-hidden />
+              )}
+            </Button>
           </div>
           <div className={styles.chart}>
             {/* Adjacent month before the window, parked in the left gutter. */}

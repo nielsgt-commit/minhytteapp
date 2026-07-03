@@ -9,6 +9,19 @@
   overflow: auto;
 }
 
+/* Fallback for browsers without the Fullscreen API (iPhone Safari): pin the
+   card over the whole viewport instead. Above the bottom nav bar (100) and
+   the selection toast (101). dvh tracks Safari's collapsing toolbars. */
+.hostPseudoFullscreen {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  z-index: 102;
+  background: var(--ds-color-neutral-background-default);
+  overflow: auto;
+  border-radius: 0;
+}
+
 /* Landscape-fullscreen toggle: visible at every viewport width. The TSX
    still drops it on browsers without the Fullscreen API (iPhone Safari). */
 .fullscreenButton {
