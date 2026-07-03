@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import {
   Button,
   Card,
@@ -7,7 +7,12 @@ import {
   Tag,
   ToggleGroup,
 } from "@digdir/designsystemet-react"
-import { ChevronLeftIcon, ChevronRightIcon } from "@navikt/aksel-icons"
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExpandIcon,
+  ShrinkIcon,
+} from "@navikt/aksel-icons"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
@@ -134,6 +139,45 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     const index = models.indexOf(active)
     const next = models[(index + delta + models.length) % models.length]
     setSelectedKey(next.key)
+  }
+
+  // Fullscreen-landscape mode for phones: the whole card goes fullscreen via
+  // the Fullscreen API, with a best-effort orientation lock to landscape
+  // (honored on Android; iOS has no Fullscreen API on iPhone, so the button
+  // is hidden there via the fullscreenEnabled check).
+  const sectionRef = useRef<HTMLElement>(null)
+  const canFullscreen = document.fullscreenEnabled
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  useEffect(() => {
+    const onChange = () => {
+      setIsFullscreen(document.fullscreenElement === sectionRef.current)
+    }
+    document.addEventListener("fullscreenchange", onChange)
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange)
+    }
+  }, [])
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen()
+      return
+    }
+    const el = sectionRef.current
+    if (!el) return
+    void el
+      .requestFullscreen()
+      .then(() => {
+        // TS 5.1+ dropped ScreenOrientation.lock from lib.dom (Safari never
+        // shipped it), so reach for it through an optional-member cast.
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (orientation: string) => Promise<void>
+        }
+        return orientation.lock?.("landscape")
+      })
+      // The lock (or fullscreen itself) failing just leaves the current
+      // orientation — nothing to surface.
+      .catch(() => undefined)
   }
 
   const [mode, setMode] = useState<FocusMode>("season")
@@ -337,7 +381,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
 
   return (
     <Card asChild>
-      <section aria-label={t("Season overview")}>
+      <section
+        ref={sectionRef}
+        className={styles.host}
+        aria-label={t("Season overview")}
+      >
         <Card.Block>
           {/* Toolbar: season chevrons top-left (hidden with a single season)
               step through the configured seasons; the zoom toggle top-right
@@ -392,6 +440,27 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                 </ToggleGroup.Item>
               )}
             </ToggleGroup>
+            {canFullscreen && (
+              <Button
+                type="button"
+                variant="tertiary"
+                icon
+                data-size="sm"
+                className={styles.fullscreenButton}
+                aria-label={
+                  isFullscreen
+                    ? t("Exit fullscreen")
+                    : t("Fullscreen landscape")
+                }
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? (
+                  <ShrinkIcon aria-hidden />
+                ) : (
+                  <ExpandIcon aria-hidden />
+                )}
+              </Button>
+            )}
           </div>
           <div className={styles.chart}>
             {/* Adjacent month before the window, parked in the left gutter. */}

@@ -1,6 +1,31 @@
 /* Border, radius, background and padding now come from the Digdir Card /
    Card.Block. Internal headroom above the dividers is handled by .chart. */
 
+/* The card's <section>, fullscreened by the landscape toggle. Fullscreen
+   elements sit on a black backdrop by default, so paint the app background
+   and let a chart taller than the (landscape) viewport scroll. */
+.host:fullscreen {
+  background: var(--ds-color-neutral-background-default);
+  overflow: auto;
+}
+
+/* Landscape-fullscreen toggle: phones only — wider screens already show the
+   chart comfortably. While fullscreen it must stay visible regardless of the
+   (now landscape, hence wider) viewport, so the exit button isn't lost. */
+.fullscreenButton {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .fullscreenButton {
+    display: inline-flex;
+  }
+}
+
+.host:fullscreen .fullscreenButton {
+  display: inline-flex;
+}
+
 /* Focus toggle row: pushes the segmented control to the top-right corner of
    the panel, above the chart. */
 .toolbar {
