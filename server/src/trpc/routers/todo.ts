@@ -1,8 +1,8 @@
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
-import { todosTable } from "../../db/schema/todo.schema.ts"
+import { todoAssigneesTable, todosTable } from "../../db/schema/todo.schema.ts"
 import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
 import {
   assertPropertyMember,
@@ -11,6 +11,7 @@ import {
   router,
 } from "../init.ts"
 import {
+  assertUserIsPropertyMember,
   resolvePropertyIdFromEquipment,
   resolvePropertyIdFromInfrastructure,
   resolvePropertyIdFromStructure,
@@ -92,7 +93,25 @@ export const todoRouter = router({
       .from(todosTable)
       .where(eq(todosTable.property_id, input.property_id))
       .orderBy(desc(todosTable.created_at), desc(todosTable.id))
-    return rows.map(toWireTodo)
+    const assigneeRows = await ctx.db
+      .select({
+        todo_id: todoAssigneesTable.todo_id,
+        user_id: todoAssigneesTable.user_id,
+      })
+      .from(todoAssigneesTable)
+      .innerJoin(todosTable, eq(todosTable.id, todoAssigneesTable.todo_id))
+      .where(eq(todosTable.property_id, input.property_id))
+      .orderBy(todoAssigneesTable.id)
+    const assigneesByTodo = new Map<number, number[]>()
+    for (const a of assigneeRows) {
+      const list = assigneesByTodo.get(a.todo_id)
+      if (list) list.push(a.user_id)
+      else assigneesByTodo.set(a.todo_id, [a.user_id])
+    }
+    return rows.map(row => ({
+      ...toWireTodo(row),
+      assignee_ids: assigneesByTodo.get(row.id) ?? [],
+    }))
   }),
 
   create: propertyAdminProcedure
@@ -158,6 +177,63 @@ export const todoRouter = router({
         .where(eq(todosTable.id, input.id))
         .returning()
       return toWireTodo(updated)
+    }),
+
+  setAssignee: propertyAdminProcedure
+    .input(
+      z.object({
+        property_id: z.number().int().positive(),
+        id: z.number().int().positive(),
+        user_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolvePropertyIdFromTodo(
+        ctx.db,
+        input.id,
+      )
+      if (existingPropertyId !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "todo does not belong to this property",
+        })
+      }
+      await assertUserIsPropertyMember(ctx.db, input.user_id, input.property_id)
+      await ctx.db
+        .insert(todoAssigneesTable)
+        .values({ todo_id: input.id, user_id: input.user_id })
+        .onConflictDoNothing()
+      return { ok: true as const }
+    }),
+
+  removeAssignee: propertyAdminProcedure
+    .input(
+      z.object({
+        property_id: z.number().int().positive(),
+        id: z.number().int().positive(),
+        user_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolvePropertyIdFromTodo(
+        ctx.db,
+        input.id,
+      )
+      if (existingPropertyId !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "todo does not belong to this property",
+        })
+      }
+      await ctx.db
+        .delete(todoAssigneesTable)
+        .where(
+          and(
+            eq(todoAssigneesTable.todo_id, input.id),
+            eq(todoAssigneesTable.user_id, input.user_id),
+          ),
+        )
+      return { ok: true as const }
     }),
 
   delete: protectedProcedure

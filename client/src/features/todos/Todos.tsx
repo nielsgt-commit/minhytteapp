@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Chip,
   Dropdown,
   List,
   Paragraph,
@@ -151,6 +152,12 @@ export function Todos() {
       { enabled },
     ),
   )
+  const { data: users } = useQuery(
+    trpc.user.listForProperty.queryOptions(
+      { property_id: propertyId },
+      { enabled },
+    ),
+  )
 
   // A "Move to…" lands the item in the maintenance views, so invalidate both.
   const invalidationKeys = [trpc.todo.pathKey(), trpc.maintenance.pathKey()]
@@ -179,6 +186,7 @@ export function Todos() {
                 done: false,
                 created_at: Temporal.Now.instant(),
                 created_by: null,
+                assignee_ids: [],
               },
               ...(old ?? []),
             ]
@@ -232,6 +240,51 @@ export function Todos() {
     }),
     [trpc.todo.pathKey()],
   )
+  const assignMutation = useMutationWithInvalidation(
+    trpc.todo.setAssignee.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old =>
+          old?.map(td =>
+            td.id === vars.id && !td.assignee_ids.includes(vars.user_id)
+              ? { ...td, assignee_ids: [...td.assignee_ids, vars.user_id] }
+              : td,
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
+    [trpc.todo.pathKey()],
+  )
+  const unassignMutation = useMutationWithInvalidation(
+    trpc.todo.removeAssignee.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old =>
+          old?.map(td =>
+            td.id === vars.id
+              ? {
+                  ...td,
+                  assignee_ids: td.assignee_ids.filter(
+                    id => id !== vars.user_id,
+                  ),
+                }
+              : td,
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
+    [trpc.todo.pathKey()],
+  )
   const moveMutation = useMutationWithInvalidation(
     trpc.todo.moveToMaintenance.mutationOptions({
       // The todo leaves this list and becomes a maintenance task.
@@ -252,6 +305,8 @@ export function Todos() {
     createMutation,
     updateMutation,
     deleteMutation,
+    assignMutation,
+    unassignMutation,
     moveMutation,
   )
 
@@ -259,8 +314,14 @@ export function Todos() {
   const infrastructureRows = infrastructure ?? []
   const equipmentRows = equipment ?? []
 
+  const userRows = users ?? []
+  const userById = new Map(userRows.map(u => [u.id, u.name]))
+
   // Which row (if any) has its inline "Move to…" picker open.
   const [movingId, setMovingId] = useState<number | null>(null)
+
+  // Which row (if any) has its inline "Assign to…" chip picker open.
+  const [assigningId, setAssigningId] = useState<number | null>(null)
 
   // Which row (if any) has its delete button armed for confirmation.
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
@@ -310,6 +371,13 @@ export function Todos() {
     if (!description) return
     updateMutation.mutate({ property_id: selectedPropertyId, id, description })
     setEditingId(null)
+  }
+
+  const toggleAssignee = (todoId: number, userId: number, next: boolean) => {
+    if (selectedPropertyId == null) return
+    const vars = { property_id: selectedPropertyId, id: todoId, user_id: userId }
+    if (next) assignMutation.mutate(vars)
+    else unassignMutation.mutate(vars)
   }
 
   const handleMove = (id: number, token: string) => {
@@ -395,14 +463,24 @@ export function Todos() {
                           toggleDone(todo)
                         }}
                       />
-                      <Paragraph
-                        className={`${styles.description} ${
-                          todo.done ? styles.done : ""
-                        }`}
-                        data-size="sm"
-                      >
-                        {todo.description}
-                      </Paragraph>
+                      <div className={styles.textCol}>
+                        <Paragraph
+                          className={`${styles.description} ${
+                            todo.done ? styles.done : ""
+                          }`}
+                          data-size="sm"
+                        >
+                          {todo.description}
+                        </Paragraph>
+                        {todo.assignee_ids.length > 0 && (
+                          <Paragraph className={styles.assignees} data-size="sm">
+                            {todo.assignee_ids
+                              .map(id => userById.get(id))
+                              .filter((n): n is string => n != null)
+                              .join(", ")}
+                          </Paragraph>
+                        )}
+                      </div>
                       <div className={styles.actions}>
                         {confirmingDeleteId === todo.id ? (
                           <>
@@ -424,6 +502,37 @@ export function Todos() {
                               }}
                             >
                               {t("Confirm delete")}
+                            </Button>
+                          </>
+                        ) : assigningId === todo.id ? (
+                          <>
+                            <div className={styles.assignChips}>
+                              {userRows.map(u => (
+                                <Chip.Checkbox
+                                  key={u.id}
+                                  data-size="sm"
+                                  data-color="accent"
+                                  checked={todo.assignee_ids.includes(u.id)}
+                                  onChange={e => {
+                                    toggleAssignee(
+                                      todo.id,
+                                      u.id,
+                                      e.target.checked,
+                                    )
+                                  }}
+                                >
+                                  {u.name}
+                                </Chip.Checkbox>
+                              ))}
+                            </div>
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setAssigningId(null)
+                              }}
+                            >
+                              {t("Close")}
                             </Button>
                           </>
                         ) : movingId === todo.id ? (
@@ -484,6 +593,16 @@ export function Todos() {
                                   <Dropdown.Button
                                     onClick={() => {
                                       setMenuOpenId(null)
+                                      setAssigningId(todo.id)
+                                    }}
+                                  >
+                                    {t("Assign to...")}
+                                  </Dropdown.Button>
+                                </Dropdown.Item>
+                                <Dropdown.Item>
+                                  <Dropdown.Button
+                                    onClick={() => {
+                                      setMenuOpenId(null)
                                       setMovingId(todo.id)
                                     }}
                                   >
@@ -514,6 +633,15 @@ export function Todos() {
                               }}
                             >
                               {t("Edit")}
+                            </Button>
+                            <Button
+                              variant="tertiary"
+                              data-size="sm"
+                              onClick={() => {
+                                setAssigningId(todo.id)
+                              }}
+                            >
+                              {t("Assign to...")}
                             </Button>
                             <Button
                               variant="tertiary"
