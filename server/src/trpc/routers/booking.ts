@@ -449,6 +449,9 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
         booking_id: bookingOccupantsTable.booking_id,
         user_id: bookingOccupantsTable.user_id,
         user_name: usersTable.name,
+        // Children aren't family-group members; their primary parent's id lets
+        // the client color a child's stay with the parent's group.
+        parent_user_id: usersTable.parent_user_id,
         room_id: bookingOccupantsTable.room_id,
         queued: bookingOccupantsTable.queued,
         sleeps_separately: bookingOccupantsTable.sleeps_separately,

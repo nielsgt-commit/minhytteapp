@@ -6,7 +6,11 @@ type DotBooking = {
   status: string
   start_date: Temporal.PlainDate
   end_date: Temporal.PlainDate
-  occupants: { user_id: number; queued: boolean }[]
+  occupants: {
+    user_id: number
+    parent_user_id: number | null
+    queued: boolean
+  }[]
 }
 
 type DotGroup = {
@@ -39,9 +43,17 @@ export function buildOccupantDots(
     if (b.status === "cancelled") continue
     if (opts?.excludeBookingId != null && b.id === opts.excludeBookingId)
       continue
+    // Children aren't family-group members themselves — they inherit their
+    // parent's group.
     const occGroups = b.occupants
       .filter(o => !o.queued)
-      .map(o => familyGroupByUser.get(o.user_id) ?? 0)
+      .map(
+        o =>
+          familyGroupByUser.get(o.user_id) ??
+          (o.parent_user_id != null
+            ? (familyGroupByUser.get(o.parent_user_id) ?? 0)
+            : 0),
+      )
     if (occGroups.length === 0) continue
 
     const startIso = b.start_date.toString()

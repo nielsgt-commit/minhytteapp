@@ -184,6 +184,17 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
   }, [userGroups])
 
   const lanes = useMemo<Lane[]>(() => {
+    // Children aren't family-group members themselves — they inherit their
+    // parent's group.
+    const groupForOccupant = (o: {
+      user_id: number
+      parent_user_id: number | null
+    }): number =>
+      familyGroupByUser.get(o.user_id) ??
+      (o.parent_user_id != null
+        ? (familyGroupByUser.get(o.parent_user_id) ?? 0)
+        : 0)
+
     const byUser = new Map<number, Lane>()
     for (const b of bookings) {
       if (b.status === "cancelled") continue
@@ -199,7 +210,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
           lane = {
             userId: o.user_id,
             name: o.user_name ?? `#${String(o.user_id)}`,
-            groupId: familyGroupByUser.get(o.user_id) ?? 0,
+            groupId: groupForOccupant(o),
             bars: [],
           }
           byUser.set(o.user_id, lane)

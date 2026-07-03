@@ -5,6 +5,15 @@ import { BOOKING_MAX, BOOKING_MIN } from "./constants.ts"
 
 const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
+const occ = (
+  user_id: number,
+  over?: { queued?: boolean; parent_user_id?: number },
+) => ({
+  user_id,
+  parent_user_id: over?.parent_user_id ?? null,
+  queued: over?.queued ?? false,
+})
+
 // All dates kept inside the bookable window so they aren't clamped.
 const groups = [
   { id: 7, is_family: true, members: [{ user_id: 1 }, { user_id: 2 }] },
@@ -33,11 +42,7 @@ describe("buildOccupantDots", () => {
         booking({
           start_date: pd("2026-07-10"),
           end_date: pd("2026-07-11"),
-          occupants: [
-            { user_id: 1, queued: false },
-            { user_id: 2, queued: false },
-            { user_id: 3, queued: false },
-          ],
+          occupants: [occ(1), occ(2), occ(3)],
         }),
       ],
       groups,
@@ -51,15 +56,12 @@ describe("buildOccupantDots", () => {
     const dots = buildOccupantDots(
       [
         booking({
-          occupants: [
-            { user_id: 1, queued: false },
-            { user_id: 2, queued: true },
-          ],
+          occupants: [occ(1), occ(2, { queued: true })],
         }),
         booking({
           id: 2,
           status: "cancelled",
-          occupants: [{ user_id: 3, queued: false }],
+          occupants: [occ(3)],
         }),
       ],
       groups,
@@ -68,18 +70,32 @@ describe("buildOccupantDots", () => {
   })
 
   test("occupant without a family group is 0", () => {
+    const dots = buildOccupantDots([booking({ occupants: [occ(4)] })], groups)
+    expect(dots.get("2026-07-10")).toEqual([0])
+  })
+
+  test("a child inherits their parent's family group", () => {
     const dots = buildOccupantDots(
-      [booking({ occupants: [{ user_id: 4, queued: false }] })],
+      [
+        booking({
+          occupants: [
+            // Child of user 3 (group 9); children aren't group members.
+            occ(50, { parent_user_id: 3 }),
+            // Child of user 4, whose only group is non-family → 0.
+            occ(51, { parent_user_id: 4 }),
+          ],
+        }),
+      ],
       groups,
     )
-    expect(dots.get("2026-07-10")).toEqual([0])
+    expect(dots.get("2026-07-10")).toEqual([9, 0])
   })
 
   test("excludeBookingId drops that booking", () => {
     const dots = buildOccupantDots(
       [
-        booking({ id: 5, occupants: [{ user_id: 1, queued: false }] }),
-        booking({ id: 6, occupants: [{ user_id: 3, queued: false }] }),
+        booking({ id: 5, occupants: [occ(1)] }),
+        booking({ id: 6, occupants: [occ(3)] }),
       ],
       groups,
       { excludeBookingId: 5 },
@@ -95,7 +111,7 @@ describe("buildOccupantDots", () => {
         booking({
           start_date: min.subtract({ days: 30 }),
           end_date: max.add({ days: 30 }),
-          occupants: [{ user_id: 1, queued: false }],
+          occupants: [occ(1)],
         }),
       ],
       groups,
