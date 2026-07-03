@@ -141,10 +141,11 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     setSelectedKey(next.key)
   }
 
-  // Fullscreen-landscape mode for phones: the whole card goes fullscreen via
-  // the Fullscreen API, with a best-effort orientation lock to landscape
-  // (honored on Android; iOS has no Fullscreen API on iPhone, so the button
-  // is hidden there via the fullscreenEnabled check).
+  // Fullscreen-landscape mode: the whole card goes fullscreen via the
+  // Fullscreen API, with a best-effort orientation lock to landscape
+  // (honored on Android phones; a lock failure elsewhere is ignored. iOS has
+  // no Fullscreen API on iPhone, so the button is hidden there via the
+  // fullscreenEnabled check).
   const sectionRef = useRef<HTMLElement>(null)
   const canFullscreen = document.fullscreenEnabled
   const [isFullscreen, setIsFullscreen] = useState(false)

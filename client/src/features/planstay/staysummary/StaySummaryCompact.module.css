@@ -9,20 +9,9 @@
   overflow: auto;
 }
 
-/* Landscape-fullscreen toggle: phones only — wider screens already show the
-   chart comfortably. While fullscreen it must stay visible regardless of the
-   (now landscape, hence wider) viewport, so the exit button isn't lost. */
+/* Landscape-fullscreen toggle: visible at every viewport width. The TSX
+   still drops it on browsers without the Fullscreen API (iPhone Safari). */
 .fullscreenButton {
-  display: none;
-}
-
-@media (max-width: 639px) {
-  .fullscreenButton {
-    display: inline-flex;
-  }
-}
-
-.host:fullscreen .fullscreenButton {
   display: inline-flex;
 }
 
