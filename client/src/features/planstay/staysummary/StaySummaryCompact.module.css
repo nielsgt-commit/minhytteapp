@@ -27,9 +27,11 @@
 }
 
 /* Focus toggle row: pushes the segmented control to the top-right corner of
-   the panel, above the chart. */
+   the panel, above the chart. Wraps on the narrowest screens, where season
+   chevrons + name + toggle + fullscreen button can't share one row. */
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
