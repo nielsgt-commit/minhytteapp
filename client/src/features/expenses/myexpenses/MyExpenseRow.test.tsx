@@ -6,7 +6,10 @@ import { MyExpenseRow } from "./MyExpenseRow.tsx"
 import type { ExpenseRow } from "../types.ts"
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en" },
+  }),
 }))
 
 function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
@@ -22,6 +25,7 @@ function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     maintenance_id: null,
     settlement_id: null,
     date: Temporal.PlainDate.from("2026-01-15"),
+    receipt_date: Temporal.PlainDate.from("2026-01-15"),
     status: "submitted",
     receipt_url: null,
     expense_types: ["food", "gas"],
@@ -35,6 +39,8 @@ describe("MyExpenseRow", () => {
       <MyExpenseRow
         expense={makeExpense()}
         deletePending={false}
+        receiptDatePending={false}
+        onReceiptDateChange={() => {}}
         onEdit={() => {}}
         onDelete={() => {}}
       />,
@@ -47,6 +53,8 @@ describe("MyExpenseRow", () => {
       <MyExpenseRow
         expense={makeExpense({ expense_types: [] })}
         deletePending={false}
+        receiptDatePending={false}
+        onReceiptDateChange={() => {}}
         onEdit={() => {}}
         onDelete={() => {}}
       />,
@@ -59,6 +67,8 @@ describe("MyExpenseRow", () => {
       <MyExpenseRow
         expense={makeExpense({ amount: 123, status: "draft" })}
         deletePending={false}
+        receiptDatePending={false}
+        onReceiptDateChange={() => {}}
         onEdit={() => {}}
         onDelete={() => {}}
       />,
@@ -75,6 +85,8 @@ describe("MyExpenseRow", () => {
       <MyExpenseRow
         expense={makeExpense()}
         deletePending={false}
+        receiptDatePending={false}
+        onReceiptDateChange={() => {}}
         onEdit={onEdit}
         onDelete={onDelete}
       />,
@@ -90,6 +102,8 @@ describe("MyExpenseRow", () => {
       <MyExpenseRow
         expense={makeExpense()}
         deletePending={true}
+        receiptDatePending={false}
+        onReceiptDateChange={() => {}}
         onEdit={() => {}}
         onDelete={() => {}}
       />,

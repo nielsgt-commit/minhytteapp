@@ -71,22 +71,21 @@
   gap: 0.5rem;
 }
 
-.dialogImage {
-  width: 100%;
-  height: 24rem;
-}
-
 @media (max-width: 640px) {
   .row {
     grid-template-columns: auto auto auto;
     grid-template-areas:
-      "category   .       receipt"
+      "category   .       ."
       "submitter  .       name"
       "sumLabel   .       amount"
+      "receipt    receipt receipt"
       "divider    divider divider"
       "actions    actions actions";
     row-gap: 0.5rem;
     column-gap: 0.5rem;
+  }
+  .receipt {
+    justify-self: start;
   }
   .category {
     justify-self: start;

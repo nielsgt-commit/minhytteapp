@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import { DraftList } from "./DraftList.tsx"
 import type { ExpenseDraft } from "./useExpenseDrafts.ts"
 
@@ -8,9 +9,11 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
+const receiptDate = Temporal.PlainDate.from("2026-07-01")
+
 const drafts: ExpenseDraft[] = [
-  { id: "a", category: "food", amount: 100 },
-  { id: "b", category: "gas", amount: 50 },
+  { id: "a", category: "food", amount: 100, receipt_date: receiptDate },
+  { id: "b", category: "gas", amount: 50, receipt_date: receiptDate },
 ]
 
 describe("DraftList", () => {

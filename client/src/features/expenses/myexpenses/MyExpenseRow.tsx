@@ -1,12 +1,16 @@
 import { Button, Divider, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import styles from "./MyExpenses.module.css"
 import { STATUS_COLOR } from "../expenseStatus.ts"
 import type { ExpenseRow } from "../types.ts"
+import { ReceiptDateButton } from "@/components/shared/ReceiptDateButton"
 
 type Props = {
   expense: ExpenseRow
   deletePending: boolean
+  receiptDatePending: boolean
+  onReceiptDateChange: (next: Temporal.PlainDate) => void
   onEdit: () => void
   onDelete: () => void
 }
@@ -14,6 +18,8 @@ type Props = {
 export function MyExpenseRow({
   expense,
   deletePending,
+  receiptDatePending,
+  onReceiptDateChange,
   onEdit,
   onDelete,
 }: Props) {
@@ -38,6 +44,13 @@ export function MyExpenseRow({
       >
         {expense.status}
       </Tag>
+      <span className={styles.receipt}>
+        <ReceiptDateButton
+          value={expense.receipt_date}
+          onChange={onReceiptDateChange}
+          disabled={receiptDatePending || deletePending}
+        />
+      </span>
       <Paragraph className={styles.sumLabel} data-size="sm">
         {t("Sum")}
       </Paragraph>

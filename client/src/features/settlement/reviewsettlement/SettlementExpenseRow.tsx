@@ -1,15 +1,12 @@
 import {
   Card,
-  Dialog,
   Divider,
-  Heading,
   Paragraph,
-  Skeleton,
   Switch,
   Tag,
 } from "@digdir/designsystemet-react"
-import { ReceiptIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import styles from "./SettlementExpenseRow.module.css"
 import { EditExpenseDialog } from "./EditExpenseDialog"
 import type { ExpenseRow } from "./useReviewSettlementData"
@@ -17,6 +14,7 @@ import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { useToggleState } from "@/hooks/useToggleState"
+import { ReceiptDateButton } from "@/components/shared/ReceiptDateButton"
 
 type Props = {
   expense: ExpenseRow
@@ -33,6 +31,7 @@ const basePayload = (e: ExpenseRow) => ({
   booking_id: e.booking_id ?? undefined,
   maintenance_id: e.maintenance_id ?? undefined,
   date: e.date,
+  receipt_date: e.receipt_date,
   status: e.status,
   receipt_url: e.receipt_url,
   expense_types: e.expense_types,
@@ -69,6 +68,14 @@ export function SettlementExpenseRow({
     })
   }
 
+  const changeReceiptDate = (next: Temporal.PlainDate) => {
+    updateExpense.mutate({
+      ...basePayload(expense),
+      settlement_id: expense.settlement_id ?? undefined,
+      receipt_date: next,
+    })
+  }
+
   const submitCategory = async (fd: FormData) => {
     const raw = fd.get("category")
     const trimmed = (typeof raw === "string" ? raw : "").trim()
@@ -93,31 +100,11 @@ export function SettlementExpenseRow({
             </span>
           </Paragraph>
           <span className={styles.receipt}>
-            {expense.receipt_url && (
-              <Dialog.TriggerContext>
-                <Dialog.Trigger
-                  variant="tertiary"
-                  data-size="sm"
-                  icon
-                  aria-label={t("View receipt")}
-                >
-                  <ReceiptIcon aria-hidden fontSize="1.25rem" />
-                </Dialog.Trigger>
-                <Dialog>
-                  <Dialog.Block>
-                    <Heading level={3} data-size="xs">
-                      {t("Receipt")}
-                    </Heading>
-                  </Dialog.Block>
-                  <Dialog.Block>
-                    <Skeleton
-                      className={styles.dialogImage}
-                      variant="rectangle"
-                    />
-                  </Dialog.Block>
-                </Dialog>
-              </Dialog.TriggerContext>
-            )}
+            <ReceiptDateButton
+              value={expense.receipt_date}
+              onChange={changeReceiptDate}
+              disabled={!editable || updateExpense.isPending}
+            />
           </span>
           <Paragraph className={styles.sumLabel} data-size="sm">
             {t("Sum")}

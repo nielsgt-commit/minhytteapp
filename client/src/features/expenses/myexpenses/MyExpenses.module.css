@@ -13,11 +13,17 @@
 
 .row {
   display: grid;
-  grid-template-columns: auto auto auto 1fr auto auto auto;
-  grid-template-areas: "category statusLabel statusTag . sumLabel amount actions";
+  grid-template-columns: auto auto auto 1fr auto auto auto auto;
+  grid-template-areas: "category statusLabel statusTag . receipt sumLabel amount actions";
   align-items: baseline;
   gap: 1rem;
   justify-content: space-between;
+}
+
+.receipt {
+  grid-area: receipt;
+  display: inline-flex;
+  align-self: center;
 }
 
 .category {
@@ -76,10 +82,14 @@
       "category    .       ."
       "statusLabel .       statusTag"
       "sumLabel    .       amount"
+      "receipt     receipt receipt"
       "divider     divider divider"
       "actions     actions actions";
     row-gap: 0.5rem;
     column-gap: 0.5rem;
+  }
+  .receipt {
+    justify-self: start;
   }
   .category {
     justify-self: start;

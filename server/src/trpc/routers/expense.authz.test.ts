@@ -4,6 +4,7 @@ import {
   propertyOwnersTable,
   propertyTable,
 } from "../../db/schema/property.schema.ts"
+import { settlementsTable } from "../../db/schema/settlement.schema.ts"
 import {
   userGroupMembersTable,
   userGroupsTable,
@@ -198,6 +199,83 @@ describe("expense review authz", () => {
           id: created.id,
           property_id: prop.id,
           amount: 500,
+          date: aDate,
+          status: "submitted",
+        }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" })
+      await expect(
+        memberCaller.expense.delete({ id: created.id }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" })
+    })
+  })
+})
+
+// Once the open settlement is past collecting, submitted expenses are locked —
+// except for heads during the reviewing phase, who toggle their own submitted
+// expenses in and out of the settlement from the review screen.
+describe("expense settlement lock", () => {
+  async function seedReviewingSettlement(tx: Tx, propertyId: number) {
+    const [settlement] = await tx
+      .insert(settlementsTable)
+      .values({
+        property_id: propertyId,
+        year: 2026,
+        status: "open",
+        phase: "reviewing",
+        split_policy: "occupancy_days",
+      })
+      .returning()
+    return settlement
+  }
+
+  it("lets a head toggle their submitted expense's settlement link while reviewing", async () => {
+    await withRollback(async tx => {
+      const { prop, head } = await seed(tx)
+      const settlement = await seedReviewingSettlement(tx, prop.id)
+      const headCaller = createCaller(ctxFor(tx, authUser(head)))
+      const created = await headCaller.expense.create({
+        property_id: prop.id,
+        amount: 700,
+        date: aDate,
+        status: "submitted",
+      })
+      const linked = await headCaller.expense.update({
+        id: created.id,
+        property_id: prop.id,
+        amount: 700,
+        date: aDate,
+        status: "submitted",
+        settlement_id: settlement.id,
+      })
+      expect(linked.settlement_id).toBe(settlement.id)
+      const unlinked = await headCaller.expense.update({
+        id: created.id,
+        property_id: prop.id,
+        amount: 700,
+        date: aDate,
+        status: "submitted",
+        settlement_id: null,
+      })
+      expect(unlinked.settlement_id).toBeNull()
+    })
+  })
+
+  it("still blocks a non-head member from touching submitted expenses while reviewing", async () => {
+    await withRollback(async tx => {
+      const { prop, member } = await seed(tx)
+      const memberCaller = createCaller(ctxFor(tx, authUser(member)))
+      const created = await memberCaller.expense.create({
+        property_id: prop.id,
+        amount: 500,
+        date: aDate,
+        status: "submitted",
+      })
+      await seedReviewingSettlement(tx, prop.id)
+      await expect(
+        memberCaller.expense.update({
+          id: created.id,
+          property_id: prop.id,
+          amount: 600,
           date: aDate,
           status: "submitted",
         }),

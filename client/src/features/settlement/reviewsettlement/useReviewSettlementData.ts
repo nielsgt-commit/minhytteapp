@@ -19,6 +19,7 @@ export type ExpenseRow = {
   maintenance_id: number | null
   settlement_id: number | null
   date: Temporal.PlainDate
+  receipt_date: Temporal.PlainDate
   status: Status
   receipt_url: string | null
   expense_types: ExpenseType[]

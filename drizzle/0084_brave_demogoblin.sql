@@ -1,0 +1,1 @@
+ALTER TABLE "expenses" ADD COLUMN "receipt_date" date DEFAULT CURRENT_DATE NOT NULL;

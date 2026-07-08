@@ -17,6 +17,7 @@ const baseExpense: ExpenseRow = {
   maintenance_id: null,
   settlement_id: null,
   date: pd("2026-01-15"),
+  receipt_date: pd("2026-01-16"),
   status: "submitted",
   receipt_url: null,
   expense_types: ["food"],
@@ -32,6 +33,7 @@ describe("basePayload", () => {
       booking_id: undefined,
       maintenance_id: undefined,
       date: pd("2026-01-15"),
+      receipt_date: pd("2026-01-16"),
       receipt_url: null,
       expense_types: ["food"],
     })

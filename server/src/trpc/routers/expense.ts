@@ -13,25 +13,38 @@ import {
   plainDateToDbString,
   zPlainDate,
 } from "../../shared/temporal.ts"
+import type { AuthUser } from "../context.ts"
 import {
   assertPropertyHead,
   assertPropertyMember,
+  isPropertyHead,
   propertyAdminProcedure,
   protectedProcedure,
   router,
 } from "../init.ts"
 
-// Wire mapping: the `date` column is a "YYYY-MM-DD" string in drizzle —
-// convert to Temporal.PlainDate before returning rows.
-function toWireExpense<T extends { date: string }>(
+// Wire mapping: the `date`/`receipt_date` columns are "YYYY-MM-DD" strings in
+// drizzle — convert to Temporal.PlainDate before returning rows.
+function toWireExpense<T extends { date: string; receipt_date: string }>(
   e: T,
-): Omit<T, "date"> & { date: Temporal.PlainDate } {
-  return { ...e, date: plainDateFromDb(e.date) }
+): Omit<T, "date" | "receipt_date"> & {
+  date: Temporal.PlainDate
+  receipt_date: Temporal.PlainDate
+} {
+  return {
+    ...e,
+    date: plainDateFromDb(e.date),
+    receipt_date: plainDateFromDb(e.receipt_date),
+  }
 }
 
 type Db = typeof dbClient
 
-async function assertExpensesUnlocked(db: Db, propertyId: number) {
+async function assertExpensesUnlocked(
+  db: Db,
+  user: AuthUser,
+  propertyId: number,
+) {
   const open = (
     await db
       .select({ phase: settlementsTable.phase })
@@ -44,13 +57,21 @@ async function assertExpensesUnlocked(db: Db, propertyId: number) {
       )
       .limit(1)
   ).at(0)
-  if (open && open.phase !== "collecting_expenses") {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message:
-        "expenses are locked: the open settlement is past the collecting phase",
-    })
+  if (!open || open.phase === "collecting_expenses") return
+  // During the review phase the heads adjudicate the pot — including pulling
+  // their own still-submitted expenses in or out of the settlement — so the
+  // collecting lock steps aside for heads there.
+  if (
+    open.phase === "reviewing" &&
+    (await isPropertyHead(db, user, propertyId))
+  ) {
+    return
   }
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message:
+      "expenses are locked: the open settlement is past the collecting phase",
+  })
 }
 
 // reimbursed/rejected are the "review" outcomes — approving or rejecting a
@@ -71,6 +92,9 @@ const expenseFields = {
   maintenance_id: z.number().int().positive().optional(),
   settlement_id: z.number().int().positive().nullish(),
   date: zPlainDate,
+  // Optional: the DB defaults it to today when omitted on create, and an
+  // update that leaves it out keeps the stored value.
+  receipt_date: zPlainDate.optional(),
   status: z.enum(["draft", "submitted", "reimbursed", "rejected"]),
   receipt_url: z.url().optional().nullable(),
   expense_types: z.array(z.string().min(1).max(64)).default([]),
@@ -109,6 +133,7 @@ const expenseColumns = {
   maintenance_id: expensesTable.maintenance_id,
   settlement_id: expensesTable.settlement_id,
   date: expensesTable.date,
+  receipt_date: expensesTable.receipt_date,
   status: expensesTable.status,
   receipt_url: expensesTable.receipt_url,
   expense_types: expensesTable.expense_types,
@@ -132,7 +157,7 @@ export const expenseRouter = router({
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       if (input.status === "submitted") {
-        await assertExpensesUnlocked(ctx.db, input.property_id)
+        await assertExpensesUnlocked(ctx.db, ctx.user, input.property_id)
       }
       if (isReviewStatus(input.status)) {
         await assertPropertyHead(ctx.db, ctx.user, input.property_id)
@@ -142,6 +167,9 @@ export const expenseRouter = router({
         .values({
           ...input,
           date: plainDateToDbString(input.date),
+          receipt_date: input.receipt_date
+            ? plainDateToDbString(input.receipt_date)
+            : undefined,
           payer_id: ctx.user.id,
         })
         .returning()
@@ -176,12 +204,18 @@ export const expenseRouter = router({
         await assertPropertyHead(ctx.db, ctx.user, input.property_id)
       }
       if (input.status === "submitted") {
-        await assertExpensesUnlocked(ctx.db, input.property_id)
+        await assertExpensesUnlocked(ctx.db, ctx.user, input.property_id)
       }
       const { id, property_id: _propertyId, ...rest } = input
       const [updated] = await ctx.db
         .update(expensesTable)
-        .set({ ...rest, date: plainDateToDbString(rest.date) })
+        .set({
+          ...rest,
+          date: plainDateToDbString(rest.date),
+          receipt_date: rest.receipt_date
+            ? plainDateToDbString(rest.receipt_date)
+            : undefined,
+        })
         .where(eq(expensesTable.id, id))
         .returning()
       return toWireExpense(updated)
@@ -212,7 +246,7 @@ export const expenseRouter = router({
         await assertPropertyHead(ctx.db, ctx.user, existing.property_id)
       }
       if (existing.status === "submitted" && existing.property_id != null) {
-        await assertExpensesUnlocked(ctx.db, existing.property_id)
+        await assertExpensesUnlocked(ctx.db, ctx.user, existing.property_id)
       }
       const deleted = (
         await ctx.db

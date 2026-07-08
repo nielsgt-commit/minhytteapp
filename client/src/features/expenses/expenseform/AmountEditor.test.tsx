@@ -1,14 +1,19 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, test, vi } from "vitest"
+import { Temporal } from "temporal-polyfill"
 import { renderWithProviders } from "@/test-utils/renderWithProviders.tsx"
 import { AmountEditor } from "./AmountEditor.tsx"
+
+const receiptDate = Temporal.PlainDate.from("2026-07-01")
 
 describe("AmountEditor", () => {
   test("uses the category name in the amount label", async () => {
     await renderWithProviders(
       <AmountEditor
         category="food"
+        receiptDate={receiptDate}
+        onReceiptDateChange={() => {}}
         amount=""
         onAmountChange={() => {}}
         onAdd={() => {}}
@@ -25,6 +30,8 @@ describe("AmountEditor", () => {
     await renderWithProviders(
       <AmountEditor
         category="food"
+        receiptDate={receiptDate}
+        onReceiptDateChange={() => {}}
         amount=""
         onAmountChange={onAmountChange}
         onAdd={() => {}}
@@ -42,6 +49,8 @@ describe("AmountEditor", () => {
     await renderWithProviders(
       <AmountEditor
         category="food"
+        receiptDate={receiptDate}
+        onReceiptDateChange={() => {}}
         amount="10"
         onAmountChange={() => {}}
         onAdd={onAdd}
@@ -62,6 +71,8 @@ describe("AmountEditor", () => {
     await renderWithProviders(
       <AmountEditor
         category="food"
+        receiptDate={receiptDate}
+        onReceiptDateChange={() => {}}
         amount="10"
         onAmountChange={() => {}}
         onAdd={onAdd}
@@ -79,6 +90,8 @@ describe("AmountEditor", () => {
     await renderWithProviders(
       <AmountEditor
         category="food"
+        receiptDate={receiptDate}
+        onReceiptDateChange={() => {}}
         amount="10"
         onAmountChange={() => {}}
         onAdd={() => {}}
@@ -88,9 +101,8 @@ describe("AmountEditor", () => {
     )
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Remove" })).toBeDisabled()
     expect(
-      screen.getByRole("button", { name: "Upload receipt" }),
+      screen.getByRole("button", { name: /Date on receipt/ }),
     ).toBeDisabled()
   })
 })

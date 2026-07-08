@@ -38,7 +38,7 @@ export function AddNewExpenseFlow({
       parsedAmount <= 0
     )
       return
-    drafts.add(editor.openCategory, Math.floor(parsedAmount))
+    drafts.add(editor.openCategory, Math.floor(parsedAmount), editor.receiptDate)
     editor.close()
   }
 
@@ -78,7 +78,9 @@ export function AddNewExpenseFlow({
               <AmountEditor
                 category={editor.openCategory}
                 amount={editor.amount}
+                receiptDate={editor.receiptDate}
                 onAmountChange={editor.setAmount}
+                onReceiptDateChange={editor.setReceiptDate}
                 onAdd={addDraft}
                 onCancel={editor.close}
                 pending={pending}

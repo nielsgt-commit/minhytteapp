@@ -110,6 +110,9 @@ export const expensesTable = pgTable(
       () => settlementsTable.id,
     ),
     date: date("date", { mode: "string" }).notNull(),
+    receipt_date: date("receipt_date", { mode: "string" })
+      .notNull()
+      .default(sql`CURRENT_DATE`),
     status: varchar("status", {
       length: 11,
       enum: ["draft", "submitted", "reimbursed", "rejected"],

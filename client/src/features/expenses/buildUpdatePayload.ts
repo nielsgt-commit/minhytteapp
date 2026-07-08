@@ -14,6 +14,7 @@ export function basePayload(e: ExpenseRow, fallbackPropertyId: number) {
     booking_id: e.booking_id ?? undefined,
     maintenance_id: e.maintenance_id ?? undefined,
     date: e.date,
+    receipt_date: e.receipt_date,
     receipt_url: e.receipt_url,
     expense_types: e.expense_types,
   }
@@ -23,6 +24,7 @@ type UpdateOverrides = {
   description?: string
   amount?: number
   date?: Temporal.PlainDate
+  receipt_date?: Temporal.PlainDate
   status: Status
   reimbursed_by_id?: number
   settlement_id?: number | null
@@ -50,6 +52,7 @@ export function toUpdateInput(
         ? overrides.settlement_id
         : (e.settlement_id ?? undefined),
     date: overrides.date ?? e.date,
+    receipt_date: overrides.receipt_date ?? e.receipt_date,
     status: overrides.status,
     receipt_url: e.receipt_url,
     expense_types: e.expense_types,

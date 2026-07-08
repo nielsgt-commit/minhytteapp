@@ -14,6 +14,7 @@ import {
   usersTable,
 } from "../db/schema/users.schema.ts"
 import type { SplitPolicyConfig } from "../shared/splitPolicy.ts"
+import { Temporal } from "../shared/temporal.ts"
 import type { AuthUser, Context } from "./context.ts"
 import { createCallerFactory } from "./init.ts"
 import { appRouter } from "./routers/_app.ts"
@@ -150,6 +151,38 @@ describe("policy-driven phase gating", () => {
         to: "collecting_expenses",
       })
       expect(regressed.phase).toBe("collecting_expenses")
+    })
+  })
+
+  it("links heads' submitted expenses to the settlement when entering review", async () => {
+    await withRollback(async tx => {
+      const { prop, head, settlement } = await seed(tx, OWNERSHIP_ONLY_CONFIG)
+      const caller = createCaller(ctxFor(tx, authUser(head)))
+      const aDate = Temporal.PlainDate.from("2026-05-01")
+      const submitted = await caller.expense.create({
+        property_id: prop.id,
+        amount: 300,
+        date: aDate,
+        status: "submitted",
+      })
+      const draft = await caller.expense.create({
+        property_id: prop.id,
+        amount: 200,
+        date: aDate,
+        status: "draft",
+      })
+      await caller.settlement.advancePhase({
+        id: settlement.id,
+        from: "collecting_expenses",
+        to: "reviewing",
+      })
+      const expenses = await caller.expense.listForProperty({
+        property_id: prop.id,
+      })
+      expect(expenses.find(e => e.id === submitted.id)?.settlement_id).toBe(
+        settlement.id,
+      )
+      expect(expenses.find(e => e.id === draft.id)?.settlement_id).toBeNull()
     })
   })
 

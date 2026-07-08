@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, or } from "drizzle-orm"
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
@@ -1162,6 +1162,27 @@ export const settlementRouter = router({
           code: "CONFLICT",
           message: "settlement phase changed concurrently",
         })
+      }
+      // Entering review pulls the heads' still-submitted expenses into the pot
+      // by default, so the review screen's Include switch starts on. A head can
+      // still exclude any of them there (which nulls the link again).
+      if (input.to === "reviewing") {
+        const headIds = (await listSettlementHeads(ctx.db, propertyId)).map(
+          h => h.user_id,
+        )
+        if (headIds.length > 0) {
+          await ctx.db
+            .update(expensesTable)
+            .set({ settlement_id: input.id })
+            .where(
+              and(
+                eq(expensesTable.property_id, propertyId),
+                eq(expensesTable.status, "submitted"),
+                inArray(expensesTable.payer_id, headIds),
+                isNull(expensesTable.settlement_id),
+              ),
+            )
+        }
       }
       return toWireSettlement(updated)
     }),

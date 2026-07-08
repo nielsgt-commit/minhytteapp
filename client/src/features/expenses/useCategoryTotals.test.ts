@@ -16,6 +16,7 @@ function makeExpense(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     maintenance_id: null,
     settlement_id: null,
     date: Temporal.PlainDate.from("2026-01-01"),
+    receipt_date: Temporal.PlainDate.from("2026-01-01"),
     status: "submitted",
     receipt_url: null,
     expense_types: [],

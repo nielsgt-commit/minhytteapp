@@ -36,6 +36,7 @@ export function ExpenseForm() {
         amount: d.amount,
         receipt_url: null,
         date,
+        receipt_date: d.receipt_date,
         status: "submitted",
         expense_types: [d.category],
       })

@@ -589,6 +589,20 @@
       "when": 1783061200622,
       "tag": "0083_abandoned_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1783538728304,
+      "tag": "0084_brave_demogoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1783538745803,
+      "tag": "0085_backfill_receipt_date",
+      "breakpoints": true
     }
   ]
 }

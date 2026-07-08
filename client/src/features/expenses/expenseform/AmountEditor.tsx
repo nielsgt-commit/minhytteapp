@@ -1,12 +1,15 @@
 import { Button, Textfield } from "@digdir/designsystemet-react"
-import { FolderIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
+import type { Temporal } from "temporal-polyfill"
 import styles from "./AddNewExpenseFlow.module.css"
+import { ReceiptDateButton } from "@/components/shared/ReceiptDateButton"
 
 type Props = {
   category: string
   amount: string
+  receiptDate: Temporal.PlainDate
   onAmountChange: (value: string) => void
+  onReceiptDateChange: (next: Temporal.PlainDate) => void
   onAdd: () => void
   onCancel: () => void
   pending: boolean
@@ -15,7 +18,9 @@ type Props = {
 export function AmountEditor({
   category,
   amount,
+  receiptDate,
   onAmountChange,
+  onReceiptDateChange,
   onAdd,
   onCancel,
   pending,
@@ -41,18 +46,11 @@ export function AmountEditor({
         autoFocus
       />
       <div className={styles.editorActions}>
-        <FolderIcon aria-hidden fontSize="1.25rem" />
-        <Button
-          type="button"
-          variant="tertiary"
-          data-color="danger"
+        <ReceiptDateButton
+          value={receiptDate}
+          onChange={onReceiptDateChange}
           disabled={pending}
-        >
-          {t("Remove")}
-        </Button>
-        <Button type="button" variant="tertiary" disabled={pending}>
-          {t("Upload receipt")}
-        </Button>
+        />
       </div>
       <div className={styles.editorButtons}>
         <Button
