@@ -4,7 +4,7 @@ import {
 } from "@/selection/useSelection"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Button, Field, Heading, Label } from "@digdir/designsystemet-react"
+import { Button, Field, Label } from "@digdir/designsystemet-react"
 import type { PortableTextBlock } from "@portabletext/types"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
@@ -361,10 +361,6 @@ function InspectionFlowForm(props: {
 
   return (
     <form action={handleSubmit} className={styles.wrap}>
-      <Heading level={4} data-size="xs">
-        {t("Inspect {{name}}", { name: scope.name })}
-      </Heading>
-
       <MetadataSection
         value={cadence}
         owners={owners}

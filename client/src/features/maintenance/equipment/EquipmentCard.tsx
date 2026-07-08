@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next"
 import {
   ClipboardCheckmarkIcon,
   ClockDashedIcon,
+  ImageIcon,
   MenuElipsisVerticalIcon,
 } from "@navikt/aksel-icons"
 import styles from "./Equipment.module.css"
@@ -18,13 +19,8 @@ import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/Equipmen
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
 import { MaintenanceTodos } from "@/features/maintenance/maintenancecard/MaintenanceTodos.tsx"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
+import { BottomSheet } from "@/components/shared/BottomSheet"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
-
-export type ModalState =
-  | { kind: "none" }
-  | { kind: "inspecting"; id: number }
-  | { kind: "history"; id: number }
-  | { kind: "todos"; id: number }
 
 type EquipmentItem = {
   id: number
@@ -38,25 +34,18 @@ type EquipmentItem = {
 export function EquipmentCard(props: {
   item: EquipmentItem
   historyEntries: readonly EquipmentHistoryEntryData[]
-  modalState: ModalState
-  setModalState: (next: ModalState) => void
 }) {
   const { t } = useTranslation("maintenance")
   const isMobile = useIsMobile()
+  const [sheet, setSheet] = useState<
+    "none" | "todos" | "history" | "inspection"
+  >("none")
   const [menuOpen, setMenuOpen] = useState(false)
-  const { item, historyEntries, modalState, setModalState } = props
+  const { item, historyEntries } = props
 
-  const isInspecting =
-    modalState.kind === "inspecting" && modalState.id === item.id
-  const isHistoryOpen =
-    modalState.kind === "history" && modalState.id === item.id
-  const isTodosOpen = modalState.kind === "todos" && modalState.id === item.id
-
-  const historyLabel = isMobile
-    ? t("History")
-    : isHistoryOpen
-      ? t("Hide history")
-      : t("Show history")
+  const closeSheet = () => {
+    setSheet("none")
+  }
 
   const nameGroup = (
     <div className={styles.nameGroup}>
@@ -81,29 +70,25 @@ export function EquipmentCard(props: {
     </div>
   )
 
-  const historyToggle = (
+  const historyButton = (
     <Button
       variant="tertiary"
       data-size="sm"
       onClick={() => {
-        setModalState(
-          isHistoryOpen ? { kind: "none" } : { kind: "history", id: item.id },
-        )
+        setSheet("history")
       }}
     >
       <ClockDashedIcon aria-hidden fontSize="1.25rem" />
-      {historyLabel}
+      {t("History")}
     </Button>
   )
 
-  const todosToggle = (
+  const todosButton = (
     <Button
       variant="tertiary"
       data-size="sm"
       onClick={() => {
-        setModalState(
-          isTodosOpen ? { kind: "none" } : { kind: "todos", id: item.id },
-        )
+        setSheet("todos")
       }}
     >
       <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
@@ -138,11 +123,7 @@ export function EquipmentCard(props: {
             <Dropdown.Button
               className={styles.menuItem}
               onClick={() => {
-                setModalState(
-                  isTodosOpen
-                    ? { kind: "none" }
-                    : { kind: "todos", id: item.id },
-                )
+                setSheet("todos")
                 setMenuOpen(false)
               }}
             >
@@ -154,11 +135,7 @@ export function EquipmentCard(props: {
             <Dropdown.Button
               className={styles.menuItem}
               onClick={() => {
-                setModalState(
-                  isHistoryOpen
-                    ? { kind: "none" }
-                    : { kind: "history", id: item.id },
-                )
+                setSheet("history")
                 setMenuOpen(false)
               }}
             >
@@ -177,88 +154,80 @@ export function EquipmentCard(props: {
       variant="secondary"
       data-size="sm"
       onClick={() => {
-        setModalState({ kind: "inspecting", id: item.id })
+        setSheet("inspection")
       }}
     >
       {t("Start inspection")}
     </Button>
   )
 
-  const historyBlock = isHistoryOpen && !isInspecting && (
-    <Card.Block>
-      {historyEntries.length === 0 ? (
-        <EmptyState title={t("No history yet.")} />
-      ) : (
-        <div className={styles.list}>
-          {historyEntries.map(entry => {
-            const key =
-              entry.kind === "inspection"
-                ? `i-${String(entry.i.id)}`
-                : `m-${String(entry.m.id)}`
-            return <EquipmentHistoryEntry key={key} entry={entry} />
-          })}
-        </div>
-      )}
-    </Card.Block>
-  )
-
-  const todosBlock = isTodosOpen && !isInspecting && (
-    <Card.Block>
-      <MaintenanceTodos
-        scope={{ kind: "equipment", id: item.id, name: item.name }}
-      />
-    </Card.Block>
-  )
-
-  const inspectionBlock = isInspecting && (
-    <Card.Block>
-      <InspectionFlow
-        scope={{
-          kind: "equipment",
-          id: item.id,
-          name: item.name,
-        }}
-        open={isInspecting}
-        onClose={() => {
-          setModalState({ kind: "none" })
-        }}
-      />
-    </Card.Block>
-  )
-
-  if (isMobile) {
-    return (
-      <Card asChild>
-        <article>
-          <Card.Block className={styles.topRow} data-size="sm">
-            {nameGroup}
-            {!isInspecting && kebabMenu}
-          </Card.Block>
-          {!isInspecting && (
-            <Card.Block className={styles.inspectRow} data-size="sm">
-              {inspectButton}
-            </Card.Block>
-          )}
-          {historyBlock}
-          {todosBlock}
-          {inspectionBlock}
-        </article>
-      </Card>
-    )
-  }
-
   return (
     <Card asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
           {nameGroup}
-          {!isInspecting && historyToggle}
-          {!isInspecting && todosToggle}
-          {!isInspecting && inspectButton}
+          {isMobile ? (
+            kebabMenu
+          ) : (
+            <>
+              {historyButton}
+              {todosButton}
+              {inspectButton}
+            </>
+          )}
         </Card.Block>
-        {historyBlock}
-        {todosBlock}
-        {inspectionBlock}
+        {/* Placeholder slot for a future image/thumbnail of the equipment. */}
+        <Card.Block className={styles.imageRow} data-size="sm">
+          <ImageIcon aria-hidden fontSize="1.25rem" />
+        </Card.Block>
+        {isMobile && (
+          <Card.Block className={styles.inspectRow} data-size="sm">
+            {inspectButton}
+          </Card.Block>
+        )}
+        <BottomSheet
+          open={sheet === "todos"}
+          onClose={closeSheet}
+          title={t("Todos for {{name}}", { name: item.name })}
+        >
+          <MaintenanceTodos
+            scope={{ kind: "equipment", id: item.id, name: item.name }}
+          />
+        </BottomSheet>
+        <BottomSheet
+          open={sheet === "history"}
+          onClose={closeSheet}
+          title={t("History for {{name}}", { name: item.name })}
+        >
+          {historyEntries.length === 0 ? (
+            <EmptyState title={t("No history yet.")} />
+          ) : (
+            <div className={styles.list}>
+              {historyEntries.map(entry => {
+                const key =
+                  entry.kind === "inspection"
+                    ? `i-${String(entry.i.id)}`
+                    : `m-${String(entry.m.id)}`
+                return <EquipmentHistoryEntry key={key} entry={entry} />
+              })}
+            </div>
+          )}
+        </BottomSheet>
+        <BottomSheet
+          open={sheet === "inspection"}
+          onClose={closeSheet}
+          title={t("Inspect {{name}}", { name: item.name })}
+        >
+          <InspectionFlow
+            scope={{
+              kind: "equipment",
+              id: item.id,
+              name: item.name,
+            }}
+            open={sheet === "inspection"}
+            onClose={closeSheet}
+          />
+        </BottomSheet>
       </article>
     </Card>
   )

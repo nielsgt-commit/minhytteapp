@@ -24,31 +24,27 @@
 }
 
 /* The name group is multi-line (name + brand/model + year + category), so align
-   the kebab to the top instead of centering it against the whole group — that
-   keeps it on the heading's row. */
-.topRow {
+   the buttons/kebab to the top instead of centering them against the whole
+   group — that keeps them on the heading's row. */
+.row {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 0.5rem;
 }
 
 /* These rows lay out horizontally with `gap`, but @digdir's card styles add a
    top margin to every non-first child of a Card.Block (`>*+*`), which would
    push the trailing items off the heading's row. Reset it. */
-.topRow > *,
 .row > * {
   margin-block: 0;
 }
 
-/* Desktop: name group, toggles, then inspection button pushed to the far right. */
-.row {
+/* Placeholder row marking where the image/thumbnail will later go. */
+.imageRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-.row .inspect {
-  margin-left: auto;
+  justify-content: center;
+  color: var(--ds-color-neutral-text-subtle);
 }
 
 .nameGroup {
@@ -56,6 +52,8 @@
   flex-direction: column;
   gap: 0.1rem;
   min-width: 0;
+  /* Keep the name group left while the action buttons/kebab sit right. */
+  margin-inline-end: auto;
 }
 .name {
   margin: 0;

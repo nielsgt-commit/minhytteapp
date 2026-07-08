@@ -8,7 +8,6 @@ import styles from "./Equipment.module.css"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
-import type { ModalState } from "@/features/maintenance/equipment/EquipmentCard.tsx"
 import { EquipmentCard } from "@/features/maintenance/equipment/EquipmentCard.tsx"
 import { CardGallery } from "@/components/shared/CardGallery/CardGallery.tsx"
 
@@ -36,7 +35,6 @@ export function Equipment() {
     ),
   )
 
-  const [modalState, setModalState] = useState<ModalState>({ kind: "none" })
   const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set())
 
   if (selectedPropertyId == null) {
@@ -132,8 +130,6 @@ export function Equipment() {
                 key={item.id}
                 item={item}
                 historyEntries={historyEntries}
-                modalState={modalState}
-                setModalState={setModalState}
               />
             )
           })}

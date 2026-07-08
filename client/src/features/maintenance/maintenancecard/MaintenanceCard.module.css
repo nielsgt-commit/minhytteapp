@@ -7,8 +7,7 @@
 /* These rows lay out horizontally with `gap`, but @digdir's card styles add a
    top margin to every non-first child of a Card.Block (`>*+*`). In a centered
    flex row that asymmetric margin shifts the trailing items down, so reset it. */
-.row > *,
-.mobileTopRow > * {
+.row > * {
   margin-block: 0;
 }
 
@@ -18,6 +17,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Keep the heading left while the action buttons/kebab sit right. */
+  margin-inline-end: auto;
+}
+
+/* Placeholder row marking where the image/thumbnail will later go. */
+.imageRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-color-neutral-text-subtle);
 }
 
 /* Push the inspection button to the far right of the row. */
@@ -25,30 +34,15 @@
   margin-left: auto;
 }
 
-/* Mobile layout (rendered via useIsMobile, see MaintenanceCard.tsx) */
-.mobileTopRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.nameTag {
-  /* Keep a long structure name from pushing the toggles off-row. */
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mobileInspectRow {
+/* Full-width inspect button row (mobile only, see MaintenanceCard.tsx) */
+.inspectRow {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
 }
 
-.mobileInspectRow .inspect {
+.inspectRow .inspect {
   width: 100%;
   margin-left: 0;
 }
