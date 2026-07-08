@@ -34,6 +34,7 @@ export const stayRouter = router({
       .selectDistinct({
         user_id: usersTable.id,
         name: usersTable.name,
+        building_name: structuresTable.name,
       })
       .from(bookingTable)
       .innerJoin(
@@ -41,6 +42,11 @@ export const stayRouter = router({
         eq(bookingOccupantsTable.booking_id, bookingTable.id),
       )
       .innerJoin(usersTable, eq(usersTable.id, bookingOccupantsTable.user_id))
+      .leftJoin(roomTable, eq(roomTable.id, bookingOccupantsTable.room_id))
+      .leftJoin(
+        structuresTable,
+        eq(structuresTable.id, roomTable.structure_id),
+      )
       .where(
         and(
           eq(bookingTable.property_id, input.property_id),
@@ -66,15 +72,27 @@ export const stayRouter = router({
 
     const byId = new Map<
       number,
-      { user_id: number; name: string; via: "booking" | "stay" | "both" }
+      {
+        user_id: number
+        name: string
+        building_name: string | null
+        via: "booking" | "stay" | "both"
+      }
     >()
     for (const u of bookingOccupants) {
-      byId.set(u.user_id, { ...u, via: "booking" })
+      // A guest can appear once per booking row; keep a known building over null.
+      const existing = byId.get(u.user_id)
+      byId.set(u.user_id, {
+        ...u,
+        building_name: u.building_name ?? existing?.building_name ?? null,
+        via: "booking",
+      })
     }
     for (const u of stayOccupants) {
       const existing = byId.get(u.user_id)
       byId.set(u.user_id, {
         ...u,
+        building_name: existing?.building_name ?? null,
         via: existing ? "both" : "stay",
       })
     }

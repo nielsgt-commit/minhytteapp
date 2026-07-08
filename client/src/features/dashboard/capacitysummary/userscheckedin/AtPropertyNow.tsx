@@ -1,17 +1,10 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import {
-  Avatar,
-  EXPERIMENTAL_AvatarStack as AvatarStack,
-  Tooltip,
-} from "@digdir/designsystemet-react"
+import { Avatar, Tooltip } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./AtPropertyNow.module.css"
-
-const VISIBLE_LIMIT = 4
 
 function initials(name: string) {
   return name
@@ -29,81 +22,27 @@ export function AtPropertyNow() {
   const { data: guests } = useSuspenseQuery(
     trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
   )
-  const [expanded, setExpanded] = useState(false)
 
   if (guests.length === 0)
     return <EmptyState title={t("No one at the property right now.")} />
 
-  const canTruncate = guests.length > VISIBLE_LIMIT
-  const collapsed = canTruncate && !expanded
-  const hiddenCount = collapsed ? guests.length - VISIBLE_LIMIT : 0
-  const toggle = () => {
-    setExpanded(e => !e)
-  }
-
-  if (collapsed) {
-    return (
-      <AvatarStack
-        aria-label={t("At property now")}
-        overlap={8}
-        suffix={`+${String(hiddenCount)}`}
-        onClick={toggle}
-        onKeyDown={e => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            toggle()
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-expanded={false}
-        className={`${styles.stack} ${styles.clickable}`}
-      >
-        {guests.slice(0, VISIBLE_LIMIT).map(g => (
-          <Tooltip key={g.user_id} content={g.name}>
-            <Avatar aria-label={g.name} data-initials={initials(g.name)} />
-          </Tooltip>
-        ))}
-      </AvatarStack>
-    )
-  }
-
-  if (canTruncate) {
-    return (
-      <div
-        aria-label={t("At property now")}
-        role="button"
-        tabIndex={0}
-        aria-expanded
-        onClick={toggle}
-        onKeyDown={e => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            toggle()
-          }
-        }}
-        className={styles.expandedList}
-      >
-        {guests.map(g => (
-          <Tooltip key={g.user_id} content={g.name}>
-            <Avatar aria-label={g.name} data-initials={initials(g.name)} />
-          </Tooltip>
-        ))}
-      </div>
-    )
-  }
-
   return (
-    <AvatarStack
-      aria-label={t("At property now")}
-      overlap={8}
-      className={styles.stack}
-    >
-      {guests.map(g => (
-        <Tooltip key={g.user_id} content={g.name}>
-          <Avatar aria-label={g.name} data-initials={initials(g.name)} />
-        </Tooltip>
-      ))}
-    </AvatarStack>
+    <div role="group" aria-label={t("At property now")} className={styles.list}>
+      {guests.map(g => {
+        const label = g.building_name
+          ? `${g.name} · ${g.building_name}`
+          : g.name
+        return (
+          <Tooltip key={g.user_id} content={label}>
+            {/* tabIndex lets a tap/click focus the avatar, which opens the tooltip. */}
+            <Avatar
+              aria-label={label}
+              data-initials={initials(g.name)}
+              tabIndex={0}
+            />
+          </Tooltip>
+        )
+      })}
+    </div>
   )
 }
