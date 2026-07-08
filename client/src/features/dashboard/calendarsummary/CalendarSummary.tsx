@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { PlannedAvailabilitySummary } from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
 import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { useSuspenseQuery } from "@tanstack/react-query"
@@ -25,12 +25,22 @@ export function CalendarSummary() {
   const [weekStart, setWeekStart] = useState(() =>
     startOfSunday(Temporal.Now.plainDateISO()),
   )
+  // Transition so week navigation keeps the current week on screen while the
+  // new week's suspense queries load, instead of dropping to the skeleton.
+  const [isPending, startTransition] = useTransition()
+  const changeWeek = (d: Temporal.PlainDate) => {
+    startTransition(() => {
+      setWeekStart(d)
+    })
+  }
   const resetWeek = () => {
-    setWeekStart(startOfSunday(Temporal.Now.plainDateISO()))
+    changeWeek(startOfSunday(Temporal.Now.plainDateISO()))
   }
 
   return (
-    <section className={styles.summarySection}>
+    <section
+      className={`${styles.summarySection}${isPending ? ` ${styles.pending}` : ""}`}
+    >
       <Heading onClick={resetWeek} className={styles.heading}>
         {t("This week at {{propertyName}}", { propertyName })}
       </Heading>
@@ -40,7 +50,7 @@ export function CalendarSummary() {
             <QueryBoundary>
               <PlannedAvailabilitySummary
                 weekStart={weekStart}
-                onWeekStartChange={setWeekStart}
+                onWeekStartChange={changeWeek}
               />
             </QueryBoundary>
           </Card.Block>

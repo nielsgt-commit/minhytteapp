@@ -90,6 +90,21 @@ export function PlannedAvailabilitySummary({
   )
   const dinnerKey = trpc.dinner.listForProperty.queryKey(dinnerInput)
 
+  // Warm the adjacent weeks' dinner queries so chevron navigation resolves
+  // from cache instead of suspending the whole card.
+  useEffect(() => {
+    for (const delta of [-7, 7]) {
+      const start = weekStart.add({ days: delta })
+      void qc.prefetchQuery(
+        trpc.dinner.listForProperty.queryOptions({
+          property_id: propertyId,
+          start,
+          end: start.add({ days: 6 }),
+        }),
+      )
+    }
+  }, [qc, trpc, propertyId, weekStart])
+
   // Optimistic add/remove so toggling a name in the kebab menu reflects
   // instantly; onSuccess (in the wrapper) refetches to reconcile — including
   // the today-panel query, which shares the dinner pathKey.
