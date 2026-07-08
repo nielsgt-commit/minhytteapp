@@ -89,7 +89,9 @@ describe("ReviewExpenseCard", () => {
         onReject={onReject}
       />,
     )
-    await user.click(screen.getByRole("button", { name: "Reimburse" }))
+    await user.click(
+      screen.getByRole("button", { name: "Approve and mark as reimbursed" }),
+    )
     await user.click(screen.getByRole("button", { name: "Reject" }))
     expect(onReimburse).toHaveBeenCalledWith(expense)
     expect(onReject).toHaveBeenCalledWith(expense)
@@ -104,7 +106,9 @@ describe("ReviewExpenseCard", () => {
         onReject={() => {}}
       />,
     )
-    expect(screen.getByRole("button", { name: "Reimburse" })).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Approve and mark as reimbursed" }),
+    ).toBeDisabled()
     expect(screen.getByRole("button", { name: "Reject" })).toBeDisabled()
   })
 })

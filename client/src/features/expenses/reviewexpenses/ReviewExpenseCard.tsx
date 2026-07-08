@@ -90,7 +90,7 @@ export function ReviewExpenseCard({
                 onReimburse(expense)
               }}
             >
-              {t("Reimburse")}
+              {t("Approve and mark as reimbursed")}
             </Button>
             <Button
               variant="tertiary"
