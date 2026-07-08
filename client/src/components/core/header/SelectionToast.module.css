@@ -12,7 +12,7 @@
 /* Lift above the fixed BottomNavBar (~56px + paddings), which shows ≤900px. */
 @media (max-width: 900px) {
   .toast {
-    inset-block-end: calc(64px + 2rem + env(safe-area-inset-bottom));
+    inset-block-end: calc(64px + 2.5rem + env(safe-area-inset-bottom));
   }
 }
 

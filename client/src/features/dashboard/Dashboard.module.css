@@ -10,7 +10,7 @@
 
 /* Floating shopping-list button. Sits bottom-right, level with the gallery's
    floating pagination dots: same bottom offset as `.dots.floating` in
-   CardGallery.module.css (mobile bottom-nav height 88px + safe-area + 0.5rem).
+   CardGallery.module.css (mobile bottom-nav height 96px + safe-area + 0.5rem).
    Sized to match a digdir Avatar: its --dsc-avatar-size is 2.625em where em is
    relative to the avatar's own font-size (--ds-font-size-4, the default md
    size), so we mirror that font-size here and size in em — matching rem would
@@ -21,7 +21,7 @@
 .shoppingFab {
   position: fixed;
   right: 1rem;
-  bottom: calc(88px + env(safe-area-inset-bottom) + 0.5rem);
+  bottom: calc(96px + env(safe-area-inset-bottom) + 0.5rem);
   z-index: 99;
   box-sizing: border-box;
   display: inline-flex;

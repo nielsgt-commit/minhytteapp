@@ -46,6 +46,6 @@
    their page bottom hidden behind the bar. */
 @media (max-width: 900px) {
   .main {
-    padding-bottom: calc(56px + 1rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(56px + 1.5rem + env(safe-area-inset-bottom));
   }
 }
