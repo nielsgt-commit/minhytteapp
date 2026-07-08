@@ -52,26 +52,11 @@
   gap: var(--ds-size-4);
 }
 
-/* The "Now" tab's four sections. Stacked in a single column on the smallest
-   phones (<=375px); two columns once there's a bit more width. */
+/* The "Now" tab's sections, stacked in a single column at every mobile width. */
 .nowCard {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--ds-size-4);
-}
-
-@media (min-width: 376px) {
-  .nowCard {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Weather (first), available beds and dinner (4th onward) span the full
-     width; the two middle sections (at property now / available parking) sit
-     side by side. */
-  .nowCard > :first-child,
-  .nowCard > :nth-child(n + 4) {
-    grid-column: 1 / -1;
-  }
 }
 
 .nowSection {
