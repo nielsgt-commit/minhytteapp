@@ -571,11 +571,13 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
             })}
 
             <div
-              className={
-                effectiveMode === "peak"
-                  ? `${styles.lanes} ${styles.lanesPeak}`
-                  : styles.lanes
-              }
+              className={[
+                styles.lanes,
+                effectiveMode === "peak" && styles.lanesPeak,
+                fullscreenActive && styles.lanesFullscreen,
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
               {lanes.length === 0 && (
                 <Paragraph className={styles.empty}>
@@ -584,6 +586,12 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
               )}
               {lanes.map(lane => (
                 <div key={lane.userId} className={styles.lane}>
+                  {/* Fullscreen shows the name always, level with the lane's
+                      bars; outside fullscreen the name only appears on hover
+                      (the per-bar label below). */}
+                  {fullscreenActive && (
+                    <span className={styles.laneName}>{lane.name}</span>
+                  )}
                   {lane.bars.map((bar, i) => {
                     const left = fraction(bar.start)
                     const right = fraction(bar.end.add({ days: 1 }))

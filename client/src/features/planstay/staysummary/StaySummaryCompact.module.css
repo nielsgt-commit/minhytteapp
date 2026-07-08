@@ -22,6 +22,24 @@
   border-radius: 0;
 }
 
+/* Fullscreen while the device is still portrait: force landscape in CSS by
+   rotating the card 90° and swapping the viewport axes. Covers iPhone (no
+   orientation lock at all) and anywhere the native lock was refused; when
+   the lock does land, the viewport itself turns landscape and this rule
+   stops matching. */
+@media (orientation: portrait) {
+  .hostPseudoFullscreen,
+  .host:fullscreen {
+    inset: auto;
+    top: 0;
+    left: 100dvw;
+    width: 100dvh;
+    height: 100dvw;
+    transform: rotate(90deg);
+    transform-origin: top left;
+  }
+}
+
 /* Landscape-fullscreen toggle: visible at every viewport width. The TSX
    still drops it on browsers without the Fullscreen API (iPhone Safari). */
 .fullscreenButton {
@@ -192,6 +210,13 @@
   margin-top: 3rem;
 }
 
+/* Fullscreen shows an always-visible name level with each lane's bars; the
+   label is taller than the 8px lane, so widen the gap enough that adjacent
+   names don't touch. */
+.lanesFullscreen {
+  gap: 0.6rem;
+}
+
 /* One person per lane. 8px-tall bars for a slim Gantt look. */
 .lane {
   position: relative;
@@ -223,6 +248,26 @@
 .barQueued:hover + .laneLabel {
   opacity: 1;
   visibility: visible;
+}
+
+/* Always-visible guest name in fullscreen: left-aligned, vertically centred
+   on the lane so it sits level with the bars. The halo keeps it readable
+   when a bar runs underneath it. */
+.laneName {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  line-height: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--ds-color-neutral-text-subtle);
+  text-shadow:
+    0 0 3px var(--ds-color-neutral-background-default),
+    0 0 3px var(--ds-color-neutral-background-default);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Bar background color (family-group color) is set inline per occupant. */

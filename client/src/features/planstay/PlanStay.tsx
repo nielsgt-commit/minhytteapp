@@ -37,7 +37,7 @@ export function PlanStay() {
   // overview shows.
   const [inFlow, setInFlow] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
-  const [overviewView, setOverviewView] = useState<"season" | "mine">("season")
+  const [overviewView, setOverviewView] = useState<"season" | "mine">("mine")
 
   const help: PageHelpContent = {
     intro: t(
