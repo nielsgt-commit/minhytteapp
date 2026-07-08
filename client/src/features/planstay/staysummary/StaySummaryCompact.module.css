@@ -290,6 +290,34 @@
   font-size: 0.8rem;
 }
 
+/* Pseudo-fullscreen while the device is still portrait: the card fakes
+   landscape by rotating itself 90° (rule above), but the popover renders in
+   the browser top layer, so the ancestor rotation never reaches it visually —
+   it would come up sideways relative to the chart. Rotate it the same 90° and
+   centre it over the screen like a small modal; anchored placement is
+   meaningless across the rotation, so drop the inline floating-ui translate
+   (needs !important to beat the inline style) and the anchor arrow with it.
+   The popover is still a DOM descendant of the card (the top layer doesn't
+   reparent), so nesting under .hostPseudoFullscreen keeps this exactly in
+   sync with the case where the card itself rotates. Native fullscreen never
+   rotates the card — the UA fullscreen stylesheet forces transform:none
+   !important — so this deliberately excludes .host:fullscreen. */
+@media (orientation: portrait) {
+  .hostPseudoFullscreen .barPopover {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: max-content;
+    height: max-content;
+    translate: none !important;
+    transform: rotate(90deg);
+    /* Rotated 90°, the popover's own height runs along the screen's width. */
+    max-height: calc(100dvw - 2rem);
+    overflow-y: auto;
+    --dsc-popover-arrow-size: 0;
+  }
+}
+
 .popName {
   margin: 0 0 0.4rem;
   font-weight: 600;
