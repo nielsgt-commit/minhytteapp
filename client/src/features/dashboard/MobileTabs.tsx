@@ -12,10 +12,10 @@ import { useTRPC } from "@/trpc/trpc"
 import { PlannedAvailabilitySummary } from "@/features/dashboard/calendarsummary/plannedavailability/PlannedAvailabilitySummary.tsx"
 import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { AtPropertyNow } from "@/features/dashboard/capacitysummary/userscheckedin/AtPropertyNow.tsx"
-import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
-import { AvailableBedsToday } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
+// import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
+// import { AvailableBedsToday } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
-import { DinnerToday } from "@/features/dashboard/dinner/DinnerToday.tsx"
+// import { DinnerToday } from "@/features/dashboard/dinner/DinnerToday.tsx"
 import { PriorityWeeksPanel } from "./PriorityWeeksPanel"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { Temporal } from "temporal-polyfill"
@@ -137,6 +137,7 @@ function MobileNowPanel() {
             </Card.Block>
           </section>
         </Card>
+        {/* Stashed for now: parking, available beds and dinner panels.
         <Card asChild>
           <section>
             <Card.Block className={styles.nowSection}>
@@ -176,6 +177,7 @@ function MobileNowPanel() {
             </Card.Block>
           </section>
         </Card>
+        */}
       </div>
     </div>
   )
