@@ -78,6 +78,17 @@ describe("addOccupant / removeOccupant", () => {
     const next = bookingDraftReducer(seeded, removeOccupant(1))
     expect(next.occupants.map(o => o.user_id)).toEqual([2])
   })
+
+  test("booker can be removed and re-added without a room ('not staying' toggle)", () => {
+    const seeded = bookingDraftReducer(initialBookingDraft, setBooker(7, 42))
+    const removed = bookingDraftReducer(seeded, removeOccupant(7))
+    expect(removed.occupants).toEqual([])
+    expect(removed.booker_id).toBe(7)
+    const restored = bookingDraftReducer(removed, addOccupant(7, null))
+    expect(restored.occupants).toEqual([
+      { user_id: 7, room_id: null, queued: false, sleeps_separately: false },
+    ])
+  })
 })
 
 describe("assignOccupantToRoom / markOccupantQueued", () => {

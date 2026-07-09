@@ -4,6 +4,12 @@
   margin-bottom: var(--ds-size-2);
 }
 
+@media (max-width: 640px) {
+  .addButton {
+    flex: 1;
+  }
+}
+
 .groups {
   display: flex;
   flex-direction: column;
@@ -47,6 +53,16 @@
   margin-left: auto;
 }
 
+/* Kebab sits at the far right of the card head; when priority tags are
+   present they keep the auto margin and the kebab follows right after. */
+.kebab {
+  margin-left: auto;
+}
+
+.priorityTags + .kebab {
+  margin-left: 0;
+}
+
 .companions {
   display: flex;
   flex-wrap: wrap;
@@ -56,6 +72,15 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-2);
+  margin-top: var(--ds-size-2);
+}
+
+.handOver {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--ds-size-2);
   margin-top: var(--ds-size-2);
 }

@@ -1,7 +1,18 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
 import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
-import { Button, Card, Tag } from "@digdir/designsystemet-react"
+import {
+  Button,
+  Card,
+  Checkbox,
+  Dropdown,
+  Field,
+  Label,
+  Paragraph,
+  Select,
+  Tag,
+} from "@digdir/designsystemet-react"
+import { MenuElipsisVerticalIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
@@ -75,9 +86,20 @@ export function MyPlannedStay() {
       property_id: selectedPropertyId,
     }),
   )
+  const { data: propertyUsers } = useSuspenseQuery(
+    trpc.user.listForProperty.queryOptions({ property_id: selectedPropertyId }),
+  )
+  const childUserIds = new Set(
+    propertyUsers.filter(u => u.is_child).map(u => u.id),
+  )
   const active = bookings.filter(b => b.status !== "cancelled")
+  // Include stays she booked for others (booker but not occupant) so she can
+  // still manage them after removing herself.
   const myBookings = active
-    .filter(b => b.occupants.some(o => o.user_id === me.id))
+    .filter(
+      b =>
+        b.occupants.some(o => o.user_id === me.id) || b.booker_id === me.id,
+    )
     .sort((a, b) => Temporal.PlainDate.compare(a.start_date, b.start_date))
 
   type SheetTarget =
@@ -90,11 +112,47 @@ export function MyPlannedStay() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
     null,
   )
+  const [confirmingRemoveId, setConfirmingRemoveId] = useState<number | null>(
+    null,
+  )
+  // Which card's kebab menu is open.
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
+  const [handOver, setHandOver] = useState<{
+    bookingId: number
+    newBookerId: number | null
+    removeSelf: boolean
+  } | null>(null)
   const updateMutation = useMutationWithInvalidation(
     trpc.booking.update.mutationOptions(),
     [trpc.booking.pathKey()],
   )
-  const { error: mutationError } = useMutationsStatus(updateMutation)
+  const transferMutation = useMutationWithInvalidation(
+    trpc.booking.transferBooker.mutationOptions(),
+    [trpc.booking.pathKey()],
+  )
+  const { error: mutationError } = useMutationsStatus(
+    updateMutation,
+    transferMutation,
+  )
+
+  const removeSelf = (b: (typeof myBookings)[number]) => {
+    updateMutation.mutate({
+      id: b.id,
+      property_id: b.property_id,
+      start_date: b.start_date,
+      end_date: b.end_date,
+      status: b.status,
+      notes: b.notes,
+      occupants: b.occupants
+        .filter(o => o.user_id !== me.id)
+        .map(o => ({
+          user_id: o.user_id,
+          room_id: o.room_id,
+          queued: o.queued,
+          sleeps_separately: o.sleeps_separately,
+        })),
+    })
+  }
 
   // Priority weeks are assigned per ISO year, so fetch the list once per
   // distinct year the user's stays touch, then resolve overlaps client-side.
@@ -149,6 +207,7 @@ export function MyPlannedStay() {
           type="button"
           variant="secondary"
           data-size="sm"
+          className={styles.addButton}
           onClick={() => {
             setSheetTarget({ kind: "create" })
           }}
@@ -217,8 +276,21 @@ export function MyPlannedStay() {
             <h3 className={styles.monthHeading}>{group.label}</h3>
             <ul className={styles.list}>
               {group.bookings.map(b => {
-                const otherNames = new Set<string>()
+                const companionNames = b.occupants
+                  .filter(o => o.user_id !== me.id)
+                  .map(o => o.user_name ?? `#${String(o.user_id)}`)
+                // Others at the cabin in the same period: occupants of other
+                // overlapping bookings, minus everyone already on this stay.
+                // Mirrors StayAvailabilityPanel: prefer the confirmed entry
+                // when someone appears both queued and confirmed, and mark
+                // queued names with a trailing "?".
+                const stayUserIds = new Set(b.occupants.map(o => o.user_id))
+                const othersSeen = new Map<
+                  number,
+                  { name: string; queued: boolean }
+                >()
                 for (const other of active) {
+                  if (other.id === b.id) continue
                   if (
                     !rangesOverlap(
                       b.start_date,
@@ -229,17 +301,39 @@ export function MyPlannedStay() {
                   )
                     continue
                   for (const o of other.occupants) {
-                    if (o.user_id === me.id) continue
-                    otherNames.add(o.user_name ?? `#${String(o.user_id)}`)
+                    if (o.user_id === me.id || stayUserIds.has(o.user_id))
+                      continue
+                    const existing = othersSeen.get(o.user_id)
+                    if (!existing || (!o.queued && existing.queued)) {
+                      othersSeen.set(o.user_id, {
+                        name: o.user_name ?? `#${String(o.user_id)}`,
+                        queued: o.queued,
+                      })
+                    }
                   }
                 }
-                const names = Array.from(otherNames)
+                const othersInPeriod = Array.from(othersSeen.values()).map(o =>
+                  o.queued ? `${o.name}?` : o.name,
+                )
                 const isOpen = openId === b.id
                 const isConfirmingDelete = confirmingDeleteId === b.id
+                const isConfirmingRemove = confirmingRemoveId === b.id
                 const canEdit = b.booker_id === me.id
+                const meIsOccupant = b.occupants.some(
+                  o => o.user_id === me.id,
+                )
+                const eligibleNewBookers = b.occupants.filter(
+                  o => o.user_id !== me.id && !childUserIds.has(o.user_id),
+                )
+                const canRemoveMe = meIsOccupant && b.occupants.length >= 2
+                const canHandOverBooking =
+                  canEdit && eligibleNewBookers.length > 0
+                const isHandingOver = handOver?.bookingId === b.id
                 const priorityWeeks = priorityWeeksFor(b)
                 const toggle = () => {
                   setConfirmingDeleteId(null)
+                  setConfirmingRemoveId(null)
+                  setHandOver(null)
                   setOpenId(prev => (prev === b.id ? null : b.id))
                 }
                 return (
@@ -278,23 +372,127 @@ export function MyPlannedStay() {
                               ))}
                             </div>
                           )}
+                          {(canEdit || canRemoveMe) && (
+                            <span
+                              className={styles.kebab}
+                              onClick={e => {
+                                e.stopPropagation()
+                              }}
+                              onKeyDown={e => {
+                                e.stopPropagation()
+                              }}
+                            >
+                              <Dropdown.TriggerContext>
+                                <Dropdown.Trigger
+                                  variant="tertiary"
+                                  data-size="sm"
+                                  icon
+                                  aria-label={t("Stay actions")}
+                                >
+                                  <MenuElipsisVerticalIcon
+                                    aria-hidden
+                                    fontSize="1.25rem"
+                                  />
+                                </Dropdown.Trigger>
+                                <Dropdown
+                                  placement="bottom-end"
+                                  open={menuOpenId === b.id}
+                                  onOpen={() => {
+                                    setMenuOpenId(b.id)
+                                  }}
+                                  onClose={() => {
+                                    setMenuOpenId(null)
+                                  }}
+                                >
+                                  <Dropdown.List>
+                                    {canRemoveMe && (
+                                      <Dropdown.Item>
+                                        <Dropdown.Button
+                                          onClick={() => {
+                                            setMenuOpenId(null)
+                                            setConfirmingDeleteId(null)
+                                            setHandOver(null)
+                                            setConfirmingRemoveId(b.id)
+                                            setOpenId(b.id)
+                                          }}
+                                        >
+                                          {t("Remove me")}
+                                        </Dropdown.Button>
+                                      </Dropdown.Item>
+                                    )}
+                                    {canHandOverBooking && (
+                                      <Dropdown.Item>
+                                        <Dropdown.Button
+                                          onClick={() => {
+                                            setMenuOpenId(null)
+                                            setConfirmingDeleteId(null)
+                                            setConfirmingRemoveId(null)
+                                            setHandOver({
+                                              bookingId: b.id,
+                                              newBookerId:
+                                                eligibleNewBookers[0].user_id,
+                                              removeSelf: meIsOccupant,
+                                            })
+                                            setOpenId(b.id)
+                                          }}
+                                        >
+                                          {t("Hand over booking")}
+                                        </Dropdown.Button>
+                                      </Dropdown.Item>
+                                    )}
+                                    {canEdit && (
+                                      <Dropdown.Item>
+                                        <Dropdown.Button
+                                          data-color="danger"
+                                          onClick={() => {
+                                            setMenuOpenId(null)
+                                            setConfirmingRemoveId(null)
+                                            setHandOver(null)
+                                            setConfirmingDeleteId(b.id)
+                                            setOpenId(b.id)
+                                          }}
+                                        >
+                                          {t("Delete stay")}
+                                        </Dropdown.Button>
+                                      </Dropdown.Item>
+                                    )}
+                                  </Dropdown.List>
+                                </Dropdown>
+                              </Dropdown.TriggerContext>
+                            </span>
+                          )}
                         </div>
                         {isOpen && (
                           <>
                             <div className={styles.companions}>
-                              {names.length > 0 ? (
+                              {!meIsOccupant && (
+                                <Tag data-color="warning">
+                                  {t("You're not staying yourself")}
+                                </Tag>
+                              )}
+                              {companionNames.length > 0 ? (
                                 <>
-                                  <span>{t("Accompanied by:")}</span>
-                                  {names.map(n => (
+                                  <span>{t("With:")}</span>
+                                  {companionNames.map(n => (
                                     <Tag key={n} data-color="info">
                                       {n}
                                     </Tag>
                                   ))}
                                 </>
                               ) : (
-                                <span>{t("Solo stay")}</span>
+                                meIsOccupant && <span>{t("Solo stay")}</span>
                               )}
                             </div>
+                            {othersInPeriod.length > 0 && (
+                              <div className={styles.companions}>
+                                <span>{t("During this period:")}</span>
+                                {othersInPeriod.map(n => (
+                                  <Tag key={n} data-color="neutral">
+                                    {n}
+                                  </Tag>
+                                ))}
+                              </div>
+                            )}
                             {!canEdit && (
                               <div className={styles.companions}>
                                 <span>{t("Booked by:")}</span>
@@ -303,8 +501,87 @@ export function MyPlannedStay() {
                                 </Tag>
                               </div>
                             )}
+                            {canEdit && isHandingOver && (
+                              <div
+                                className={styles.handOver}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                }}
+                                onKeyDown={e => {
+                                  e.stopPropagation()
+                                }}
+                              >
+                                <Field>
+                                  <Label>{t("New booker")}</Label>
+                                  <Select
+                                    value={
+                                      handOver.newBookerId != null
+                                        ? String(handOver.newBookerId)
+                                        : ""
+                                    }
+                                    onChange={e => {
+                                      setHandOver({
+                                        ...handOver,
+                                        newBookerId:
+                                          e.target.value === ""
+                                            ? null
+                                            : Number(e.target.value),
+                                      })
+                                    }}
+                                  >
+                                    {eligibleNewBookers.map(o => (
+                                      <Select.Option
+                                        key={o.user_id}
+                                        value={String(o.user_id)}
+                                      >
+                                        {o.user_name ?? `#${String(o.user_id)}`}
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Field>
+                                {meIsOccupant && (
+                                  <Checkbox
+                                    label={t("Also remove me from the stay")}
+                                    checked={handOver.removeSelf}
+                                    onChange={e => {
+                                      setHandOver({
+                                        ...handOver,
+                                        removeSelf: e.target.checked,
+                                      })
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            )}
                             <div className={styles.actions}>
-                              {canEdit ? (
+                              {isConfirmingRemove ? (
+                                <>
+                                  <Button
+                                    type="button"
+                                    variant="tertiary"
+                                    disabled={updateMutation.isPending}
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setConfirmingRemoveId(null)
+                                    }}
+                                  >
+                                    {t("Cancel")}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="primary"
+                                    data-color="danger"
+                                    disabled={updateMutation.isPending}
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setConfirmingRemoveId(null)
+                                      removeSelf(b)
+                                    }}
+                                  >
+                                    {t("Confirm remove")}
+                                  </Button>
+                                </>
+                              ) : canEdit ? (
                                 isConfirmingDelete ? (
                                   <>
                                     <Button
@@ -346,64 +623,69 @@ export function MyPlannedStay() {
                                       {t("Confirm delete")}
                                     </Button>
                                   </>
-                                ) : (
+                                ) : isHandingOver ? (
                                   <>
                                     <Button
                                       type="button"
-                                      variant="secondary"
+                                      variant="tertiary"
+                                      disabled={transferMutation.isPending}
                                       onClick={e => {
                                         e.stopPropagation()
-                                        setSheetTarget({
-                                          kind: "edit",
-                                          booking: b,
-                                        })
+                                        setHandOver(null)
                                       }}
                                     >
-                                      {t("Edit stay")}
+                                      {t("Cancel")}
                                     </Button>
                                     <Button
                                       type="button"
-                                      variant="secondary"
-                                      data-color="danger"
-                                      disabled={updateMutation.isPending}
+                                      variant="primary"
+                                      disabled={
+                                        handOver.newBookerId == null ||
+                                        transferMutation.isPending
+                                      }
                                       onClick={e => {
                                         e.stopPropagation()
-                                        setConfirmingDeleteId(b.id)
+                                        if (handOver.newBookerId == null) return
+                                        transferMutation.mutate({
+                                          property_id: b.property_id,
+                                          id: b.id,
+                                          new_booker_id: handOver.newBookerId,
+                                          remove_self:
+                                            handOver.removeSelf &&
+                                            meIsOccupant,
+                                        })
+                                        setHandOver(null)
                                       }}
                                     >
-                                      {t("Delete stay")}
+                                      {t("Hand over")}
                                     </Button>
                                   </>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setSheetTarget({
+                                        kind: "edit",
+                                        booking: b,
+                                      })
+                                    }}
+                                  >
+                                    {t("Edit stay")}
+                                  </Button>
                                 )
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  data-color="danger"
-                                  disabled={updateMutation.isPending}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    updateMutation.mutate({
-                                      id: b.id,
-                                      property_id: b.property_id,
-                                      start_date: b.start_date,
-                                      end_date: b.end_date,
-                                      status: b.status,
-                                      notes: b.notes,
-                                      occupants: b.occupants
-                                        .filter(o => o.user_id !== me.id)
-                                        .map(o => ({
-                                          user_id: o.user_id,
-                                          room_id: o.room_id,
-                                          queued: o.queued,
-                                          sleeps_separately:
-                                            o.sleeps_separately,
-                                        })),
-                                    })
-                                  }}
-                                >
-                                  {t("Remove me")}
-                                </Button>
+                              ) : canRemoveMe ? null : (
+                                <Paragraph>
+                                  {t(
+                                    "You're the only guest — ask {{name}} to cancel the stay instead.",
+                                    {
+                                      name:
+                                        b.booker_name ??
+                                        `#${String(b.booker_id)}`,
+                                    },
+                                  )}
+                                </Paragraph>
                               )}
                             </div>
                           </>

@@ -1,6 +1,7 @@
 import type { Dispatch, RefObject } from "react"
 import {
   Card,
+  Checkbox,
   Field,
   Heading,
   Label,
@@ -40,6 +41,9 @@ export function StepGuests({
   stepActiveClass: string
 }) {
   const { t } = useTranslation("planstay")
+  const bookerStaying =
+    selectedUserId != null &&
+    draft.occupants.some(o => o.user_id === selectedUserId)
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <Card className={styles.card}>
@@ -107,6 +111,19 @@ export function StepGuests({
               </Suggestion.List>
             </Suggestion>
           </Field>
+
+          <Checkbox
+            label={t("I'm booking for others — I'm not staying myself")}
+            checked={selectedUserId != null && !bookerStaying}
+            onChange={e => {
+              if (selectedUserId == null) return
+              if (e.target.checked) {
+                dispatch(removeOccupant(selectedUserId))
+              } else {
+                dispatch(addOccupant(selectedUserId, null))
+              }
+            }}
+          />
         </Card.Block>
       </Card>
     </div>

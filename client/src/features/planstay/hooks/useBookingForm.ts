@@ -150,6 +150,7 @@ export function useBookingForm(
     selectedUserId != null &&
     draft.start_date != null &&
     draft.end_date != null &&
+    draft.occupants.length > 0 &&
     !isPending
 
   return {

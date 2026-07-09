@@ -75,6 +75,9 @@ export function StepConfirm({
 }) {
   const { t } = useTranslation("planstay")
   const bookerName = users.find(u => u.id === draft.booker_id)?.name ?? "—"
+  const bookerIsOccupant = draft.occupants.some(
+    o => o.user_id === draft.booker_id,
+  )
   const nights =
     draft.start_date && draft.end_date
       ? Temporal.PlainDate.from(draft.start_date).until(
@@ -137,7 +140,8 @@ export function StepConfirm({
               <strong>{t("Who")}</strong>
             </dt>
             <dd className={styles.item}>
-              {bookerName} {t("(booker)")}
+              {bookerName}{" "}
+              {bookerIsOccupant ? t("(booker)") : t("(booker, not staying)")}
               {guestNames.length > 0 && <> · {guestNames.join(", ")}</>}
             </dd>
 

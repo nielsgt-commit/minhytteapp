@@ -41,7 +41,7 @@ const bookingFields = {
   status: statusEnum.default("confirmed"),
   notes: z.string().max(1024).nullable().optional(),
   occupants: z.array(bookingOccupantInput).min(1, {
-    error: "at least one occupant (the booker) is required",
+    error: "at least one occupant is required",
   }),
 }
 
@@ -318,15 +318,6 @@ async function resolveRoomsAndUsers(
   return { roomById, userById }
 }
 
-function ensureBookerIsOccupant(bookerId: number, occupants: OccupantInput[]) {
-  if (!occupants.some(o => o.user_id === bookerId)) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "booker must be listed as an occupant",
-    })
-  }
-}
-
 function dedupeOccupants(occupants: OccupantInput[]) {
   const seen = new Set<number>()
   const out: OccupantInput[] = []
@@ -474,6 +465,97 @@ export const bookingRouter = router({
     .query(async ({ ctx, input }) => {
       await assertPropertyMember(ctx.db, ctx.user, input.property_id)
       return loadBookings(ctx.db, { property_id: input.property_id })
+    }),
+
+  // Live bed availability for the dashboard: per habitable room, capacity minus
+  // occupants of confirmed bookings covering today. Queued (waitlisted)
+  // occupants hold no bed; occupants without a room only count in
+  // unassignedGuests.
+  bedAvailabilityToday: protectedProcedure
+    .input(z.object({ property_id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
+
+      const rooms = await ctx.db
+        .select({
+          id: roomTable.id,
+          name: roomTable.name,
+          structure_id: roomTable.structure_id,
+          structure_name: structuresTable.name,
+          structure_category: structuresTable.category,
+          beds_sm: roomTable.beds_sm,
+          beds_lg: roomTable.beds_lg,
+          beds_double: roomTable.beds_double,
+          beds_kid: roomTable.beds_kid,
+          mattresses: roomTable.mattresses,
+          travel_cot: roomTable.travel_cot,
+        })
+        .from(roomTable)
+        .innerJoin(
+          structuresTable,
+          eq(structuresTable.id, roomTable.structure_id),
+        )
+        .where(
+          and(
+            eq(structuresTable.property_id, input.property_id),
+            eq(structuresTable.category, "habitable"),
+          ),
+        )
+        .orderBy(asc(roomTable.id))
+
+      const today = sql<string>`CURRENT_DATE`
+      const occupants = await ctx.db
+        .selectDistinct({
+          user_id: bookingOccupantsTable.user_id,
+          room_id: bookingOccupantsTable.room_id,
+        })
+        .from(bookingOccupantsTable)
+        .innerJoin(
+          bookingTable,
+          eq(bookingTable.id, bookingOccupantsTable.booking_id),
+        )
+        .where(
+          and(
+            eq(bookingTable.property_id, input.property_id),
+            eq(bookingTable.status, "confirmed"),
+            eq(bookingOccupantsTable.queued, false),
+            sql`${bookingTable.start_date} <= ${today}`,
+            sql`${bookingTable.end_date} >= ${today}`,
+          ),
+        )
+
+      const occupiedByRoom = new Map<number, number>()
+      const unassignedUserIds = new Set<number>()
+      for (const o of occupants) {
+        if (o.room_id == null) {
+          unassignedUserIds.add(o.user_id)
+        } else {
+          occupiedByRoom.set(
+            o.room_id,
+            (occupiedByRoom.get(o.room_id) ?? 0) + 1,
+          )
+        }
+      }
+
+      return {
+        unassignedGuests: unassignedUserIds.size,
+        rooms: rooms.map(r => {
+          const capacity = roomTotalCapacity({
+            ...r,
+            property_id: input.property_id,
+          })
+          const occupied = occupiedByRoom.get(r.id) ?? 0
+          return {
+            room_id: r.id,
+            name: r.name,
+            structure_id: r.structure_id,
+            structure_name: r.structure_name,
+            capacity,
+            occupied,
+            available: Math.max(0, capacity - occupied),
+          }
+        }),
+      }
     }),
 
   previewConflicts: protectedProcedure
@@ -800,7 +882,6 @@ export const bookingRouter = router({
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       const bookerId = ctx.user.id
-      ensureBookerIsOccupant(bookerId, input.occupants)
       const occupants = dedupeOccupants(input.occupants)
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
@@ -897,7 +978,6 @@ export const bookingRouter = router({
       const endDate = plainDateToDbString(input.end_date)
 
       const bookerId = existing.booker_id
-      ensureBookerIsOccupant(bookerId, input.occupants)
       const occupants = dedupeOccupants(input.occupants)
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
@@ -1022,6 +1102,169 @@ export const bookingRouter = router({
             sleeps_separately: o.sleeps_separately,
           })),
         )
+
+        return toWireBooking(updated)
+      })
+    }),
+
+  transferBooker: propertyAdminProcedure
+    .input(
+      z.object({
+        property_id: z.number().int().positive(),
+        id: z.number().int().positive(),
+        new_booker_id: z.number().int().positive(),
+        remove_self: z.boolean().optional().default(false),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existing = (
+        await ctx.db
+          .select({
+            property_id: bookingTable.property_id,
+            booker_id: bookingTable.booker_id,
+            status: bookingTable.status,
+            start_date: bookingTable.start_date,
+            end_date: bookingTable.end_date,
+          })
+          .from(bookingTable)
+          .where(eq(bookingTable.id, input.id))
+          .limit(1)
+      ).at(0)
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND" })
+      }
+      if (existing.property_id !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "booking belongs to another property",
+        })
+      }
+      const callerId = ctx.user.id
+      if (callerId !== existing.booker_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "only the booker can hand over this booking",
+        })
+      }
+      if (existing.status === "cancelled") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "cannot hand over a cancelled booking",
+        })
+      }
+      if (input.new_booker_id === existing.booker_id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "new booker must be a different user",
+        })
+      }
+
+      const existingOccupants = await ctx.db
+        .select({
+          user_id: bookingOccupantsTable.user_id,
+          room_id: bookingOccupantsTable.room_id,
+          queued: bookingOccupantsTable.queued,
+          sleeps_separately: bookingOccupantsTable.sleeps_separately,
+        })
+        .from(bookingOccupantsTable)
+        .where(eq(bookingOccupantsTable.booking_id, input.id))
+
+      if (!existingOccupants.some(o => o.user_id === input.new_booker_id)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "new booker must be an occupant of the booking",
+        })
+      }
+      const newBooker = (
+        await ctx.db
+          .select({ is_child: usersTable.is_child })
+          .from(usersTable)
+          .where(eq(usersTable.id, input.new_booker_id))
+          .limit(1)
+      ).at(0)
+      if (newBooker?.is_child === true) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "a child cannot be responsible for a booking",
+        })
+      }
+
+      await assertBookingsUnlocked(ctx.db, input.property_id, [
+        { start_date: existing.start_date, end_date: existing.end_date },
+      ])
+
+      const remaining = input.remove_self
+        ? existingOccupants.filter(o => o.user_id !== callerId)
+        : existingOccupants
+      if (remaining.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "at least one occupant is required",
+        })
+      }
+      const rewriteOccupants = remaining.length !== existingOccupants.length
+
+      // Removing an occupant frees beds, so recompute the derived room
+      // allocation the same way `update` does.
+      const occupants = remaining.map(o => ({
+        user_id: o.user_id,
+        room_id: o.room_id,
+        queued: o.queued,
+        sleeps_separately: o.sleeps_separately,
+      }))
+      const { roomById, userById } = await resolveRoomsAndUsers(
+        ctx.db,
+        input.property_id,
+        occupants,
+      )
+      const { bookingRooms, overflowByRoom } = computeBookingRooms(
+        occupants,
+        roomById,
+        userById,
+      )
+      const occupantQueued = new Map<number, boolean>()
+      for (const o of occupants) {
+        const roomOverflow =
+          o.room_id != null &&
+          (overflowByRoom.get(o.room_id)?.includes(o.user_id) ?? false)
+        occupantQueued.set(o.user_id, o.queued || roomOverflow)
+      }
+
+      return ctx.db.transaction(async tx => {
+        const [updated] = await tx
+          .update(bookingTable)
+          .set({
+            booker_id: input.new_booker_id,
+            updated_at: new Date(),
+          })
+          .where(eq(bookingTable.id, input.id))
+          .returning()
+
+        if (rewriteOccupants) {
+          await tx
+            .delete(bookingRoomsTable)
+            .where(eq(bookingRoomsTable.booking_id, input.id))
+          if (bookingRooms.length > 0) {
+            await tx
+              .insert(bookingRoomsTable)
+              .values(bookingRooms.map(r => ({ ...r, booking_id: input.id })))
+          }
+
+          await tx
+            .delete(bookingOccupantsTable)
+            .where(eq(bookingOccupantsTable.booking_id, input.id))
+          await tx.insert(bookingOccupantsTable).values(
+            occupants.map(o => ({
+              booking_id: input.id,
+              user_id: o.user_id,
+              room_id: o.sleeps_separately ? null : (o.room_id ?? null),
+              queued: o.sleeps_separately
+                ? false
+                : (occupantQueued.get(o.user_id) ?? false),
+              sleeps_separately: o.sleeps_separately,
+            })),
+          )
+        }
 
         return toWireBooking(updated)
       })
