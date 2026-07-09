@@ -5,6 +5,7 @@ import { ReviewBookingDays } from "@/features/settlement/reviewsettlement/Review
 import { CreateSettlementFlow } from "@/features/settlement/createsettlement/CreateSettlementFlow.tsx"
 import { ReviewSplitPolicy } from "@/features/settlement/reviewsplitpolicy/ReviewSplitPolicy.tsx"
 import { SettlementPhaseStepper } from "@/features/settlement/SettlementPhaseStepper.tsx"
+import { SettlementHeadsProgress } from "@/features/settlement/SettlementHeadsProgress.tsx"
 import { SettlementProgressSummary } from "@/features/settlement/SettlementProgressSummary.tsx"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import {
@@ -59,6 +60,7 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
   return (
     <>
       <SettlementPhaseStepper phases={phases} phase={phase} />
+      <SettlementHeadsProgress settlementId={settlementId} phase={phase} />
       <SettlementProgressSummary settlementId={settlementId} phase={phase} />
       {phase === "collecting_expenses" && (
         <ReviewExpenses settlementId={settlementId} phase={phase} next={next} />

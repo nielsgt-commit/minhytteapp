@@ -1,0 +1,101 @@
+.tracker {
+  margin-bottom: 1rem;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.toggle:disabled {
+  cursor: default;
+}
+
+.heading {
+  flex: 1;
+  color: var(--ds-color-neutral-text-subtle);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.stack {
+  display: flex;
+}
+
+.stackAvatar:not(:first-child) {
+  margin-left: -6px;
+}
+
+.chevron {
+  color: var(--ds-color-neutral-text-subtle);
+  font-size: 1.25rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+}
+
+.dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  border: 1px solid var(--ds-color-neutral-border-default);
+  background: var(--ds-color-neutral-background-default);
+}
+
+.dotDone {
+  border-color: var(--ds-color-success-border-strong);
+  background: var(--ds-color-success-base-default);
+}
+
+.dotCurrent {
+  border-color: var(--ds-color-accent-border-strong);
+  box-shadow: 0 0 0 2px var(--ds-color-accent-surface-hover);
+}
+
+.connector {
+  width: 0.75rem;
+  height: 1px;
+  background: var(--ds-color-neutral-border-subtle);
+}
+
+.status {
+  color: var(--ds-color-neutral-text-subtle);
+  min-width: 8rem;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .status {
+    min-width: 0;
+  }
+}

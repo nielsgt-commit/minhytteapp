@@ -280,5 +280,11 @@
   "Preliminary split": "Preliminary split",
   "Calculating the preliminary split…": "Calculating the preliminary split…",
   "An early estimate of who owes whom — final figures are set when the settlement closes.": "An early estimate of who owes whom — final figures are set when the settlement closes.",
-  "The preliminary split isn't available for this settlement's policy yet.": "The preliminary split isn't available for this settlement's policy yet."
+  "The preliminary split isn't available for this settlement's policy yet.": "The preliminary split isn't available for this settlement's policy yet.",
+  "Household heads": "Household heads",
+  "Awaiting acceptance": "Awaiting acceptance",
+  "Review done": "Review done",
+  "Expenses to review: {{count}}": "Expenses to review: {{count}}",
+  "Nothing waiting": "Nothing waiting",
+  "You": "You"
 }

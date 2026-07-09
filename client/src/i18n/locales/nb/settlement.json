@@ -286,5 +286,11 @@
   "Preliminary split": "Foreløpig fordeling",
   "Calculating the preliminary split…": "Beregner foreløpig fordeling…",
   "An early estimate of who owes whom — final figures are set when the settlement closes.": "Et tidlig estimat av hvem som skylder hvem — endelige tall settes når oppgjøret lukkes.",
-  "The preliminary split isn't available for this settlement's policy yet.": "Foreløpig fordeling er ikke tilgjengelig for dette oppgjørets regelsett ennå."
+  "The preliminary split isn't available for this settlement's policy yet.": "Foreløpig fordeling er ikke tilgjengelig for dette oppgjørets regelsett ennå.",
+  "Household heads": "Husstandsoverhoder",
+  "Awaiting acceptance": "Venter på godkjenning",
+  "Review done": "Gjennomgang ferdig",
+  "Expenses to review: {{count}}": "Utgifter å gjennomgå: {{count}}",
+  "Nothing waiting": "Ingenting som venter",
+  "You": "Deg"
 }
