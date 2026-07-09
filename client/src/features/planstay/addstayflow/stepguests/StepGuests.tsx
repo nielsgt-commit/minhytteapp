@@ -29,6 +29,8 @@ export function StepGuests({
   guestInputRef,
   stepClass,
   stepActiveClass,
+  heading,
+  description,
 }: {
   isActive: boolean
   users: User[]
@@ -39,6 +41,8 @@ export function StepGuests({
   guestInputRef: RefObject<HTMLInputElement | null>
   stepClass: string
   stepActiveClass: string
+  heading?: string
+  description?: string
 }) {
   const { t } = useTranslation("planstay")
   const bookerStaying =
@@ -49,7 +53,7 @@ export function StepGuests({
       <Card className={styles.card}>
         <Card.Block>
           <div className={styles.headingRow}>
-            <Heading level={4}>{t("Guests")}</Heading>
+            <Heading level={4}>{heading ?? t("Guests")}</Heading>
             {draft.start_date && draft.end_date && (
               <Tag data-color="info">
                 {draft.start_date} → {draft.end_date}
@@ -58,7 +62,7 @@ export function StepGuests({
           </div>
 
           <Field>
-            <Label>{t("Add guests")}</Label>
+            <Label>{description ?? t("Add guests")}</Label>
             <Suggestion
               multiple
               selected={draft.occupants.map(o => {

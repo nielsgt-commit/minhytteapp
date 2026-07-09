@@ -168,48 +168,42 @@ function PlanStayFlowContent({
         hasStartDate={draft.start_date != null}
       />
 
-      <StepQuestion
-        question={t("Who's coming?")}
+      <StepGuests
+        isActive
+        users={users}
+        otherUsers={otherUsers}
+        selectedUserId={effectiveUserId}
+        draft={draft}
+        dispatch={dispatch}
+        guestInputRef={guestInputRef}
+        stepClass=""
+        stepActiveClass=""
+        heading={t("Who's coming?")}
         description={t("Add the people joining you.")}
-      >
-        <StepGuests
-          isActive
-          users={users}
-          otherUsers={otherUsers}
-          selectedUserId={effectiveUserId}
-          draft={draft}
-          dispatch={dispatch}
-          guestInputRef={guestInputRef}
-          stepClass=""
-          stepActiveClass=""
-        />
-      </StepQuestion>
+      />
 
-      <StepQuestion
-        question={t("Where will everyone sleep?")}
+      <StepRooms
+        isActive
+        isFetching={isFetching}
+        propertyStructures={propertyStructures}
+        propertyRooms={propertyRooms}
+        users={users}
+        occupantsByRoom={occupancy.occupantsByRoom}
+        existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
+        adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
+        unassigned={occupancy.unassigned}
+        tent={occupancy.tent}
+        draft={draft}
+        dispatch={dispatch}
+        selectedUserId={effectiveUserId}
+        expandedRoomId={expandedRoomId}
+        setExpandedRoomId={setExpandedRoomId}
+        conflicts={conflicts}
+        stepClass=""
+        stepActiveClass=""
+        heading={t("Where will everyone sleep?")}
         description={t("Assign your group to rooms and beds.")}
-      >
-        <StepRooms
-          isActive
-          isFetching={isFetching}
-          propertyStructures={propertyStructures}
-          propertyRooms={propertyRooms}
-          users={users}
-          occupantsByRoom={occupancy.occupantsByRoom}
-          existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
-          adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
-          unassigned={occupancy.unassigned}
-          tent={occupancy.tent}
-          draft={draft}
-          dispatch={dispatch}
-          selectedUserId={effectiveUserId}
-          expandedRoomId={expandedRoomId}
-          setExpandedRoomId={setExpandedRoomId}
-          conflicts={conflicts}
-          stepClass=""
-          stepActiveClass=""
-        />
-      </StepQuestion>
+      />
 
       <StepQuestion
         question={t("Ready to confirm?")}

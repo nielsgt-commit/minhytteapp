@@ -50,6 +50,8 @@ export function StepRooms({
   conflicts,
   stepClass,
   stepActiveClass,
+  heading,
+  description,
 }: {
   isActive: boolean
   isFetching: boolean
@@ -69,6 +71,8 @@ export function StepRooms({
   conflicts: PreviewConflicts | undefined
   stepClass: string
   stepActiveClass: string
+  heading?: string
+  description?: string
 }) {
   const { t } = useTranslation("planstay")
   const [hasTent, setHasTent] = useState(() => tent.length > 0)
@@ -78,13 +82,14 @@ export function StepRooms({
       <Card className={styles.card}>
         <Card.Block>
           <div className={styles.headingRow}>
-            <Heading level={4}>{t("Rooms")}</Heading>
+            <Heading level={4}>{heading ?? t("Rooms")}</Heading>
             {draft.start_date && draft.end_date && (
               <Tag data-color="info">
                 {draft.start_date} → {draft.end_date}
               </Tag>
             )}
           </div>
+          {description && <Paragraph data-size="sm">{description}</Paragraph>}
           {isFetching && (
             <Paragraph className={styles.loading}>
               {t("Checking conflicts…")}
