@@ -106,9 +106,7 @@ export function MyPlannedStay() {
     | { kind: "create" }
     | { kind: "edit"; booking: (typeof myBookings)[number] }
   const [sheetTarget, setSheetTarget] = useState<SheetTarget | null>(null)
-  const [openId, setOpenId] = useState<number | null>(
-    () => myBookings[0]?.id ?? null,
-  )
+  const [openId, setOpenId] = useState<number | null>(null)
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
     null,
   )
@@ -364,8 +362,7 @@ export function MyPlannedStay() {
                             <div className={styles.priorityTags}>
                               {priorityWeeks.map(pw => (
                                 <Tag key={pw.iso_week} data-color="warning">
-                                  {t("W{{week}} priority: {{name}}", {
-                                    week: pw.iso_week,
+                                  {t("{{name}}'s week", {
                                     name: pw.owner_name,
                                   })}
                                 </Tag>
