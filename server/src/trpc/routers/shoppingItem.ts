@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
@@ -74,6 +74,21 @@ export const shoppingItemRouter = router({
         .where(eq(shoppingListItemsTable.id, id))
         .returning()
       return toWireShoppingItem(updated)
+    }),
+
+  clearSection: propertyAdminProcedure
+    .input(z.object({ section: sectionEnum }))
+    .mutation(async ({ ctx, input }) => {
+      const deleted = await ctx.db
+        .delete(shoppingListItemsTable)
+        .where(
+          and(
+            eq(shoppingListItemsTable.property_id, input.property_id),
+            eq(shoppingListItemsTable.section, input.section),
+          ),
+        )
+        .returning()
+      return { deleted: deleted.length }
     }),
 
   delete: protectedProcedure

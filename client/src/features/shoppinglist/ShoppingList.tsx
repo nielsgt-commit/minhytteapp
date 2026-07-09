@@ -120,17 +120,22 @@ export function ShoppingList() {
     trpc.shoppingItem.delete.mutationOptions(),
     shoppingKeys,
   )
+  const clearSectionMutation = useMutationWithInvalidation(
+    trpc.shoppingItem.clearSection.mutationOptions(),
+    shoppingKeys,
+  )
 
   const { error } = useMutationsStatus(
     createMutation,
     updateMutation,
     deleteMutation,
+    clearSectionMutation,
   )
 
   // A toggle/rename is optimistic, so we don't disable the list for it — that
   // grey-out flash on every check was part of the flicker. Only a delete (an
   // item disappearing) blocks the row actions.
-  const busy = deleteMutation.isPending
+  const busy = deleteMutation.isPending || clearSectionMutation.isPending
 
   const [editingId, setEditingId] = useState<number | null>(null)
 
@@ -145,6 +150,12 @@ export function ShoppingList() {
   // menu is open so the two-tap delete confirm can keep it open between taps.
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
 
+  // Same idea for the per-section heading kebab: which section's menu is open,
+  // and which section's Clear is armed awaiting the confirming second tap.
+  const [sectionMenuOpen, setSectionMenuOpen] = useState<Section | null>(null)
+  const [confirmingClearSection, setConfirmingClearSection] =
+    useState<Section | null>(null)
+
   useEffect(() => {
     if (confirmingDeleteId == null) return
     const timer = setTimeout(() => {
@@ -154,6 +165,16 @@ export function ShoppingList() {
       clearTimeout(timer)
     }
   }, [confirmingDeleteId])
+
+  useEffect(() => {
+    if (confirmingClearSection == null) return
+    const timer = setTimeout(() => {
+      setConfirmingClearSection(null)
+    }, 4000)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [confirmingClearSection])
 
   const handleDelete = (id: number) => {
     if (confirmingDeleteId === id) {
@@ -202,6 +223,19 @@ export function ShoppingList() {
     }
   }
 
+  const handleClear = (section: Section) => {
+    if (confirmingClearSection === section) {
+      setConfirmingClearSection(null)
+      setSectionMenuOpen(null)
+      clearSectionMutation.mutate({
+        property_id: selectedPropertyId,
+        section,
+      })
+    } else {
+      setConfirmingClearSection(section)
+    }
+  }
+
   const toggleChecked = (item: (typeof items)[number]) => {
     updateMutation.mutate({
       property_id: selectedPropertyId,
@@ -245,9 +279,52 @@ export function ShoppingList() {
             return (
               <div className={styles.section} key={section}>
                 {index > 0 && <Divider />}
-                <Heading level={3} data-size="xs" className={styles.heading}>
-                  {sectionLabel(section)}
-                </Heading>
+                <div className={styles.headingRow}>
+                  <Heading level={3} data-size="xs" className={styles.heading}>
+                    {sectionLabel(section)}
+                  </Heading>
+                  <Dropdown.TriggerContext>
+                    <Dropdown.Trigger
+                      variant="tertiary"
+                      data-size="sm"
+                      icon
+                      aria-label={t("List actions")}
+                      disabled={busy}
+                      onClick={() => {
+                        setSectionMenuOpen(
+                          sectionMenuOpen === section ? null : section,
+                        )
+                        setConfirmingClearSection(null)
+                      }}
+                    >
+                      <MenuElipsisVerticalIcon aria-hidden />
+                    </Dropdown.Trigger>
+                    <Dropdown
+                      placement="bottom-end"
+                      open={sectionMenuOpen === section}
+                      onClose={() => {
+                        setSectionMenuOpen(null)
+                        setConfirmingClearSection(null)
+                      }}
+                    >
+                      <Dropdown.List>
+                        <Dropdown.Item>
+                          <Dropdown.Button
+                            data-color="danger"
+                            disabled={sectionItems.length === 0}
+                            onClick={() => {
+                              handleClear(section)
+                            }}
+                          >
+                            {confirmingClearSection === section
+                              ? t("Confirm clear?")
+                              : t("Clear list")}
+                          </Dropdown.Button>
+                        </Dropdown.Item>
+                      </Dropdown.List>
+                    </Dropdown>
+                  </Dropdown.TriggerContext>
+                </div>
                 <form action={handleAdd(section)} className={styles.addRow}>
                   <Textfield
                     aria-label={t("New item")}
