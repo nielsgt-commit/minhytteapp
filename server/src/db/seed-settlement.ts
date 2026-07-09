@@ -15,11 +15,25 @@ import {
   bookingRoomsTable,
   bookingTable,
 } from "./schema/booking.schema.ts"
+import { dinnerResponsiblesTable } from "./schema/dinner.schema.ts"
+import { eventTable } from "./schema/event.schema.ts"
 import {
+  equipmentCategoriesTable,
+  equipmentTable,
+} from "./schema/maintenance.schema.ts"
+import {
+  infrastructureTable,
+  parkingClaimsTable,
+  propertyContactsTable,
   propertyOwnersTable,
   propertyPriorityWeeksTable,
+  propertySeasonsTable,
   propertyTable,
+  structuresTable,
 } from "./schema/property.schema.ts"
+import { shoppingListItemsTable } from "./schema/shopping.schema.ts"
+import { stayTable } from "./schema/stay.schema.ts"
+import { todosTable } from "./schema/todo.schema.ts"
 import {
   expenseCategoriesTable,
   expenseSharesTable,
@@ -47,8 +61,9 @@ import {
 //   pnpm db:seed:settlement        (or: npx tsx server/src/db/seed-settlement.ts)
 //
 // Log in as SEED_LOGIN_EMAIL (default niels.theissen@gmail.com). That user is
-// made an admin and the sole *head* of Familie Alpha, so they can drive every
-// phase and close the settlement on their own.
+// made an admin and head of Familie Alpha. Every family has a head (4 heads in
+// total), so multi-head gating is real: the other heads must finish their
+// review and accept the split before the settlement can close.
 // ---------------------------------------------------------------------------
 
 const PROPERTY_NAME = "Testhytta"
@@ -58,18 +73,26 @@ const LOGIN_EMAIL = normalizeEmail(
 )
 const YEAR = new Date().getFullYear()
 
-// Each family owns the property and books its own priority week (28/29/30, the
-// only weeks allowed by the priority_week_peak_only check). Children carry the
-// `child` flag so child_weight policies have something to scale. Ownership is
-// deliberately NOT proportional to person-days so the custom "by ownership %"
+// Each family owns the property and books its stay week; alpha/beta/gamma book
+// their priority week (28/29/30, the only weeks allowed by the
+// priority_week_peak_only check), delta books outside the peak. Children carry
+// the `child` flag so child_weight policies have something to scale. Ownership
+// is deliberately NOT proportional to person-days so the custom "by ownership %"
 // policy splits visibly differently from the built-in occupancy_days flow.
 // Person-days = (members who book) * stayLength, child_weight = 1 in built-in.
-type SeedMember = { name: string; email: string; child?: boolean }
+// `head: true` marks the family's head; Alpha's head is the login admin.
+type SeedMember = {
+  name: string
+  email: string
+  child?: boolean
+  head?: boolean
+}
 type SeedGroup = {
-  key: "alpha" | "beta" | "gamma"
+  key: "alpha" | "beta" | "gamma" | "delta"
   name: string
   ownership: string
-  priorityWeek: 28 | 29 | 30
+  priorityWeek?: 28 | 29 | 30
+  stayWeek: number
   stayLength: number
   members: SeedMember[]
 }
@@ -77,8 +100,9 @@ const GROUPS: SeedGroup[] = [
   {
     key: "alpha",
     name: "Familie Alpha",
-    ownership: "60.00",
+    ownership: "40.00",
     priorityWeek: 28,
+    stayWeek: 28,
     stayLength: 7, // the whole of week 28
     members: [
       // The login admin is prepended as the head; these are the rest.
@@ -92,9 +116,10 @@ const GROUPS: SeedGroup[] = [
     name: "Familie Beta",
     ownership: "20.00",
     priorityWeek: 29,
+    stayWeek: 29,
     stayLength: 5,
     members: [
-      { name: "Bjørn Beta", email: `bjorn${SEED_DOMAIN}` },
+      { name: "Bjørn Beta", email: `bjorn${SEED_DOMAIN}`, head: true },
       { name: "Berit Beta", email: `berit${SEED_DOMAIN}` },
       { name: "Bea Beta", email: `bea${SEED_DOMAIN}` },
       { name: "Bo Beta", email: `bo${SEED_DOMAIN}`, child: true },
@@ -105,11 +130,26 @@ const GROUPS: SeedGroup[] = [
     name: "Familie Gamma",
     ownership: "20.00",
     priorityWeek: 30,
+    stayWeek: 30,
     stayLength: 3,
     members: [
-      { name: "Cecilie Gamma", email: `cecilie${SEED_DOMAIN}` },
+      { name: "Cecilie Gamma", email: `cecilie${SEED_DOMAIN}`, head: true },
       { name: "Carl Gamma", email: `carl${SEED_DOMAIN}` },
       { name: "Cilla Gamma", email: `cilla${SEED_DOMAIN}`, child: true },
+    ],
+  },
+  {
+    key: "delta",
+    name: "Familie Delta",
+    ownership: "20.00",
+    // No priority week: only 28-30 pass the peak-only check, and those are
+    // taken. Delta stays outside the peak instead.
+    stayWeek: 31,
+    stayLength: 4,
+    members: [
+      { name: "Dag Delta", email: `dag${SEED_DOMAIN}`, head: true },
+      { name: "Dina Delta", email: `dina${SEED_DOMAIN}` },
+      { name: "Dora Delta", email: `dora${SEED_DOMAIN}`, child: true },
     ],
   },
 ]
@@ -249,6 +289,44 @@ async function teardown() {
       ids => db.delete(bookingTable).where(inArray(bookingTable.id, ids)),
       bookingIds,
     )
+    // Feature rows created by using the app against the seeded Testhytta
+    // (todos, parking, shopping, stays, assets, ...). None of these FKs
+    // cascade from properties, so teardown must clear them; their own
+    // children DO cascade (assignees, rooms, maintenance/inspections/
+    // procedure steps), so one delete per table is enough.
+    await db
+      .delete(todosTable)
+      .where(inArray(todosTable.property_id, propertyIds))
+    await db
+      .delete(parkingClaimsTable)
+      .where(inArray(parkingClaimsTable.property_id, propertyIds))
+    await db
+      .delete(shoppingListItemsTable)
+      .where(inArray(shoppingListItemsTable.property_id, propertyIds))
+    await db
+      .delete(dinnerResponsiblesTable)
+      .where(inArray(dinnerResponsiblesTable.property_id, propertyIds))
+    await db
+      .delete(eventTable)
+      .where(inArray(eventTable.property_id, propertyIds))
+    await db
+      .delete(stayTable)
+      .where(inArray(stayTable.property_id, propertyIds))
+    await db
+      .delete(propertyContactsTable)
+      .where(inArray(propertyContactsTable.property_id, propertyIds))
+    await db
+      .delete(equipmentTable)
+      .where(inArray(equipmentTable.property_id, propertyIds))
+    await db
+      .delete(equipmentCategoriesTable)
+      .where(inArray(equipmentCategoriesTable.property_id, propertyIds))
+    await db
+      .delete(infrastructureTable)
+      .where(inArray(infrastructureTable.property_id, propertyIds))
+    await db
+      .delete(structuresTable)
+      .where(inArray(structuresTable.property_id, propertyIds))
     await delIn(
       ids =>
         db
@@ -256,6 +334,10 @@ async function teardown() {
           .where(inArray(propertyPriorityWeeksTable.property_id, ids)),
       propertyIds,
     )
+    // After priority weeks: they reference seasons without cascade.
+    await db
+      .delete(propertySeasonsTable)
+      .where(inArray(propertySeasonsTable.property_id, propertyIds))
     await delIn(
       ids =>
         db
@@ -423,7 +505,7 @@ async function main() {
       await db.insert(userGroupMembersTable).values({
         user_group_id: groupId,
         user_id: uid,
-        is_head: false,
+        is_head: m.head ?? false,
       })
       ids.push(uid)
     }
@@ -436,14 +518,20 @@ async function main() {
     })
   }
 
-  // --- priority weeks (peak weeks 28-30, one per owner group) ------------
+  // --- priority weeks (peak weeks 28-30; delta has none) ------------------
   await db.insert(propertyPriorityWeeksTable).values(
-    GROUPS.map(g => ({
-      property_id: propertyId,
-      user_group_id: groupIdByKey[g.key],
-      year: YEAR,
-      iso_week: g.priorityWeek,
-    })),
+    GROUPS.flatMap(g =>
+      g.priorityWeek == null
+        ? []
+        : [
+            {
+              property_id: propertyId,
+              user_group_id: groupIdByKey[g.key],
+              year: YEAR,
+              iso_week: g.priorityWeek,
+            },
+          ],
+    ),
   )
 
   // --- settlement (built-in occupancy_days flow) -------------------------
@@ -514,12 +602,12 @@ async function main() {
   }
 
   // --- bookings + occupants (the person-days that drive the split) -------
-  // Each family stays its whole priority week with all its members aboard, so
-  // person-days = members * stayLength and every member is "present during a
-  // priority week" for the time-condition policies.
+  // Each family stays its stay week with all its members aboard, so
+  // person-days = members * stayLength, and alpha/beta/gamma members are
+  // "present during a priority week" for the time-condition policies.
   for (const g of GROUPS) {
     const occupants = memberIds[g.key]
-    const monday = isoWeekMonday(YEAR, g.priorityWeek)
+    const monday = isoWeekMonday(YEAR, g.stayWeek)
     const start = monday.toString()
     const end = monday.add({ days: g.stayLength - 1 }).toString()
     const bookingId = (
@@ -591,7 +679,19 @@ async function main() {
       status: "reimbursed",
       expense_types: ["Brensel"],
     },
-    // Submitted → review queue.
+    {
+      property_id: propertyId,
+      settlement_id: settlementId,
+      description: "Brensel vinter",
+      amount: 350,
+      payer_id: memberIds.delta[1], // Dina Delta
+      reimbursed_by_id: memberIds.delta[0], // Dag Delta
+      date: isoDate(2, 15),
+      status: "reimbursed",
+      expense_types: ["Brensel"],
+    },
+    // Submitted → review queue (one per head except Delta, so each head's
+    // progress state differs).
     {
       property_id: propertyId,
       settlement_id: settlementId,
@@ -617,10 +717,20 @@ async function main() {
       settlement_id: settlementId,
       description: "Vedlikehold rør",
       amount: 250,
-      payer_id: memberIds.gamma[0], // Cecilie Gamma
+      payer_id: memberIds.gamma[0], // Cecilie Gamma (head-paid, auto-pot)
       date: isoDate(8, 14),
       status: "submitted",
       expense_types: ["Vedlikehold"],
+    },
+    {
+      property_id: propertyId,
+      settlement_id: settlementId,
+      description: "Renhold vår",
+      amount: 200,
+      payer_id: memberIds.alpha[1], // Anna Alpha → login head's queue
+      date: isoDate(5, 18),
+      status: "submitted",
+      expense_types: ["Renhold"],
     },
   ])
 
@@ -775,13 +885,16 @@ async function main() {
   console.log("settlement seed complete.")
   console.log(`  property      #${String(propertyId)} "${PROPERTY_NAME}"`)
   console.log(
-    `  log in as     ${LOGIN_EMAIL}  (admin + sole head of Familie Alpha)`,
+    `  log in as     ${LOGIN_EMAIL}  (admin + head of Familie Alpha)`,
   )
   console.log(
-    `  users         ${String(userCount)} across 3 owner groups (${String(childCount)} children)`,
+    `  users         ${String(userCount)} across ${String(GROUPS.length)} owner groups (${String(childCount)} children)`,
   )
   console.log(
-    "  priority wks  Alpha=28, Beta=29, Gamma=30 (stays land in these weeks)",
+    "  heads         4: login (Alpha), Bjørn Beta, Cecilie Gamma, Dag Delta",
+  )
+  console.log(
+    "  priority wks  Alpha=28, Beta=29, Gamma=30 (stays in these weeks; Delta stays week 31)",
   )
   console.log(
     `  total days    ${String(openResult.total_booking_days ?? 0)} person-days`,
@@ -791,10 +904,10 @@ async function main() {
     `  OPEN sett.    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, collecting_expenses)`,
   )
   console.log(
-    "    reimbursed  Strøm 800 + Vedlikehold 1200 -> Alpha, Forsikring 500 -> Beta, Brensel 300 -> Gamma",
+    "    reimbursed  Strøm 800 + Vedlikehold 1200 -> Alpha, Forsikring 500 -> Beta, Brensel 300 -> Gamma, Brensel 350 -> Delta",
   )
   console.log(
-    "    to review   Renhold 400, Strøm 150, Vedlikehold 250 (submitted)",
+    "    to review   Renhold 400 (Gamma), Strøm 150 (Beta), Vedlikehold 250 (Gamma, head-paid), Renhold 200 (Alpha)",
   )
   console.log(`    shares      ${shareLine(openResult)}`)
   console.log(`    net         ${netLine(openResult)}`)
@@ -802,7 +915,7 @@ async function main() {
   console.log("")
   console.log('  custom policy "Strøm etter eierandel, resten etter døgn"')
   console.log(
-    "    Strøm by ownership % (Alpha 60 / Beta 20 / Gamma 20), rest by person-days",
+    "    Strøm by ownership % (Alpha 40 / Beta 20 / Gamma 20 / Delta 20), rest by person-days",
   )
   console.log("    edit it in Administrer -> Fordelingspolicy")
   if (
