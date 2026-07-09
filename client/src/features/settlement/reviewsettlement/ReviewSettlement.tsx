@@ -130,6 +130,18 @@ export function ReviewSettlement({
         />
       </div>
 
+      <Paragraph data-size="sm">
+        {t(
+          "This is where each household head decides what stays in the final settlement. Go over the approved expenses and turn off Still reviewing when you're done — the settlement moves on once every head has finished.",
+        )}
+      </Paragraph>
+      {showWaiting && pendingOthers.length > 0 && (
+        <Paragraph role="alert" data-size="sm">
+          {t("Waiting for {{names}} to complete the settlement.", {
+            names: pendingOthers.map(h => h.name).join(", "),
+          })}
+        </Paragraph>
+      )}
       {expensesToShow.length === 0 ? (
         <EmptyState title={t("No reimbursed expenses.")} />
       ) : (
@@ -174,13 +186,6 @@ export function ReviewSettlement({
             </Button>
           )}
         </div>
-      )}
-      {showWaiting && pendingOthers.length > 0 && (
-        <Paragraph role="alert" data-size="sm">
-          {t("Waiting for {{names}} to complete the settlement.", {
-            names: pendingOthers.map(h => h.name).join(", "),
-          })}
-        </Paragraph>
       )}
       <ErrorAlert error={status.error} />
     </>

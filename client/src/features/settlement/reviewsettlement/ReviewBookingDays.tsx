@@ -109,6 +109,11 @@ export function ReviewBookingDays({
           }}
         />
       </div>
+      <Paragraph data-size="sm">
+        {t(
+          "This is where you review your family group's bookings for the period. The booking days decide how the total is split between the households, so make sure the days and guests are right.",
+        )}
+      </Paragraph>
       {!stillAccepting && (
         <Paragraph role="alert" data-size="sm">
           <Trans

@@ -33,6 +33,11 @@ export function ReviewHeader({
           }}
         />
       </div>
+      <Paragraph data-size="sm">
+        {t(
+          "This is where you review the expenses logged by your family group. Approving an expense adds it to the settlement for review — what stays in the final settlement is decided in the Review settlement step.",
+        )}
+      </Paragraph>
       {warningCount != null && (
         <Paragraph role="alert" data-size="sm">
           {t(

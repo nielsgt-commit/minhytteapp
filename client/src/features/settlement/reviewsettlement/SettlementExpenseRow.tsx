@@ -1,10 +1,13 @@
+import { useState } from "react"
 import {
   Card,
   Divider,
+  Dropdown,
   Paragraph,
   Switch,
   Tag,
 } from "@digdir/designsystemet-react"
+import { MenuElipsisVerticalIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import type { Temporal } from "temporal-polyfill"
 import styles from "./SettlementExpenseRow.module.css"
@@ -45,6 +48,7 @@ export function SettlementExpenseRow({
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const editDialog = useToggleState()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const updateExpense = useMutationWithInvalidation(
     trpc.expense.update.mutationOptions({
@@ -94,11 +98,49 @@ export function SettlementExpenseRow({
     <Card asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
-          <Paragraph asChild data-size="sm">
-            <span className={styles.category}>
-              {expense.expense_types[0] ?? t("(no category)")}
+          <div className={styles.cardHeader}>
+            <Paragraph asChild data-size="sm">
+              <span className={styles.category}>
+                {expense.expense_types[0] ?? t("(no category)")}
+              </span>
+            </Paragraph>
+            <span className={styles.menu}>
+              <Dropdown.TriggerContext>
+                <Dropdown.Trigger
+                  variant="tertiary"
+                  data-size="sm"
+                  icon
+                  aria-label={t("Expense actions")}
+                  onClick={() => {
+                    setMenuOpen(o => !o)
+                  }}
+                >
+                  <MenuElipsisVerticalIcon aria-hidden />
+                </Dropdown.Trigger>
+                <Dropdown
+                  placement="bottom-end"
+                  open={menuOpen}
+                  onClose={() => {
+                    setMenuOpen(false)
+                  }}
+                >
+                  <Dropdown.List>
+                    <Dropdown.Item>
+                      <Dropdown.Button
+                        disabled={!editable || updateExpense.isPending}
+                        onClick={() => {
+                          setMenuOpen(false)
+                          editDialog.open()
+                        }}
+                      >
+                        {t("Edit")}
+                      </Dropdown.Button>
+                    </Dropdown.Item>
+                  </Dropdown.List>
+                </Dropdown>
+              </Dropdown.TriggerContext>
             </span>
-          </Paragraph>
+          </div>
           <span className={styles.receipt}>
             <ReceiptDateButton
               value={expense.receipt_date}
@@ -156,18 +198,16 @@ export function SettlementExpenseRow({
                 }}
               />
             </span>
-            <EditExpenseDialog
-              expenseId={expense.id}
-              open={editDialog.value}
-              onOpen={editDialog.open}
-              onClose={editDialog.close}
-              defaultCategory={expense.expense_types[0] ?? ""}
-              onSubmit={submitCategory}
-              saving={updateExpense.isPending}
-              errorMessage={updateExpense.error?.message ?? null}
-              editable={editable}
-            />
           </div>
+          <EditExpenseDialog
+            expenseId={expense.id}
+            open={editDialog.value}
+            onClose={editDialog.close}
+            defaultCategory={expense.expense_types[0] ?? ""}
+            onSubmit={submitCategory}
+            saving={updateExpense.isPending}
+            errorMessage={updateExpense.error?.message ?? null}
+          />
           <ErrorAlert error={editDialog.value ? null : updateExpense.error} />
         </Card.Block>
       </article>

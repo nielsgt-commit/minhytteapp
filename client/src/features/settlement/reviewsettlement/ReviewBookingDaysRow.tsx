@@ -1,12 +1,13 @@
 import { useState } from "react"
 import {
-  Button,
   Card,
+  Dropdown,
   Heading,
   Paragraph,
   Switch,
   Tag,
 } from "@digdir/designsystemet-react"
+import { MenuElipsisVerticalIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./ReviewBookingDays.module.css"
 import {
@@ -108,6 +109,7 @@ export function ReviewBookingDaysRow({
 
   const [edit, setEdit] = useState<EditState | null>(null)
   const editing = edit != null
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const updateBooking = useMutationWithInvalidation(
     trpc.booking.update.mutationOptions({
@@ -236,13 +238,48 @@ export function ReviewBookingDaysRow({
               }}
             />
           ) : (
-            <Heading level={4} data-size="2xs">
-              {formatDateRange(
-                booking.start_date,
-                booking.end_date,
-                i18n.language,
-              )}
-            </Heading>
+            <div className={styles.cardHeader}>
+              <Heading level={4} data-size="2xs">
+                {formatDateRange(
+                  booking.start_date,
+                  booking.end_date,
+                  i18n.language,
+                )}
+              </Heading>
+              <Dropdown.TriggerContext>
+                <Dropdown.Trigger
+                  variant="tertiary"
+                  data-size="sm"
+                  icon
+                  aria-label={t("Booking actions")}
+                  onClick={() => {
+                    setMenuOpen(o => !o)
+                  }}
+                >
+                  <MenuElipsisVerticalIcon aria-hidden />
+                </Dropdown.Trigger>
+                <Dropdown
+                  placement="bottom-end"
+                  open={menuOpen}
+                  onClose={() => {
+                    setMenuOpen(false)
+                  }}
+                >
+                  <Dropdown.List>
+                    <Dropdown.Item>
+                      <Dropdown.Button
+                        onClick={() => {
+                          setMenuOpen(false)
+                          enterEdit()
+                        }}
+                      >
+                        {t("Edit")}
+                      </Dropdown.Button>
+                    </Dropdown.Item>
+                  </Dropdown.List>
+                </Dropdown>
+              </Dropdown.TriggerContext>
+            </div>
           )}
         </Card.Block>
         <Card.Block data-size="sm">
@@ -323,24 +360,13 @@ export function ReviewBookingDaysRow({
                 })
               }}
             />
-            {editing ? (
+            {editing && (
               <EditActions
                 onSave={save}
                 onCancel={cancelEdit}
                 saving={updateBooking.isPending}
                 bookerMissing={bookerMissing}
               />
-            ) : (
-              <Button
-                variant="tertiary"
-                data-size="sm"
-                type="button"
-                onClick={() => {
-                  enterEdit()
-                }}
-              >
-                {t("Edit")}
-              </Button>
             )}
           </div>
         </Card.Block>

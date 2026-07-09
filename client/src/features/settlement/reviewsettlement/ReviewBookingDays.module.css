@@ -6,6 +6,14 @@
   margin-bottom: 0.5rem;
 }
 
+/* Date range with the kebab menu pinned to the right edge. */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .footer {
   display: flex;
   flex-direction: column;

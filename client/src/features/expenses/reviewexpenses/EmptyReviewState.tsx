@@ -30,7 +30,6 @@ export function EmptyReviewState({
   const toBookingDays = next === "collecting_bookings"
   return (
     <>
-      <Card>{t("No more items to review.")}</Card>
       <Paragraph data-size="sm">
         {toBookingDays ? (
           <Trans
@@ -46,6 +45,7 @@ export function EmptyReviewState({
           />
         )}
       </Paragraph>
+      <Card>{t("No more items to review.")}</Card>
       {!stillAccepting && next != null && (
         <Button
           type="button"

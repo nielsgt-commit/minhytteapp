@@ -65,15 +65,18 @@ export function SettlementProgressSummary({
 
   return (
     <div className={styles.summary}>
-      <Chip.Button
-        type="button"
-        aria-expanded={open}
-        onClick={() => {
-          setOpen(o => !o)
-        }}
-      >
-        {openYear ?? "—"}
-      </Chip.Button>
+      <div className={styles.chipRow}>
+        <Paragraph data-size="sm">{t("Settlement:")}</Paragraph>
+        <Chip.Button
+          type="button"
+          aria-expanded={open}
+          onClick={() => {
+            setOpen(o => !o)
+          }}
+        >
+          {openYear ?? "—"}
+        </Chip.Button>
+      </div>
       {open && (
         <Card asChild className={styles.card}>
           <article>

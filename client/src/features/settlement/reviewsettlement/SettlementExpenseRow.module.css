@@ -9,15 +9,25 @@
 
 .row {
   display: grid;
-  grid-template-columns: auto auto auto 1fr auto auto auto auto;
-  grid-template-areas: "category submitter name . sumLabel amount receipt actions";
+  grid-template-columns: auto auto 1fr auto auto auto auto;
+  grid-template-areas:
+    "header header header header header header header"
+    "submitter name . sumLabel amount receipt actions";
   align-items: baseline;
   gap: 1rem;
   justify-content: space-between;
 }
 
+/* Category pill on the left, kebab menu pinned to the right, on one row. */
+.cardHeader {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .category {
-  grid-area: category;
   display: inline-flex;
   align-items: baseline;
   padding: 0.125rem 0.625rem;
@@ -75,7 +85,7 @@
   .row {
     grid-template-columns: auto auto auto;
     grid-template-areas:
-      "category   .       ."
+      "header     header  header"
       "submitter  .       name"
       "sumLabel   .       amount"
       "receipt    receipt receipt"
@@ -85,9 +95,6 @@
     column-gap: 0.5rem;
   }
   .receipt {
-    justify-self: start;
-  }
-  .category {
     justify-self: start;
   }
   .submittedByLabel {

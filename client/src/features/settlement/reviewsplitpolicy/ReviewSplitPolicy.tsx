@@ -74,6 +74,16 @@ export function ReviewSplitPolicy({ settlementId, prev, stepNumber }: Props) {
             {String(stepNumber)}. {t("Review split policy")}
           </Heading>
           <Paragraph data-size="sm">
+            {t(
+              "This is where you see the final split between the households and the transfers needed to even things out. Once every head has accepted, the settlement is closed.",
+            )}
+          </Paragraph>
+          {myHead == null && !closed && (
+            <Paragraph data-size="sm">
+              {t("Only heads of this property can accept.")}
+            </Paragraph>
+          )}
+          <Paragraph data-size="sm">
             {t("Policy:")} <strong>{policyLabel}</strong>
             {closed ? t(" (closed)") : ""}
           </Paragraph>
@@ -209,11 +219,6 @@ export function ReviewSplitPolicy({ settlementId, prev, stepNumber }: Props) {
                 {myHead?.accepted ? t("Accepted") : t("Accept and close")}
               </Button>
             </>
-          )}
-          {myHead == null && !closed && (
-            <Paragraph data-size="sm">
-              {t("Only heads of this property can accept.")}
-            </Paragraph>
           )}
           <ErrorAlert error={status.error} />
         </Card.Block>

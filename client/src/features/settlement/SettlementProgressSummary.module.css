@@ -5,6 +5,13 @@
   align-items: flex-start;
 }
 
+/* Label and year chip on one line. */
+.chipRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+}
+
 /* Drop the card's surface fill; keep the solid outline. */
 .card {
   background: transparent;
