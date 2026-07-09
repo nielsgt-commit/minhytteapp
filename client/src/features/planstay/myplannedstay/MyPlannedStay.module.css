@@ -63,6 +63,20 @@
   margin-left: 0;
 }
 
+/* On mobile, drop the priority tags to their own row so the date range and
+   kebab are alone on the first row. */
+@media (max-width: 640px) {
+  .priorityTags {
+    order: 1;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .priorityTags + .kebab {
+    margin-left: auto;
+  }
+}
+
 .companions {
   display: flex;
   flex-wrap: wrap;
