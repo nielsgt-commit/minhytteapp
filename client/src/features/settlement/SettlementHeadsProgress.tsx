@@ -50,7 +50,7 @@ export function SettlementHeadsProgress({
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
 
   const { data: me } = useSuspenseQuery(trpc.user.me.queryOptions())
   const { data: users } = useSuspenseQuery(
@@ -91,7 +91,7 @@ export function SettlementHeadsProgress({
 
   return (
     <Card asChild className={styles.tracker} data-size="sm">
-      <section aria-label={t("Household heads")}>
+      <section aria-label={t("Settlement progress")}>
         <Card.Block className={styles.block}>
           <button
             type="button"
@@ -102,7 +102,7 @@ export function SettlementHeadsProgress({
               setExpanded(e => !e)
             }}
           >
-            <span className={styles.heading}>{t("Household heads")}</span>
+            <span className={styles.heading}>{t("Settlement progress")}</span>
             {stackedHeads.length > 0 && (
               <span className={styles.stack} aria-hidden>
                 {stackedHeads.map(h => (

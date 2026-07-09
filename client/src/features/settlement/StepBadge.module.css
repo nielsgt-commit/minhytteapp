@@ -1,0 +1,36 @@
+/* Same look as the phase-stepper badges so intro, stepper and step headings
+   read as one system. */
+.badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--ds-color-neutral-border-default);
+  background: var(--ds-color-neutral-background-default);
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.active {
+  background: var(--ds-color-accent-background-default);
+  border-color: var(--ds-color-accent-border-default);
+  color: var(--ds-color-accent-text-default);
+}
+
+.done {
+  background: var(--ds-color-success-surface-default);
+  border-color: var(--ds-color-success-border-default);
+  color: var(--ds-color-success-text-default);
+}
+
+/* Layout helper for headings that lead with a badge. */
+.stepHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+}

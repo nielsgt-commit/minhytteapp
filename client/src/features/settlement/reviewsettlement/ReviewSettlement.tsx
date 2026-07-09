@@ -1,9 +1,9 @@
 import { useState } from "react"
 import {
   Button,
+  Dialog,
   Heading,
   Paragraph,
-  Switch,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
@@ -21,6 +21,9 @@ import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { type SettlementPhase } from "@/features/settlement/phase"
+import { SettlementHeadsProgress } from "@/features/settlement/SettlementHeadsProgress.tsx"
+import { StepBadge } from "@/features/settlement/StepBadge.tsx"
+import stepStyles from "@/features/settlement/StepBadge.module.css"
 
 function sortExpenses(expenses: ExpenseRow[]) {
   return expenses
@@ -45,7 +48,7 @@ export function ReviewSettlement({
 }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const [showWaiting, setShowWaiting] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const { heads, reimbursed, editableHeadId } =
     useReviewSettlementData(settlementId)
   const { visibleIds } = useHeadVisibility()
@@ -93,101 +96,168 @@ export function ReviewSettlement({
 
   const pendingOthers = otherHeads.filter(h => !h.review_done)
   const allHeadsDone = pendingOthers.length === 0 && myReviewDone
-
-  const onProgressToggle = (checked: boolean) => {
-    setShowWaiting(false)
-    updateProgress.mutate({ id: settlementId, done: !checked })
-  }
-
-  const onContinueClick = () => {
-    if (!allHeadsDone) {
-      setShowWaiting(true)
-      return
-    }
-    if (next == null) return
-    advancePhase.mutate({
-      id: settlementId,
-      from: "reviewing",
-      to: next,
-    })
-  }
+  const iAmHead = editableHeadId != null
 
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">
-          {String(stepNumber)}. {t("Review settlement")}
+        <Heading level={4} data-size="sm" className={stepStyles.stepHeading}>
+          <StepBadge number={stepNumber} state="active" />
+          {t("Review settlement")}
         </Heading>
-        <Switch
-          label={t("Still reviewing")}
-          position="end"
-          data-size="sm"
-          checked={stillReviewing}
-          disabled={updateProgress.isPending}
-          onChange={e => {
-            onProgressToggle(e.target.checked)
-          }}
-        />
       </div>
 
-      <Paragraph data-size="sm">
-        {t(
-          "This is where each household head decides what stays in the final settlement. Go over the approved expenses and turn off Still reviewing when you're done — the settlement moves on once every head has finished.",
-        )}
-      </Paragraph>
-      {showWaiting && pendingOthers.length > 0 && (
-        <Paragraph role="alert" data-size="sm">
-          {t("Waiting for {{names}} to complete the settlement.", {
-            names: pendingOthers.map(h => h.name).join(", "),
-          })}
-        </Paragraph>
-      )}
-      {expensesToShow.length === 0 ? (
-        <EmptyState title={t("No reimbursed expenses.")} />
-      ) : (
-        <ul className={expenseRowStyles.list}>
-          {expensesToShow.map(e => (
-            <li key={e.id}>
-              <SettlementExpenseRow
-                expense={e}
-                editable={effectiveHeadId(e) === editableHeadId}
-                openSettlementId={settlementId}
-              />
-            </li>
-          ))}
-        </ul>
+      {/* Once the head marks their review done, the expense list steps aside
+          and the heads-progress panel becomes the view; Resume reviewing
+          brings the list back. */}
+      {!(iAmHead && myReviewDone) && (
+        <>
+          <Paragraph data-size="sm">
+            {t(
+              "This is where each household head decides what stays in the final settlement. Go over the approved expenses and mark your review as done — the settlement moves on once every head has finished.",
+            )}
+          </Paragraph>
+          {expensesToShow.length === 0 ? (
+            <EmptyState title={t("No reimbursed expenses.")} />
+          ) : (
+            <ul className={expenseRowStyles.list}>
+              {expensesToShow.map(e => (
+                <li key={e.id}>
+                  <SettlementExpenseRow
+                    expense={e}
+                    editable={effectiveHeadId(e) === editableHeadId}
+                    openSettlementId={settlementId}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
       {phase === "reviewing" && (
-        <div className={styles.footer}>
-          <Button
-            type="button"
-            variant="tertiary"
-            data-size="sm"
-            disabled={regressPhase.isPending || prev == null}
-            onClick={() => {
-              if (prev == null) return
-              regressPhase.mutate({
-                id: settlementId,
-                from: "reviewing",
-                to: prev,
-              })
-            }}
-          >
-            {t("Back")}
-          </Button>
-          {!stillReviewing && next != null && (
+        <>
+          {iAmHead && myReviewDone && !allHeadsDone && (
+            <Paragraph data-size="sm">
+              {t(
+                "Your review is done — waiting for the other heads to finish.",
+              )}
+            </Paragraph>
+          )}
+          {(!iAmHead || myReviewDone) && (
+            <SettlementHeadsProgress
+              settlementId={settlementId}
+              phase={phase}
+            />
+          )}
+          <div className={styles.footer}>
             <Button
               type="button"
+              variant="tertiary"
               data-size="sm"
-              disabled={advancePhase.isPending}
-              onClick={onContinueClick}
+              disabled={regressPhase.isPending || prev == null}
+              onClick={() => {
+                if (prev == null) return
+                regressPhase.mutate({
+                  id: settlementId,
+                  from: "reviewing",
+                  to: prev,
+                })
+              }}
             >
-              {t("Progress to split policy")}
+              {t("Back")}
             </Button>
-          )}
-        </div>
+            {iAmHead && stillReviewing && (
+              <Button
+                type="button"
+                data-size="sm"
+                disabled={updateProgress.isPending}
+                onClick={() => {
+                  updateProgress.mutate({ id: settlementId, done: true })
+                }}
+              >
+                {t("Mark review as done")}
+              </Button>
+            )}
+            {iAmHead && myReviewDone && (
+              <Button
+                type="button"
+                variant="tertiary"
+                data-size="sm"
+                disabled={updateProgress.isPending}
+                onClick={() => {
+                  updateProgress.mutate({ id: settlementId, done: false })
+                }}
+              >
+                {t("Resume reviewing")}
+              </Button>
+            )}
+            {iAmHead && allHeadsDone && next != null && (
+              <>
+                <Button
+                  type="button"
+                  data-size="sm"
+                  disabled={advancePhase.isPending}
+                  onClick={() => {
+                    setConfirming(true)
+                  }}
+                >
+                  {t("Progress to split policy")}
+                </Button>
+                <Dialog
+                  open={confirming}
+                  onClose={() => {
+                    setConfirming(false)
+                  }}
+                >
+                  <Dialog.Block>
+                    <Heading level={3} data-size="xs">
+                      {t("Close the review?")}
+                    </Heading>
+                  </Dialog.Block>
+                  <Dialog.Block>
+                    <Paragraph data-size="sm">
+                      {t(
+                        "Continuing finishes the review for this period — the expenses in the settlement are locked while the heads accept the split. If something needs another look, it can be reopened with the Back button on the next step.",
+                      )}
+                    </Paragraph>
+                  </Dialog.Block>
+                  <Dialog.Block>
+                    <div className={styles.footer}>
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        data-size="sm"
+                        disabled={advancePhase.isPending}
+                        onClick={() => {
+                          setConfirming(false)
+                        }}
+                      >
+                        {t("Cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        data-size="sm"
+                        disabled={advancePhase.isPending}
+                        onClick={() => {
+                          advancePhase.mutate({
+                            id: settlementId,
+                            from: "reviewing",
+                            to: next,
+                          })
+                        }}
+                      >
+                        {t("Close the review and continue")}
+                      </Button>
+                    </div>
+                    <ErrorAlert error={advancePhase.error} />
+                  </Dialog.Block>
+                </Dialog>
+              </>
+            )}
+          </div>
+        </>
       )}
-      <ErrorAlert error={status.error} />
+      {!confirming && <ErrorAlert error={status.error} />}
     </>
   )
 }

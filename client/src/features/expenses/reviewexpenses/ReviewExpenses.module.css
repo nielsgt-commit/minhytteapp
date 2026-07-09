@@ -6,6 +6,11 @@
   margin-bottom: 0.5rem;
 }
 
+.confirmActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .list {
   display: flex;
   flex-direction: column;

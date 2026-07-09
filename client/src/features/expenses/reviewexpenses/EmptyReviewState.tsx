@@ -1,12 +1,19 @@
-import { Button, Card, Paragraph } from "@digdir/designsystemet-react"
-import { Trans, useTranslation } from "react-i18next"
+import { useState } from "react"
+import {
+  Button,
+  Card,
+  Dialog,
+  Heading,
+  Paragraph,
+} from "@digdir/designsystemet-react"
+import { useTranslation } from "react-i18next"
+import styles from "./ReviewExpenses.module.css"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import type { SettlementPhase } from "@/features/settlement/phase.ts"
 
 type Props = {
   phase: SettlementPhase
-  stillAccepting: boolean
   next: SettlementPhase | null
   advancePending: boolean
   advanceError: { message: string } | null
@@ -15,13 +22,13 @@ type Props = {
 
 export function EmptyReviewState({
   phase,
-  stillAccepting,
   next,
   advancePending,
   advanceError,
   onContinue,
 }: Props) {
   const { t } = useTranslation("expenses")
+  const [confirming, setConfirming] = useState(false)
   if (phase !== "collecting_expenses") {
     return <EmptyState title={t("(nothing to review)")} />
   }
@@ -30,35 +37,68 @@ export function EmptyReviewState({
   const toBookingDays = next === "collecting_bookings"
   return (
     <>
-      <Paragraph data-size="sm">
-        {toBookingDays ? (
-          <Trans
-            t={t}
-            i18nKey="When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to booking days</3>."
-            components={{ 1: <em />, 3: <em /> }}
-          />
-        ) : (
-          <Trans
-            t={t}
-            i18nKey="When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to review settlement</3>."
-            components={{ 1: <em />, 3: <em /> }}
-          />
-        )}
-      </Paragraph>
       <Card>{t("No more items to review.")}</Card>
-      {!stillAccepting && next != null && (
-        <Button
-          type="button"
-          data-size="sm"
-          disabled={advancePending}
-          onClick={onContinue}
-        >
-          {toBookingDays
-            ? t("Continue to booking days")
-            : t("Continue to review settlement")}
-        </Button>
+      {next != null && (
+        <>
+          <div>
+            <Button
+              type="button"
+              data-size="sm"
+              onClick={() => {
+                setConfirming(true)
+              }}
+            >
+              {toBookingDays
+                ? t("Continue to booking days")
+                : t("Continue to review settlement")}
+            </Button>
+          </div>
+          <Dialog
+            open={confirming}
+            onClose={() => {
+              setConfirming(false)
+            }}
+          >
+            <Dialog.Block>
+              <Heading level={3} data-size="xs">
+                {t("Close expenses?")}
+              </Heading>
+            </Dialog.Block>
+            <Dialog.Block>
+              <Paragraph data-size="sm">
+                {t(
+                  "Continuing closes expense logging for this period — no new expenses can be added to the settlement. If something turns up later, it can be reopened with the Back button on the next step.",
+                )}
+              </Paragraph>
+            </Dialog.Block>
+            <Dialog.Block>
+              <div className={styles.confirmActions}>
+                <Button
+                  type="button"
+                  variant="tertiary"
+                  data-size="sm"
+                  disabled={advancePending}
+                  onClick={() => {
+                    setConfirming(false)
+                  }}
+                >
+                  {t("Cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  data-size="sm"
+                  disabled={advancePending}
+                  onClick={onContinue}
+                >
+                  {t("Close expenses and continue")}
+                </Button>
+              </div>
+              <ErrorAlert error={advanceError} />
+            </Dialog.Block>
+          </Dialog>
+        </>
       )}
-      <ErrorAlert error={advanceError} />
+      {!confirming && <ErrorAlert error={advanceError} />}
     </>
   )
 }

@@ -3,14 +3,16 @@ import { useState } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import {
   Button,
+  Dialog,
   Heading,
   Paragraph,
-  Switch,
 } from "@digdir/designsystemet-react"
-import { Trans, useTranslation } from "react-i18next"
+import { useTranslation } from "react-i18next"
 import styles from "./ReviewBookingDays.module.css"
 import { ReviewBookingDaysRow } from "./ReviewBookingDaysRow"
 import { type SettlementPhase } from "@/features/settlement/phase"
+import { StepBadge } from "@/features/settlement/StepBadge.tsx"
+import stepStyles from "@/features/settlement/StepBadge.module.css"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
@@ -35,7 +37,7 @@ export function ReviewBookingDays({
 }: Props) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const [stillAccepting, setStillAccepting] = useState(true)
+  const [confirming, setConfirming] = useState(false)
   const selectedPropertyId = useSelectedPropertyId()
   const propertyId = selectedPropertyId ?? 0
   const { data: bookings } = useSuspenseQuery(
@@ -95,34 +97,16 @@ export function ReviewBookingDays({
   return (
     <>
       <div className={styles.header}>
-        <Heading level={4} data-size="sm">
-          {String(stepNumber)}. {t("Review bookings")}
+        <Heading level={4} data-size="sm" className={stepStyles.stepHeading}>
+          <StepBadge number={stepNumber} state="active" />
+          {t("Review bookings")}
         </Heading>
-        <Switch
-          label={t("Allow new stays")}
-          position="end"
-          data-size="sm"
-          checked={stillAccepting}
-          disabled={advancePhase.isPending || next == null}
-          onChange={e => {
-            setStillAccepting(e.target.checked)
-          }}
-        />
       </div>
       <Paragraph data-size="sm">
         {t(
           "This is where you review your family group's bookings for the period. The booking days decide how the total is split between the households, so make sure the days and guests are right.",
         )}
       </Paragraph>
-      {!stillAccepting && (
-        <Paragraph role="alert" data-size="sm">
-          <Trans
-            ns="settlement"
-            i18nKey="Bookings will no longer be accepted for this period. When you're ready to review the settlement, click <em>Continue to review</em>."
-            components={{ em: <em /> }}
-          />
-        </Paragraph>
-      )}
       {visible.length === 0 ? (
         <EmptyState title={t("No bookings.")} />
       ) : (
@@ -166,25 +150,71 @@ export function ReviewBookingDays({
             >
               {t("Back")}
             </Button>
-            {!stillAccepting && next != null && (
-              <Button
-                type="button"
-                data-size="sm"
-                disabled={advancePhase.isPending}
-                onClick={() => {
-                  advancePhase.mutate({
-                    id: settlementId,
-                    from: "collecting_bookings",
-                    to: next,
-                  })
-                }}
-              >
-                {t("Continue to review")}
-              </Button>
+            {next != null && (
+              <>
+                <Button
+                  type="button"
+                  data-size="sm"
+                  onClick={() => {
+                    setConfirming(true)
+                  }}
+                >
+                  {t("Continue to review")}
+                </Button>
+                <Dialog
+                  open={confirming}
+                  onClose={() => {
+                    setConfirming(false)
+                  }}
+                >
+                  <Dialog.Block>
+                    <Heading level={3} data-size="xs">
+                      {t("Close stays?")}
+                    </Heading>
+                  </Dialog.Block>
+                  <Dialog.Block>
+                    <Paragraph data-size="sm">
+                      {t(
+                        "Continuing closes stay logging for this period — no new stays can be added for the settlement year. If something changes later, it can be reopened with the Back button on the next step.",
+                      )}
+                    </Paragraph>
+                  </Dialog.Block>
+                  <Dialog.Block>
+                    <div className={styles.footerActions}>
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        data-size="sm"
+                        disabled={advancePhase.isPending}
+                        onClick={() => {
+                          setConfirming(false)
+                        }}
+                      >
+                        {t("Cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        data-size="sm"
+                        disabled={advancePhase.isPending}
+                        onClick={() => {
+                          advancePhase.mutate({
+                            id: settlementId,
+                            from: "collecting_bookings",
+                            to: next,
+                          })
+                        }}
+                      >
+                        {t("Close stays and continue")}
+                      </Button>
+                    </div>
+                    <ErrorAlert error={advancePhase.error} />
+                  </Dialog.Block>
+                </Dialog>
+              </>
             )}
           </div>
         )}
-        <ErrorAlert error={status.error} />
+        {!confirming && <ErrorAlert error={status.error} />}
       </div>
     </>
   )

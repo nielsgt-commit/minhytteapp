@@ -11,7 +11,6 @@ import { ReviewExpenseCard } from "./ReviewExpenseCard.tsx"
 import { ReviewHeader } from "./ReviewHeader.tsx"
 import { EmptyReviewState } from "./EmptyReviewState.tsx"
 import { useReviewMutations } from "./useReviewMutations.ts"
-import { useAcceptingToggle } from "./useAcceptingToggle.ts"
 import type { ExpenseRow } from "../types.ts"
 import { selectExpensesToReview } from "../selectors.ts"
 import { type SettlementPhase } from "@/features/settlement/phase.ts"
@@ -63,10 +62,6 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
     me.id,
   )
 
-  const { stillAccepting, warningCount, onSwitchChange } = useAcceptingToggle(
-    toReview.length,
-  )
-
   const review = useReviewMutations({
     settlementId,
     reviewerId: me.id,
@@ -85,14 +80,7 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
     )
   }
 
-  const header = (
-    <ReviewHeader
-      stillAccepting={stillAccepting}
-      disabled={advancePhase.isPending || next == null}
-      warningCount={warningCount}
-      onSwitchChange={onSwitchChange}
-    />
-  )
+  const header = <ReviewHeader />
 
   if (toReview.length === 0) {
     return (
@@ -100,7 +88,6 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
         {header}
         <EmptyReviewState
           phase={phase}
-          stillAccepting={stillAccepting}
           next={next}
           advancePending={advancePhase.isPending}
           advanceError={advancePhase.error}

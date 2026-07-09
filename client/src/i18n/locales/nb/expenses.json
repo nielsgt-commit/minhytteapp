@@ -13,7 +13,6 @@
   "(no category)": "(ingen kategori)",
   "(no recurring fees)": "(ingen faste kostnader)",
   "(nothing to review)": "(ingenting å gå gjennom)",
-  "Allow new expenses": "Godta nye utgifter",
   "Add": "Legg til",
   "Add or remove categories": "Legg til eller fjern kategorier",
   "Add or select a property to track shared costs and keep receipts in one place.": "Legg til eller velg en eiendom for å holde oversikt over felleskostnader og samle kvitteringer på ett sted.",
@@ -65,8 +64,7 @@
   "Total": "Totalt",
   "Upload receipt": "Last opp kvittering",
   "View receipt": "Vis kvittering",
-  "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to booking days</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Godta nye utgifter</1> og klikk <3>Gå videre til bookingdager</3>.",
-  "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to review settlement</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Godta nye utgifter</1> og klikk <3>Gå videre til å gjennomgå oppgjøret</3>.",
-  "You still have {{count}} item to review — finish the list before continuing._one": "Du har fortsatt {{count}} ting å gå gjennom — fullfør listen før du går videre.",
-  "You still have {{count}} item to review — finish the list before continuing._other": "Du har fortsatt {{count}} ting å gå gjennom — fullfør listen før du går videre."
+  "Continuing closes expense logging for this period — no new expenses can be added to the settlement. If something turns up later, it can be reopened with the Back button on the next step.": "Når du går videre, stenges føring av utgifter for perioden — ingen nye utgifter kan legges til i oppgjøret. Dukker det opp noe senere, kan det åpnes igjen med Tilbake-knappen på neste steg.",
+  "Close expenses and continue": "Steng for nye utgifter og gå videre",
+  "Close expenses?": "Stenge for nye utgifter?"
 }

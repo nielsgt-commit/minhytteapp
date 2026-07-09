@@ -4,16 +4,18 @@ import { Button, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { SettlementFlow } from "@/features/settlement/SettlementFlow.tsx"
 import { SettlementDashboard } from "@/features/settlement/SettlementDashboard.tsx"
+import { SettlementIntro } from "@/features/settlement/SettlementIntro.tsx"
 import { useTRPC } from "@/trpc/trpc"
 import styles from "./SettlementDashboard.module.css"
 
 // The settlement page always lands on the dashboard. From there a head (or any
-// member) steps into the phase-by-phase flow. When there is no open settlement
-// we still show the overview framing, with an empty state and the create action.
+// member) passes through a short intro explaining the steps before entering
+// the phase-by-phase flow. When there is no open settlement we still show the
+// overview framing, with an empty state and the create action.
 export function SettlementHome({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("settlement")
   const trpc = useTRPC()
-  const [inFlow, setInFlow] = useState(false)
+  const [stage, setStage] = useState<"overview" | "intro" | "flow">("overview")
 
   const { data: settlements } = useSuspenseQuery(
     trpc.settlement.listForProperty.queryOptions({ property_id: propertyId }),
@@ -42,14 +44,14 @@ export function SettlementHome({ propertyId }: { propertyId: number }) {
     )
   }
 
-  if (!inFlow) {
+  if (stage === "overview") {
     return (
       <SettlementDashboard
         propertyId={propertyId}
         settlementId={openSettlement.id}
         year={openSettlement.year}
         onAdvance={() => {
-          setInFlow(true)
+          setStage("intro")
         }}
       />
     )
@@ -63,13 +65,23 @@ export function SettlementHome({ propertyId }: { propertyId: number }) {
           variant="tertiary"
           data-size="sm"
           onClick={() => {
-            setInFlow(false)
+            setStage("overview")
           }}
         >
           {t("← Back to overview")}
         </Button>
       </div>
-      <SettlementFlow propertyId={propertyId} />
+      {stage === "intro" ? (
+        <SettlementIntro
+          propertyId={propertyId}
+          settlementId={openSettlement.id}
+          onContinue={() => {
+            setStage("flow")
+          }}
+        />
+      ) : (
+        <SettlementFlow propertyId={propertyId} />
+      )}
     </>
   )
 }
