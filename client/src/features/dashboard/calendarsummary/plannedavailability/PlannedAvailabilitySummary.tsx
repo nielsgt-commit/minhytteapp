@@ -23,6 +23,11 @@ import { DayCard } from "./DayCard"
 import { DaySummary } from "./DaySummary"
 import { OccupancyMatrix } from "./OccupancyMatrix"
 import { roomGroupsForDay } from "./daySummaryUtils"
+import {
+  GUEST_FILTER,
+  isOccupying,
+  occupantsOnDay,
+} from "@server/shared/bedOccupancy.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { useIsMobile } from "@/hooks/useIsMobile.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation.ts"
@@ -209,17 +214,10 @@ export function PlannedAvailabilitySummary({
 
   const hasForecast = (weather?.days.length ?? 0) > 0
 
-  const propertyBookings = bookings.filter(b => b.status !== "cancelled")
+  const propertyBookings = bookings.filter(b => isOccupying(b.status))
 
-  const guestsOnDay = (iso: string) => {
-    let count = 0
-    for (const b of propertyBookings) {
-      if (iso >= b.start_date.toString() && iso <= b.end_date.toString()) {
-        count += b.occupants.length
-      }
-    }
-    return count
-  }
+  const guestsOnDay = (iso: string) =>
+    occupantsOnDay(propertyBookings, iso, GUEST_FILTER).length
 
   const roomById = new Map(rooms.map(r => [r.id, r]))
 
@@ -256,15 +254,11 @@ export function PlannedAvailabilitySummary({
 
   const birthdayGuestsOnDay = (iso: string) => {
     const seen = new Map<number, string>()
-    for (const b of propertyBookings) {
-      if (iso < b.start_date.toString() || iso > b.end_date.toString()) continue
-      for (const o of b.occupants) {
-        const u = userById.get(o.user_id)
-        if (!u?.birthday) continue
-        if (u.birthday.toString().slice(5) !== iso.slice(5)) continue
-        if (seen.has(o.user_id)) continue
-        seen.set(o.user_id, u.name)
-      }
+    for (const o of occupantsOnDay(propertyBookings, iso, GUEST_FILTER)) {
+      const u = userById.get(o.user_id)
+      if (!u?.birthday) continue
+      if (u.birthday.toString().slice(5) !== iso.slice(5)) continue
+      seen.set(o.user_id, u.name)
     }
     if (iso === todayIso) {
       for (const p of atProperty) {

@@ -1,4 +1,8 @@
 import type { Temporal } from "temporal-polyfill"
+import {
+  GUEST_FILTER,
+  occupantsOnDay,
+} from "@server/shared/bedOccupancy.ts"
 
 export type RoomInfo = {
   id: number
@@ -10,6 +14,7 @@ export type OccupantInfo = {
   room_id: number | null
   user_id: number
   user_name: string | null
+  queued?: boolean
 }
 
 export type BookingInfo = {
@@ -35,15 +40,10 @@ export function roomGroupsForDay(
   unassignedLabel: string,
 ): RoomGroup[] {
   const byRoom = new Map<number | null, Map<number, string>>()
-  for (const b of bookings) {
-    if (b.status === "cancelled") continue
-    // end_date is inclusive, so the booking occupies [start_date, end_date].
-    if (iso < b.start_date.toString() || iso > b.end_date.toString()) continue
-    for (const o of b.occupants) {
-      const guests = byRoom.get(o.room_id) ?? new Map<number, string>()
-      guests.set(o.user_id, o.user_name ?? `#${String(o.user_id)}`)
-      byRoom.set(o.room_id, guests)
-    }
+  for (const o of occupantsOnDay(bookings, iso, GUEST_FILTER)) {
+    const guests = byRoom.get(o.room_id) ?? new Map<number, string>()
+    guests.set(o.user_id, o.user_name ?? `#${String(o.user_id)}`)
+    byRoom.set(o.room_id, guests)
   }
 
   const groups: RoomGroup[] = []

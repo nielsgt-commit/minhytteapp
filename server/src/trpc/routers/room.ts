@@ -37,6 +37,7 @@ export const roomRouter = router({
           name: roomTable.name,
           structure_id: roomTable.structure_id,
           structure_name: structuresTable.name,
+          structure_category: structuresTable.category,
           beds_sm: roomTable.beds_sm,
           beds_lg: roomTable.beds_lg,
           beds_double: roomTable.beds_double,

@@ -5,8 +5,6 @@ import { bookingOccupantsTable } from "../../db/schema/booking.schema.ts"
 import {
   propertyOwnersTable,
   propertyTable,
-  roomTable,
-  structuresTable,
 } from "../../db/schema/property.schema.ts"
 import {
   userGroupMembersTable,
@@ -204,88 +202,6 @@ describe("booker need not be an occupant", () => {
         occupants: [occ(kid.id)],
       })
       expect(await occupantIds(tx, created.id)).toEqual([kid.id])
-    })
-  })
-})
-
-describe("booking.bedAvailabilityToday", () => {
-  async function seedRoom(tx: Tx, propertyId: number) {
-    const [structure] = await tx
-      .insert(structuresTable)
-      .values({ property_id: propertyId, name: "Main cabin" })
-      .returning()
-    const [room] = await tx
-      .insert(roomTable)
-      .values({
-        structure_id: structure.id,
-        name: "North room",
-        beds_sm: 2,
-        beds_double: 1,
-      })
-      .returning()
-    return { structure, room }
-  }
-
-  it("counts occupants of bookings covering today against room capacity", async () => {
-    await withRollback(async tx => {
-      const { prop, anna, bjorn } = await seed(tx)
-      const { room } = await seedRoom(tx, prop.id)
-      const caller = createCaller(ctxFor(tx, authUser(anna)))
-      const today = Temporal.Now.plainDateISO()
-      await caller.booking.create({
-        property_id: prop.id,
-        start_date: today,
-        end_date: today.add({ days: 2 }),
-        occupants: [
-          { ...occ(anna.id), room_id: room.id },
-          occ(bjorn.id), // stays but has no room yet
-        ],
-      })
-      const res = await caller.booking.bedAvailabilityToday({
-        property_id: prop.id,
-      })
-      expect(res.rooms).toHaveLength(1)
-      expect(res.rooms[0]).toMatchObject({
-        room_id: room.id,
-        name: "North room",
-        structure_name: "Main cabin",
-        capacity: 4, // 2 single + 1 double (2 slots)
-        occupied: 1,
-        available: 3,
-      })
-      expect(res.unassignedGuests).toBe(1)
-    })
-  })
-
-  it("ignores bookings outside today and queued occupants", async () => {
-    await withRollback(async tx => {
-      const { prop, anna, bjorn, kid } = await seed(tx)
-      const { room } = await seedRoom(tx, prop.id)
-      const caller = createCaller(ctxFor(tx, authUser(anna)))
-      // Future booking: must not count.
-      await caller.booking.create({
-        property_id: prop.id,
-        start_date: START,
-        end_date: END,
-        occupants: [{ ...occ(anna.id), room_id: room.id }],
-      })
-      // Current booking with a queued (waitlisted) occupant: only the placed
-      // occupant holds a bed.
-      const today = Temporal.Now.plainDateISO()
-      await caller.booking.create({
-        property_id: prop.id,
-        start_date: today,
-        end_date: today,
-        occupants: [
-          { ...occ(bjorn.id), room_id: room.id },
-          { ...occ(kid.id), room_id: room.id, queued: true },
-        ],
-      })
-      const res = await caller.booking.bedAvailabilityToday({
-        property_id: prop.id,
-      })
-      expect(res.rooms[0]).toMatchObject({ occupied: 1, available: 3 })
-      expect(res.unassignedGuests).toBe(0)
     })
   })
 })

@@ -24,6 +24,7 @@ import {
   protectedProcedure,
   router,
 } from "../init.ts"
+import { roomTotalCapacity, type BedCounts } from "../../shared/bedOccupancy.ts"
 
 const statusEnum = z.enum(["pending", "confirmed", "cancelled"])
 
@@ -126,15 +127,6 @@ type RoomCapacity = {
 
 type UserRow = { id: number; name: string; is_child: boolean | null }
 
-type BedCounts = {
-  beds_sm: number
-  beds_lg: number
-  beds_double: number
-  beds_kid: number
-  mattresses: number
-  travel_cot: number
-}
-
 function zeroBeds(): BedCounts {
   return {
     beds_sm: 0,
@@ -144,18 +136,6 @@ function zeroBeds(): BedCounts {
     mattresses: 0,
     travel_cot: 0,
   }
-}
-
-/** Total person-slots a room can hold (beds_double counts 2 slots). */
-function roomTotalCapacity(room: RoomCapacity): number {
-  return (
-    room.travel_cot +
-    room.beds_kid +
-    room.beds_sm +
-    room.beds_lg +
-    room.beds_double * 2 +
-    room.mattresses
-  )
 }
 
 type AllocateRoomResult = {
@@ -467,97 +447,6 @@ export const bookingRouter = router({
       return loadBookings(ctx.db, { property_id: input.property_id })
     }),
 
-  // Live bed availability for the dashboard: per habitable room, capacity minus
-  // occupants of confirmed bookings covering today. Queued (waitlisted)
-  // occupants hold no bed; occupants without a room only count in
-  // unassignedGuests.
-  bedAvailabilityToday: protectedProcedure
-    .input(z.object({ property_id: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      await assertPropertyMember(ctx.db, ctx.user, input.property_id)
-
-      const rooms = await ctx.db
-        .select({
-          id: roomTable.id,
-          name: roomTable.name,
-          structure_id: roomTable.structure_id,
-          structure_name: structuresTable.name,
-          structure_category: structuresTable.category,
-          beds_sm: roomTable.beds_sm,
-          beds_lg: roomTable.beds_lg,
-          beds_double: roomTable.beds_double,
-          beds_kid: roomTable.beds_kid,
-          mattresses: roomTable.mattresses,
-          travel_cot: roomTable.travel_cot,
-        })
-        .from(roomTable)
-        .innerJoin(
-          structuresTable,
-          eq(structuresTable.id, roomTable.structure_id),
-        )
-        .where(
-          and(
-            eq(structuresTable.property_id, input.property_id),
-            eq(structuresTable.category, "habitable"),
-          ),
-        )
-        .orderBy(asc(roomTable.id))
-
-      const today = sql<string>`CURRENT_DATE`
-      const occupants = await ctx.db
-        .selectDistinct({
-          user_id: bookingOccupantsTable.user_id,
-          room_id: bookingOccupantsTable.room_id,
-        })
-        .from(bookingOccupantsTable)
-        .innerJoin(
-          bookingTable,
-          eq(bookingTable.id, bookingOccupantsTable.booking_id),
-        )
-        .where(
-          and(
-            eq(bookingTable.property_id, input.property_id),
-            eq(bookingTable.status, "confirmed"),
-            eq(bookingOccupantsTable.queued, false),
-            sql`${bookingTable.start_date} <= ${today}`,
-            sql`${bookingTable.end_date} >= ${today}`,
-          ),
-        )
-
-      const occupiedByRoom = new Map<number, number>()
-      const unassignedUserIds = new Set<number>()
-      for (const o of occupants) {
-        if (o.room_id == null) {
-          unassignedUserIds.add(o.user_id)
-        } else {
-          occupiedByRoom.set(
-            o.room_id,
-            (occupiedByRoom.get(o.room_id) ?? 0) + 1,
-          )
-        }
-      }
-
-      return {
-        unassignedGuests: unassignedUserIds.size,
-        rooms: rooms.map(r => {
-          const capacity = roomTotalCapacity({
-            ...r,
-            property_id: input.property_id,
-          })
-          const occupied = occupiedByRoom.get(r.id) ?? 0
-          return {
-            room_id: r.id,
-            name: r.name,
-            structure_id: r.structure_id,
-            structure_name: r.structure_name,
-            capacity,
-            occupied,
-            available: Math.max(0, capacity - occupied),
-          }
-        }),
-      }
-    }),
-
   previewConflicts: protectedProcedure
     .input(
       z.object({
@@ -785,18 +674,7 @@ export const bookingRouter = router({
       for (const room of allRooms) {
         if (!touchedRoomIds.has(room.id)) continue
 
-        const capacity = roomTotalCapacity({
-          id: room.id,
-          name: room.name,
-          property_id: 0, // not needed here
-          structure_category: room.structure_category,
-          beds_sm: room.beds_sm,
-          beds_lg: room.beds_lg,
-          beds_double: room.beds_double,
-          beds_kid: room.beds_kid,
-          mattresses: room.mattresses,
-          travel_cot: room.travel_cot,
-        })
+        const capacity = roomTotalCapacity(room)
 
         const draftUserIdsForRoom = draftByRoom.get(room.id) ?? []
         const existingUserIdsForRoom = existingByRoom.get(room.id) ?? []
@@ -842,18 +720,7 @@ export const bookingRouter = router({
       // 6. Property-level capacity
       let totalCapacity = 0
       for (const room of allRooms) {
-        totalCapacity += roomTotalCapacity({
-          id: room.id,
-          name: room.name,
-          property_id: 0,
-          structure_category: room.structure_category,
-          beds_sm: room.beds_sm,
-          beds_lg: room.beds_lg,
-          beds_double: room.beds_double,
-          beds_kid: room.beds_kid,
-          mattresses: room.mattresses,
-          travel_cot: room.travel_cot,
-        })
+        totalCapacity += roomTotalCapacity(room)
       }
 
       // Total placed = draft occupants + all occupants in overlapping bookings

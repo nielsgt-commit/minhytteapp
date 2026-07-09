@@ -1,20 +1,15 @@
 import { Paragraph } from "@digdir/designsystemet-react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { Temporal } from "temporal-polyfill"
+import {
+  bedAvailabilityForDay,
+  type RoomAvailability,
+} from "@server/shared/bedOccupancy.ts"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
 import styles from "./RoomAvailabilityIndicator.module.css"
-
-type RoomAvailability = {
-  room_id: number
-  name: string
-  structure_id: number
-  structure_name: string | null
-  capacity: number
-  occupied: number
-  available: number
-}
 
 export function RoomAvailabilityIndicator({
   rooms,
@@ -80,17 +75,24 @@ export function RoomAvailabilityIndicator({
   )
 }
 
-// Fetches its own availability so a slow/failing query only affects this card.
+// Derives availability from the same booking/room queries the calendar card
+// uses (shared React Query cache), through the shared bedOccupancy logic, so
+// this card can never disagree with the day cards.
 export function AvailableBedsToday() {
   const trpc = useTRPC()
   const propertyId = useSelectedPropertyId() ?? 0
-  const { data } = useSuspenseQuery(
-    trpc.booking.bedAvailabilityToday.queryOptions({ property_id: propertyId }),
+  const { data: bookings } = useSuspenseQuery(
+    trpc.booking.listForProperty.queryOptions({ property_id: propertyId }),
   )
+  const { data: rooms } = useSuspenseQuery(
+    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
+  )
+  const today = Temporal.Now.plainDateISO().toString()
+  const availability = bedAvailabilityForDay(rooms, bookings, today)
   return (
     <RoomAvailabilityIndicator
-      rooms={data.rooms}
-      unassignedGuests={data.unassignedGuests}
+      rooms={availability.rooms}
+      unassignedGuests={availability.unassignedGuests}
     />
   )
 }

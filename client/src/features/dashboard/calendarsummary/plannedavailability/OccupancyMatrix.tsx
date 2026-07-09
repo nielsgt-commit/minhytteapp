@@ -2,6 +2,7 @@ import { Fragment } from "react"
 import { useTranslation } from "react-i18next"
 import { Table } from "@digdir/designsystemet-react"
 import { Temporal } from "temporal-polyfill"
+import { isOccupying, roomTotalCapacity } from "@server/shared/bedOccupancy.ts"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { formatDayMonth } from "@/utils/dateUtils"
 import styles from "./OccupancyMatrix.module.css"
@@ -58,17 +59,6 @@ type Bar = {
 
 const UNASSIGNED = "none"
 
-function roomCapacity(r: Room): number {
-  return (
-    r.beds_sm +
-    r.beds_lg +
-    r.beds_double * 2 +
-    r.beds_kid +
-    r.mattresses +
-    r.travel_cot
-  )
-}
-
 // Greedy interval partitioning: pack non-overlapping bars onto the same lane,
 // then return one array of bars per lane (each sorted by start column).
 function laneArraysFor(input: Omit<Bar, "lane">[]): Bar[][] {
@@ -115,7 +105,7 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
   const dayUsersByRoom = new Map<string, Set<number>[]>()
 
   for (const b of bookings) {
-    if (b.status === "cancelled") continue
+    if (!isOccupying(b.status)) continue
     const bStart = b.start_date.toString()
     const bEnd = b.end_date.toString()
     if (bStart > wEnd || bEnd < wStart) continue
@@ -155,7 +145,7 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
   for (const r of rooms) {
     bedsByStructure.set(
       r.structure_id,
-      (bedsByStructure.get(r.structure_id) ?? 0) + roomCapacity(r),
+      (bedsByStructure.get(r.structure_id) ?? 0) + roomTotalCapacity(r),
     )
   }
 
