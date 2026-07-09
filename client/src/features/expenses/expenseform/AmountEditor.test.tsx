@@ -101,8 +101,8 @@ describe("AmountEditor", () => {
     )
     expect(screen.getByRole("button", { name: "Add" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
-    expect(
-      screen.getByRole("button", { name: /Date on receipt/ }),
-    ).toBeDisabled()
+    // The visible date button is aria-hidden; the real control is the
+    // invisible native date input overlaying it.
+    expect(screen.getByLabelText(/Date on receipt/)).toBeDisabled()
   })
 })
