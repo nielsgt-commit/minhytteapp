@@ -40,11 +40,11 @@ export function SettlementDashboard({
       </header>
 
       <div className={styles.grid}>
-        <TopContributorsCard
+        <LeadingCategoriesCard
           propertyId={propertyId}
           settlementId={settlementId}
         />
-        <LeadingCategoriesCard
+        <TopContributorsCard
           propertyId={propertyId}
           settlementId={settlementId}
         />
