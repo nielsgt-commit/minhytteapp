@@ -11,7 +11,17 @@ beforeAll(async () => {
       fallbackLng: "en",
       ns: ["dashboard"],
       defaultNS: "dashboard",
-      resources: { en: { dashboard: {} } },
+      // Plural keys need real entries; everything else falls back to the key.
+      resources: {
+        en: {
+          dashboard: {
+            "{{count}} guest without a room_one":
+              "{{count}} guest without a room",
+            "{{count}} guest without a room_other":
+              "{{count}} guests without a room",
+          },
+        },
+      },
       keySeparator: false,
       nsSeparator: ":",
       interpolation: { escapeValue: false },
@@ -19,93 +29,98 @@ beforeAll(async () => {
   }
 })
 
-const emptyBeds = {
-  beds_sm: 0,
-  beds_lg: 0,
-  beds_double: 0,
-  beds_kid: 0,
-  mattresses: 0,
-  travel_cot: 0,
+const baseRoom = {
+  room_id: 1,
+  name: "North room",
+  structure_id: 1,
+  structure_name: "Main cabin" as string | null,
+  capacity: 4,
+  occupied: 0,
+  available: 4,
+}
+
+function room(overrides: Partial<typeof baseRoom> = {}) {
+  return { ...baseRoom, ...overrides }
 }
 
 describe("RoomAvailabilityIndicator", () => {
-  test("groups rooms by structure and shows the structure name", () => {
+  test("shows each room name with its available/capacity count", () => {
     render(
       <RoomAvailabilityIndicator
         rooms={[
-          {
-            ...emptyBeds,
-            beds_sm: 2,
-            structure_id: 1,
-            structure_name: "Main cabin",
-          },
-          {
-            ...emptyBeds,
-            beds_lg: 1,
-            structure_id: 1,
-            structure_name: "Main cabin",
-          },
-          {
-            ...emptyBeds,
-            beds_sm: 1,
-            structure_id: 2,
-            structure_name: "Annex",
-          },
+          room({ room_id: 1, name: "North room", capacity: 4, available: 3 }),
+          room({ room_id: 2, name: "South room", capacity: 2, available: 2 }),
         ]}
+        unassignedGuests={0}
       />,
     )
-    expect(screen.getAllByText("Main cabin")).toHaveLength(1)
+    expect(screen.getByText("North room 3/4")).toBeInTheDocument()
+    expect(screen.getByText("South room 2/2")).toBeInTheDocument()
+  })
+
+  test("shows the total available bed count", () => {
+    render(
+      <RoomAvailabilityIndicator
+        rooms={[
+          room({ room_id: 1, capacity: 4, available: 3 }),
+          room({ room_id: 2, name: "South room", capacity: 2, available: 0 }),
+        ]}
+        unassignedGuests={0}
+      />,
+    )
+    expect(screen.getByText("3 of 6 beds available")).toBeInTheDocument()
+  })
+
+  test("shows structure names only when rooms span multiple structures", () => {
+    const { rerender } = render(
+      <RoomAvailabilityIndicator
+        rooms={[
+          room({ room_id: 1, structure_id: 1, structure_name: "Main cabin" }),
+          room({
+            room_id: 2,
+            name: "Annex room",
+            structure_id: 2,
+            structure_name: "Annex",
+          }),
+        ]}
+        unassignedGuests={0}
+      />,
+    )
+    expect(screen.getByText("Main cabin")).toBeInTheDocument()
     expect(screen.getByText("Annex")).toBeInTheDocument()
+
+    rerender(
+      <RoomAvailabilityIndicator
+        rooms={[
+          room({ room_id: 1, structure_id: 1, structure_name: "Main cabin" }),
+        ]}
+        unassignedGuests={0}
+      />,
+    )
+    expect(screen.queryByText("Main cabin")).not.toBeInTheDocument()
   })
 
   test("falls back to 'Structure #{id}' when name missing", () => {
     render(
       <RoomAvailabilityIndicator
-        rooms={[{ ...emptyBeds, beds_sm: 3, structure_id: 99 }]}
+        rooms={[
+          room({ room_id: 1, structure_id: 99, structure_name: null }),
+          room({
+            room_id: 2,
+            structure_id: 1,
+            structure_name: "Main cabin",
+          }),
+        ]}
+        unassignedGuests={0}
       />,
     )
     expect(screen.getByText("Structure #99")).toBeInTheDocument()
   })
 
-  test("uses 'success' color when many beds available", () => {
-    const { container } = render(
-      <RoomAvailabilityIndicator
-        rooms={[
-          { ...emptyBeds, beds_sm: 5, structure_id: 1, structure_name: "Big" },
-        ]}
-      />,
-    )
-    expect(container.querySelector('[data-color="success"]')).not.toBeNull()
-  })
-
-  test("uses 'danger' color when total beds <= 1", () => {
-    const { container } = render(
-      <RoomAvailabilityIndicator
-        rooms={[
-          { ...emptyBeds, beds_sm: 1, structure_id: 1, structure_name: "Tiny" },
-        ]}
-      />,
-    )
-    expect(container.querySelector('[data-color="danger"]')).not.toBeNull()
-  })
-
-  test("counts double beds twice when summing capacity", () => {
+  test("mentions guests without a room", () => {
     render(
-      <RoomAvailabilityIndicator
-        rooms={[
-          {
-            ...emptyBeds,
-            beds_double: 3,
-            structure_id: 7,
-            structure_name: "Double-house",
-          },
-        ]}
-      />,
+      <RoomAvailabilityIndicator rooms={[room({})]} unassignedGuests={2} />,
     )
-    // 3 double beds = 6 capacity, well above 1 → 'success'
-    const tag = screen.getByText("Double-house")
-    expect(tag.closest("[data-color]")?.getAttribute("data-color")).toBe(
-      "success",
-    )
+    expect(screen.getByText("2 guests without a room")).toBeInTheDocument()
   })
 })

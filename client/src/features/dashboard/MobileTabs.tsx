@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Badge, Card, Divider, Heading } from "@digdir/designsystemet-react"
 import { ShoppingBasketIcon } from "@navikt/aksel-icons"
@@ -13,7 +13,7 @@ import { PlannedAvailabilitySummary } from "@/features/dashboard/calendarsummary
 import { PlannedMaintenanceSummary } from "@/features/dashboard/calendarsummary/plannedmaintenance/PlannedMaintenanceSummary.tsx"
 import { AtPropertyNow } from "@/features/dashboard/capacitysummary/userscheckedin/AtPropertyNow.tsx"
 import { AvailableParking } from "@/features/dashboard/capacitysummary/availableparking/AvailableParking.tsx"
-import { RoomAvailabilityIndicator } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
+import { AvailableBedsToday } from "@/features/dashboard/capacitysummary/roomavailabilityindicator/RoomAvailabilityIndicator.tsx"
 import { NowWeather } from "@/features/dashboard/weather/NowWeather.tsx"
 import { DinnerToday } from "@/features/dashboard/dinner/DinnerToday.tsx"
 import { PriorityWeeksPanel } from "./PriorityWeeksPanel"
@@ -84,7 +84,7 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
         resetSignal={homeSignal}
       >
         <QueryBoundary>
-          <MobileNowPanel propertyId={propertyId} />
+          <MobileNowPanel />
         </QueryBoundary>
         <MobileWeekPanel />
         <MobileYearPanel propertyId={propertyId} />
@@ -102,24 +102,20 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
 //   )
 // }
 
-function MobileNowPanel({ propertyId }: { propertyId: number }) {
+function MobileNowPanel() {
   const { t } = useTranslation("dashboard")
-  const trpc = useTRPC()
-  const { data: rooms } = useSuspenseQuery(
-    trpc.room.listForProperty.queryOptions({ property_id: propertyId }),
-  )
 
   return (
     <div className={styles.swipePage}>
       <Heading level={2} data-size="sm">
-        {t("Now")}
+        {t("Today")}
       </Heading>
       <div className={styles.nowCard}>
         <Card asChild>
           <section>
             <Card.Block className={styles.nowSection}>
               <Heading level={3} data-size="xs">
-                {t("Weather today")}
+                {t("Weather")}
               </Heading>
               <Divider className={styles.divider} />
               <QueryBoundary fallback={<CardSkeleton lines={1} />}>
@@ -161,7 +157,9 @@ function MobileNowPanel({ propertyId }: { propertyId: number }) {
                 {t("Available beds")}
               </Heading>
               <Divider className={styles.divider} />
-              <RoomAvailabilityIndicator rooms={rooms} />
+              <QueryBoundary fallback={<CardSkeleton lines={1} />}>
+                <AvailableBedsToday />
+              </QueryBoundary>
             </Card.Block>
           </section>
         </Card>

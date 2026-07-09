@@ -190,9 +190,7 @@ export function PlannedAvailabilitySummary({
     return o?.user_group_name ?? null
   })()
 
-  const [selectedDay, setSelectedDay] = useState<string | null>(() =>
-    Temporal.Now.plainDateISO().toString(),
-  )
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
   // Desktop view mode. "grid" = week columns + inline row drawer,
   // "rows" = vertical list reusing the mobile inline-expand, "popover" = per-card
@@ -206,25 +204,8 @@ export function PlannedAvailabilitySummary({
   const expandInline = isMobile || useRows
 
   useEffect(() => {
-    const todayIso = Temporal.Now.plainDateISO().toString()
-    const visible = Array.from({ length: 7 }, (_, i) =>
-      weekStart.add({ days: i }).toString(),
-    )
-    if (visible.includes(todayIso)) {
-      setSelectedDay(todayIso)
-      return
-    }
-    const active = bookings.filter(b => b.status !== "cancelled")
-    const firstWithGuests = visible.find(iso =>
-      active.some(
-        b =>
-          iso >= b.start_date.toString() &&
-          iso <= b.end_date.toString() &&
-          b.occupants.length > 0,
-      ),
-    )
-    setSelectedDay(firstWithGuests ?? null)
-  }, [weekStart, bookings])
+    setSelectedDay(null)
+  }, [weekStart])
 
   const hasForecast = (weather?.days.length ?? 0) > 0
 
