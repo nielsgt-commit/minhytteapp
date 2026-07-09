@@ -60,7 +60,7 @@ export function TopContributorsCard({
       <section>
         <Card.Block>
           <Heading level={3} data-size="2xs">
-            {t("Top contributors")}
+            {t("Most expenses logged")}
           </Heading>
           <Paragraph data-size="sm" className={styles.subtitle}>
             {t("Who has logged the most expenses for this period so far.")}
