@@ -3,16 +3,27 @@
   display: inline-flex;
 }
 
-/* Kept rendered (not display: none) so showPicker() is allowed to open,
-   anchored to the button. */
-.hiddenInput {
+/* Invisible but click- and focus-able on top of the button; kept rendered
+   (not display: none) so showPicker() is allowed to open. */
+.overlayInput {
   position: absolute;
-  inset-block-end: 0;
-  inset-inline-start: 0;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
   border: 0;
   padding: 0;
+  cursor: pointer;
+}
+
+.overlayInput:disabled {
+  cursor: default;
   pointer-events: none;
+}
+
+/* The input stays invisible, so the focus ring goes on the wrapper. */
+.wrapper:has(.overlayInput:focus-visible) {
+  outline: 2px solid var(--ds-color-focus-default, currentColor);
+  outline-offset: 2px;
+  border-radius: var(--ds-border-radius-md);
 }

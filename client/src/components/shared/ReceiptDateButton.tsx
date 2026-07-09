@@ -1,4 +1,3 @@
-import { useRef } from "react"
 import { Button } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
@@ -12,23 +11,13 @@ type Props = {
 }
 
 /**
- * "Date on receipt: 8.7.2026 (Today)" rendered as a button that opens the
- * native date picker. Stands in for the receipt-upload controls for now.
+ * "Date on receipt: 8.7.2026 (Today)" styled as a button. The real control is
+ * an invisible native date input overlaying the button, so a click lands on
+ * the input itself and the native picker opens.
  */
 export function ReceiptDateButton({ value, onChange, disabled }: Props) {
   const { t, i18n } = useTranslation("expenses")
-  const inputRef = useRef<HTMLInputElement>(null)
   const isToday = value.equals(Temporal.Now.plainDateISO())
-
-  const openPicker = () => {
-    const input = inputRef.current
-    if (!input) return
-    if (typeof input.showPicker === "function") {
-      input.showPicker()
-    } else {
-      input.click()
-    }
-  }
 
   return (
     <span className={styles.wrapper}>
@@ -37,7 +26,8 @@ export function ReceiptDateButton({ value, onChange, disabled }: Props) {
         variant="tertiary"
         data-size="sm"
         disabled={disabled}
-        onClick={openPicker}
+        tabIndex={-1}
+        aria-hidden
       >
         {t("Date on receipt")}
         {": "}
@@ -45,12 +35,20 @@ export function ReceiptDateButton({ value, onChange, disabled }: Props) {
         {isToday ? ` (${t("Today")})` : ""}
       </Button>
       <input
-        ref={inputRef}
-        className={styles.hiddenInput}
+        className={styles.overlayInput}
         type="date"
-        tabIndex={-1}
-        aria-hidden
+        aria-label={t("Date on receipt")}
+        disabled={disabled}
         value={toDateInputValue(value)}
+        onClick={e => {
+          // Desktop browsers don't open the calendar when the input body is
+          // clicked; the click itself grants the user activation required.
+          try {
+            e.currentTarget.showPicker()
+          } catch {
+            // Unsupported or disallowed — the input still works via keyboard.
+          }
+        }}
         onChange={e => {
           if (e.target.value !== "") {
             onChange(Temporal.PlainDate.from(e.target.value))

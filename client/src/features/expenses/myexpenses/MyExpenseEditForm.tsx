@@ -23,7 +23,12 @@ type SubmitState = {
   error: string | null
   // Echoed back on failure so the form keeps the user's input after the
   // automatic form-action reset.
-  values: { date: string; description: string; amount: string } | null
+  values: {
+    date: string
+    receiptDate: string
+    description: string
+    amount: string
+  } | null
 }
 
 const INITIAL_STATE: SubmitState = { error: null, values: null }
@@ -48,6 +53,7 @@ export function MyExpenseEditForm({
   >(async (_prev, fd) => {
     const values = {
       date: fdString(fd, "date"),
+      receiptDate: fdString(fd, "receipt_date"),
       description: fdString(fd, "description"),
       amount: fdString(fd, "amount"),
     }
@@ -57,6 +63,7 @@ export function MyExpenseEditForm({
           description: values.description,
           amount: Number(values.amount),
           date: Temporal.PlainDate.from(values.date),
+          receipt_date: Temporal.PlainDate.from(values.receiptDate),
           status: "submitted",
         }),
       )
@@ -77,6 +84,15 @@ export function MyExpenseEditForm({
         name="date"
         type="date"
         defaultValue={state.values?.date ?? toDateInputValue(expense.date)}
+        required
+      />
+      <Textfield
+        label={t("Date on receipt")}
+        name="receipt_date"
+        type="date"
+        defaultValue={
+          state.values?.receiptDate ?? toDateInputValue(expense.receipt_date)
+        }
         required
       />
       <Textfield
