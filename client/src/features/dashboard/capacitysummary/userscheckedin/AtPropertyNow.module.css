@@ -1,3 +1,12 @@
 .list {
   margin-top: var(--ds-size-1);
+  max-width: 100%;
+  /* Prevent double-tap zoom so dblclick toggles expansion on touch screens. */
+  touch-action: manipulation;
+}
+
+.expanded {
+  flex-wrap: wrap;
+  width: auto;
+  row-gap: var(--ds-size-1);
 }

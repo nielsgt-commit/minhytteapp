@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import {
@@ -19,6 +20,8 @@ function initials(name: string) {
     .join("")
 }
 
+const MAX_VISIBLE = 6
+
 export function AtPropertyNow() {
   const { t } = useTranslation("dashboard")
   const trpc = useTRPC()
@@ -26,18 +29,34 @@ export function AtPropertyNow() {
   const { data: guests } = useSuspenseQuery(
     trpc.stay.atProperty.queryOptions({ property_id: propertyId }),
   )
+  const [expanded, setExpanded] = useState(false)
 
   if (guests.length === 0)
     return <EmptyState title={t("No one at the property right now.")} />
 
+  const overflowing = guests.length > MAX_VISIBLE
+  const visible = expanded ? guests : guests.slice(0, MAX_VISIBLE)
+
   return (
     <AvatarStack
       aria-label={t("At property now")}
-      className={styles.list}
-      overlap={25}
+      className={expanded ? `${styles.list} ${styles.expanded}` : styles.list}
+      overlap={expanded ? -6 : 25}
       gap="1px"
+      suffix={
+        overflowing && !expanded
+          ? `+${String(guests.length - MAX_VISIBLE)}`
+          : undefined
+      }
+      onDoubleClick={
+        overflowing
+          ? () => {
+              setExpanded(prev => !prev)
+            }
+          : undefined
+      }
     >
-      {guests.map(g => {
+      {visible.map(g => {
         const label = g.building_name
           ? `${g.name} · ${g.building_name}`
           : g.name
