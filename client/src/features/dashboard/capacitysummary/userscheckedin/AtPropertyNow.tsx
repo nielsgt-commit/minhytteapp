@@ -1,6 +1,10 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Avatar, Tooltip } from "@digdir/designsystemet-react"
+import {
+  Avatar,
+  EXPERIMENTAL_AvatarStack as AvatarStack,
+  Tooltip,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc.ts"
@@ -27,7 +31,12 @@ export function AtPropertyNow() {
     return <EmptyState title={t("No one at the property right now.")} />
 
   return (
-    <div role="group" aria-label={t("At property now")} className={styles.list}>
+    <AvatarStack
+      aria-label={t("At property now")}
+      className={styles.list}
+      overlap={25}
+      gap="1px"
+    >
       {guests.map(g => {
         const label = g.building_name
           ? `${g.name} · ${g.building_name}`
@@ -43,6 +52,6 @@ export function AtPropertyNow() {
           </Tooltip>
         )
       })}
-    </div>
+    </AvatarStack>
   )
 }
