@@ -19,16 +19,37 @@ beforeAll(async () => {
   }
 })
 
+const guest = (name: string, queued = false, pending = false) => ({
+  name,
+  queued,
+  pending,
+})
+
 describe("GuestListView", () => {
   test("renders each name as a tag", () => {
-    render(<GuestListView names={["Alice", "Bob", "Cleo"]} />)
+    render(
+      <GuestListView guests={[guest("Alice"), guest("Bob"), guest("Cleo")]} />,
+    )
     expect(screen.getByText("Alice")).toBeInTheDocument()
     expect(screen.getByText("Bob")).toBeInTheDocument()
     expect(screen.getByText("Cleo")).toBeInTheDocument()
   })
 
-  test("renders nothing when names is empty", () => {
-    const { container } = render(<GuestListView names={[]} />)
+  test("marks queued guests with a suffix and neutral color", () => {
+    render(<GuestListView guests={[guest("Alice"), guest("Maja", true)]} />)
+    const queuedTag = screen.getByText("Maja (queued)")
+    expect(queuedTag).toHaveAttribute("data-color", "neutral")
+    expect(screen.getByText("Alice")).toHaveAttribute("data-color", "info")
+  })
+
+  test("marks guests of pending bookings with a question mark", () => {
+    render(<GuestListView guests={[guest("Alice"), guest("Per", false, true)]} />)
+    expect(screen.getByText("Per?")).toBeInTheDocument()
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+  })
+
+  test("renders nothing when guests is empty", () => {
+    const { container } = render(<GuestListView guests={[]} />)
     expect(container).toBeEmptyDOMElement()
   })
 })

@@ -24,11 +24,18 @@ export type BookingInfo = {
   occupants: OccupantInfo[]
 }
 
+export type GuestChip = {
+  name: string
+  queued: boolean
+  // From a pending (unconfirmed) booking — rendered with a "?" after the name.
+  pending: boolean
+}
+
 export type RoomGroup = {
   roomId: number | null
   roomName: string
   buildingName: string | null
-  guests: string[]
+  guests: GuestChip[]
 }
 
 // Everyone sleeping at the property on `iso`, grouped by their room and sorted
@@ -39,10 +46,25 @@ export function roomGroupsForDay(
   iso: string,
   unassignedLabel: string,
 ): RoomGroup[] {
-  const byRoom = new Map<number | null, Map<number, string>>()
-  for (const o of occupantsOnDay(bookings, iso, GUEST_FILTER)) {
-    const guests = byRoom.get(o.room_id) ?? new Map<number, string>()
-    guests.set(o.user_id, o.user_name ?? `#${String(o.user_id)}`)
+  // Occupants don't carry their booking's status, so stamp it on before the
+  // day filter; the dedupe in occupantsOnDay then picks the flag along with
+  // the entry it keeps.
+  const stamped = bookings.map(b => ({
+    ...b,
+    occupants: b.occupants.map(o => ({
+      ...o,
+      pending: b.status === "pending",
+    })),
+  }))
+
+  const byRoom = new Map<number | null, Map<number, GuestChip>>()
+  for (const o of occupantsOnDay(stamped, iso, GUEST_FILTER)) {
+    const guests = byRoom.get(o.room_id) ?? new Map<number, GuestChip>()
+    guests.set(o.user_id, {
+      name: o.user_name ?? `#${String(o.user_id)}`,
+      queued: o.queued === true,
+      pending: o.pending,
+    })
     byRoom.set(o.room_id, guests)
   }
 

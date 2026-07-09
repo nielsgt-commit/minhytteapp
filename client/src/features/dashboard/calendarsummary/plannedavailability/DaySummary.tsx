@@ -56,7 +56,7 @@ export function DaySummary({ groups, buildingDividers = false }: Props) {
                 <Paragraph data-size="sm" className={styles.daySummaryRoom}>
                   {g.roomName}
                 </Paragraph>
-                <GuestListView names={g.guests} />
+                <GuestListView guests={g.guests} />
               </div>
             ))}
           </div>

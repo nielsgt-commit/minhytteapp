@@ -12,6 +12,7 @@
   "{{name}} week": "{{name}} week",
   "{{count}} guest_one": "{{count}} guest",
   "{{count}} guest_other": "{{count}} guests",
+  " (queued)": " (queued)",
   "{{count}} guest without a room_one": "{{count}} guest without a room",
   "{{count}} guest without a room_other": "{{count}} guests without a room",
   "{{available}} of {{capacity}} beds available": "{{available}} of {{capacity}} beds available",

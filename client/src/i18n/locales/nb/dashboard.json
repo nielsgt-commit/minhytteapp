@@ -12,6 +12,7 @@
   "{{name}} week": "{{name}}-uka",
   "{{count}} guest_one": "{{count}} gjest",
   "{{count}} guest_other": "{{count}} gjester",
+  " (queued)": " (i kø)",
   "{{count}} guest without a room_one": "{{count}} gjest uten rom",
   "{{count}} guest without a room_other": "{{count}} gjester uten rom",
   "{{available}} of {{capacity}} beds available": "{{available}} av {{capacity}} senger ledige",

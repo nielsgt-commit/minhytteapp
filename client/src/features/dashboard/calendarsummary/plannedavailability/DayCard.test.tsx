@@ -77,7 +77,7 @@ describe("DayCard", () => {
         roomId: 1,
         roomName: "Loft",
         buildingName: "Main cabin",
-        guests: ["Alice"],
+        guests: [{ name: "Alice", queued: false, pending: false }],
       },
     ]
     const { rerender } = render(

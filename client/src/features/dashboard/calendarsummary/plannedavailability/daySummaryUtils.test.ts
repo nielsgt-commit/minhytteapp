@@ -32,8 +32,14 @@ describe("roomGroupsForDay", () => {
     const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
     // Annex (Bunk room) sorts before Main cabin (Loft).
     expect(groups.map(g => g.buildingName)).toEqual(["Annex", "Main cabin"])
-    expect(groups[0]).toMatchObject({ roomName: "Bunk room", guests: ["Bob"] })
-    expect(groups[1]).toMatchObject({ roomName: "Loft", guests: ["Alice"] })
+    expect(groups[0]).toMatchObject({
+      roomName: "Bunk room",
+      guests: [{ name: "Bob", queued: false, pending: false }],
+    })
+    expect(groups[1]).toMatchObject({
+      roomName: "Loft",
+      guests: [{ name: "Alice", queued: false, pending: false }],
+    })
   })
 
   test("excludes cancelled bookings", () => {
@@ -88,7 +94,38 @@ describe("roomGroupsForDay", () => {
     ]
     const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
     expect(groups).toHaveLength(1)
-    expect(groups[0].guests).toEqual(["Alice"])
+    expect(groups[0].guests).toEqual([{ name: "Alice", queued: false, pending: false }])
+  })
+
+  test("flags queued guests so the UI can badge them", () => {
+    const bookings: BookingInfo[] = [
+      {
+        status: "confirmed",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-15"),
+        occupants: [occ(1, 1, "Alice"), { ...occ(2, 1, "Maja"), queued: true }],
+      },
+    ]
+    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    expect(groups[0].guests).toEqual([
+      { name: "Alice", queued: false, pending: false },
+      { name: "Maja", queued: true, pending: false },
+    ])
+  })
+
+  test("flags guests of pending bookings so the UI can mark them uncertain", () => {
+    const bookings: BookingInfo[] = [
+      {
+        status: "pending",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-15"),
+        occupants: [occ(1, 1, "Alice")],
+      },
+    ]
+    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    expect(groups[0].guests).toEqual([
+      { name: "Alice", queued: false, pending: true },
+    ])
   })
 
   test("uses the fallback label and no building for unassigned occupants", () => {
@@ -105,7 +142,7 @@ describe("roomGroupsForDay", () => {
       roomId: null,
       roomName: "Unassigned",
       buildingName: null,
-      guests: ["Alice"],
+      guests: [{ name: "Alice", queued: false, pending: false }],
     })
   })
 
@@ -119,6 +156,6 @@ describe("roomGroupsForDay", () => {
       },
     ]
     const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
-    expect(groups[0].guests).toEqual(["#7"])
+    expect(groups[0].guests).toEqual([{ name: "#7", queued: false, pending: false }])
   })
 })
