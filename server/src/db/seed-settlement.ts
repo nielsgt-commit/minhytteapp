@@ -73,13 +73,24 @@ const LOGIN_EMAIL = normalizeEmail(
 )
 const YEAR = new Date().getFullYear()
 
-// Each family owns the property and books its stay week; alpha/beta/gamma book
-// their priority week (28/29/30, the only weeks allowed by the
-// priority_week_peak_only check), delta books outside the peak. Children carry
-// the `child` flag so child_weight policies have something to scale. Ownership
-// is deliberately NOT proportional to person-days so the custom "by ownership %"
-// policy splits visibly differently from the built-in occupancy_days flow.
-// Person-days = (members who book) * stayLength, child_weight = 1 in built-in.
+// SEED_PHASE=split_policy fast-forwards the open settlement to step 4: every
+// submitted expense is approved (what the heads would do in review), all four
+// heads' reviews are marked done, and the settlement waits at "Review split
+// policy" with no acceptances yet. Default: the flow starts from the top.
+const FAST_FORWARD = process.env.SEED_PHASE === "split_policy"
+const OPEN_PHASE = FAST_FORWARD
+  ? ("split_policy" as const)
+  : ("collecting_expenses" as const)
+
+// Each family owns the property and books its main stay week; alpha/beta/gamma
+// book their priority week (28/29/30, the only weeks allowed by the
+// priority_week_peak_only check), delta books outside the peak. On top of the
+// main week every family has several shorter stays spread across the year
+// (`extraStays`), often with only some members aboard, so person-days vary
+// realistically between the households. Children carry the `child` flag so
+// child_weight policies have something to scale. Ownership is deliberately NOT
+// proportional to person-days so the custom "by ownership %" policy splits
+// visibly differently from the built-in occupancy_days flow.
 // `head: true` marks the family's head; Alpha's head is the login admin.
 type SeedMember = {
   name: string
@@ -87,6 +98,9 @@ type SeedMember = {
   child?: boolean
   head?: boolean
 }
+// `who` holds indexes into memberIds[group] (0 = the head; for Alpha that is
+// the login admin). Omitted = the whole family stays.
+type SeedStay = { week: number; length: number; who?: number[] }
 type SeedGroup = {
   key: "alpha" | "beta" | "gamma" | "delta"
   name: string
@@ -94,6 +108,7 @@ type SeedGroup = {
   priorityWeek?: 28 | 29 | 30
   stayWeek: number
   stayLength: number
+  extraStays: SeedStay[]
   members: SeedMember[]
 }
 const GROUPS: SeedGroup[] = [
@@ -104,6 +119,11 @@ const GROUPS: SeedGroup[] = [
     priorityWeek: 28,
     stayWeek: 28,
     stayLength: 7, // the whole of week 28
+    extraStays: [
+      { week: 8, length: 4, who: [0, 1] }, // winter, adults only
+      { week: 15, length: 5 }, // easter, everyone
+      { week: 41, length: 3, who: [0, 1] }, // autumn break
+    ],
     members: [
       // The login admin is prepended as the head; these are the rest.
       { name: "Anna Alpha", email: `anna${SEED_DOMAIN}` },
@@ -118,6 +138,11 @@ const GROUPS: SeedGroup[] = [
     priorityWeek: 29,
     stayWeek: 29,
     stayLength: 5,
+    extraStays: [
+      { week: 7, length: 3, who: [0, 1] }, // winter weekend
+      { week: 33, length: 4 }, // late summer, everyone
+      { week: 46, length: 2, who: [0] }, // head alone, closing chores
+    ],
     members: [
       { name: "Bjørn Beta", email: `bjorn${SEED_DOMAIN}`, head: true },
       { name: "Berit Beta", email: `berit${SEED_DOMAIN}` },
@@ -132,6 +157,11 @@ const GROUPS: SeedGroup[] = [
     priorityWeek: 30,
     stayWeek: 30,
     stayLength: 3,
+    extraStays: [
+      { week: 12, length: 2 }, // spring weekend, everyone
+      { week: 36, length: 4, who: [0, 1] }, // september, adults only
+      { week: 50, length: 3 }, // pre-christmas, everyone
+    ],
     members: [
       { name: "Cecilie Gamma", email: `cecilie${SEED_DOMAIN}`, head: true },
       { name: "Carl Gamma", email: `carl${SEED_DOMAIN}` },
@@ -146,6 +176,11 @@ const GROUPS: SeedGroup[] = [
     // taken. Delta stays outside the peak instead.
     stayWeek: 31,
     stayLength: 4,
+    extraStays: [
+      { week: 5, length: 3 }, // winter, everyone
+      { week: 38, length: 2, who: [0, 1] }, // september weekend
+      { week: 44, length: 3, who: [1, 2] }, // Dina + Dora, autumn
+    ],
     members: [
       { name: "Dag Delta", email: `dag${SEED_DOMAIN}`, head: true },
       { name: "Dina Delta", email: `dina${SEED_DOMAIN}` },
@@ -167,6 +202,264 @@ const CATEGORIES = ["Strøm", "Forsikring", "Vedlikehold", "Renhold", "Brensel"]
 function isoDate(month: number, day: number): string {
   return `${String(YEAR)}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
 }
+
+// A year's worth of expenses spread across every household and category.
+// `submitted` rows land in the heads' review queues (Delta deliberately has
+// none, so the four heads' progress states differ); the rest are reimbursed
+// and count toward the divide immediately. `payerIdx` points into
+// memberIds[group] (0 = the group's head; for Alpha that is the login admin).
+// Reimbursement stays within the payer's own group so credit lands on that
+// group: the head reimburses, unless the head paid — then the second member
+// does.
+type SeedExpense = {
+  description: string
+  amount: number
+  category: (typeof CATEGORIES)[number]
+  group: SeedGroup["key"]
+  payerIdx: number
+  date: string
+  submitted?: boolean
+}
+const EXPENSES: SeedExpense[] = [
+  // Strøm — bi-monthly bills, rotating payer household.
+  {
+    description: "Strøm januar",
+    amount: 2400,
+    category: "Strøm",
+    group: "alpha",
+    payerIdx: 1,
+    date: isoDate(1, 15),
+  },
+  {
+    description: "Strøm mars",
+    amount: 1900,
+    category: "Strøm",
+    group: "beta",
+    payerIdx: 1,
+    date: isoDate(3, 12),
+  },
+  {
+    description: "Strøm mai",
+    amount: 1100,
+    category: "Strøm",
+    group: "gamma",
+    payerIdx: 1,
+    date: isoDate(5, 10),
+  },
+  // Dated inside week 28 (Alpha's stay) for present_when_expense_added policies.
+  {
+    description: "Strøm sommer",
+    amount: 950,
+    category: "Strøm",
+    group: "alpha",
+    payerIdx: 0,
+    date: isoWeekMonday(YEAR, 28).add({ days: 2 }).toString(),
+  },
+  {
+    description: "Strøm september",
+    amount: 1300,
+    category: "Strøm",
+    group: "delta",
+    payerIdx: 1,
+    date: isoDate(9, 15),
+  },
+  {
+    description: "Strøm november",
+    amount: 2100,
+    category: "Strøm",
+    group: "beta",
+    payerIdx: 0,
+    date: isoDate(11, 12),
+  },
+  // Forsikring
+  {
+    description: "Forsikring hytte",
+    amount: 8900,
+    category: "Forsikring",
+    group: "alpha",
+    payerIdx: 0,
+    date: isoDate(1, 3),
+  },
+  {
+    description: "Forsikring naust",
+    amount: 1200,
+    category: "Forsikring",
+    group: "delta",
+    payerIdx: 0,
+    date: isoDate(6, 1),
+  },
+  // Vedlikehold
+  {
+    description: "Beis og maling",
+    amount: 3200,
+    category: "Vedlikehold",
+    group: "beta",
+    payerIdx: 2,
+    date: isoDate(4, 18),
+  },
+  {
+    description: "Nye takrenner",
+    amount: 4500,
+    category: "Vedlikehold",
+    group: "alpha",
+    payerIdx: 1,
+    date: isoDate(5, 4),
+  },
+  {
+    description: "Dørlås og håndtak",
+    amount: 780,
+    category: "Vedlikehold",
+    group: "gamma",
+    payerIdx: 0,
+    date: isoDate(6, 20),
+  },
+  {
+    description: "Reparasjon av trapp",
+    amount: 2600,
+    category: "Vedlikehold",
+    group: "delta",
+    payerIdx: 1,
+    date: isoDate(7, 30),
+  },
+  {
+    description: "Ny vindski",
+    amount: 1450,
+    category: "Vedlikehold",
+    group: "beta",
+    payerIdx: 1,
+    date: isoDate(8, 22),
+  },
+  // Renhold — after each family's main stay.
+  {
+    description: "Vårvask",
+    amount: 600,
+    category: "Renhold",
+    group: "alpha",
+    payerIdx: 1,
+    date: isoDate(5, 18),
+  },
+  {
+    description: "Renhold etter uke 28",
+    amount: 450,
+    category: "Renhold",
+    group: "alpha",
+    payerIdx: 0,
+    date: isoDate(7, 20),
+  },
+  {
+    description: "Renhold etter uke 29",
+    amount: 450,
+    category: "Renhold",
+    group: "beta",
+    payerIdx: 1,
+    date: isoDate(7, 27),
+  },
+  {
+    description: "Renhold etter uke 30",
+    amount: 350,
+    category: "Renhold",
+    group: "gamma",
+    payerIdx: 1,
+    date: isoDate(8, 3),
+  },
+  {
+    description: "Hovedrengjøring høst",
+    amount: 800,
+    category: "Renhold",
+    group: "delta",
+    payerIdx: 0,
+    date: isoDate(8, 30),
+  },
+  // Brensel
+  {
+    description: "Vinterved",
+    amount: 1800,
+    category: "Brensel",
+    group: "delta",
+    payerIdx: 1,
+    date: isoDate(2, 15),
+  },
+  {
+    description: "Pellets",
+    amount: 950,
+    category: "Brensel",
+    group: "gamma",
+    payerIdx: 1,
+    date: isoDate(3, 20),
+  },
+  {
+    description: "Høstved",
+    amount: 2200,
+    category: "Brensel",
+    group: "alpha",
+    payerIdx: 1,
+    date: isoDate(10, 5),
+  },
+  {
+    description: "Propan",
+    amount: 700,
+    category: "Brensel",
+    group: "beta",
+    payerIdx: 2,
+    date: isoDate(11, 20),
+  },
+  // Submitted → review queue.
+  {
+    description: "Renhold etter sesong",
+    amount: 400,
+    category: "Renhold",
+    group: "gamma",
+    payerIdx: 1,
+    date: isoDate(8, 6),
+    submitted: true,
+  },
+  {
+    description: "Strøm tillegg",
+    amount: 150,
+    category: "Strøm",
+    group: "beta",
+    payerIdx: 2,
+    date: isoDate(8, 9),
+    submitted: true,
+  },
+  // Head-paid, so it lands in the pot automatically once reviewed.
+  {
+    description: "Vedlikehold rør",
+    amount: 250,
+    category: "Vedlikehold",
+    group: "gamma",
+    payerIdx: 0,
+    date: isoDate(8, 14),
+    submitted: true,
+  },
+  {
+    description: "Renhold vår",
+    amount: 200,
+    category: "Renhold",
+    group: "alpha",
+    payerIdx: 1,
+    date: isoDate(5, 25),
+    submitted: true,
+  },
+  {
+    description: "Ved til høsten",
+    amount: 1250,
+    category: "Brensel",
+    group: "alpha",
+    payerIdx: 1,
+    date: isoDate(9, 28),
+    submitted: true,
+  },
+  {
+    description: "Beis terrasse",
+    amount: 890,
+    category: "Vedlikehold",
+    group: "beta",
+    payerIdx: 1,
+    date: isoDate(9, 5),
+    submitted: true,
+  },
+]
 
 // This seed writes fake fixture data and must never touch a real database.
 // Refuse to run unless the target is an explicitly local Postgres — anything
@@ -543,7 +836,7 @@ async function main() {
         year: YEAR,
         season: "summer",
         status: "open",
-        phase: "collecting_expenses",
+        phase: OPEN_PHASE,
         split_policy: "occupancy_days",
         created_by_id: loginUserId,
       })
@@ -602,137 +895,74 @@ async function main() {
   }
 
   // --- bookings + occupants (the person-days that drive the split) -------
-  // Each family stays its stay week with all its members aboard, so
-  // person-days = members * stayLength, and alpha/beta/gamma members are
-  // "present during a priority week" for the time-condition policies.
+  // Each family books its main stay week with everyone aboard (so
+  // alpha/beta/gamma members are "present during a priority week" for the
+  // time-condition policies), plus its extraStays spread across the year —
+  // often with only some members, so the households' person-day totals differ.
   for (const g of GROUPS) {
-    const occupants = memberIds[g.key]
-    const monday = isoWeekMonday(YEAR, g.stayWeek)
-    const start = monday.toString()
-    const end = monday.add({ days: g.stayLength - 1 }).toString()
-    const bookingId = (
+    const members = memberIds[g.key]
+    const stays: SeedStay[] = [
+      { week: g.stayWeek, length: g.stayLength },
+      ...g.extraStays,
+    ]
+    for (const s of stays) {
+      const occupants = (s.who ?? members.map((_, i) => i)).map(i => members[i])
+      const monday = isoWeekMonday(YEAR, s.week)
+      const bookingId = (
+        await db
+          .insert(bookingTable)
+          .values({
+            property_id: propertyId,
+            booker_id: occupants[0],
+            start_date: monday.toString(),
+            end_date: monday.add({ days: s.length - 1 }).toString(),
+            status: "confirmed",
+          })
+          .returning({ id: bookingTable.id })
+      )[0].id
       await db
-        .insert(bookingTable)
-        .values({
-          property_id: propertyId,
-          booker_id: occupants[0],
-          start_date: start,
-          end_date: end,
-          status: "confirmed",
-        })
-        .returning({ id: bookingTable.id })
-    )[0].id
-    await db
-      .insert(bookingOccupantsTable)
-      .values(occupants.map(user_id => ({ booking_id: bookingId, user_id })))
+        .insert(bookingOccupantsTable)
+        .values(occupants.map(user_id => ({ booking_id: bookingId, user_id })))
+    }
   }
 
   // --- expenses ----------------------------------------------------------
-  // A bunch of expenses across categories. Reimbursed ones count toward the
+  // The EXPENSES table above, mapped to rows. Reimbursed ones count toward the
   // divide immediately (credited to the reimburser's group); submitted ones sit
-  // in the review queue for the "reviewing" phase. reimbursed_by stays within
-  // the payer's own group so credit lands on that group.
-  const week28Day = isoWeekMonday(YEAR, 28).add({ days: 2 }).toString()
-  await db.insert(expensesTable).values([
-    // Reimbursed → counted now.
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Strøm sommer",
-      amount: 800,
-      payer_id: memberIds.alpha[1], // Anna Alpha
-      reimbursed_by_id: memberIds.alpha[0], // admin (Alpha)
-      date: week28Day, // inside week 28 (Alpha's stay)
-      status: "reimbursed",
-      expense_types: ["Strøm"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Vedlikehold tak",
-      amount: 1200,
-      payer_id: memberIds.alpha[0], // admin (Alpha)
-      reimbursed_by_id: memberIds.alpha[1], // Anna Alpha
-      date: isoDate(5, 4),
-      status: "reimbursed",
-      expense_types: ["Vedlikehold"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Forsikring",
-      amount: 500,
-      payer_id: memberIds.beta[1], // Berit Beta
-      reimbursed_by_id: memberIds.beta[0], // Bjørn Beta
-      date: isoDate(3, 1),
-      status: "reimbursed",
-      expense_types: ["Forsikring"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Brensel",
-      amount: 300,
-      payer_id: memberIds.gamma[1], // Carl Gamma
-      reimbursed_by_id: memberIds.gamma[0], // Cecilie Gamma
-      date: isoDate(4, 20),
-      status: "reimbursed",
-      expense_types: ["Brensel"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Brensel vinter",
-      amount: 350,
-      payer_id: memberIds.delta[1], // Dina Delta
-      reimbursed_by_id: memberIds.delta[0], // Dag Delta
-      date: isoDate(2, 15),
-      status: "reimbursed",
-      expense_types: ["Brensel"],
-    },
-    // Submitted → review queue (one per head except Delta, so each head's
-    // progress state differs).
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Renhold etter sesong",
-      amount: 400,
-      payer_id: memberIds.gamma[1], // Carl Gamma
-      date: isoDate(8, 6),
-      status: "submitted",
-      expense_types: ["Renhold"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Strøm tillegg",
-      amount: 150,
-      payer_id: memberIds.beta[2], // Bea Beta
-      date: isoDate(8, 9),
-      status: "submitted",
-      expense_types: ["Strøm"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Vedlikehold rør",
-      amount: 250,
-      payer_id: memberIds.gamma[0], // Cecilie Gamma (head-paid, auto-pot)
-      date: isoDate(8, 14),
-      status: "submitted",
-      expense_types: ["Vedlikehold"],
-    },
-    {
-      property_id: propertyId,
-      settlement_id: settlementId,
-      description: "Renhold vår",
-      amount: 200,
-      payer_id: memberIds.alpha[1], // Anna Alpha → login head's queue
-      date: isoDate(5, 18),
-      status: "submitted",
-      expense_types: ["Renhold"],
-    },
-  ])
+  // in the review queue for the "reviewing" phase. When fast-forwarding past
+  // review, the submitted ones are approved instead — status reimbursed with
+  // the payer's group head as reimburser — exactly what a head's approval does.
+  await db.insert(expensesTable).values(
+    EXPENSES.map(e => {
+      const members = memberIds[e.group]
+      const submitted = (e.submitted ?? false) && !FAST_FORWARD
+      return {
+        property_id: propertyId,
+        settlement_id: settlementId,
+        description: e.description,
+        amount: e.amount,
+        payer_id: members[e.payerIdx],
+        reimbursed_by_id: submitted
+          ? null
+          : e.payerIdx === 0
+            ? members[1]
+            : members[0],
+        date: e.date,
+        status: submitted ? ("submitted" as const) : ("reimbursed" as const),
+        expense_types: [e.category],
+      }
+    }),
+  )
+
+  // --- fast-forward: all heads' reviews done, waiting at step 4 -----------
+  if (FAST_FORWARD) {
+    await db.insert(settlementReviewsTable).values(
+      GROUPS.map(g => ({
+        settlement_id: settlementId,
+        head_user_id: memberIds[g.key][0],
+      })),
+    )
+  }
 
   // --- closed settlement (last year), divided by the custom policy --------
   // A fully closed settlement so its result is visible in the UI immediately
@@ -881,12 +1111,20 @@ async function main() {
     (n, g) => n + g.members.filter(m => m.child).length,
     0,
   )
+  const stayCount = GROUPS.reduce((n, g) => n + 1 + g.extraStays.length, 0)
+  const sumAmount = (rows: SeedExpense[]) =>
+    rows.reduce((s, e) => s + e.amount, 0)
+  const perGroupCounts = (rows: SeedExpense[]) =>
+    GROUPS.map(
+      g =>
+        `${short(g.name)} ${String(rows.filter(e => e.group === g.key).length)}`,
+    ).join(" / ")
+  const reimbursedSeed = EXPENSES.filter(e => !e.submitted)
+  const submittedSeed = EXPENSES.filter(e => e.submitted)
 
   console.log("settlement seed complete.")
   console.log(`  property      #${String(propertyId)} "${PROPERTY_NAME}"`)
-  console.log(
-    `  log in as     ${LOGIN_EMAIL}  (admin + head of Familie Alpha)`,
-  )
+  console.log(`  log in as     ${LOGIN_EMAIL}  (admin + head of Familie Alpha)`)
   console.log(
     `  users         ${String(userCount)} across ${String(GROUPS.length)} owner groups (${String(childCount)} children)`,
   )
@@ -897,18 +1135,27 @@ async function main() {
     "  priority wks  Alpha=28, Beta=29, Gamma=30 (stays in these weeks; Delta stays week 31)",
   )
   console.log(
-    `  total days    ${String(openResult.total_booking_days ?? 0)} person-days`,
+    `  bookings      ${String(stayCount)} stays across the year, ${String(openResult.total_booking_days ?? 0)} person-days in total`,
   )
   console.log("")
   console.log(
-    `  OPEN sett.    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, collecting_expenses)`,
+    `  OPEN sett.    #${String(settlementId)} (${String(YEAR)} summer, occupancy_days, ${OPEN_PHASE})`,
   )
-  console.log(
-    "    reimbursed  Strøm 800 + Vedlikehold 1200 -> Alpha, Forsikring 500 -> Beta, Brensel 300 -> Gamma, Brensel 350 -> Delta",
-  )
-  console.log(
-    "    to review   Renhold 400 (Gamma), Strøm 150 (Beta), Vedlikehold 250 (Gamma, head-paid), Renhold 200 (Alpha)",
-  )
+  if (FAST_FORWARD) {
+    console.log(
+      `    reimbursed  ${String(EXPENSES.length)} expenses / ${String(sumAmount(EXPENSES))} kr (${perGroupCounts(EXPENSES)}) — review queue approved`,
+    )
+    console.log(
+      "    fast-fwd    all 4 heads' reviews done; waiting at step 4 (accept the split)",
+    )
+  } else {
+    console.log(
+      `    reimbursed  ${String(reimbursedSeed.length)} expenses / ${String(sumAmount(reimbursedSeed))} kr (${perGroupCounts(reimbursedSeed)})`,
+    )
+    console.log(
+      `    to review   ${String(submittedSeed.length)} expenses / ${String(sumAmount(submittedSeed))} kr (${perGroupCounts(submittedSeed)})`,
+    )
+  }
   console.log(`    shares      ${shareLine(openResult)}`)
   console.log(`    net         ${netLine(openResult)}`)
   console.log(`    transfers   ${xferLine(openTransfers)}`)
