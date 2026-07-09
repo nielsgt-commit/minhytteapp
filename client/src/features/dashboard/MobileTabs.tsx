@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, type RefObject } from "react"
+import { createPortal } from "react-dom"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { Badge, Card, Divider, Heading } from "@digdir/designsystemet-react"
-import { ShoppingBasketIcon } from "@navikt/aksel-icons"
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ShoppingBasketIcon,
+} from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
@@ -61,9 +66,13 @@ function ShoppingBasketFab({ propertyId }: { propertyId: number }) {
 // snapping the gallery back to the first ("Now") page.
 export const DASHBOARD_HOME_EVENT = "minhytte:dashboard-home"
 
+// Gallery page indices, in child order below.
+const WEEK_PAGE = 1
+
 export function MobileTabs({ propertyId }: { propertyId: number }) {
   const { t } = useTranslation("dashboard")
   const [homeSignal, setHomeSignal] = useState(0)
+  const [activePage, setActivePage] = useState(0)
 
   useEffect(() => {
     const onHome = () => {
@@ -82,11 +91,12 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
         fullWidth
         ariaLabel={t("Dashboard pages")}
         resetSignal={homeSignal}
+        onActiveChange={setActivePage}
       >
         <QueryBoundary>
           <MobileNowPanel />
         </QueryBoundary>
-        <MobileWeekPanel />
+        <MobileWeekPanel galleryActive={activePage === WEEK_PAGE} />
         <MobileYearPanel propertyId={propertyId} />
       </CardGallery>
       <ShoppingBasketFab propertyId={propertyId} />
@@ -213,14 +223,95 @@ function MobileYearPanel({ propertyId }: { propertyId: number }) {
   )
 }
 
-function MobileWeekPanel() {
+// While the week page is the active gallery page and today's day card (marked
+// with [data-today-card] by DayCard) is scrolled out of the viewport, float an
+// arrow FAB just above the gallery's dot pill — pointing towards the card, so
+// down when it's below the view and up when it's been scrolled past; tapping
+// it scrolls the card to the centre of the view. The IntersectionObserver is
+// (re)attached via a MutationObserver because the card mounts late (suspense)
+// and remounts on week navigation — and disappears entirely on non-current
+// weeks, which hides the FAB.
+function ScrollToTodayFab({
+  enabled,
+  pageRef,
+}: {
+  enabled: boolean
+  pageRef: RefObject<HTMLDivElement | null>
+}) {
+  const { t } = useTranslation("dashboard")
+  const [direction, setDirection] = useState<"up" | "down" | null>(null)
+
+  useEffect(() => {
+    if (!enabled) {
+      setDirection(null)
+      return
+    }
+    const page = pageRef.current
+    if (!page) return
+    let io: IntersectionObserver | null = null
+    const attach = () => {
+      io?.disconnect()
+      io = null
+      const card = page.querySelector("[data-today-card]")
+      if (!card) {
+        setDirection(null)
+        return
+      }
+      io = new IntersectionObserver(([entry]) => {
+        setDirection(
+          entry.isIntersecting
+            ? null
+            : entry.boundingClientRect.top < 0
+              ? "up"
+              : "down",
+        )
+      })
+      io.observe(card)
+    }
+    attach()
+    const mo = new MutationObserver(attach)
+    mo.observe(page, { childList: true, subtree: true })
+    return () => {
+      io?.disconnect()
+      mo.disconnect()
+    }
+  }, [enabled, pageRef])
+
+  if (!direction) return null
+
+  // Portalled to <body>: the gallery track is CSS-transformed, which would
+  // otherwise become the containing block for position: fixed and drag the
+  // button along as pages swipe (and clip it under the viewport's overflow).
+  return createPortal(
+    <button
+      type="button"
+      className={styles.todayFab}
+      aria-label={t("Scroll to today")}
+      onClick={() => {
+        pageRef.current
+          ?.querySelector("[data-today-card]")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" })
+      }}
+    >
+      {direction === "up" ? (
+        <ArrowUpIcon aria-hidden fontSize="1.5rem" />
+      ) : (
+        <ArrowDownIcon aria-hidden fontSize="1.5rem" />
+      )}
+    </button>,
+    document.body,
+  )
+}
+
+function MobileWeekPanel({ galleryActive }: { galleryActive: boolean }) {
   const { t } = useTranslation("dashboard")
   const [weekStart, setWeekStart] = useState(() =>
     startOfSunday(Temporal.Now.plainDateISO()),
   )
+  const pageRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div className={styles.swipePage}>
+    <div className={styles.swipePage} ref={pageRef}>
       <Heading level={2} data-size="sm">
         {t("This week")}
       </Heading>
@@ -242,6 +333,7 @@ function MobileWeekPanel() {
           </Card.Block>
         </section>
       </Card>
+      <ScrollToTodayFab enabled={galleryActive} pageRef={pageRef} />
     </div>
   )
 }

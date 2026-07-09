@@ -38,6 +38,32 @@
   cursor: pointer;
 }
 
+/* Floating scroll-to-today button on the "This week" page. Centred just above
+   the gallery's floating dot pill: the pill's bottom offset (96px nav +
+   safe-area + 0.5rem, see `.dots.floating` in CardGallery.module.css) plus the
+   pill's own height (1.75rem dot buttons + 2×0.25rem padding + 2×1px border,
+   content-box) plus a 0.5rem gap. Same chrome as the shopping FAB above. */
+.todayFab {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(96px + env(safe-area-inset-bottom) + 3.25rem + 2px);
+  z-index: 99;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ds-font-size-4);
+  width: 2.625em;
+  height: 2.625em;
+  padding: 0;
+  background: var(--ds-color-background-default);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: 50%;
+  color: var(--ds-color-neutral-text-subtle);
+  cursor: pointer;
+}
+
 .stackedPanels {
   display: flex;
   flex-direction: column;

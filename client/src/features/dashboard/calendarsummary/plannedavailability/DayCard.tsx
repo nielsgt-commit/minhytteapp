@@ -86,6 +86,10 @@ export function DayCard({
       .filter(Boolean)
       .join(" ") || undefined
 
+  // DOM hook for the dashboard's scroll-to-today FAB, which needs to observe
+  // and scroll to this card from outside the component tree.
+  const todayAttr = isToday ? "" : undefined
+
   const inner = (
     <>
       <div className={styles.dayRow}>
@@ -211,7 +215,7 @@ export function DayCard({
     return (
       <Popover.TriggerContext>
         <Card asChild className={cardClassName}>
-          <li>
+          <li data-today-card={todayAttr}>
             <Popover.Trigger asChild>
               <Card.Block
                 className={`${styles.dayCardBlock} ${styles.dayCardClickable}`}
@@ -236,7 +240,7 @@ export function DayCard({
 
   return (
     <Card asChild className={cardClassName}>
-      <li>
+      <li data-today-card={todayAttr}>
         <Card.Block
           role={isClickable ? "button" : undefined}
           tabIndex={isClickable ? 0 : undefined}

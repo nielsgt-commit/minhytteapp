@@ -40,17 +40,22 @@ const TAP_SNAP_MS = 250
  * `resetSignal` lets a parent snap the gallery back to the first page from
  * outside (e.g. re-tapping the bottom nav's Dashboard tab): every change of
  * the value eases the gallery home.
+ *
+ * `onActiveChange` reports the active page index whenever it changes (swipe,
+ * dots, arrows or reset), so a parent can react to which page is showing.
  */
 export function CardGallery({
   children,
   ariaLabel,
   fullWidth = false,
   resetSignal,
+  onActiveChange,
 }: {
   children: ReactNode
   ariaLabel: string
   fullWidth?: boolean
   resetSignal?: number
+  onActiveChange?: (index: number) => void
 }) {
   const { t } = useTranslation("maintenance")
   const isMobile = useIsMobile()
@@ -156,6 +161,10 @@ export function CardGallery({
       mo.disconnect()
     }
   }, [isMobile, fullWidth, active, count])
+
+  useEffect(() => {
+    onActiveChange?.(active)
+  }, [active, onActiveChange])
 
   // An external reset (changed `resetSignal`) eases the gallery back to the
   // first page, same as tapping its dot. The initial value must not trigger a
