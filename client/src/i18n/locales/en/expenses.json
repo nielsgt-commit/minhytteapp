@@ -12,7 +12,7 @@
   ",-": ",-",
   "(no category)": "(no category)",
   "(nothing to review)": "(nothing to review)",
-  "Accept new expenses": "Accept new expenses",
+  "Allow new expenses": "Allow new expenses",
   "Add": "Add",
   "Add or remove categories": "Add or remove categories",
   "Add or select a property to track shared costs and keep receipts in one place.": "Add or select a property to track shared costs and keep receipts in one place.",
@@ -51,8 +51,8 @@
   "Total": "Total",
   "Upload receipt": "Upload receipt",
   "View receipt": "View receipt",
-  "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>.": "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>.",
-  "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to review settlement</3>.": "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to review settlement</3>.",
+  "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to booking days</3>.": "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to booking days</3>.",
+  "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to review settlement</3>.": "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to review settlement</3>.",
   "You still have {{count}} item to review — finish the list before continuing._one": "You still have {{count}} item to review — finish the list before continuing.",
   "You still have {{count}} item to review — finish the list before continuing._other": "You still have {{count}} items to review — finish the list before continuing."
 }

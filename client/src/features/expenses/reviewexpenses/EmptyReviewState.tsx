@@ -34,13 +34,13 @@ export function EmptyReviewState({
         {toBookingDays ? (
           <Trans
             t={t}
-            i18nKey="When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>."
+            i18nKey="When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to booking days</3>."
             components={{ 1: <em />, 3: <em /> }}
           />
         ) : (
           <Trans
             t={t}
-            i18nKey="When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to review settlement</3>."
+            i18nKey="When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to review settlement</3>."
             components={{ 1: <em />, 3: <em /> }}
           />
         )}

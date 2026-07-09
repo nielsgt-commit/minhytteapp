@@ -23,7 +23,7 @@ export function ReviewHeader({
           1. {t("Review expenses")}
         </Heading>
         <Switch
-          label={t("Accept new expenses")}
+          label={t("Allow new expenses")}
           position="end"
           data-size="sm"
           checked={stillAccepting}

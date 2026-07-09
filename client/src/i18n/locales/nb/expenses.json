@@ -13,7 +13,7 @@
   "(no category)": "(ingen kategori)",
   "(no recurring fees)": "(ingen faste kostnader)",
   "(nothing to review)": "(ingenting å gå gjennom)",
-  "Accept new expenses": "Ta imot nye utgifter",
+  "Allow new expenses": "Godta nye utgifter",
   "Add": "Legg til",
   "Add or remove categories": "Legg til eller fjern kategorier",
   "Add or select a property to track shared costs and keep receipts in one place.": "Legg til eller velg en eiendom for å holde oversikt over felleskostnader og samle kvitteringer på ett sted.",
@@ -65,8 +65,8 @@
   "Total": "Totalt",
   "Upload receipt": "Last opp kvittering",
   "View receipt": "Vis kvittering",
-  "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to booking days</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Ta imot nye utgifter</1> og klikk <3>Gå videre til bookingdager</3>.",
-  "When you're done collecting expenses, turn off <1>Accept new expenses</1> and click <3>Continue to review settlement</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Ta imot nye utgifter</1> og klikk <3>Gå videre til å gjennomgå oppgjøret</3>.",
+  "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to booking days</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Godta nye utgifter</1> og klikk <3>Gå videre til bookingdager</3>.",
+  "When you're done collecting expenses, turn off <1>Allow new expenses</1> and click <3>Continue to review settlement</3>.": "Når du er ferdig med å samle inn utgifter, slå av <1>Godta nye utgifter</1> og klikk <3>Gå videre til å gjennomgå oppgjøret</3>.",
   "You still have {{count}} item to review — finish the list before continuing._one": "Du har fortsatt {{count}} ting å gå gjennom — fullfør listen før du går videre.",
   "You still have {{count}} item to review — finish the list before continuing._other": "Du har fortsatt {{count}} ting å gå gjennom — fullfør listen før du går videre."
 }

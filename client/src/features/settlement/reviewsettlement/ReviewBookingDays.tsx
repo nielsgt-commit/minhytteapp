@@ -99,7 +99,7 @@ export function ReviewBookingDays({
           {String(stepNumber)}. {t("Review bookings")}
         </Heading>
         <Switch
-          label={t("Accept new bookings")}
+          label={t("Allow new stays")}
           position="end"
           data-size="sm"
           checked={stillAccepting}
