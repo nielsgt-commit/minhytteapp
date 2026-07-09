@@ -201,7 +201,7 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
       .catch(() => undefined)
   }
 
-  const [mode, setMode] = useState<FocusMode>("season")
+  const [mode, setMode] = useState<FocusMode>("peak")
   // A season without priority weeks has no peak window to zoom to.
   const effectiveMode: FocusMode = active.peak ? mode : "season"
   const focus =
