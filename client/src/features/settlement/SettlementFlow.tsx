@@ -60,10 +60,11 @@ export function SettlementFlow({ propertyId }: { propertyId: number }) {
   return (
     <>
       <SettlementPhaseStepper phases={phases} phase={phase} />
-      {/* During reviewing the panel is the "waiting for the others" display,
+      {/* Hidden during collecting: there's nothing per-head to track yet.
+          During reviewing the panel is the "waiting for the others" display,
           shown by ReviewSettlement only after the head marks their own review
           done — not up here ahead of it. */}
-      {phase !== "reviewing" && (
+      {phase === "split_policy" && (
         <SettlementHeadsProgress settlementId={settlementId} phase={phase} />
       )}
       <SettlementProgressSummary settlementId={settlementId} phase={phase} />
