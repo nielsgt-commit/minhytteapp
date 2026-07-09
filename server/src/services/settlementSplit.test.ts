@@ -764,3 +764,99 @@ describe("computeTransfers", () => {
     ])
   })
 })
+
+describe("breakdown", () => {
+  it("records one bucket per rule with the exact weights used", () => {
+    const input = makeInput({
+      expenses: [expense(900, 1, { expense_types: ["Food"] }), expense(300, 3)],
+      bookings: [
+        {
+          booker_id: 1,
+          start_date: "2026-07-01",
+          end_date: "2026-07-03",
+          occupant_user_ids: [1],
+          extra_count: 0,
+        },
+        {
+          booker_id: 3,
+          start_date: "2026-08-01",
+          end_date: "2026-08-06",
+          occupant_user_ids: [3],
+          extra_count: 0,
+        },
+      ],
+    })
+    const result = computePolicySplit(
+      config({ ...equallyMainGroups, how: { kind: "weighted_by_occupancy" } }, [
+        {
+          what: { kind: "category", category_ids: [1] },
+          how: { kind: "equally" },
+          who: [{ kind: "main_groups" }],
+          except: [],
+          when: { kind: "always" },
+        },
+      ]),
+      input,
+      ALL,
+    )
+    expect(result.expense_count).toBe(2)
+    expect(sharesByGroup(result)).toEqual({ A: 550, B: 650 })
+
+    const { buckets, rounding, occupancy } = result.breakdown
+    expect(buckets).toHaveLength(2)
+    const food = buckets.find(b => b.rule_index === 0)
+    expect(food).toMatchObject({
+      category_names: ["Food"],
+      how: "equally",
+      amount: 900,
+      expense_count: 1,
+    })
+    expect(food?.weights).toEqual([
+      { group_id: 10, weight: 1 },
+      { group_id: 20, weight: 1 },
+    ])
+    const fallback = buckets.find(b => b.rule_index === null)
+    expect(fallback).toMatchObject({
+      category_names: null,
+      how: "weighted_by_occupancy",
+      amount: 300,
+      expense_count: 1,
+    })
+    expect(fallback?.weights).toEqual([
+      { group_id: 10, weight: 3 },
+      { group_id: 20, weight: 6 },
+    ])
+    expect(rounding).toBeNull()
+    expect(occupancy).toEqual({
+      window: { kind: "year" },
+      include_extra_guests: false,
+      child_weight: 1,
+    })
+  })
+
+  it("reports the rounding adjustment so shares stay verifiable", () => {
+    const input = makeInput({ expenses: [expense(101, 1)] })
+    const result = computePolicySplit(config(equallyMainGroups), input, ALL)
+    // 101 / 2 = 50.5 each, rounds to 51 + 51; the drift of -1 lands on A.
+    expect(sharesByGroup(result)).toEqual({ A: 50, B: 51 })
+    expect(result.breakdown.rounding).toEqual({ group_id: 10, amount: -1 })
+  })
+
+  it("labels a bucket equally when occupancy weights are all zero", () => {
+    const input = makeInput({ expenses: [expense(100, 1)] })
+    const result = computePolicySplit(
+      config({ ...equallyMainGroups, how: { kind: "weighted_by_occupancy" } }),
+      input,
+      ALL,
+    )
+    expect(sharesByGroup(result)).toEqual({ A: 50, B: 50 })
+    expect(result.breakdown.buckets).toHaveLength(1)
+    expect(result.breakdown.buckets[0]).toMatchObject({
+      how: "equally",
+      weights: [
+        { group_id: 10, weight: 1 },
+        { group_id: 20, weight: 1 },
+      ],
+    })
+  })
+})

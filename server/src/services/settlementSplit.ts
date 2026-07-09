@@ -23,6 +23,8 @@ import { normalizeWhat, resolveOccupancy } from "../shared/splitPolicy.ts"
 import type {
   SplitPolicyConfig,
   SplitPolicyFallback,
+  SplitPolicyHow,
+  SplitPolicyOccupancy,
   SplitPolicyOccupancyWindow,
   SplitPolicyParameter,
   SplitPolicyRule,
@@ -114,10 +116,36 @@ export type SplitInput = {
   priorityWeeks: { user_group_id: number; iso_week: number }[]
 }
 
+// One line of the "check it yourself" breakdown: a set of expenses that were
+// all divided the same way, with the exact weights used. A reader can verify
+// each group's contribution as amount × weight ÷ (sum of weights). Expenses
+// under the same rule land in separate buckets when their weights differ
+// (date-dependent when-filters), so the arithmetic always reproduces exactly.
+export type BreakdownBucket = {
+  // Index into config.rules, or null for the fallback ("all other expenses").
+  rule_index: number | null
+  // Category names the rule targets; null when the bucket covers any expense.
+  category_names: string[] | null
+  how: SplitPolicyHow["kind"]
+  expense_count: number
+  amount: number
+  weights: { group_id: number; weight: number }[]
+}
+
+export type SplitBreakdown = {
+  buckets: BreakdownBucket[]
+  // Whole-krone drift assigned to one group after rounding, if any.
+  rounding: { group_id: number; amount: number } | null
+  // How person-days were counted, when a booking-days policy is in play.
+  occupancy: SplitPolicyOccupancy | null
+}
+
 export type PolicySplitResult = {
   total_reimbursed: number
   total_booking_days: number | null
+  expense_count: number
   groups: GroupAllocation[]
+  breakdown: SplitBreakdown
 }
 
 function isoWeekRange(
@@ -384,19 +412,56 @@ export function computePolicySplit(
     return users
   }
 
+  // Category names each rule targets, for labelling breakdown buckets.
+  const ruleCategoryNames = config.rules.map(r => {
+    const w = normalizeWhat(r.what)
+    return w.kind === "category"
+      ? w.category_ids
+          .map(id => input.categoryNameById.get(id))
+          .filter((n): n is string => n != null)
+      : null
+  })
+
   const floatShareByGroup = new Map<number, number>()
-  const addGroupShares = (weights: Map<number, number>, amount: number) => {
-    const totalWeight = [...weights.values()].reduce((s, v) => s + v, 0)
-    const entries = [...weights.entries()]
+  const bucketByKey = new Map<string, BreakdownBucket>()
+  const addGroupShares = (
+    rawWeights: Map<number, number>,
+    amount: number,
+    ruleIndex: number | null,
+    how: SplitPolicyHow["kind"],
+  ) => {
+    const rawTotal = [...rawWeights.values()].reduce((s, v) => s + v, 0)
+    // All-zero weights mean "split equally among the targets"; record it that
+    // way so the breakdown arithmetic reproduces the shares exactly.
+    const weights =
+      rawTotal > 0
+        ? rawWeights
+        : new Map([...rawWeights.keys()].map(g => [g, 1]))
+    const effectiveHow = rawTotal > 0 ? how : "equally"
+    const totalWeight = rawTotal > 0 ? rawTotal : weights.size
+    const entries = [...weights.entries()].sort((a, b) => a[0] - b[0])
     for (const [groupId, weight] of entries) {
-      const portion =
-        totalWeight > 0
-          ? (amount * weight) / totalWeight
-          : amount / entries.length
       floatShareByGroup.set(
         groupId,
-        (floatShareByGroup.get(groupId) ?? 0) + portion,
+        (floatShareByGroup.get(groupId) ?? 0) + (amount * weight) / totalWeight,
       )
+    }
+    const key = `${String(ruleIndex)}|${effectiveHow}|${entries
+      .map(([g, w]) => `${String(g)}:${String(w)}`)
+      .join(",")}`
+    const bucket = bucketByKey.get(key)
+    if (bucket != null) {
+      bucket.amount += amount
+      bucket.expense_count += 1
+    } else {
+      bucketByKey.set(key, {
+        rule_index: ruleIndex,
+        category_names: ruleIndex != null ? ruleCategoryNames[ruleIndex] : null,
+        how: effectiveHow,
+        expense_count: 1,
+        amount,
+        weights: entries.map(([group_id, weight]) => ({ group_id, weight })),
+      })
     }
   }
 
@@ -407,6 +472,7 @@ export function computePolicySplit(
     rule: SplitPolicyRule | SplitPolicyFallback,
     amount: number,
     expenseDate: string,
+    ruleIndex: number | null,
   ) => {
     const groupMode = isMainGroupsOnly(rule.who) && rule.except.length === 0
 
@@ -437,7 +503,7 @@ export function computePolicySplit(
             break
         }
       }
-      addGroupShares(weights, amount)
+      addGroupShares(weights, amount, ruleIndex, rule.how.kind)
       return
     }
 
@@ -461,7 +527,12 @@ export function computePolicySplit(
       )
     })
     if (users.length === 0) {
-      addGroupShares(new Map(mainGroupIds.map(g => [g, 1])), amount)
+      addGroupShares(
+        new Map(mainGroupIds.map(g => [g, 1])),
+        amount,
+        ruleIndex,
+        "equally",
+      )
       return
     }
 
@@ -469,14 +540,14 @@ export function computePolicySplit(
       const groups = [
         ...new Set(users.flatMap(u => input.userToMainGroup.get(u) ?? [])),
       ]
-      let weights = new Map(groups.map(g => [g, ownershipByGroup.get(g) ?? 0]))
-      if ([...weights.values()].every(w => w === 0)) {
-        weights = new Map(groups.map(g => [g, 1]))
-      }
-      addGroupShares(weights, amount)
+      const weights = new Map(
+        groups.map(g => [g, ownershipByGroup.get(g) ?? 0]),
+      )
+      addGroupShares(weights, amount, ruleIndex, "by_ownership_pct")
       return
     }
 
+    let how = rule.how.kind
     let userWeights: Map<number, number>
     if (rule.how.kind === "weighted_by_occupancy") {
       userWeights = new Map(
@@ -487,6 +558,7 @@ export function computePolicySplit(
       )
       if ([...userWeights.values()].every(w => w === 0)) {
         userWeights = new Map(users.map(u => [u, 1]))
+        how = "equally"
       }
     } else {
       userWeights = new Map(users.map(u => [u, 1]))
@@ -497,7 +569,7 @@ export function computePolicySplit(
       if (g == null) continue
       groupWeights.set(g, (groupWeights.get(g) ?? 0) + w)
     }
-    addGroupShares(groupWeights, amount)
+    addGroupShares(groupWeights, amount, ruleIndex, how)
   }
 
   const paidByGroup = new Map<number, number>()
@@ -510,11 +582,11 @@ export function computePolicySplit(
       paidByGroup.set(groupId, (paidByGroup.get(groupId) ?? 0) + e.amount)
     }
 
-    const rule =
-      config.rules.find(r =>
-        ruleMatchesExpense(r.what, e.expense_types, input.categoryNameById),
-      ) ?? config.fallback
-    allocateExpense(rule, e.amount, e.date)
+    const ruleIndex = config.rules.findIndex(r =>
+      ruleMatchesExpense(r.what, e.expense_types, input.categoryNameById),
+    )
+    const rule = ruleIndex >= 0 ? config.rules[ruleIndex] : config.fallback
+    allocateExpense(rule, e.amount, e.date, ruleIndex >= 0 ? ruleIndex : null)
   }
 
   const allocations: GroupAllocation[] = input.mainGroups.map(g => {
@@ -535,6 +607,7 @@ export function computePolicySplit(
 
   const sumShares = allocations.reduce((s, a) => s + a.total_share, 0)
   const drift = totalReimbursed - sumShares
+  let rounding: SplitBreakdown["rounding"] = null
   if (drift !== 0 && allocations.length > 0) {
     let largest = allocations[0]
     for (const a of allocations) {
@@ -542,6 +615,7 @@ export function computePolicySplit(
     }
     largest.total_share += drift
     largest.net = largest.total_paid - largest.total_share
+    rounding = { group_id: largest.group_id, amount: drift }
   }
 
   const totalDays = bookingDaysEnabled
@@ -551,7 +625,13 @@ export function computePolicySplit(
   return {
     total_reimbursed: totalReimbursed,
     total_booking_days: totalDays,
+    expense_count: input.expenses.length,
     groups: allocations,
+    breakdown: {
+      buckets: [...bucketByKey.values()],
+      rounding,
+      occupancy: bookingDaysEnabled ? occupancy : null,
+    },
   }
 }
 

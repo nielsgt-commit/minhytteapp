@@ -39,6 +39,7 @@ import {
 } from "../../shared/splitPolicy.ts"
 import {
   type GroupAllocation,
+  type SplitBreakdown,
   type Transfer,
   computePolicySplit,
   computeTransfers,
@@ -115,11 +116,13 @@ type PreviewResult = {
   inputs: {
     total_reimbursed: number
     total_booking_days: number | null
+    expense_count: number
   }
   groups: GroupAllocation[]
   transfers: Transfer[]
   heads: HeadStatus[]
   closed: boolean
+  breakdown: SplitBreakdown
 }
 
 async function resolveSettlementPropertyId(
@@ -329,11 +332,13 @@ async function computePreviewSplit(
         inputs: {
           total_reimbursed: result.total_reimbursed,
           total_booking_days: result.total_booking_days,
+          expense_count: result.expense_count,
         },
         groups: result.groups,
         transfers: computeTransfers(result.groups),
         heads: await headStatuses(db, settlementId, headsRows),
         closed: settlement.phase === "closed",
+        breakdown: result.breakdown,
       }
     }
   }
@@ -366,11 +371,12 @@ async function computePreviewSplit(
       policy: "occupancy_days",
       policy_name: null,
       parameters: [...SPLIT_POLICY_PARAMETERS],
-      inputs: { total_reimbursed: 0, total_booking_days: 0 },
+      inputs: { total_reimbursed: 0, total_booking_days: 0, expense_count: 0 },
       groups: [],
       transfers: [],
       heads: [],
       closed: settlement.phase === "closed",
+      breakdown: { buckets: [], rounding: null, occupancy: null },
     }
   }
 
@@ -504,6 +510,7 @@ async function computePreviewSplit(
 
   const sumShares = allocations.reduce((s, a) => s + a.total_share, 0)
   const drift = totalReimbursed - sumShares
+  let rounding: SplitBreakdown["rounding"] = null
   if (drift !== 0 && allocations.length > 0) {
     let largest = allocations[0]
     for (const a of allocations) {
@@ -511,6 +518,7 @@ async function computePreviewSplit(
     }
     largest.total_share += drift
     largest.net = largest.total_paid - largest.total_share
+    rounding = { group_id: largest.group_id, amount: drift }
   }
 
   return {
@@ -520,11 +528,38 @@ async function computePreviewSplit(
     inputs: {
       total_reimbursed: totalReimbursed,
       total_booking_days: totalDays,
+      expense_count: reimbursedRows.length,
     },
     groups: allocations,
     transfers: computeTransfers(allocations),
     heads: await headStatuses(db, settlementId, headsRows),
     closed: settlement.phase === "closed",
+    breakdown: {
+      buckets:
+        totalReimbursed > 0
+          ? [
+              {
+                rule_index: null,
+                category_names: null,
+                how: "weighted_by_occupancy",
+                expense_count: reimbursedRows.length,
+                amount: totalReimbursed,
+                weights: allocations.map(a => ({
+                  group_id: a.group_id,
+                  weight: a.booking_days ?? 0,
+                })),
+              },
+            ]
+          : [],
+      rounding,
+      // The built-in policy counts every night in the year and always adds
+      // extra guest names to the booker's household.
+      occupancy: {
+        window: { kind: "year" },
+        include_extra_guests: true,
+        child_weight: 1,
+      },
+    },
   }
 }
 

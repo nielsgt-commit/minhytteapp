@@ -2,11 +2,14 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { type SettlementPhase } from "@/features/settlement/phase"
+import { StepBadge } from "@/features/settlement/StepBadge.tsx"
+import stepStyles from "@/features/settlement/StepBadge.module.css"
 import { useTRPC } from "@/trpc/trpc"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
+import { SplitCalculationDetails } from "./SplitCalculationDetails"
 
 type Props = {
   settlementId: number
@@ -70,8 +73,9 @@ export function ReviewSplitPolicy({ settlementId, prev, stepNumber }: Props) {
     <Card asChild>
       <article>
         <Card.Block data-size="sm">
-          <Heading level={3} data-size="xs">
-            {String(stepNumber)}. {t("Review split policy")}
+          <Heading level={3} data-size="xs" className={stepStyles.stepHeading}>
+            <StepBadge number={stepNumber} state="active" />
+            {t("Review split policy")}
           </Heading>
           <Paragraph data-size="sm">
             {t(
@@ -157,6 +161,17 @@ export function ReviewSplitPolicy({ settlementId, prev, stepNumber }: Props) {
             </ul>
           )}
         </Card.Block>
+
+        {preview.breakdown.buckets.length > 0 && groups.length > 0 && (
+          <Card.Block data-size="sm">
+            <SplitCalculationDetails
+              totalReimbursed={inputs.total_reimbursed}
+              expenseCount={inputs.expense_count}
+              groups={groups}
+              breakdown={preview.breakdown}
+            />
+          </Card.Block>
+        )}
 
         <Card.Block data-size="sm">
           <Heading level={4} data-size="2xs">
