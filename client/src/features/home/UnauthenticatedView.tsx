@@ -32,7 +32,7 @@ export function UnauthenticatedView() {
     setErrorMsg(null)
     const { error } = await signIn.magicLink({
       email,
-      callbackURL: "/dashboard",
+      callbackURL: "/oversikt",
     })
     if (error) {
       setStatus("error")

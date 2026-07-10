@@ -68,7 +68,7 @@ describe("UnauthenticatedView", () => {
     expect(magicLinkMock).toHaveBeenCalledTimes(1)
     expect(magicLinkMock).toHaveBeenCalledWith({
       email: "user@example.com",
-      callbackURL: "/dashboard",
+      callbackURL: "/oversikt",
     })
   })
 

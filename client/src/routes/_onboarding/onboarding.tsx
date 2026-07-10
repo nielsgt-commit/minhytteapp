@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_onboarding/onboarding")({
       (me.onboarding_step === "done" || me.onboarding_dismissed_at != null)
     ) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw redirect({ to: "/dashboard" })
+      throw redirect({ to: "/oversikt" })
     }
     await context.queryClient.ensureQueryData(trpc.property.mine.queryOptions())
   },
