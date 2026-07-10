@@ -284,6 +284,16 @@
   border: none;
 }
 
+/* Pending booking: diagonal stripes laid over the group color (set inline as
+   background-color), so solid bars read as confirmed = definitely coming. */
+.barPending {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(255 255 255 / 0.65) 0 3px,
+    transparent 3px 7px
+  );
+}
+
 /* Booking-details popover opened by clicking a bar. */
 .barPopover {
   max-width: 18rem;
@@ -370,6 +380,21 @@
   height: 0.6rem;
   border-radius: 2px;
   flex-shrink: 0;
+}
+
+/* Pending key: the group swatch shape with the same stripe overlay as the
+   bars, on a neutral base since pending isn't tied to one group's color. */
+.legendPendingSwatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background-color: var(--ds-color-neutral-base-default);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(255 255 255 / 0.65) 0 3px,
+    transparent 3px 7px
+  );
 }
 
 /* Weekend key: pushed to the opposite (right) end of the legend row. */

@@ -328,6 +328,12 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
     return out
   }, [lanes, userGroups, t])
 
+  // Pending-stripe key is only worth a legend slot when a striped bar is
+  // actually on screen.
+  const hasPending = lanes.some(lane =>
+    lane.bars.some(bar => bar.status === "pending"),
+  )
+
   // Dotted dividers sit on each month boundary the window touches (e.g. in the
   // season view: Jun 1 at the left edge, Jul 1 in the middle, Aug 1 at the right
   // edge); each carries the name of the month that begins there, to its right.
@@ -635,14 +641,17 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                             the button role, focus and keyboard handling. */}
                         <Popover.Trigger asChild>
                           <span
-                            className={
-                              bar.queued ? styles.barQueued : styles.bar
-                            }
+                            className={[
+                              bar.queued ? styles.barQueued : styles.bar,
+                              bar.status === "pending" && styles.barPending,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
                             style={{
                               left: `${String(left * 100)}%`,
                               width: `${String(Math.max(right - left, 0) * 100)}%`,
                               // backgroundColor (not the `background` shorthand)
-                              // so the queued bar's hatch background-image
+                              // so the pending bar's stripe background-image
                               // survives.
                               backgroundColor: color,
                             }}
@@ -730,6 +739,12 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
                   {item.label}
                 </li>
               ))}
+              {hasPending && (
+                <li className={styles.legendItem}>
+                  <span className={styles.legendPendingSwatch} />
+                  {t("Pending")}
+                </li>
+              )}
               {/* Weekend key, parked at the opposite (right) end of the row. */}
               <li className={styles.legendWeekend}>
                 <span className={styles.legendWeekendSwatch} />
