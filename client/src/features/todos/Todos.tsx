@@ -9,7 +9,6 @@ import {
   Dropdown,
   List,
   Paragraph,
-  Select,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { MenuElipsisVerticalIcon } from "@navikt/aksel-icons"
@@ -27,87 +26,8 @@ import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
 import { useIsMobile } from "@/hooks/useIsMobile"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
-
-type TargetKind = "structure" | "infrastructure" | "equipment"
-type Target = { kind: TargetKind; id: number }
-
-const NO_TARGET = ""
-
-// Encodes a target as "<kind>:<id>" so a single <select> can carry the choice.
-function parseTargetToken(token: string): Target | undefined {
-  if (token === NO_TARGET) return undefined
-  const [kind, idStr] = token.split(":")
-  const id = Number(idStr)
-  if (!Number.isFinite(id) || id <= 0) return undefined
-  if (
-    kind !== "structure" &&
-    kind !== "infrastructure" &&
-    kind !== "equipment"
-  ) {
-    return undefined
-  }
-  return { kind, id }
-}
-
-type NamedRow = { id: number; name: string }
-
-function TargetSelect({
-  name,
-  value,
-  onChange,
-  structures,
-  infrastructure,
-  equipment,
-}: {
-  name?: string
-  value?: string
-  onChange?: (token: string) => void
-  structures: readonly NamedRow[]
-  infrastructure: readonly NamedRow[]
-  equipment: readonly NamedRow[]
-}) {
-  const { t } = useTranslation("todos")
-  return (
-    <Select
-      data-size="sm"
-      name={name}
-      aria-label={t("Target")}
-      value={value}
-      onChange={e => onChange?.(e.target.value)}
-    >
-      <Select.Option value={NO_TARGET}>
-        {t("No target (general todo)")}
-      </Select.Option>
-      {structures.length > 0 && (
-        <Select.Optgroup label={t("Building")}>
-          {structures.map(s => (
-            <Select.Option key={s.id} value={`structure:${String(s.id)}`}>
-              {s.name}
-            </Select.Option>
-          ))}
-        </Select.Optgroup>
-      )}
-      {infrastructure.length > 0 && (
-        <Select.Optgroup label={t("Infrastructure")}>
-          {infrastructure.map(i => (
-            <Select.Option key={i.id} value={`infrastructure:${String(i.id)}`}>
-              {i.name}
-            </Select.Option>
-          ))}
-        </Select.Optgroup>
-      )}
-      {equipment.length > 0 && (
-        <Select.Optgroup label={t("Equipment")}>
-          {equipment.map(eq => (
-            <Select.Option key={eq.id} value={`equipment:${String(eq.id)}`}>
-              {eq.name}
-            </Select.Option>
-          ))}
-        </Select.Optgroup>
-      )}
-    </Select>
-  )
-}
+import { NO_TARGET, parseTargetToken } from "./targetToken"
+import { TargetSelect } from "./TargetSelect"
 
 export function Todos() {
   const { t } = useTranslation("todos")
