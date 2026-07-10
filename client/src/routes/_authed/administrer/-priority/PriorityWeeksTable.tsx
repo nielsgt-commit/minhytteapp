@@ -1,7 +1,7 @@
 import { Table } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { type Season, weekRangeForSeason } from "@/features/seasons/seasonUtils"
-import { type EligibleOwner, type OwnerLookups } from "./priorityUtils"
+import { type Season, weekRangeForSeason } from "@/utils/seasonUtils"
+import { type EligibleOwner, type OwnerLookups } from "@/utils/priorityUtils"
 import { PriorityWeekRow } from "./PriorityWeekRow"
 import { ConflictRow } from "./ConflictRow"
 

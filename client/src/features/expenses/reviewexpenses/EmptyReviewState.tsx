@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
-import type { SettlementPhase } from "@/features/settlement/phase.ts"
+import type { SettlementPhase } from "@server/shared/splitPolicy.ts"
 
 type Props = {
   phase: SettlementPhase

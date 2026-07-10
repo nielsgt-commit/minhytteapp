@@ -20,7 +20,7 @@ import { InlineEditField } from "@/components/shared/InlineEditField"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdNumber } from "@/utils/formData"
-import section from "@/features/property/managePropertySection.module.css"
+import section from "@/components/layouts/manageSection.module.css"
 import { AddStructureFlow } from "@/features/property/structures/AddStructureFlow.tsx"
 import {
   AddBedsFlow,

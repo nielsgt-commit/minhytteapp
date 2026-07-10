@@ -7,12 +7,12 @@ import {
   buildOwnerLookups,
   defaultYear,
   formatRange,
-} from "@/routes/_authed/administrer/-priority/priorityUtils"
+} from "@/utils/priorityUtils"
 import {
   type Season,
   groupAssignmentsBySeason,
   weekRangeForSeason,
-} from "@/features/seasons/seasonUtils"
+} from "@/utils/seasonUtils"
 import styles from "./PriorityWeeksPanel.module.css"
 
 // Read-only dashboard view of which owner group holds each priority week.

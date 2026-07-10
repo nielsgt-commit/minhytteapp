@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { ListUsers } from "./users/ListUsers.tsx"
-import section from "@/features/property/managePropertySection.module.css"
+import section from "@/components/layouts/manageSection.module.css"
 
 export function Users() {
   const { t } = useTranslation("usergroups")

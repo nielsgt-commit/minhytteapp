@@ -4,10 +4,7 @@ import { useTranslation } from "react-i18next"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { useTRPC } from "@/trpc/trpc"
 import type { Temporal } from "temporal-polyfill"
-import {
-  type WeekRange,
-  formatRange,
-} from "@/routes/_authed/administrer/-priority/priorityUtils"
+import { type WeekRange, formatRange } from "@/utils/priorityUtils"
 import type { SortMode } from "./SummerSummary"
 import styles from "./SummerSummary.module.css"
 

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Button, Card, Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/trpc"
-import section from "@/features/property/managePropertySection.module.css"
+import section from "@/components/layouts/manageSection.module.css"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
@@ -13,8 +13,12 @@ import {
   type Season,
   groupAssignmentsBySeason,
   isCrossYear,
-} from "@/features/seasons/seasonUtils"
-import { PEAK_WEEKS, buildOwnerLookups, defaultYear } from "./priorityUtils"
+} from "@/utils/seasonUtils"
+import {
+  PEAK_WEEKS,
+  buildOwnerLookups,
+  defaultYear,
+} from "@/utils/priorityUtils"
 import { YearNavigator } from "./YearNavigator"
 import { PriorityWeeksTable } from "./PriorityWeeksTable"
 

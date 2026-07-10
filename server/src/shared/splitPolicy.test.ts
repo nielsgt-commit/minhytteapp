@@ -10,6 +10,7 @@ import {
   configViolations,
   nextPhaseIn,
   normalizeParameters,
+  phaseAtLeast,
   normalizeWhat,
   prevPhaseIn,
   requiredPhases,
@@ -261,5 +262,13 @@ describe("phase gating", () => {
     expect(prevPhaseIn(phases, "collecting_bookings")).toBe(
       "collecting_expenses",
     )
+  })
+})
+
+describe("phaseAtLeast", () => {
+  it("is true at or past the target and false before it", () => {
+    expect(phaseAtLeast("reviewing", "reviewing")).toBe(true)
+    expect(phaseAtLeast("closed", "reviewing")).toBe(true)
+    expect(phaseAtLeast("collecting_expenses", "reviewing")).toBe(false)
   })
 })

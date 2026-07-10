@@ -4,7 +4,7 @@ import {
   type EligibleOwner,
   type WeekRange,
   formatRange,
-} from "./priorityUtils"
+} from "@/utils/priorityUtils"
 
 type PriorityWeekRowProps = {
   week: number

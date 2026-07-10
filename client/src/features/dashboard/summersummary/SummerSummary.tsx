@@ -6,11 +6,11 @@ import { Temporal } from "temporal-polyfill"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { useTRPC } from "@/trpc/trpc"
-import { defaultYear } from "@/routes/_authed/administrer/-priority/priorityUtils"
+import { defaultYear } from "@/utils/priorityUtils"
 import {
   groupAssignmentsBySeason,
   weekRangeForSeason,
-} from "@/features/seasons/seasonUtils"
+} from "@/utils/seasonUtils"
 import { PriorityWeekSummary } from "./PriorityWeekSummary"
 import styles from "./SummerSummary.module.css"
 

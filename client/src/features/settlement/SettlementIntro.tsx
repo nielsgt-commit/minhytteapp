@@ -2,11 +2,11 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Button, Heading, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { usePhaseLabels } from "@/features/settlement/SettlementPhaseStepper.tsx"
-import { StepBadge } from "@/features/settlement/StepBadge.tsx"
+import { StepBadge } from "@/components/shared/StepBadge.tsx"
 import {
   requiredPhases,
   type SettlementPhase,
-} from "@/features/settlement/phase"
+} from "@server/shared/splitPolicy.ts"
 import { normalizeParameters } from "@server/shared/splitPolicy.ts"
 import { useTRPC } from "@/trpc/trpc"
 import styles from "./SettlementIntro.module.css"

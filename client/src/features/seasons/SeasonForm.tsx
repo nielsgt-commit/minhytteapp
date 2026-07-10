@@ -10,7 +10,11 @@ import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { formatDateRange } from "@/utils/dateUtils"
-import { type Season, seasonInstanceYear, seasonWindow } from "./seasonUtils.ts"
+import {
+  type Season,
+  seasonInstanceYear,
+  seasonWindow,
+} from "@/utils/seasonUtils"
 import styles from "./SeasonForm.module.css"
 
 export type SeasonFormValues = {

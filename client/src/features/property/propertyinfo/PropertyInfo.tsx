@@ -19,7 +19,7 @@ import {
   AddressLookup,
   type GeonorgeAddress,
 } from "@/features/property/register/AddressLookup"
-import { PropertyEvents } from "@/features/dashboard/propertyevents/PropertyEvents.tsx"
+import { PropertyEvents } from "./PropertyEvents.tsx"
 import styles from "./PropertyInfo.module.css"
 
 type MatrikkelDraft = {

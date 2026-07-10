@@ -13,7 +13,7 @@ import type {
   BookingDraft,
   BookingDraftAction,
 } from "@/features/planstay/booking-logic"
-import { groupColor } from "@/features/usergroups/groupColors"
+import { groupColor } from "@/utils/groupColors"
 import type { OccupantDot } from "../occupantDots.ts"
 
 const WIDE_QUERY = "(min-width: 640px)"

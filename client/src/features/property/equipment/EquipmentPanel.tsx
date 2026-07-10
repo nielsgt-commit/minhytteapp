@@ -21,7 +21,7 @@ import { SubmitButton } from "@/components/shared/SubmitButton"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
-import section from "@/features/property/managePropertySection.module.css"
+import section from "@/components/layouts/manageSection.module.css"
 import { ManageEquipmentCategories } from "./ManageEquipmentCategories"
 import styles from "./EquipmentPanel.module.css"
 

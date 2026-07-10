@@ -8,10 +8,7 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
-import {
-  AddBedsFlow,
-  type RoomData,
-} from "@/features/property/structures/AddBedsFlow"
+import { AddBedsFlow, type RoomData } from "@/features/property"
 import listStyles from "./StepList.module.css"
 
 type Props = {

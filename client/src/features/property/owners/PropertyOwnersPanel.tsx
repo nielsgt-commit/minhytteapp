@@ -17,7 +17,7 @@ import {
 } from "./ownershipCalculations.ts"
 import { OwnerListView } from "./OwnerListView.tsx"
 import { OwnerAddForm } from "./OwnerAddForm.tsx"
-import section from "@/features/property/managePropertySection.module.css"
+import section from "@/components/layouts/manageSection.module.css"
 
 type AddKind = "user" | "group"
 

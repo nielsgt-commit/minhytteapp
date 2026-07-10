@@ -25,6 +25,7 @@ import { PriorityWeeksPanel } from "./PriorityWeeksPanel"
 // import { SummerSummary } from "@/features/dashboard/summersummary/SummerSummary.tsx"
 import { Temporal } from "temporal-polyfill"
 import { startOfSunday } from "@/utils/dateUtils"
+import { DASHBOARD_HOME_EVENT } from "@/components/shared/BottomNavBar"
 
 // A floating basket button that links to the shopping list, carrying a badge of
 // open (unchecked) items. It floats bottom-right, level with the gallery's
@@ -62,9 +63,7 @@ function ShoppingBasketFab({ propertyId }: { propertyId: number }) {
   )
 }
 
-// Fired by the bottom nav's Dashboard tab; a mounted MobileTabs answers by
 // snapping the gallery back to the first ("Now") page.
-export const DASHBOARD_HOME_EVENT = "minhytte:dashboard-home"
 
 // Gallery page indices, in child order below.
 const WEEK_PAGE = 1

@@ -17,7 +17,10 @@ import { Fragment, useEffect, useRef, useState } from "react"
 import type { ComponentType, SVGProps } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./BottomNavBar.module.css"
-import { DASHBOARD_HOME_EVENT } from "@/features/dashboard/MobileTabs"
+
+// Fired by the Dashboard tab when re-tapped while already on the dashboard;
+// a mounted MobileTabs (dashboard feature) answers by resetting to Home.
+export const DASHBOARD_HOME_EVENT = "minhytte:dashboard-home"
 
 // Aksel icons are SVG components; we just need a callable component type
 // that accepts the standard SVG props plus an optional fontSize.

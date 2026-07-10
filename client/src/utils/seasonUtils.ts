@@ -1,4 +1,5 @@
 import { Temporal } from "temporal-polyfill"
+import { isCrossYear } from "@server/shared/season.ts"
 import { isoWeekMonday } from "@/utils/dateUtils"
 
 // A season as the client works with it: a recurring month+day range (end
@@ -33,12 +34,9 @@ export const FALLBACK_SEASON: Season = {
 // day), which is what the chart math wants.
 export type DateWindow = { start: Temporal.PlainDate; end: Temporal.PlainDate }
 
-export function isCrossYear(s: Season): boolean {
-  return (
-    s.end_month < s.start_month ||
-    (s.end_month === s.start_month && s.end_day < s.start_day)
-  )
-}
+// Cross-year detection is shared with the server (season router validation);
+// re-exported so client callers keep one import for all season helpers.
+export { isCrossYear }
 
 // The season's concrete window for the instance that STARTS in `startYear`;
 // a cross-year season ends in `startYear + 1`. overflow: "constrain" resolves

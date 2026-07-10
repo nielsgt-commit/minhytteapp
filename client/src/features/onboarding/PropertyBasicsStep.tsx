@@ -7,10 +7,7 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import { fdNumber, fdString } from "@/utils/formData"
-import {
-  AddressLookup,
-  type GeonorgeAddress,
-} from "@/features/property/register/AddressLookup"
+import { AddressLookup, type GeonorgeAddress } from "@/features/property"
 
 export type PropertyBasicsValues = {
   address: string

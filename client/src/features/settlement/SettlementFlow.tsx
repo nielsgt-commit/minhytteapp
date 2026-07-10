@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { ReviewSettlement } from "@/features/settlement/reviewsettlement/ReviewSettlement.tsx"
-import { ReviewExpenses } from "@/features/expenses/reviewexpenses/ReviewExpenses.tsx"
+import { ReviewExpenses } from "@/features/expenses"
 import { ReviewBookingDays } from "@/features/settlement/reviewsettlement/ReviewBookingDays.tsx"
 import { CreateSettlementFlow } from "@/features/settlement/createsettlement/CreateSettlementFlow.tsx"
 import { ReviewSplitPolicy } from "@/features/settlement/reviewsplitpolicy/ReviewSplitPolicy.tsx"
@@ -12,7 +12,7 @@ import {
   nextPhaseIn,
   prevPhaseIn,
   requiredPhases,
-} from "@/features/settlement/phase"
+} from "@server/shared/splitPolicy.ts"
 import { normalizeParameters } from "@server/shared/splitPolicy.ts"
 import { useTRPC } from "@/trpc/trpc"
 

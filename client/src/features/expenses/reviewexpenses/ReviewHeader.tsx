@@ -1,7 +1,7 @@
 import { Heading, Paragraph } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
-import { StepBadge } from "@/features/settlement/StepBadge.tsx"
-import stepStyles from "@/features/settlement/StepBadge.module.css"
+import { StepBadge } from "@/components/shared/StepBadge.tsx"
+import stepStyles from "@/components/shared/StepBadge.module.css"
 import styles from "./ReviewExpenses.module.css"
 
 export function ReviewHeader() {

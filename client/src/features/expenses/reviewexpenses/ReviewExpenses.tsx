@@ -13,7 +13,7 @@ import { EmptyReviewState } from "./EmptyReviewState.tsx"
 import { useReviewMutations } from "./useReviewMutations.ts"
 import type { ExpenseRow } from "../types.ts"
 import { selectExpensesToReview } from "../selectors.ts"
-import { type SettlementPhase } from "@/features/settlement/phase.ts"
+import { type SettlementPhase } from "@server/shared/splitPolicy.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
 type Props = {

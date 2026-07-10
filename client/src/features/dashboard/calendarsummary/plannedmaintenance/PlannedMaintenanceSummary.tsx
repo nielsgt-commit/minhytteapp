@@ -12,11 +12,8 @@ import {
   startOfSunday,
   toDateInputValue,
 } from "@/utils/dateUtils"
-import {
-  priorityGroupLabel,
-  staticDueKindLabel,
-} from "@/features/maintenance/due/maintenanceDue.ts"
-import { buildOwnerLookups } from "@/routes/_authed/administrer/-priority/priorityUtils.ts"
+import { priorityGroupLabel, staticDueKindLabel } from "@/features/maintenance"
+import { buildOwnerLookups } from "@/utils/priorityUtils.ts"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import styles from "./PlannedMaintenanceSummary.module.css"
 

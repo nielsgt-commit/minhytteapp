@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc.ts"
 import { formatDateRange } from "@/utils/dateUtils"
-import { groupColor } from "@/features/usergroups/groupColors"
+import { groupColor } from "@/utils/groupColors"
 import {
   FALLBACK_SEASON,
   peakWindow,
@@ -26,7 +26,7 @@ import {
   seasonWindow,
   type DateWindow,
   type Season,
-} from "@/features/seasons/seasonUtils"
+} from "@/utils/seasonUtils"
 import { YEAR } from "../constants.ts"
 import styles from "./StaySummaryCompact.module.css"
 

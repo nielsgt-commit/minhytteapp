@@ -20,10 +20,10 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
-import { type SettlementPhase } from "@/features/settlement/phase"
+import { type SettlementPhase } from "@server/shared/splitPolicy.ts"
 import { SettlementHeadsProgress } from "@/features/settlement/SettlementHeadsProgress.tsx"
-import { StepBadge } from "@/features/settlement/StepBadge.tsx"
-import stepStyles from "@/features/settlement/StepBadge.module.css"
+import { StepBadge } from "@/components/shared/StepBadge.tsx"
+import stepStyles from "@/components/shared/StepBadge.module.css"
 
 function sortExpenses(expenses: ExpenseRow[]) {
   return expenses

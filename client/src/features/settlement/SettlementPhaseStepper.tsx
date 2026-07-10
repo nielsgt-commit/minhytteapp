@@ -3,7 +3,7 @@ import styles from "./SettlementPhaseStepper.module.css"
 import {
   SETTLEMENT_PHASES,
   type SettlementPhase,
-} from "@/features/settlement/phase"
+} from "@server/shared/splitPolicy.ts"
 
 export function usePhaseLabels(): Record<SettlementPhase, string> {
   const { t } = useTranslation("settlement")
