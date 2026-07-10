@@ -9,11 +9,7 @@
 // in OUTPUT shape: real Temporal.PlainDate/Instant instances, not superjson
 // wire JSON.
 
-import {
-  TRPCClientError,
-  createTRPCClient,
-  type TRPCLink,
-} from "@trpc/client"
+import { TRPCClientError, createTRPCClient, type TRPCLink } from "@trpc/client"
 import { observable } from "@trpc/server/observable"
 import type { AppRouter } from "@server/trpc/routers/_app.ts"
 

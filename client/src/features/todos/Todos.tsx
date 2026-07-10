@@ -295,7 +295,11 @@ export function Todos() {
 
   const toggleAssignee = (todoId: number, userId: number, next: boolean) => {
     if (selectedPropertyId == null) return
-    const vars = { property_id: selectedPropertyId, id: todoId, user_id: userId }
+    const vars = {
+      property_id: selectedPropertyId,
+      id: todoId,
+      user_id: userId,
+    }
     if (next) assignMutation.mutate(vars)
     else unassignMutation.mutate(vars)
   }
@@ -393,7 +397,10 @@ export function Todos() {
                           {todo.description}
                         </Paragraph>
                         {todo.assignee_ids.length > 0 && (
-                          <Paragraph className={styles.assignees} data-size="sm">
+                          <Paragraph
+                            className={styles.assignees}
+                            data-size="sm"
+                          >
                             {todo.assignee_ids
                               .map(id => userById.get(id))
                               .filter((n): n is string => n != null)

@@ -118,9 +118,7 @@ describe("Todos", () => {
     // React's transition handling for later tests in this jsdom.
     resolveCreate(todoRow({ id: 2, description: "Buy firewood" }))
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: "Add" }),
-      ).not.toBeDisabled()
+      expect(screen.getByRole("button", { name: "Add" })).not.toBeDisabled()
     })
   })
 
@@ -141,7 +139,9 @@ describe("Todos", () => {
   })
 
   test("toggling done flips the checkbox optimistically and rolls back on error", async () => {
-    const handlers = makeHandlers([todoRow({ id: 1, description: "Chop wood" })])
+    const handlers = makeHandlers([
+      todoRow({ id: 1, description: "Chop wood" }),
+    ])
     let rejectUpdate!: (e: Error) => void
     handlers["todo.update"] = () =>
       new Promise((_res, rej) => {

@@ -11,7 +11,10 @@ describe("parseTargetToken", () => {
       kind: "infrastructure",
       id: 12,
     })
-    expect(parseTargetToken("equipment:3")).toEqual({ kind: "equipment", id: 3 })
+    expect(parseTargetToken("equipment:3")).toEqual({
+      kind: "equipment",
+      id: 3,
+    })
   })
 
   test("the empty NO_TARGET token means no target", () => {
