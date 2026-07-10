@@ -5,7 +5,7 @@ import { equipmentCategoriesTable } from "../../db/schema/maintenance.schema.ts"
 import { wireMap } from "../util/wire.ts"
 import {
   propertyAdminProcedure,
-  propertyHeadOrAdminProcedure,
+  propertyHeadProcedure,
   router,
 } from "../init.ts"
 
@@ -29,7 +29,7 @@ export const equipmentCategoryRouter = router({
       .orderBy(asc(equipmentCategoriesTable.name))
   }),
 
-  create: propertyHeadOrAdminProcedure
+  create: propertyHeadProcedure
     .input(z.object({ name: z.string().trim().min(1).max(32) }))
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
@@ -39,7 +39,7 @@ export const equipmentCategoryRouter = router({
       return toWireCategory(created)
     }),
 
-  archive: propertyHeadOrAdminProcedure
+  archive: propertyHeadProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const existing = (

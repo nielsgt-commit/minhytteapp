@@ -7,7 +7,11 @@ import {
 } from "../../db/schema/property.schema.ts"
 import { userGroupsTable } from "../../db/schema/users.schema.ts"
 import { instantFromDate } from "../../shared/temporal.ts"
-import { isPropertyHead, propertyAdminProcedure, router } from "../init.ts"
+import {
+  assertPropertyHeadOrAdmin,
+  propertyAdminProcedure,
+  router,
+} from "../init.ts"
 import type { AuthUser } from "../context.ts"
 import type { db as dbClient } from "../../db/client.ts"
 
@@ -51,13 +55,12 @@ async function loadSeasonForEdit(db: Db, seasonId: number, propertyId: number) {
 async function ensureCanEdit(db: Db, user: AuthUser, propertyId: number) {
   // Priority weeks are an operator surface: a platform admin may edit any
   // group's pick even without membership. Heads edit their own property.
-  if (user.is_admin) return
-  if (!(await isPropertyHead(db, user, propertyId))) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "must be a household head to edit priority weeks",
-    })
-  }
+  await assertPropertyHeadOrAdmin(
+    db,
+    user,
+    propertyId,
+    "must be a household head to edit priority weeks",
+  )
 }
 
 export async function ensureMainGroupOfProperty(

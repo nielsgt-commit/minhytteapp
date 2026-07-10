@@ -8,7 +8,7 @@ import {
 import { wireMap } from "../util/wire.ts"
 import {
   propertyAdminProcedure,
-  propertyHeadOrAdminProcedure,
+  propertyHeadProcedure,
   router,
 } from "../init.ts"
 
@@ -45,7 +45,7 @@ export const expenseCategoryRouter = router({
     return rows.map(r => toWireCategory(r))
   }),
 
-  create: propertyHeadOrAdminProcedure
+  create: propertyHeadProcedure
     .input(z.object({ name: z.string().trim().min(1).max(64) }))
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db
@@ -55,7 +55,7 @@ export const expenseCategoryRouter = router({
       return toWireCategory(created)
     }),
 
-  rename: propertyHeadOrAdminProcedure
+  rename: propertyHeadProcedure
     .input(
       z.object({
         id: z.number().int().positive(),
@@ -100,7 +100,7 @@ export const expenseCategoryRouter = router({
       })
     }),
 
-  archive: propertyHeadOrAdminProcedure
+  archive: propertyHeadProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const existing = (
@@ -120,7 +120,7 @@ export const expenseCategoryRouter = router({
       return toWireCategory(archived)
     }),
 
-  unarchive: propertyHeadOrAdminProcedure
+  unarchive: propertyHeadProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const existing = (

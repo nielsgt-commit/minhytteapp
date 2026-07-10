@@ -232,6 +232,25 @@ describe("advancePhase", () => {
     })
   })
 
+  it("refuses a platform admin who is not a member head", async () => {
+    // The strict-head distinction is deliberate: settlement participation
+    // requires real membership; the admin flag must not satisfy it.
+    await withRollback(async tx => {
+      const { outsider, settlement } = await seed(tx)
+      const admin = { ...authUser(outsider), is_admin: true }
+      await expect(
+        createCaller(ctxFor(tx, admin)).settlement.advancePhase({
+          id: settlement.id,
+          from: "collecting_expenses",
+          to: "collecting_bookings",
+        }),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "only heads can advance settlement phase",
+      })
+    })
+  })
+
   it("throws CONFLICT when the same step is replayed", async () => {
     await withRollback(async tx => {
       const { headA, settlement } = await seed(tx)

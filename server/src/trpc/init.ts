@@ -75,12 +75,10 @@ export async function assertPropertyHead(
   db: Db,
   user: AuthUser,
   propertyId: number,
+  message = "must be a household head of this property",
 ) {
   if (!(await isPropertyHead(db, user, propertyId))) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "head or admin role required for this property",
-    })
+    throw new TRPCError({ code: "FORBIDDEN", message })
   }
 }
 
@@ -93,9 +91,10 @@ export async function assertPropertyHeadOrAdmin(
   db: Db,
   user: AuthUser,
   propertyId: number,
+  message?: string,
 ) {
   if (user.is_admin) return
-  await assertPropertyHead(db, user, propertyId)
+  await assertPropertyHead(db, user, propertyId, message)
 }
 
 export async function assertPropertyMember(
@@ -131,7 +130,7 @@ export const propertyAdminProcedure = protectedProcedure
     return next()
   })
 
-export const propertyHeadOrAdminProcedure = protectedProcedure
+export const propertyHeadProcedure = protectedProcedure
   .input(z.object({ property_id: z.number().int().positive() }))
   .use(async ({ ctx, input, next }) => {
     await assertPropertyHead(ctx.db, ctx.user, input.property_id)

@@ -6,7 +6,7 @@ import { isValidMonthDay, normalizeWeeks } from "../../shared/season.ts"
 import { wireMap } from "../util/wire.ts"
 import {
   propertyAdminProcedure,
-  propertyHeadOrAdminProcedure,
+  propertyHeadProcedure,
   router,
 } from "../init.ts"
 
@@ -74,7 +74,7 @@ export const seasonRouter = router({
     return rows.map(r => toWireSeason(r))
   }),
 
-  create: propertyHeadOrAdminProcedure
+  create: propertyHeadProcedure
     .input(seasonFields)
     .mutation(async ({ ctx, input }) => {
       assertValidRange(input)
@@ -93,7 +93,7 @@ export const seasonRouter = router({
       return toWireSeasonRow(created)
     }),
 
-  update: propertyHeadOrAdminProcedure
+  update: propertyHeadProcedure
     .input(seasonFields.extend({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       assertValidRange(input)
@@ -131,7 +131,7 @@ export const seasonRouter = router({
       return toWireSeasonRow(updated)
     }),
 
-  archive: propertyHeadOrAdminProcedure
+  archive: propertyHeadProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const existing = (

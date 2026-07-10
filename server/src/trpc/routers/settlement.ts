@@ -221,12 +221,12 @@ export const settlementRouter = router({
         })
       }
       if (settlement.property_id != null) {
-        if (!(await isPropertyHead(ctx.db, ctx.user, settlement.property_id))) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "only heads can accept the split",
-          })
-        }
+        await assertPropertyHead(
+          ctx.db,
+          ctx.user,
+          settlement.property_id,
+          "only heads can accept the split",
+        )
       }
       if (settlement.phase !== "split_policy") {
         throw new TRPCError({
@@ -241,7 +241,6 @@ export const settlementRouter = router({
         })
       }
       const propertyId = settlement.property_id
-      await assertPropertyMember(ctx.db, ctx.user, propertyId)
 
       const heads = await listSettlementHeads(ctx.db, propertyId)
       if (!heads.some(h => h.user_id === ctx.user.id)) {
@@ -314,13 +313,12 @@ export const settlementRouter = router({
         })
       }
       const propertyId = settlement.property_id
-      await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "only heads can update review progress",
-        })
-      }
+      await assertPropertyHead(
+        ctx.db,
+        ctx.user,
+        propertyId,
+        "only heads can update review progress",
+      )
 
       const heads = await listSettlementHeads(ctx.db, propertyId)
       if (!heads.some(h => h.user_id === ctx.user.id)) {
@@ -576,7 +574,6 @@ export const settlementRouter = router({
         ctx.db,
         input.transferId,
       )
-      await assertPropertyMember(ctx.db, ctx.user, propertyId)
       const transfer = (
         await ctx.db
           .select({
@@ -595,12 +592,12 @@ export const settlementRouter = router({
           message: "transfer not found",
         })
       }
-      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "only heads can mark transfers paid",
-        })
-      }
+      await assertPropertyHead(
+        ctx.db,
+        ctx.user,
+        propertyId,
+        "only heads can mark transfers paid",
+      )
       const membership = (
         await ctx.db
           .select({ user_id: userGroupMembersTable.user_id })
@@ -648,13 +645,12 @@ export const settlementRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
-      await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "only heads can advance settlement phase",
-        })
-      }
+      await assertPropertyHead(
+        ctx.db,
+        ctx.user,
+        propertyId,
+        "only heads can advance settlement phase",
+      )
       const updated = await advanceSettlementPhase(ctx.db, {
         settlementId: input.id,
         propertyId,
@@ -674,13 +670,12 @@ export const settlementRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const propertyId = await resolveSettlementPropertyId(ctx.db, input.id)
-      await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      if (!(await isPropertyHead(ctx.db, ctx.user, propertyId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "only heads can regress settlement phase",
-        })
-      }
+      await assertPropertyHead(
+        ctx.db,
+        ctx.user,
+        propertyId,
+        "only heads can regress settlement phase",
+      )
       const updated = await regressSettlementPhase(ctx.db, {
         settlementId: input.id,
         from: input.from,
