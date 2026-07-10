@@ -17,6 +17,13 @@ export function isOccupying(status: string): boolean {
   return OCCUPYING_STATUSES.includes(status as BookingStatus)
 }
 
+// Virtual "Tent" room for sleeps-separately occupants. Real room ids are
+// serial (positive), so -1 can never collide. The tent holds no real beds and
+// never reaches capacity/availability math — it only groups tent sleepers in
+// room pickers and day cards.
+export const TENT_ROOM_ID = -1
+export const TENT_CAPACITY = 10
+
 export type OccupancyOccupant = {
   user_id: number
   room_id: number | null

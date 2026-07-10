@@ -102,8 +102,17 @@ export function useOccupancyData({
         )
 
   const existingOccupantsByRoom = new Map<number, ExistingOccupant[]>()
+  const existingTent: ExistingOccupant[] = []
   for (const b of overlappingBookings) {
     for (const o of b.occupants) {
+      if (o.sleeps_separately === true) {
+        existingTent.push({
+          user_id: o.user_id,
+          user_name: o.user_name,
+          queued: o.queued,
+        })
+        continue
+      }
       if (o.room_id == null) continue
       const list = existingOccupantsByRoom.get(o.room_id) ?? []
       list.push({
@@ -169,6 +178,7 @@ export function useOccupancyData({
     adultInKidOnlyByRoom,
     overlappingBookings,
     existingOccupantsByRoom,
+    existingTent,
     roomOverCapacityDays,
   }
 }

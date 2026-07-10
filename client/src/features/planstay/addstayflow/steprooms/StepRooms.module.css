@@ -42,36 +42,7 @@
   margin-bottom: 0.75rem;
 }
 
-.tentCard {
-  margin-top: 0.5rem;
-}
-
-.tentHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
 .tentHint {
   color: var(--ds-color-neutral-text-subtle);
   margin: 0.25rem 0 0.5rem;
-}
-
-.tentTagRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.tentItem {
-  display: flex;
-  align-items: center;
-  gap: 0.125rem;
-}
-
-.tentRemove {
-  padding: 0 0.25rem;
-  min-height: auto;
 }

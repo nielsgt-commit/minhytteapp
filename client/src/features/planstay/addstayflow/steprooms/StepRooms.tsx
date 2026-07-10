@@ -1,16 +1,15 @@
 import type { Dispatch } from "react"
 import { useState } from "react"
 import {
-  Button,
   Card,
   Checkbox,
   Heading,
   Label,
   Paragraph,
-  Select,
   Tag,
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
+import { TENT_CAPACITY, TENT_ROOM_ID } from "@server/shared/bedOccupancy.ts"
 import {
   assignOccupantToRoom,
   markOccupantQueued,
@@ -42,6 +41,7 @@ export function StepRooms({
   adultInKidOnlyByRoom,
   unassigned,
   tent,
+  existingTent,
   draft,
   dispatch,
   selectedUserId,
@@ -63,6 +63,7 @@ export function StepRooms({
   adultInKidOnlyByRoom: Map<number, number[]>
   unassigned: DraftOccupant[]
   tent: DraftOccupant[]
+  existingTent: ExistingOccupant[]
   draft: BookingDraft
   dispatch: Dispatch<BookingDraftAction>
   selectedUserId: number | null
@@ -76,7 +77,18 @@ export function StepRooms({
 }) {
   const { t } = useTranslation("planstay")
   const [hasTent, setHasTent] = useState(() => tent.length > 0)
-  const placeableInTent = draft.occupants.filter(o => !o.sleeps_separately)
+  // Virtual room: assigning here flips sleeps_separately instead of room_id.
+  const tentRoom: RoomShape = {
+    id: TENT_ROOM_ID,
+    name: t("Tent"),
+    structure_id: TENT_ROOM_ID,
+    beds_sm: 0,
+    beds_lg: 0,
+    beds_double: 0,
+    beds_kid: 0,
+    travel_cot: 0,
+    mattresses: TENT_CAPACITY,
+  }
   return (
     <div className={`${stepClass} ${isActive ? stepActiveClass : ""}`}>
       <Card className={styles.card}>
@@ -113,6 +125,46 @@ export function StepRooms({
           </div>
 
           <ul className={styles.buildingList}>
+            {hasTent && (
+              <li>
+                <Label data-size="sm" className={styles.buildingLabel}>
+                  {t("Tent")}
+                </Label>
+                <Paragraph data-size="sm" className={styles.tentHint}>
+                  {t("Sleeps separately — counts as a stay but uses no bed.")}
+                </Paragraph>
+                <ul className={styles.roomList}>
+                  <li>
+                    <RoomCapacityMeter
+                      room={tentRoom}
+                      // Building label above already says "Tent"; skip the
+                      // duplicate structure sub-line inside the card.
+                      structureName=""
+                      occupantsInRoom={tent}
+                      existingOccupantsInRoom={existingTent}
+                      users={users}
+                      adultInKidOnlyUserIds={[]}
+                      unassignedOccupants={unassigned}
+                      onAssign={uid => {
+                        dispatch(setOccupantSeparate(uid, true))
+                      }}
+                      onRemove={uid => {
+                        dispatch(setOccupantSeparate(uid, false))
+                      }}
+                      // Removing from the tent only unassigns (back to
+                      // "unassigned"), so the booker may be removed too.
+                      isBooker={() => false}
+                      isExpanded={expandedRoomId === TENT_ROOM_ID}
+                      onToggle={() => {
+                        setExpandedRoomId(prev =>
+                          prev === TENT_ROOM_ID ? null : TENT_ROOM_ID,
+                        )
+                      }}
+                    />
+                  </li>
+                </ul>
+              </li>
+            )}
             {propertyStructures.map(building => {
               const buildingRooms = propertyRooms.filter(
                 r => r.structure_id === building.id,
@@ -158,79 +210,6 @@ export function StepRooms({
                 </li>
               )
             })}
-            {hasTent && (
-              <li>
-                {/* Card's data-color type is narrower than Tag's; cast for info */}
-                <Card
-                  data-color={"info" as "neutral"}
-                  className={styles.tentCard}
-                >
-                  <Card.Block>
-                    <div className={styles.tentHeader}>
-                      <Label data-size="sm">{t("Tent")}</Label>
-                      <Tag data-color="info">{tent.length}</Tag>
-                    </div>
-                    <Paragraph data-size="sm" className={styles.tentHint}>
-                      {t(
-                        "Sleeps separately — counts as a stay but uses no bed.",
-                      )}
-                    </Paragraph>
-                    {tent.length > 0 && (
-                      <div className={styles.tentTagRow}>
-                        {tent.map(o => {
-                          const u = users.find(x => x.id === o.user_id)
-                          return (
-                            <div key={o.user_id} className={styles.tentItem}>
-                              <Tag data-color="info">
-                                {u?.name ?? `#${String(o.user_id)}`}
-                                {u?.is_child ? t(" (kid)") : ""}
-                              </Tag>
-                              <Button
-                                type="button"
-                                variant="tertiary"
-                                onClick={() => {
-                                  dispatch(
-                                    setOccupantSeparate(o.user_id, false),
-                                  )
-                                }}
-                                aria-label={t("Remove {{name}}", {
-                                  name: u?.name ?? String(o.user_id),
-                                })}
-                                className={styles.tentRemove}
-                              >
-                                ×
-                              </Button>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                    {placeableInTent.length > 0 && (
-                      <Select
-                        value=""
-                        onChange={e => {
-                          const v = e.target.value
-                          if (v) dispatch(setOccupantSeparate(Number(v), true))
-                        }}
-                      >
-                        <Select.Option value="">
-                          {t("Place in tent…")}
-                        </Select.Option>
-                        {placeableInTent.map(o => {
-                          const u = users.find(x => x.id === o.user_id)
-                          return (
-                            <Select.Option key={o.user_id} value={o.user_id}>
-                              {u?.name ?? `#${String(o.user_id)}`}
-                              {u?.is_child ? t(" (kid)") : ""}
-                            </Select.Option>
-                          )
-                        })}
-                      </Select>
-                    )}
-                  </Card.Block>
-                </Card>
-              </li>
-            )}
             {draft.occupants.length > 0 && (
               <li>
                 <UnassignedPanel

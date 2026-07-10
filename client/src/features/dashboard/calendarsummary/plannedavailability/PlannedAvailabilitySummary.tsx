@@ -222,7 +222,13 @@ export function PlannedAvailabilitySummary({
   const roomById = new Map(rooms.map(r => [r.id, r]))
 
   const roomGroupsOnDay = (iso: string) =>
-    roomGroupsForDay(propertyBookings, roomById, iso, t("Unassigned room"))
+    roomGroupsForDay(
+      propertyBookings,
+      roomById,
+      iso,
+      t("Unassigned room"),
+      t("Tent"),
+    )
 
   const selectedGroups =
     !isMobile && selectedDay ? roomGroupsOnDay(selectedDay) : []

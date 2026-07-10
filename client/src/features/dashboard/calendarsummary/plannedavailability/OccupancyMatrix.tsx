@@ -2,7 +2,11 @@ import { Fragment } from "react"
 import { useTranslation } from "react-i18next"
 import { Table } from "@digdir/designsystemet-react"
 import { Temporal } from "temporal-polyfill"
-import { isOccupying, roomTotalCapacity } from "@server/shared/bedOccupancy.ts"
+import {
+  isOccupying,
+  roomTotalCapacity,
+  TENT_ROOM_ID,
+} from "@server/shared/bedOccupancy.ts"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { formatDayMonth } from "@/utils/dateUtils"
 import styles from "./OccupancyMatrix.module.css"
@@ -21,6 +25,7 @@ type Occupant = {
   room_id: number | null
   user_id: number
   user_name: string | null
+  sleeps_separately?: boolean
 }
 
 type Booking = {
@@ -58,6 +63,9 @@ type Bar = {
 }
 
 const UNASSIGNED = "none"
+// Virtual row for sleeps-separately guests; only present when someone
+// actually sleeps in a tent during the visible week.
+const TENT = "tent"
 
 // Greedy interval partitioning: pack non-overlapping bars onto the same lane,
 // then return one array of bars per lane (each sorted by start column).
@@ -115,7 +123,12 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
     const endCol = weekIsos.indexOf(e)
     if (startCol === -1 || endCol === -1) continue
     for (const o of b.occupants) {
-      const key = o.room_id == null ? UNASSIGNED : String(o.room_id)
+      const key =
+        o.sleeps_separately === true
+          ? TENT
+          : o.room_id == null
+            ? UNASSIGNED
+            : String(o.room_id)
       const name = o.user_name ?? `#${String(o.user_id)}`
       const bars = barsByRoom.get(key) ?? []
       bars.push({ userId: o.user_id, name, startCol, endCol })
@@ -159,6 +172,16 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
       }
       b.roomKeys.push(key)
       buildings.set(UNASSIGNED, b)
+      continue
+    }
+    if (key === TENT) {
+      // Virtual building; beds: 0 keeps it out of the density shading.
+      buildings.set(TENT, {
+        id: TENT_ROOM_ID,
+        name: t("Tent"),
+        beds: 0,
+        roomKeys: [key],
+      })
       continue
     }
     const room = roomById.get(Number(key))
@@ -262,7 +285,9 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
               </Table.Row>
               {building.roomKeys.map(key => {
                 const room =
-                  key === UNASSIGNED ? null : roomById.get(Number(key))
+                  key === UNASSIGNED || key === TENT
+                    ? null
+                    : roomById.get(Number(key))
                 const lanes = laneArraysFor(barsByRoom.get(key) ?? [])
                 return lanes.map((laneBars, laneIdx) => (
                   <Table.Row key={`${key}-${String(laneIdx)}`}>
@@ -272,7 +297,11 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
                         rowSpan={lanes.length}
                         className={styles.roomLabel}
                       >
-                        {room ? room.name : t("Unassigned room")}
+                        {room
+                          ? room.name
+                          : key === TENT
+                            ? t("Tent")
+                            : t("Unassigned room")}
                       </Table.HeaderCell>
                     )}
                     {renderLane(laneBars)}

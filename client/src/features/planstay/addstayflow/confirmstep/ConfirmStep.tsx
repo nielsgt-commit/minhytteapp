@@ -35,8 +35,10 @@ export function ConfirmStep({
   }
   if (conflicts.property.overCapacityBy > 0) {
     let rem = conflicts.property.overCapacityBy
+    // Tent (sleeps-separately) occupants hold no bed, so they can never be
+    // the overflow — only roomless bed-sleepers get auto-queued.
     for (const o of [
-      ...draft.occupants.filter(x => x.room_id == null),
+      ...draft.occupants.filter(x => x.room_id == null && !x.sleeps_separately),
     ].reverse()) {
       if (rem <= 0) break
       overflowIds.add(o.user_id)

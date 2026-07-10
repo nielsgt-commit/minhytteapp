@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { Temporal } from "temporal-polyfill"
+import { TENT_ROOM_ID } from "@server/shared/bedOccupancy.ts"
 import {
   roomGroupsForDay,
   type BookingInfo,
@@ -29,7 +30,13 @@ describe("roomGroupsForDay", () => {
         occupants: [occ(1, 1, "Alice"), occ(2, 2, "Bob")],
       },
     ]
-    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
     // Annex (Bunk room) sorts before Main cabin (Loft).
     expect(groups.map(g => g.buildingName)).toEqual(["Annex", "Main cabin"])
     expect(groups[0]).toMatchObject({
@@ -52,7 +59,7 @@ describe("roomGroupsForDay", () => {
       },
     ]
     expect(
-      roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned"),
+      roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned", "Tent"),
     ).toEqual([])
   })
 
@@ -66,14 +73,14 @@ describe("roomGroupsForDay", () => {
       },
     ]
     expect(
-      roomGroupsForDay(bookings, rooms, "2026-07-10", "Unassigned"),
+      roomGroupsForDay(bookings, rooms, "2026-07-10", "Unassigned", "Tent"),
     ).toHaveLength(1)
     expect(
-      roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned"),
+      roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned", "Tent"),
     ).toHaveLength(1)
     // Day after end_date -> nobody.
     expect(
-      roomGroupsForDay(bookings, rooms, "2026-07-13", "Unassigned"),
+      roomGroupsForDay(bookings, rooms, "2026-07-13", "Unassigned", "Tent"),
     ).toEqual([])
   })
 
@@ -92,9 +99,17 @@ describe("roomGroupsForDay", () => {
         occupants: [occ(1, 1, "Alice")],
       },
     ]
-    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
     expect(groups).toHaveLength(1)
-    expect(groups[0].guests).toEqual([{ name: "Alice", queued: false, pending: false }])
+    expect(groups[0].guests).toEqual([
+      { name: "Alice", queued: false, pending: false },
+    ])
   })
 
   test("flags queued guests so the UI can badge them", () => {
@@ -106,7 +121,13 @@ describe("roomGroupsForDay", () => {
         occupants: [occ(1, 1, "Alice"), { ...occ(2, 1, "Maja"), queued: true }],
       },
     ]
-    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
     expect(groups[0].guests).toEqual([
       { name: "Alice", queued: false, pending: false },
       { name: "Maja", queued: true, pending: false },
@@ -122,7 +143,13 @@ describe("roomGroupsForDay", () => {
         occupants: [occ(1, 1, "Alice")],
       },
     ]
-    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
     expect(groups[0].guests).toEqual([
       { name: "Alice", queued: false, pending: true },
     ])
@@ -137,13 +164,52 @@ describe("roomGroupsForDay", () => {
         occupants: [occ(1, null, "Alice")],
       },
     ]
-    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
     expect(groups[0]).toMatchObject({
       roomId: null,
       roomName: "Unassigned",
       buildingName: null,
       guests: [{ name: "Alice", queued: false, pending: false }],
     })
+  })
+
+  test("groups sleeps-separately guests under a virtual Tent building", () => {
+    const bookings: BookingInfo[] = [
+      {
+        status: "confirmed",
+        start_date: pd("2026-07-10"),
+        end_date: pd("2026-07-12"),
+        occupants: [
+          occ(1, 1, "Alice"),
+          { ...occ(2, null, "Bob"), sleeps_separately: true },
+        ],
+      },
+    ]
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
+    const tentGroup = groups.find(g => g.roomId === TENT_ROOM_ID)
+    expect(tentGroup).toMatchObject({
+      roomName: "Tent",
+      buildingName: "Tent",
+      guests: [{ name: "Bob", queued: false, pending: false }],
+    })
+    // Tent sleepers must not appear as "Unassigned".
+    expect(groups.some(g => g.roomName === "Unassigned")).toBe(false)
+    // No tent group on days the booking doesn't cover.
+    expect(
+      roomGroupsForDay(bookings, rooms, "2026-07-13", "Unassigned", "Tent"),
+    ).toEqual([])
   })
 
   test("falls back to #id when the occupant has no name", () => {
@@ -155,7 +221,15 @@ describe("roomGroupsForDay", () => {
         occupants: [occ(7, 1, null)],
       },
     ]
-    const groups = roomGroupsForDay(bookings, rooms, "2026-07-12", "Unassigned")
-    expect(groups[0].guests).toEqual([{ name: "#7", queued: false, pending: false }])
+    const groups = roomGroupsForDay(
+      bookings,
+      rooms,
+      "2026-07-12",
+      "Unassigned",
+      "Tent",
+    )
+    expect(groups[0].guests).toEqual([
+      { name: "#7", queued: false, pending: false },
+    ])
   })
 })
