@@ -1,4 +1,5 @@
 import { useActionState, useReducer } from "react"
+// eslint-disable-next-line no-restricted-imports -- one shared pathKey-wide invalidation runs after whichever of create/update fired
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Temporal } from "temporal-polyfill"

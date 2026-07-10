@@ -1,4 +1,5 @@
 import {
+  // eslint-disable-next-line no-restricted-imports -- this IS the wrapper the convention points to
   useMutation,
   useQueryClient,
   type QueryKey,

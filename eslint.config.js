@@ -16,6 +16,20 @@ const FEATURES = readdirSync(
   .filter(d => d.isDirectory())
   .map(d => d.name)
 
+// Mutation convention (see README "Conventions"): default to
+// useMutationWithInvalidation; the rare raw-useMutation sites carry inline
+// disables stating their reason. NOTE: flat-config rule options REPLACE
+// rather than merge, so this paths list must ride along in every block that
+// also configures no-restricted-imports for client files.
+const RESTRICTED_CLIENT_IMPORT_PATHS = [
+  {
+    name: "@tanstack/react-query",
+    importNames: ["useMutation"],
+    message:
+      "Default to useMutationWithInvalidation (@/hooks/useMutationWithInvalidation). Raw useMutation is for onSettled-based invalidation, success-ordering, or shared cross-mutation invalidation — disable this rule inline with the reason.",
+  },
+]
+
 const eslintConfig = defineConfig(
   {
     name: "global-ignores",
@@ -117,6 +131,14 @@ const eslintConfig = defineConfig(
   // cycle-free (a barrel importing back through another feature's barrel
   // would silently reintroduce the settlement⇄expenses cycle).
 
+  {
+    name: "client-mutation-convention",
+    files: ["client/src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [2, { paths: RESTRICTED_CLIENT_IMPORT_PATHS }],
+    },
+  },
+
   // A feature may deep-import its own files; other features only through
   // their public barrel (@/features/<name>). Features never import routes.
   ...FEATURES.map(
@@ -128,6 +150,7 @@ const eslintConfig = defineConfig(
           "no-restricted-imports": [
             2,
             {
+              paths: RESTRICTED_CLIENT_IMPORT_PATHS,
               patterns: [
                 {
                   group: ["@/features/*/**", `!@/features/${feature}/**`],
@@ -153,6 +176,7 @@ const eslintConfig = defineConfig(
       "no-restricted-imports": [
         2,
         {
+          paths: RESTRICTED_CLIENT_IMPORT_PATHS,
           patterns: [
             {
               group: ["@/features/**", "@/routes/**"],

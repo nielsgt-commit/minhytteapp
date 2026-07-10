@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- full optimistic-update lifecycle: onMutate/rollback with onSettled-based invalidation
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Temporal } from "temporal-polyfill"
 import { useTRPC } from "@/trpc/trpc.ts"

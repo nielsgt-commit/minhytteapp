@@ -1,5 +1,6 @@
 import { useState } from "react"
 import {
+  // eslint-disable-next-line no-restricted-imports -- invalidation must complete before navigation/selection-clear; the ordering reads clearer explicit
   useMutation,
   useQueryClient,
   useSuspenseQuery,
