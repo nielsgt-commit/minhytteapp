@@ -58,3 +58,7 @@ Property-management SPA. React + Vite client, Hono + tRPC server, Postgres via D
 - Vitest + Testing Library + jsdom for client tests; separate server + e2e Vitest configs
 - `i18next-cli` for locale-key extraction checks
 - `concurrently` to run web + API together (`pnpm dev:all`)
+
+## Conventions
+
+- Feature and component folder names are single lowercase runs with no separators (e.g. `splitpolicybuilder`, `maintenancecard`); `booking-logic` and `query-states` are grandfathered legacy exceptions — do not add new kebab-case folders.

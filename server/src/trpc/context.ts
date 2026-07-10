@@ -48,6 +48,12 @@ export const createContext = async ({ req }: FetchCreateContextFnOptions) => {
     id: number | string
   }
   const id = Number(raw.id)
+  // Runs on every authenticated request: a single indexed LIMIT-1 lookup.
+  // Consumed by headOrAdminProcedure (invite management) and echoed via
+  // user.me. Deliberately not cached — head status gates authorization and
+  // must be fresh (a demoted head must lose access immediately). If this ever
+  // matters for latency, the lazy alternative is to move the lookup into
+  // headOrAdminProcedure and derive it inside user.me instead.
   const headRows = await db
     .select({ user_group_id: userGroupMembersTable.user_group_id })
     .from(userGroupMembersTable)

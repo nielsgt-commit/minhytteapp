@@ -7,6 +7,10 @@ import * as bookings from "./schema/booking.schema.ts"
 import * as maintenance from "./schema/maintenance.schema.ts"
 import * as settlement from "./schema/settlement.schema.ts"
 import * as events from "./schema/event.schema.ts"
+import * as dinner from "./schema/dinner.schema.ts"
+import * as shopping from "./schema/shopping.schema.ts"
+import * as stays from "./schema/stay.schema.ts"
+import * as todos from "./schema/todo.schema.ts"
 import * as relations from "./schema/relations.ts"
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -20,6 +24,10 @@ export const db = drizzle({
     ...maintenance,
     ...settlement,
     ...events,
+    ...dinner,
+    ...shopping,
+    ...stays,
+    ...todos,
     ...relations,
   },
 })
