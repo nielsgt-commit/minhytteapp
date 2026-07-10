@@ -19,18 +19,23 @@ type DotGroup = {
   members: { user_id: number }[]
 }
 
+// One calendar dot: the occupant's family-group id (0 = no family group) and
+// whether their booking is still pending — pending dots render striped, like
+// the season-overview bars.
+export type OccupantDot = { gid: number; pending: boolean }
+
 /**
  * Build the calendar's per-day occupant dots: ISO date ("YYYY-MM-DD") → one
- * family-group id per person staying that night (0 = no family group). One
- * entry per occupant, so the dot count is the headcount. Bounded to the
- * pickers' bookable window so the map stays small. Cancelled bookings and
- * queued occupants are ignored.
+ * dot per person staying that night, carrying their family-group id (0 = no
+ * family group) and the booking's pending flag. One entry per occupant, so
+ * the dot count is the headcount. Bounded to the pickers' bookable window so
+ * the map stays small. Cancelled bookings and queued occupants are ignored.
  */
 export function buildOccupantDots(
   bookings: DotBooking[],
   userGroups: DotGroup[],
   opts?: { excludeBookingId?: number },
-): Map<string, number[]> {
+): Map<string, OccupantDot[]> {
   const familyGroupByUser = new Map<number, number>()
   for (const g of userGroups) {
     if (!g.is_family) continue
@@ -38,23 +43,25 @@ export function buildOccupantDots(
     for (const m of g.members) familyGroupByUser.set(m.user_id, g.id)
   }
 
-  const map = new Map<string, number[]>()
+  const map = new Map<string, OccupantDot[]>()
   for (const b of bookings) {
     if (b.status === "cancelled") continue
     if (opts?.excludeBookingId != null && b.id === opts.excludeBookingId)
       continue
+    const pending = b.status === "pending"
     // Children aren't family-group members themselves — they inherit their
     // parent's group.
-    const occGroups = b.occupants
+    const occDots = b.occupants
       .filter(o => !o.queued)
-      .map(
-        o =>
+      .map(o => ({
+        gid:
           familyGroupByUser.get(o.user_id) ??
           (o.parent_user_id != null
             ? (familyGroupByUser.get(o.parent_user_id) ?? 0)
             : 0),
-      )
-    if (occGroups.length === 0) continue
+        pending,
+      }))
+    if (occDots.length === 0) continue
 
     const startIso = b.start_date.toString()
     const endIso = b.end_date.toString()
@@ -67,8 +74,8 @@ export function buildOccupantDots(
     while (Temporal.PlainDate.compare(cur, last) <= 0) {
       const iso = cur.toString()
       const list = map.get(iso)
-      if (list) list.push(...occGroups)
-      else map.set(iso, [...occGroups])
+      if (list) list.push(...occDots)
+      else map.set(iso, [...occDots])
       cur = cur.add({ days: 1 })
     }
   }

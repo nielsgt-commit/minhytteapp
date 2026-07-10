@@ -14,6 +14,7 @@ import type {
   BookingDraftAction,
 } from "@/features/planstay/booking-logic"
 import { groupColor } from "@/features/usergroups/groupColors"
+import type { OccupantDot } from "../occupantDots.ts"
 
 const WIDE_QUERY = "(min-width: 640px)"
 
@@ -46,9 +47,9 @@ function getShowMonthsSnapshot() {
 export function useFlatpickr(
   draft: Pick<BookingDraft, "start_date" | "end_date">,
   dispatch: React.Dispatch<BookingDraftAction>,
-  // ISO date ("YYYY-MM-DD") → family-group id per person staying that night.
-  // One entry per occupant; same person twice if two of their nights overlap.
-  dotsByDay?: Map<string, number[]>,
+  // ISO date ("YYYY-MM-DD") → one dot per person staying that night (family
+  // group + pending flag); same person twice if two of their nights overlap.
+  dotsByDay?: Map<string, OccupantDot[]>,
 ) {
   const inputRef = useRef<HTMLInputElement>(null)
   const fpRef = useRef<{
@@ -101,39 +102,50 @@ export function useFlatpickr(
       },
       onDayCreate(_dates, _str, _instance, dayElem: DayElement) {
         const iso = pickerDateToPlainDate(dayElem.dateObj).toString()
-        const groups = dotsRef.current?.get(iso)
-        if (!groups || groups.length === 0) return
-        // Cluster same-family dots together for an at-a-glance read.
-        const sorted = [...groups].sort((a, b) => a - b)
+        const dots = dotsRef.current?.get(iso)
+        if (!dots || dots.length === 0) return
+        // Cluster same-family dots together for an at-a-glance read, with a
+        // group's confirmed dots ahead of its pending (striped) ones.
+        const sorted = [...dots].sort(
+          (a, b) => a.gid - b.gid || Number(a.pending) - Number(b.pending),
+        )
         const wrap = document.createElement("span")
         wrap.className = "fp-occupant-dots"
-        wrap.title = tRef.current("{{count}} staying", { count: groups.length })
+        wrap.title = tRef.current("{{count}} staying", { count: dots.length })
         // gid 0 = occupant with no family group → neutral.
         const colorFor = (gid: number) =>
           gid > 0 ? groupColor(gid) : "var(--ds-color-neutral-base-default)"
 
         if (sorted.length <= MAX_DOTS) {
-          for (const gid of sorted) {
+          for (const d of sorted) {
             const dot = document.createElement("span")
-            dot.className = "fp-occupant-dot"
-            dot.style.backgroundColor = colorFor(gid)
+            dot.className = d.pending
+              ? "fp-occupant-dot fp-occupant-pending"
+              : "fp-occupant-dot"
+            dot.style.backgroundColor = colorFor(d.gid)
             wrap.appendChild(dot)
           }
         } else {
-          // 5+ people: one rounded bar, segmented by family group with each
-          // segment sized to that group's headcount. `sorted` is ascending, so
-          // equal ids are already adjacent.
+          // 5+ people: one rounded bar, segmented by family group (pending
+          // people get their own striped segment) with each segment sized to
+          // its headcount. `sorted` clusters equal (gid, pending) adjacently.
           const bar = document.createElement("span")
           bar.className = "fp-occupant-bar"
           for (let i = 0; i < sorted.length; ) {
-            const gid = sorted[i]
+            const { gid, pending } = sorted[i]
             let n = 0
-            while (i < sorted.length && sorted[i] === gid) {
+            while (
+              i < sorted.length &&
+              sorted[i].gid === gid &&
+              sorted[i].pending === pending
+            ) {
               n++
               i++
             }
             const seg = document.createElement("span")
-            seg.className = "fp-occupant-bar-seg"
+            seg.className = pending
+              ? "fp-occupant-bar-seg fp-occupant-pending"
+              : "fp-occupant-bar-seg"
             seg.style.backgroundColor = colorFor(gid)
             seg.style.flexGrow = String(n)
             bar.appendChild(seg)

@@ -35,6 +35,9 @@ function booking(
   }
 }
 
+// Shorthand for the expected dot shape; confirmed unless stated otherwise.
+const dot = (gid: number, pending = false) => ({ gid, pending })
+
 describe("buildOccupantDots", () => {
   test("one entry per non-queued occupant per day, keyed by family group", () => {
     const dots = buildOccupantDots(
@@ -47,9 +50,9 @@ describe("buildOccupantDots", () => {
       ],
       groups,
     )
-    expect(dots.get("2026-07-10")).toEqual([7, 7, 9])
+    expect(dots.get("2026-07-10")).toEqual([dot(7), dot(7), dot(9)])
     // end_date is inclusive (last night).
-    expect(dots.get("2026-07-11")).toEqual([7, 7, 9])
+    expect(dots.get("2026-07-11")).toEqual([dot(7), dot(7), dot(9)])
   })
 
   test("queued occupants and cancelled bookings are ignored", () => {
@@ -66,12 +69,23 @@ describe("buildOccupantDots", () => {
       ],
       groups,
     )
-    expect(dots.get("2026-07-10")).toEqual([7])
+    expect(dots.get("2026-07-10")).toEqual([dot(7)])
+  })
+
+  test("pending bookings mark their occupants' dots pending", () => {
+    const dots = buildOccupantDots(
+      [
+        booking({ occupants: [occ(1)] }),
+        booking({ id: 2, status: "pending", occupants: [occ(3)] }),
+      ],
+      groups,
+    )
+    expect(dots.get("2026-07-10")).toEqual([dot(7), dot(9, true)])
   })
 
   test("occupant without a family group is 0", () => {
     const dots = buildOccupantDots([booking({ occupants: [occ(4)] })], groups)
-    expect(dots.get("2026-07-10")).toEqual([0])
+    expect(dots.get("2026-07-10")).toEqual([dot(0)])
   })
 
   test("a child inherits their parent's family group", () => {
@@ -88,7 +102,7 @@ describe("buildOccupantDots", () => {
       ],
       groups,
     )
-    expect(dots.get("2026-07-10")).toEqual([9, 0])
+    expect(dots.get("2026-07-10")).toEqual([dot(9), dot(0)])
   })
 
   test("excludeBookingId drops that booking", () => {
@@ -100,7 +114,7 @@ describe("buildOccupantDots", () => {
       groups,
       { excludeBookingId: 5 },
     )
-    expect(dots.get("2026-07-10")).toEqual([9])
+    expect(dots.get("2026-07-10")).toEqual([dot(9)])
   })
 
   test("ranges are clamped to the bookable window", () => {
@@ -117,8 +131,8 @@ describe("buildOccupantDots", () => {
       groups,
     )
     expect(dots.has(min.subtract({ days: 1 }).toString())).toBe(false)
-    expect(dots.get(min.toString())).toEqual([7])
-    expect(dots.get(max.toString())).toEqual([7])
+    expect(dots.get(min.toString())).toEqual([dot(7)])
+    expect(dots.get(max.toString())).toEqual([dot(7)])
     expect(dots.has(max.add({ days: 1 }).toString())).toBe(false)
   })
 })

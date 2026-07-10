@@ -14,6 +14,7 @@ import type {
   BookingDraftAction,
 } from "@/features/planstay/booking-logic"
 import { groupColor } from "@/features/usergroups/groupColors"
+import type { OccupantDot } from "../occupantDots.ts"
 
 // Sibling of `useFlatpickr` for the PlanStayFlowSheet layout: instead of one
 // inline range calendar, this drives TWO single-date popup calendars (a start
@@ -39,39 +40,50 @@ type FpHandle = Pick<Instance, "destroy" | "clear" | "redraw" | "setDate">
 // can change without tearing down the instance.
 function paintOccupantDots(
   dayElem: DayElement,
-  getDots: () => Map<string, number[]> | undefined,
+  getDots: () => Map<string, OccupantDot[]> | undefined,
   t: (key: string, opts: { count: number }) => string,
 ) {
   const iso = pickerDateToPlainDate(dayElem.dateObj).toString()
-  const groups = getDots()?.get(iso)
-  if (!groups || groups.length === 0) return
-  const sorted = [...groups].sort((a, b) => a - b)
+  const dots = getDots()?.get(iso)
+  if (!dots || dots.length === 0) return
+  // Same-family dots cluster together, confirmed ahead of pending (striped).
+  const sorted = [...dots].sort(
+    (a, b) => a.gid - b.gid || Number(a.pending) - Number(b.pending),
+  )
   const wrap = document.createElement("span")
   wrap.className = "fp-occupant-dots"
-  wrap.title = t("{{count}} staying", { count: groups.length })
+  wrap.title = t("{{count}} staying", { count: dots.length })
   // gid 0 = occupant with no family group → neutral.
   const colorFor = (gid: number) =>
     gid > 0 ? groupColor(gid) : "var(--ds-color-neutral-base-default)"
 
   if (sorted.length <= MAX_DOTS) {
-    for (const gid of sorted) {
+    for (const d of sorted) {
       const dot = document.createElement("span")
-      dot.className = "fp-occupant-dot"
-      dot.style.backgroundColor = colorFor(gid)
+      dot.className = d.pending
+        ? "fp-occupant-dot fp-occupant-pending"
+        : "fp-occupant-dot"
+      dot.style.backgroundColor = colorFor(d.gid)
       wrap.appendChild(dot)
     }
   } else {
     const bar = document.createElement("span")
     bar.className = "fp-occupant-bar"
     for (let i = 0; i < sorted.length; ) {
-      const gid = sorted[i]
+      const { gid, pending } = sorted[i]
       let n = 0
-      while (i < sorted.length && sorted[i] === gid) {
+      while (
+        i < sorted.length &&
+        sorted[i].gid === gid &&
+        sorted[i].pending === pending
+      ) {
         n++
         i++
       }
       const seg = document.createElement("span")
-      seg.className = "fp-occupant-bar-seg"
+      seg.className = pending
+        ? "fp-occupant-bar-seg fp-occupant-pending"
+        : "fp-occupant-bar-seg"
       seg.style.backgroundColor = colorFor(gid)
       seg.style.flexGrow = String(n)
       bar.appendChild(seg)
@@ -84,8 +96,8 @@ function paintOccupantDots(
 export function useSingleDateFlatpickr(
   draft: Pick<BookingDraft, "start_date" | "end_date">,
   dispatch: React.Dispatch<BookingDraftAction>,
-  // ISO date ("YYYY-MM-DD") → family-group id per person staying that night.
-  dotsByDay?: Map<string, number[]>,
+  // ISO date ("YYYY-MM-DD") → one dot per person staying that night.
+  dotsByDay?: Map<string, OccupantDot[]>,
 ) {
   const startInputRef = useRef<HTMLInputElement>(null)
   const endInputRef = useRef<HTMLInputElement>(null)
