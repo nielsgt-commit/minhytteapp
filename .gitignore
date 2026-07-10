@@ -41,3 +41,4 @@ yalc.lock
 
 # Stray crash dumps
 *.stackdump
+.tanstack/
