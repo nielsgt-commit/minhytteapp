@@ -2,22 +2,14 @@ import { TRPCError } from "@trpc/server"
 import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { propertyContactsTable } from "../../db/schema/property.schema.ts"
-import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { propertyAdminProcedure, router } from "../init.ts"
 
 // Wire mapping: contact timestamp columns → Temporal.Instant.
-function toWireContact<T extends { created_at: Date; updated_at: Date }>(
-  c: T,
-): Omit<T, "created_at" | "updated_at"> & {
-  created_at: Temporal.Instant
-  updated_at: Temporal.Instant
-} {
-  return {
-    ...c,
-    created_at: instantFromDate(c.created_at),
-    updated_at: instantFromDate(c.updated_at),
-  }
-}
+const toWireContact = wireMap({
+  created_at: "instant",
+  updated_at: "instant",
+})
 
 const contactFields = {
   name: z.string().trim().min(1).max(255),

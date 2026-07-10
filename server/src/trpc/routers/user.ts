@@ -17,13 +17,13 @@ import {
 } from "../init.ts"
 import type { Context } from "../context.ts"
 import {
-  type Temporal,
   instantFromDate,
   instantFromDateOrNull,
   plainDateFromDbOrNull,
   plainDateToDbString,
   zPlainDate,
 } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { userIdsForProperty, visibleGroupIdsForUser } from "./userGroup.ts"
 import { isSyntheticEmail, normalizeEmail } from "../../auth/email.ts"
 
@@ -37,32 +37,12 @@ const userFields = {
 
 // Wire mapping for full users rows: `birthday` is a "YYYY-MM-DD" string
 // (date column), the *_at columns are JS Dates — convert to Temporal.
-function toWireUser<
-  T extends {
-    birthday: string | null
-    onboarding_dismissed_at: Date | null
-    created_at: Date
-    updated_at: Date
-  },
->(
-  u: T,
-): Omit<
-  T,
-  "birthday" | "onboarding_dismissed_at" | "created_at" | "updated_at"
-> & {
-  birthday: Temporal.PlainDate | null
-  onboarding_dismissed_at: Temporal.Instant | null
-  created_at: Temporal.Instant
-  updated_at: Temporal.Instant
-} {
-  return {
-    ...u,
-    birthday: plainDateFromDbOrNull(u.birthday),
-    onboarding_dismissed_at: instantFromDateOrNull(u.onboarding_dismissed_at),
-    created_at: instantFromDate(u.created_at),
-    updated_at: instantFromDate(u.updated_at),
-  }
-}
+const toWireUser = wireMap({
+  birthday: "plainDateOrNull",
+  onboarding_dismissed_at: "instantOrNull",
+  created_at: "instant",
+  updated_at: "instant",
+})
 
 const createInput = z.object(userFields)
 

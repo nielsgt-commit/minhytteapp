@@ -7,12 +7,8 @@ import {
   settlementsTable,
 } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import {
-  type Temporal,
-  plainDateFromDb,
-  plainDateToDbString,
-  zPlainDate,
-} from "../../shared/temporal.ts"
+import { plainDateToDbString, zPlainDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import type { AuthUser } from "../context.ts"
 import {
   assertPropertyHead,
@@ -25,18 +21,10 @@ import {
 
 // Wire mapping: the `date`/`receipt_date` columns are "YYYY-MM-DD" strings in
 // drizzle — convert to Temporal.PlainDate before returning rows.
-function toWireExpense<T extends { date: string; receipt_date: string }>(
-  e: T,
-): Omit<T, "date" | "receipt_date"> & {
-  date: Temporal.PlainDate
-  receipt_date: Temporal.PlainDate
-} {
-  return {
-    ...e,
-    date: plainDateFromDb(e.date),
-    receipt_date: plainDateFromDb(e.receipt_date),
-  }
-}
+const toWireExpense = wireMap({
+  date: "plainDate",
+  receipt_date: "plainDate",
+})
 
 type Db = typeof dbClient
 
@@ -150,7 +138,7 @@ export const expenseRouter = router({
         .leftJoin(usersTable, eq(usersTable.id, expensesTable.payer_id))
         .where(eq(expensesTable.property_id, input.property_id))
         .orderBy(asc(expensesTable.date))
-      return rows.map(toWireExpense)
+      return rows.map(r => toWireExpense(r))
     }),
 
   create: propertyAdminProcedure

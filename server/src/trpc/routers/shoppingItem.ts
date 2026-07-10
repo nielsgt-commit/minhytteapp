@@ -2,7 +2,7 @@ import { and, asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
-import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   assertPropertyMember,
   propertyAdminProcedure,
@@ -12,11 +12,7 @@ import {
 import { resolvePropertyIdFromShoppingItem } from "../util/propertyAccess.ts"
 
 // Wire mapping: created_at (timestamp) → Temporal.Instant.
-function toWireShoppingItem<T extends { created_at: Date }>(
-  i: T,
-): Omit<T, "created_at"> & { created_at: Temporal.Instant } {
-  return { ...i, created_at: instantFromDate(i.created_at) }
-}
+const toWireShoppingItem = wireMap({ created_at: "instant" })
 
 const sectionEnum = z.enum(["food", "other"])
 
@@ -41,7 +37,7 @@ export const shoppingItemRouter = router({
       .from(shoppingListItemsTable)
       .where(eq(shoppingListItemsTable.property_id, input.property_id))
       .orderBy(asc(shoppingListItemsTable.id))
-    return rows.map(toWireShoppingItem)
+    return rows.map(r => toWireShoppingItem(r))
   }),
 
   create: propertyAdminProcedure

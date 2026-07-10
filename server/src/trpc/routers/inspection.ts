@@ -14,11 +14,7 @@ import {
   infrastructureTable,
 } from "../../db/schema/property.schema.ts"
 import { userGroupsTable } from "../../db/schema/users.schema.ts"
-import {
-  type Temporal,
-  instantFromDate,
-  instantFromDateOrNull,
-} from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromInspection,
@@ -38,20 +34,10 @@ type Location =
   | { equipment_id: number }
 
 // Wire mapping: inspection timestamp columns → Temporal.Instant.
-function toWireInspection<
-  T extends { started_at: Date; completed_at: Date | null },
->(
-  i: T,
-): Omit<T, "started_at" | "completed_at"> & {
-  started_at: Temporal.Instant
-  completed_at: Temporal.Instant | null
-} {
-  return {
-    ...i,
-    started_at: instantFromDate(i.started_at),
-    completed_at: instantFromDateOrNull(i.completed_at),
-  }
-}
+const toWireInspection = wireMap({
+  started_at: "instant",
+  completed_at: "instantOrNull",
+})
 
 const targetXor = {
   check: (v: {
@@ -378,8 +364,8 @@ export const inspectionRouter = router({
         )
         .orderBy(asc(procedureStepsTable.created_at))
       return {
-        findings: findings.map(toWireMaintenance),
-        stepsAdded: stepsAdded.map(toWireProcedureStep),
+        findings: findings.map(r => toWireMaintenance(r)),
+        stepsAdded: stepsAdded.map(r => toWireProcedureStep(r)),
       }
     }),
 

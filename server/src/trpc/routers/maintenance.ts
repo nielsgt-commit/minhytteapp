@@ -15,10 +15,9 @@ import {
 import {
   type Temporal,
   dateFromInstant,
-  instantFromDate,
-  instantFromDateOrNull,
   zInstant,
 } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromMaintenance,
@@ -28,26 +27,11 @@ import { ensureMainGroupOfProperty } from "./priority.ts"
 
 // Wire mapping for full maintenance rows (also used by the inspection router's
 // listFindings): timestamp columns (JS Date from drizzle) → Temporal.Instant.
-export function toWireMaintenance<
-  T extends {
-    due_at: Date | null
-    created_at: Date
-    completed_at: Date | null
-  },
->(
-  m: T,
-): Omit<T, "due_at" | "created_at" | "completed_at"> & {
-  due_at: Temporal.Instant | null
-  created_at: Temporal.Instant
-  completed_at: Temporal.Instant | null
-} {
-  return {
-    ...m,
-    due_at: instantFromDateOrNull(m.due_at),
-    created_at: instantFromDate(m.created_at),
-    completed_at: instantFromDateOrNull(m.completed_at),
-  }
-}
+export const toWireMaintenance = wireMap({
+  due_at: "instantOrNull",
+  created_at: "instant",
+  completed_at: "instantOrNull",
+})
 
 const maintenanceFields = {
   description: z.string().min(1),

@@ -5,7 +5,7 @@ import type { db as dbClient } from "../../db/client.ts"
 import { propertySplitPoliciesTable } from "../../db/schema/settlement.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import type { AuthUser } from "../context.ts"
-import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   SPLIT_POLICY_PARAMETERS,
   configViolations,
@@ -18,18 +18,10 @@ import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 type Db = typeof dbClient
 
 // Wire mapping: policy timestamp columns → Temporal.Instant.
-function toWirePolicy<T extends { created_at: Date; updated_at: Date }>(
-  p: T,
-): Omit<T, "created_at" | "updated_at"> & {
-  created_at: Temporal.Instant
-  updated_at: Temporal.Instant
-} {
-  return {
-    ...p,
-    created_at: instantFromDate(p.created_at),
-    updated_at: instantFromDate(p.updated_at),
-  }
-}
+const toWirePolicy = wireMap({
+  created_at: "instant",
+  updated_at: "instant",
+})
 
 // A rule's `what` may name several categories. Legacy rows carry a single
 // `category_id`; normalizeWhat folds both shapes (and an empty selection) into
@@ -193,7 +185,7 @@ export const propertySplitPolicyRouter = router({
         )
         .where(eq(propertySplitPoliciesTable.property_id, input.property_id))
         .orderBy(asc(propertySplitPoliciesTable.name))
-      return rows.map(toWirePolicy)
+      return rows.map(r => toWirePolicy(r))
     }),
 
   save: protectedProcedure

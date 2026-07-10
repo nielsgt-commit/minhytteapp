@@ -12,11 +12,7 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
-import {
-  type Temporal,
-  instantFromDate,
-  instantFromDateOrNull,
-} from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   assertPropertyHeadOrAdmin,
   headOrAdminProcedure,
@@ -24,18 +20,10 @@ import {
 } from "../init.ts"
 
 // Wire mapping: allowed_emails timestamp columns → Temporal.Instant.
-function toWireInvite<T extends { used_at: Date | null; created_at: Date }>(
-  row: T,
-): Omit<T, "used_at" | "created_at"> & {
-  used_at: Temporal.Instant | null
-  created_at: Temporal.Instant
-} {
-  return {
-    ...row,
-    used_at: instantFromDateOrNull(row.used_at),
-    created_at: instantFromDate(row.created_at),
-  }
-}
+const toWireInvite = wireMap({
+  used_at: "instantOrNull",
+  created_at: "instant",
+})
 
 export const allowedEmailRouter = router({
   list: headOrAdminProcedure
@@ -79,7 +67,7 @@ export const allowedEmailRouter = router({
             : undefined,
         )
         .orderBy(desc(allowedEmailsTable.created_at))
-      return rows.map(toWireInvite)
+      return rows.map(r => toWireInvite(r))
     }),
 
   add: headOrAdminProcedure

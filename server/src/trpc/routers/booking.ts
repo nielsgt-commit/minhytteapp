@@ -11,12 +11,11 @@ import { structuresTable, roomTable } from "../../db/schema/property.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
 import {
   Temporal,
-  instantFromDate,
-  instantFromDateOrNull,
   plainDateFromDb,
   plainDateToDbString,
   zPlainDate,
 } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   assertPropertyMember,
   propertyAdminProcedure,
@@ -79,35 +78,13 @@ type Db = typeof dbClient
 
 // Wire mapping: drizzle `date` columns are "YYYY-MM-DD" strings and
 // `timestamp` columns are JS Dates — convert to Temporal at the handler edge.
-function toWireBooking<
-  T extends {
-    start_date: string
-    end_date: string
-    created_at: Date
-    updated_at: Date
-    cancelled_at: Date | null
-  },
->(
-  b: T,
-): Omit<
-  T,
-  "start_date" | "end_date" | "created_at" | "updated_at" | "cancelled_at"
-> & {
-  start_date: Temporal.PlainDate
-  end_date: Temporal.PlainDate
-  created_at: Temporal.Instant
-  updated_at: Temporal.Instant
-  cancelled_at: Temporal.Instant | null
-} {
-  return {
-    ...b,
-    start_date: plainDateFromDb(b.start_date),
-    end_date: plainDateFromDb(b.end_date),
-    created_at: instantFromDate(b.created_at),
-    updated_at: instantFromDate(b.updated_at),
-    cancelled_at: instantFromDateOrNull(b.cancelled_at),
-  }
-}
+const toWireBooking = wireMap({
+  start_date: "plainDate",
+  end_date: "plainDate",
+  created_at: "instant",
+  updated_at: "instant",
+  cancelled_at: "instantOrNull",
+})
 
 async function loadBookings(db: Db, filter?: { property_id: number }) {
   const query = db

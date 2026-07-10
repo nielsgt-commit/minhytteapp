@@ -3,7 +3,7 @@ import { and, asc, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { propertySeasonsTable } from "../../db/schema/property.schema.ts"
 import { isValidMonthDay, normalizeWeeks } from "../../shared/season.ts"
-import { type Temporal, instantFromDateOrNull } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   propertyAdminProcedure,
   propertyHeadOrAdminProcedure,
@@ -11,11 +11,15 @@ import {
 } from "../init.ts"
 
 // Wire mapping: archived_at (nullable timestamp) → Temporal.Instant | null.
-function toWireSeason<T extends { archived_at: Date | null }>(
-  s: T,
-): Omit<T, "archived_at"> & { archived_at: Temporal.Instant | null } {
-  return { ...s, archived_at: instantFromDateOrNull(s.archived_at) }
-}
+const toWireSeason = wireMap({ archived_at: "instantOrNull" })
+
+// Full-row variant for .returning() rows, which also carry the audit
+// timestamps (previously shipped as raw Dates — caught by wireMap's guard).
+const toWireSeasonRow = wireMap({
+  archived_at: "instantOrNull",
+  created_at: "instant",
+  updated_at: "instant",
+})
 
 const seasonFields = z.object({
   name: z.string().trim().min(1).max(64),
@@ -67,7 +71,7 @@ export const seasonRouter = router({
         asc(propertySeasonsTable.start_day),
         asc(propertySeasonsTable.id),
       )
-    return rows.map(toWireSeason)
+    return rows.map(r => toWireSeason(r))
   }),
 
   create: propertyHeadOrAdminProcedure
@@ -86,7 +90,7 @@ export const seasonRouter = router({
           priority_weeks: normalizeWeeks(input.priority_weeks),
         })
         .returning()
-      return toWireSeason(created)
+      return toWireSeasonRow(created)
     }),
 
   update: propertyHeadOrAdminProcedure
@@ -124,7 +128,7 @@ export const seasonRouter = router({
         })
         .where(eq(propertySeasonsTable.id, input.id))
         .returning()
-      return toWireSeason(updated)
+      return toWireSeasonRow(updated)
     }),
 
   archive: propertyHeadOrAdminProcedure
@@ -144,6 +148,6 @@ export const seasonRouter = router({
         .set({ archived_at: new Date(), updated_at: new Date() })
         .where(eq(propertySeasonsTable.id, input.id))
         .returning()
-      return toWireSeason(archived)
+      return toWireSeasonRow(archived)
     }),
 })

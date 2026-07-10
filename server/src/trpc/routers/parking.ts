@@ -6,17 +6,13 @@ import {
   propertyTable,
 } from "../../db/schema/property.schema.ts"
 import { usersTable } from "../../db/schema/users.schema.ts"
-import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { propertyAdminProcedure, router } from "../init.ts"
 
 // Wire mapping: claimed_at (timestamp) → Temporal.Instant. The explicit
 // Omit-based return type keeps the inferred procedure output clean
 // (a plain generic spread would yield `Date & Instant` intersections).
-function toWireClaim<T extends { claimed_at: Date }>(
-  c: T,
-): Omit<T, "claimed_at"> & { claimed_at: Temporal.Instant } {
-  return { ...c, claimed_at: instantFromDate(c.claimed_at) }
-}
+const toWireClaim = wireMap({ claimed_at: "instant" })
 
 const slotExtra = z.object({
   slot_index: z.number().int().min(0),
@@ -43,7 +39,7 @@ export const parkingRouter = router({
       .innerJoin(usersTable, eq(usersTable.id, parkingClaimsTable.user_id))
       .where(eq(parkingClaimsTable.property_id, input.property_id))
       .orderBy(asc(parkingClaimsTable.slot_index))
-    return rows.map(toWireClaim)
+    return rows.map(r => toWireClaim(r))
   }),
 
   claim: propertyAdminProcedure

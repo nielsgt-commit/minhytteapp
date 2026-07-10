@@ -1,29 +1,16 @@
 import { and, eq, gte, lte } from "drizzle-orm"
 import { z } from "zod"
 import { dinnerResponsiblesTable } from "../../db/schema/dinner.schema.ts"
-import {
-  type Temporal,
-  instantFromDate,
-  plainDateFromDb,
-  plainDateToDbString,
-  zPlainDate,
-} from "../../shared/temporal.ts"
+import { plainDateToDbString, zPlainDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { propertyAdminProcedure, router } from "../init.ts"
 import { assertUserIsPropertyMember } from "../util/propertyAccess.ts"
 
 // Wire mapping: date ("YYYY-MM-DD") → Temporal.PlainDate, created_at → Instant.
-function toWireDinner<T extends { date: string; created_at: Date }>(
-  row: T,
-): Omit<T, "date" | "created_at"> & {
-  date: Temporal.PlainDate
-  created_at: Temporal.Instant
-} {
-  return {
-    ...row,
-    date: plainDateFromDb(row.date),
-    created_at: instantFromDate(row.created_at),
-  }
-}
+const toWireDinner = wireMap({
+  date: "plainDate",
+  created_at: "instant",
+})
 
 export const dinnerRouter = router({
   listForProperty: propertyAdminProcedure
@@ -45,7 +32,7 @@ export const dinnerRouter = router({
           ),
         )
         .orderBy(dinnerResponsiblesTable.date, dinnerResponsiblesTable.id)
-      return rows.map(toWireDinner)
+      return rows.map(r => toWireDinner(r))
     }),
 
   set: propertyAdminProcedure

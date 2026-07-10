@@ -5,7 +5,7 @@ import {
   expenseCategoriesTable,
   expensesTable,
 } from "../../db/schema/settlement.schema.ts"
-import { type Temporal, instantFromDateOrNull } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   propertyAdminProcedure,
   propertyHeadOrAdminProcedure,
@@ -13,11 +13,7 @@ import {
 } from "../init.ts"
 
 // Wire mapping: archived_at (nullable timestamp) → Temporal.Instant | null.
-function toWireCategory<T extends { archived_at: Date | null }>(
-  c: T,
-): Omit<T, "archived_at"> & { archived_at: Temporal.Instant | null } {
-  return { ...c, archived_at: instantFromDateOrNull(c.archived_at) }
-}
+const toWireCategory = wireMap({ archived_at: "instantOrNull" })
 
 export const expenseCategoryRouter = router({
   list: propertyAdminProcedure.query(async ({ ctx, input }) => {
@@ -46,7 +42,7 @@ export const expenseCategoryRouter = router({
       .from(expenseCategoriesTable)
       .where(eq(expenseCategoriesTable.property_id, input.property_id))
       .orderBy(asc(expenseCategoriesTable.name))
-    return rows.map(toWireCategory)
+    return rows.map(r => toWireCategory(r))
   }),
 
   create: propertyHeadOrAdminProcedure

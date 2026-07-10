@@ -17,11 +17,8 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
-import {
-  type Temporal,
-  instantFromDate,
-  instantFromDateOrNull,
-} from "../../shared/temporal.ts"
+import { instantFromDateOrNull } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { SETTLEMENT_PHASES } from "../../shared/splitPolicy.ts"
 import {
   advanceSettlementPhase,
@@ -45,27 +42,13 @@ import {
 type Db = typeof dbClient
 
 // Wire mapping: settlement timestamp columns → Temporal.Instant.
-function toWireSettlement<
-  T extends { opened_at: Date; closed_at: Date | null },
->(
-  s: T,
-): Omit<T, "opened_at" | "closed_at"> & {
-  opened_at: Temporal.Instant
-  closed_at: Temporal.Instant | null
-} {
-  return {
-    ...s,
-    opened_at: instantFromDate(s.opened_at),
-    closed_at: instantFromDateOrNull(s.closed_at),
-  }
-}
+const toWireSettlement = wireMap({
+  opened_at: "instant",
+  closed_at: "instantOrNull",
+})
 
 // Wire mapping: settlement transfer paid_at → Temporal.Instant | null.
-function toWireTransfer<T extends { paid_at: Date | null }>(
-  t: T,
-): Omit<T, "paid_at"> & { paid_at: Temporal.Instant | null } {
-  return { ...t, paid_at: instantFromDateOrNull(t.paid_at) }
-}
+const toWireTransfer = wireMap({ paid_at: "instantOrNull" })
 
 const phaseEnum = z.enum(SETTLEMENT_PHASES)
 
@@ -159,7 +142,7 @@ export const settlementRouter = router({
         .leftJoin(usersTable, eq(usersTable.id, settlementsTable.created_by_id))
         .where(eq(settlementsTable.property_id, input.property_id))
         .orderBy(asc(settlementsTable.year))
-      return rows.map(toWireSettlement)
+      return rows.map(r => toWireSettlement(r))
     }),
 
   create: propertyAdminProcedure

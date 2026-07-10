@@ -11,11 +11,7 @@ import {
   infrastructureTable,
   structuresTable,
 } from "../../db/schema/property.schema.ts"
-import {
-  type Temporal,
-  instantFromDate,
-  instantFromDateOrNull,
-} from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 import {
   resolvePropertyIdFromMaintenance,
@@ -24,20 +20,10 @@ import {
 } from "../util/propertyAccess.ts"
 
 // Wire mapping: procedure-step timestamp columns (JS Date) → Temporal.Instant.
-export function toWireProcedureStep<
-  T extends { created_at: Date; archived_at: Date | null },
->(
-  s: T,
-): Omit<T, "created_at" | "archived_at"> & {
-  created_at: Temporal.Instant
-  archived_at: Temporal.Instant | null
-} {
-  return {
-    ...s,
-    created_at: instantFromDate(s.created_at),
-    archived_at: instantFromDateOrNull(s.archived_at),
-  }
-}
+export const toWireProcedureStep = wireMap({
+  created_at: "instant",
+  archived_at: "instantOrNull",
+})
 
 export const procedureStepRouter = router({
   // Active (non-archived) procedure steps for the property. The inspection flow

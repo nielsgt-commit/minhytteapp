@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import { maintenanceTable } from "../../db/schema/maintenance.schema.ts"
 import { todoAssigneesTable, todosTable } from "../../db/schema/todo.schema.ts"
-import { type Temporal, instantFromDate } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   assertPropertyMember,
   propertyAdminProcedure,
@@ -19,11 +19,7 @@ import {
 } from "../util/propertyAccess.ts"
 
 // Wire mapping: created_at (timestamp) → Temporal.Instant.
-function toWireTodo<T extends { created_at: Date }>(
-  todo: T,
-): Omit<T, "created_at"> & { created_at: Temporal.Instant } {
-  return { ...todo, created_at: instantFromDate(todo.created_at) }
-}
+const toWireTodo = wireMap({ created_at: "instant" })
 
 // A targeted todo becomes a maintenance task on the chosen entity. The picker
 // supplies exactly one of structure / infrastructure / equipment.

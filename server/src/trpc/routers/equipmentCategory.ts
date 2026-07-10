@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server"
 import { and, asc, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { equipmentCategoriesTable } from "../../db/schema/maintenance.schema.ts"
-import { type Temporal, instantFromDateOrNull } from "../../shared/temporal.ts"
+import { wireMap } from "../util/wire.ts"
 import {
   propertyAdminProcedure,
   propertyHeadOrAdminProcedure,
@@ -10,11 +10,7 @@ import {
 } from "../init.ts"
 
 // Wire mapping: archived_at (nullable timestamp) → Temporal.Instant | null.
-function toWireCategory<T extends { archived_at: Date | null }>(
-  c: T,
-): Omit<T, "archived_at"> & { archived_at: Temporal.Instant | null } {
-  return { ...c, archived_at: instantFromDateOrNull(c.archived_at) }
-}
+const toWireCategory = wireMap({ archived_at: "instantOrNull" })
 
 export const equipmentCategoryRouter = router({
   list: propertyAdminProcedure.query(async ({ ctx, input }) => {
