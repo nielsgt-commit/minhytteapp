@@ -42,20 +42,14 @@ VITE_TEST_HEALTH_URL=http://api.local/health \
 pnpm test:e2e
 ```
 
-## What the output looks like
+## What the test checks
 
-On a freshly migrated + seeded DB, empty tables return empty arrays:
-
-```
-booking.list      -> []
-expense.list      -> []
-maintenance.list  -> []
-settlement.list   -> []
-dashboard.summary -> { expenseCount: 0, totalSpent: 0, upcomingBookings: 0, openMaintenance: 0 }
-```
-
-If the server isn't running, `beforeAll` fails with `ECONNREFUSED` — that's
-the intended signal that the front end can't reach the back end.
+Since the tRPC lockdown every procedure requires auth, so the test probes
+each router's simplest read procedure unauthenticated: a mounted procedure
+answers with a tRPC error envelope (UNAUTHORIZED / BAD_REQUEST), while an
+unmounted router or renamed procedure answers NOT_FOUND — which fails the
+probe. If the server isn't running, the fetch fails with `ECONNREFUSED` —
+that's the intended signal that the front end can't reach the back end.
 
 ## Why this test is an integration test, not a unit test
 
@@ -69,7 +63,7 @@ renamed or removed, this file stops type-checking.
 ## Adding a new router to the check
 
 When you add a router in `server/src/trpc/routers/` and mount it on
-`_app.ts`, append one `test(...)` block in `connectivity.e2e.test.ts` that
-calls its simplest read procedure and asserts the response shape. Keep it
-to list or summary queries — mutations belong in their own tests with
-setup/teardown.
+`_app.ts`, add one entry to the `PROBES` map in `connectivity.e2e.test.ts`
+naming its simplest read procedure. The map is typed `Record<RouterName,
+string>` over `AppRouter`, so forgetting the entry (or renaming a router)
+stops the file from type-checking.
