@@ -100,7 +100,8 @@ export function MyPlannedStay() {
       b =>
         b.occupants.some(o => o.user_id === me.id) || b.booker_id === me.id,
     )
-    .sort((a, b) => Temporal.PlainDate.compare(a.start_date, b.start_date))
+    // Newest stay on top.
+    .sort((a, b) => Temporal.PlainDate.compare(b.start_date, a.start_date))
 
   type SheetTarget =
     | { kind: "create" }
@@ -204,7 +205,6 @@ export function MyPlannedStay() {
         <Button
           type="button"
           variant="secondary"
-          data-size="sm"
           className={styles.addButton}
           onClick={() => {
             setSheetTarget({ kind: "create" })
