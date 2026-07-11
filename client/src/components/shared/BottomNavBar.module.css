@@ -15,7 +15,12 @@
     background: var(--ds-color-background-default, #fff);
     border-top: 1px solid var(--ds-color-border-subtle, #d2d5d8);
     padding-block-start: 0.5rem;
-    padding-block-end: calc(1rem + env(safe-area-inset-bottom));
+    /* 2rem = the original 1rem plus an extra 1rem of fill that pushes the
+       items up while the bar stays flush with the screen bottom. Anything
+       anchored above the bar (gallery dots pill, dashboard FABs, selection
+       toast, main padding) hard-codes the bar's 96px base height and must
+       include this same extra 1rem. */
+    padding-block-end: calc(2rem + env(safe-area-inset-bottom));
   }
 }
 

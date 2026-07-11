@@ -147,14 +147,15 @@
    visible while the page scrolls. The nav bar is content-box (no global
    border-box reset), so its real height is 56px item content + 0.5rem item
    padding top/bottom + 0.5rem bar padding top + 1rem bar padding bottom =
-   96px, plus the safe-area inset; we add a 0.5rem gap on top. Only rendered
-   on mobile — the dots themselves are gated to mobile in the component. */
+   96px, plus the bar's extra 1rem of bottom-fill padding and the safe-area
+   inset; we add a 0.5rem gap on top. Only rendered on mobile — the dots
+   themselves are gated to mobile in the component. */
 @media (max-width: 640px) {
   .dots.floating {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    bottom: calc(96px + env(safe-area-inset-bottom) + 0.5rem);
+    bottom: calc(96px + 1rem + env(safe-area-inset-bottom) + 0.5rem);
     z-index: 99;
     width: fit-content;
     margin-top: 0;
