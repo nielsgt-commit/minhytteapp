@@ -80,6 +80,21 @@
   margin: 0;
 }
 
+/* Buyer attribution on items checked by someone else. inline-block keeps the
+   parent's line-through from striking the name. */
+.checkedBy {
+  display: inline-block;
+  margin-left: 0.35em;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* A box ticked by another user fills amber instead of the accent color, so a
+   checkmark you didn't make doesn't read as your own tap. ("warning" is a
+   severity color, not part of the data-color union, hence the var override.) */
+.checkedByOther {
+  --dsc-input-accent-color: var(--ds-color-warning-base-default);
+}
+
 .assignChips {
   display: flex;
   flex-wrap: wrap;

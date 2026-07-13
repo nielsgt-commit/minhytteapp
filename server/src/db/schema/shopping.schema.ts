@@ -21,6 +21,9 @@ export const shoppingListItemsTable = pgTable("shopping_list_items", {
   }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   checked: boolean("checked").notNull().default(false),
+  // Who ticked the box (null when unchecked, or for pre-feature rows) — lets
+  // concurrent shoppers see that someone else already bought an item.
+  checked_by: integer("checked_by").references(() => usersTable.id),
   created_at: timestamp("created_at").notNull().defaultNow(),
   created_by: integer("created_by").references(() => usersTable.id),
 })

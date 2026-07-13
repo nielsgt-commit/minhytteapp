@@ -93,7 +93,12 @@ export const shoppingItemRouter = router({
       const { id, property_id: _property_id, ...rest } = input
       const [updated] = await ctx.db
         .update(shoppingListItemsTable)
-        .set(rest)
+        .set({
+          ...rest,
+          ...(input.checked !== undefined && {
+            checked_by: input.checked ? ctx.user.id : null,
+          }),
+        })
         .where(eq(shoppingListItemsTable.id, id))
         .returning()
       return toWireShoppingItem(updated)

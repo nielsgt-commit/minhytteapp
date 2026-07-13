@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Temporal } from "temporal-polyfill"
 import {
@@ -33,6 +33,10 @@ type Section = "food" | "other"
 
 const SECTIONS: readonly Section[] = ["food", "other"]
 
+// After a toggle the row keeps its old sort position for a moment, so the user
+// sees the box flip before the row sinks (or rises) to its new group.
+const CHECK_HOLD_MS = 800
+
 export function ShoppingList() {
   const { t } = useTranslation("shoppinglist")
   const trpc = useTRPC()
@@ -53,9 +57,14 @@ export function ShoppingList() {
   const { data: items, isLoading } = useQuery(
     trpc.shoppingItem.listForProperty.queryOptions(
       { property_id: selectedPropertyId ?? 0 },
-      { enabled: selectedPropertyId != null },
+      {
+        enabled: selectedPropertyId != null,
+        // Concurrent shoppers see each other's checkmarks near-live.
+        refetchInterval: 15_000,
+      },
     ),
   )
+  const { data: me } = useQuery(trpc.user.me.queryOptions())
   const { data: users } = useQuery(
     trpc.user.listForProperty.queryOptions(
       { property_id: selectedPropertyId ?? 0 },
@@ -83,6 +92,7 @@ export function ShoppingList() {
               section: vars.section,
               name: vars.name,
               checked: false,
+              checked_by: null,
               created_at: Temporal.Now.instant(),
               created_by: null,
               assignee_ids: [],
@@ -110,7 +120,10 @@ export function ShoppingList() {
             i.id === vars.id
               ? {
                   ...i,
-                  ...(vars.checked !== undefined && { checked: vars.checked }),
+                  ...(vars.checked !== undefined && {
+                    checked: vars.checked,
+                    checked_by: vars.checked ? (me?.id ?? null) : null,
+                  }),
                   ...(vars.name !== undefined && { name: vars.name }),
                 }
               : i,
@@ -196,6 +209,19 @@ export function ShoppingList() {
 
   // Which row (if any) has its inline "Assign to…" chip picker open.
   const [assigningId, setAssigningId] = useState<number | null>(null)
+
+  // id → the checked value the sort keeps using while a toggle's hold lasts.
+  const [heldSortChecked, setHeldSortChecked] = useState<
+    ReadonlyMap<number, boolean>
+  >(new Map())
+  const holdTimers = useRef(new Map<number, ReturnType<typeof setTimeout>>())
+
+  useEffect(() => {
+    const timers = holdTimers.current
+    return () => {
+      for (const timer of timers.values()) clearTimeout(timer)
+    }
+  }, [])
 
   // Delete is a two-tap action: the first tap arms the item's Delete button,
   // a second tap on the same spot confirms. The armed state auto-clears after a
@@ -309,6 +335,24 @@ export function ShoppingList() {
   }
 
   const toggleChecked = (item: (typeof items)[number]) => {
+    // Freeze the row's sort slot at its pre-toggle value; a second toggle
+    // within the hold keeps the original slot and just restarts the timer.
+    setHeldSortChecked(old =>
+      old.has(item.id) ? old : new Map(old).set(item.id, item.checked),
+    )
+    const existing = holdTimers.current.get(item.id)
+    if (existing) clearTimeout(existing)
+    holdTimers.current.set(
+      item.id,
+      setTimeout(() => {
+        holdTimers.current.delete(item.id)
+        setHeldSortChecked(old => {
+          const next = new Map(old)
+          next.delete(item.id)
+          return next
+        })
+      }, CHECK_HOLD_MS),
+    )
     updateMutation.mutate({
       property_id: selectedPropertyId,
       id: item.id,
@@ -341,11 +385,14 @@ export function ShoppingList() {
           {SECTIONS.map((section, index) => {
             // Checked-off items sink to the bottom of their section; order is
             // otherwise stable (by id) within the checked / unchecked groups.
+            // Rows inside a toggle hold sort by their pre-toggle value.
             const sectionItems = items
               .filter(i => i.section === section)
               .slice()
               .sort((a, b) => {
-                if (a.checked !== b.checked) return a.checked ? 1 : -1
+                const aChecked = heldSortChecked.get(a.id) ?? a.checked
+                const bChecked = heldSortChecked.get(b.id) ?? b.checked
+                if (aChecked !== bChecked) return aChecked ? 1 : -1
                 return a.id - b.id
               })
             return (
@@ -409,204 +456,227 @@ export function ShoppingList() {
                   <Paragraph data-size="sm">{t("Nothing here yet.")}</Paragraph>
                 ) : (
                   <List.Unordered className={styles.list}>
-                    {sectionItems.map(item => (
-                      <List.Item className={styles.row} key={item.id}>
-                        {editingId !== item.id && (
-                          <Checkbox
-                            aria-label={item.name}
-                            checked={item.checked}
-                            onChange={() => {
-                              toggleChecked(item)
-                            }}
-                          />
-                        )}
-                        {editingId === item.id ? (
-                          <form
-                            action={handleRename(item)}
-                            className={styles.editForm}
-                          >
-                            <Textfield
-                              aria-label={t("New item")}
-                              name="name"
-                              defaultValue={item.name}
-                              disabled={updateMutation.isPending}
-                            />
-                            <SubmitButton>{t("Save")}</SubmitButton>
-                            <Button
-                              type="button"
-                              variant="tertiary"
-                              data-size="sm"
-                              onClick={() => {
-                                setEditingId(null)
+                    {sectionItems.map(item => {
+                      // Checked by a known other user → tint the box and name
+                      // them, so it doesn't read as an accidental own tap.
+                      const buyerName =
+                        item.checked &&
+                        item.checked_by != null &&
+                        me != null &&
+                        item.checked_by !== me.id
+                          ? userById.get(item.checked_by)
+                          : undefined
+                      return (
+                        <List.Item className={styles.row} key={item.id}>
+                          {editingId !== item.id && (
+                            <Checkbox
+                              aria-label={item.name}
+                              className={
+                                buyerName != null
+                                  ? styles.checkedByOther
+                                  : undefined
+                              }
+                              checked={item.checked}
+                              onChange={() => {
+                                toggleChecked(item)
                               }}
+                            />
+                          )}
+                          {editingId === item.id ? (
+                            <form
+                              action={handleRename(item)}
+                              className={styles.editForm}
                             >
-                              {t("Cancel")}
-                            </Button>
-                          </form>
-                        ) : (
-                          <>
-                            <div className={styles.textCol}>
-                              <Paragraph
-                                className={`${styles.name} ${
-                                  item.checked ? styles.done : ""
-                                }`}
+                              <Textfield
+                                aria-label={t("New item")}
+                                name="name"
+                                defaultValue={item.name}
+                                disabled={updateMutation.isPending}
+                              />
+                              <SubmitButton>{t("Save")}</SubmitButton>
+                              <Button
+                                type="button"
+                                variant="tertiary"
                                 data-size="sm"
+                                onClick={() => {
+                                  setEditingId(null)
+                                }}
                               >
-                                {item.name}
-                              </Paragraph>
-                              {item.assignee_ids.length > 0 && (
+                                {t("Cancel")}
+                              </Button>
+                            </form>
+                          ) : (
+                            <>
+                              <div className={styles.textCol}>
                                 <Paragraph
-                                  className={styles.assignees}
+                                  className={`${styles.name} ${
+                                    item.checked ? styles.done : ""
+                                  }`}
                                   data-size="sm"
                                 >
-                                  {item.assignee_ids
-                                    .map(id => userById.get(id))
-                                    .filter((n): n is string => n != null)
-                                    .join(", ")}
+                                  {item.name}
+                                  {buyerName != null && (
+                                    <span className={styles.checkedBy}>
+                                      · {buyerName}
+                                    </span>
+                                  )}
                                 </Paragraph>
-                              )}
-                            </div>
-                            {assigningId === item.id ? (
-                              <>
-                                <div className={styles.assignChips}>
-                                  {userRows.map(u => (
-                                    <Chip.Checkbox
-                                      key={u.id}
-                                      data-size="sm"
-                                      data-color="accent"
-                                      checked={item.assignee_ids.includes(u.id)}
-                                      onChange={e => {
-                                        toggleAssignee(
-                                          item.id,
-                                          u.id,
-                                          e.target.checked,
-                                        )
-                                      }}
-                                    >
-                                      {u.name}
-                                    </Chip.Checkbox>
-                                  ))}
-                                </div>
-                                <Button
-                                  variant="tertiary"
-                                  data-size="sm"
-                                  onClick={() => {
-                                    setAssigningId(null)
-                                  }}
-                                >
-                                  {t("Close")}
-                                </Button>
-                              </>
-                            ) : isMobile ? (
-                              <Dropdown.TriggerContext>
-                                <Dropdown.Trigger
-                                  variant="tertiary"
-                                  data-size="sm"
-                                  icon
-                                  aria-label={t("Item actions")}
-                                  disabled={busy}
-                                  onClick={() => {
-                                    setMenuOpenId(
-                                      menuOpenId === item.id ? null : item.id,
-                                    )
-                                    setConfirmingDeleteId(null)
-                                  }}
-                                >
-                                  <MenuElipsisVerticalIcon aria-hidden />
-                                </Dropdown.Trigger>
-                                <Dropdown
-                                  placement="bottom-end"
-                                  open={menuOpenId === item.id}
-                                  onClose={() => {
-                                    setMenuOpenId(null)
-                                    setConfirmingDeleteId(null)
-                                  }}
-                                >
-                                  <Dropdown.List>
-                                    <Dropdown.Item>
-                                      <Dropdown.Button
-                                        onClick={() => {
-                                          setMenuOpenId(null)
-                                          setConfirmingDeleteId(null)
-                                          setEditingId(item.id)
-                                        }}
-                                      >
-                                        {t("Edit")}
-                                      </Dropdown.Button>
-                                    </Dropdown.Item>
-                                    <Dropdown.Item>
-                                      <Dropdown.Button
-                                        onClick={() => {
-                                          setMenuOpenId(null)
-                                          setConfirmingDeleteId(null)
-                                          setAssigningId(item.id)
-                                        }}
-                                      >
-                                        {t("Assign to...")}
-                                      </Dropdown.Button>
-                                    </Dropdown.Item>
-                                    <Dropdown.Item>
-                                      <Dropdown.Button
-                                        data-color="danger"
-                                        onClick={() => {
-                                          handleDelete(item.id)
-                                        }}
-                                      >
-                                        {confirmingDeleteId === item.id
-                                          ? t("Confirm delete?")
-                                          : t("Delete")}
-                                      </Dropdown.Button>
-                                    </Dropdown.Item>
-                                  </Dropdown.List>
-                                </Dropdown>
-                              </Dropdown.TriggerContext>
-                            ) : (
-                              <div className={styles.actions}>
-                                <Button
-                                  variant="tertiary"
-                                  data-size="sm"
-                                  disabled={busy}
-                                  onClick={() => {
-                                    setConfirmingDeleteId(null)
-                                    setEditingId(item.id)
-                                  }}
-                                >
-                                  {t("Edit")}
-                                </Button>
-                                <Button
-                                  variant="tertiary"
-                                  data-size="sm"
-                                  disabled={busy}
-                                  onClick={() => {
-                                    setConfirmingDeleteId(null)
-                                    setAssigningId(item.id)
-                                  }}
-                                >
-                                  {t("Assign to...")}
-                                </Button>
-                                <Button
-                                  variant={
-                                    confirmingDeleteId === item.id
-                                      ? "primary"
-                                      : "tertiary"
-                                  }
-                                  data-color="danger"
-                                  data-size="sm"
-                                  disabled={busy}
-                                  onClick={() => {
-                                    handleDelete(item.id)
-                                  }}
-                                >
-                                  {confirmingDeleteId === item.id
-                                    ? t("Confirm delete?")
-                                    : t("Delete")}
-                                </Button>
+                                {item.assignee_ids.length > 0 && (
+                                  <Paragraph
+                                    className={styles.assignees}
+                                    data-size="sm"
+                                  >
+                                    {item.assignee_ids
+                                      .map(id => userById.get(id))
+                                      .filter((n): n is string => n != null)
+                                      .join(", ")}
+                                  </Paragraph>
+                                )}
                               </div>
-                            )}
-                          </>
-                        )}
-                      </List.Item>
-                    ))}
+                              {assigningId === item.id ? (
+                                <>
+                                  <div className={styles.assignChips}>
+                                    {userRows.map(u => (
+                                      <Chip.Checkbox
+                                        key={u.id}
+                                        data-size="sm"
+                                        data-color="accent"
+                                        checked={item.assignee_ids.includes(
+                                          u.id,
+                                        )}
+                                        onChange={e => {
+                                          toggleAssignee(
+                                            item.id,
+                                            u.id,
+                                            e.target.checked,
+                                          )
+                                        }}
+                                      >
+                                        {u.name}
+                                      </Chip.Checkbox>
+                                    ))}
+                                  </div>
+                                  <Button
+                                    variant="tertiary"
+                                    data-size="sm"
+                                    onClick={() => {
+                                      setAssigningId(null)
+                                    }}
+                                  >
+                                    {t("Close")}
+                                  </Button>
+                                </>
+                              ) : isMobile ? (
+                                <Dropdown.TriggerContext>
+                                  <Dropdown.Trigger
+                                    variant="tertiary"
+                                    data-size="sm"
+                                    icon
+                                    aria-label={t("Item actions")}
+                                    disabled={busy}
+                                    onClick={() => {
+                                      setMenuOpenId(
+                                        menuOpenId === item.id ? null : item.id,
+                                      )
+                                      setConfirmingDeleteId(null)
+                                    }}
+                                  >
+                                    <MenuElipsisVerticalIcon aria-hidden />
+                                  </Dropdown.Trigger>
+                                  <Dropdown
+                                    placement="bottom-end"
+                                    open={menuOpenId === item.id}
+                                    onClose={() => {
+                                      setMenuOpenId(null)
+                                      setConfirmingDeleteId(null)
+                                    }}
+                                  >
+                                    <Dropdown.List>
+                                      <Dropdown.Item>
+                                        <Dropdown.Button
+                                          onClick={() => {
+                                            setMenuOpenId(null)
+                                            setConfirmingDeleteId(null)
+                                            setEditingId(item.id)
+                                          }}
+                                        >
+                                          {t("Edit")}
+                                        </Dropdown.Button>
+                                      </Dropdown.Item>
+                                      <Dropdown.Item>
+                                        <Dropdown.Button
+                                          onClick={() => {
+                                            setMenuOpenId(null)
+                                            setConfirmingDeleteId(null)
+                                            setAssigningId(item.id)
+                                          }}
+                                        >
+                                          {t("Assign to...")}
+                                        </Dropdown.Button>
+                                      </Dropdown.Item>
+                                      <Dropdown.Item>
+                                        <Dropdown.Button
+                                          data-color="danger"
+                                          onClick={() => {
+                                            handleDelete(item.id)
+                                          }}
+                                        >
+                                          {confirmingDeleteId === item.id
+                                            ? t("Confirm delete?")
+                                            : t("Delete")}
+                                        </Dropdown.Button>
+                                      </Dropdown.Item>
+                                    </Dropdown.List>
+                                  </Dropdown>
+                                </Dropdown.TriggerContext>
+                              ) : (
+                                <div className={styles.actions}>
+                                  <Button
+                                    variant="tertiary"
+                                    data-size="sm"
+                                    disabled={busy}
+                                    onClick={() => {
+                                      setConfirmingDeleteId(null)
+                                      setEditingId(item.id)
+                                    }}
+                                  >
+                                    {t("Edit")}
+                                  </Button>
+                                  <Button
+                                    variant="tertiary"
+                                    data-size="sm"
+                                    disabled={busy}
+                                    onClick={() => {
+                                      setConfirmingDeleteId(null)
+                                      setAssigningId(item.id)
+                                    }}
+                                  >
+                                    {t("Assign to...")}
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      confirmingDeleteId === item.id
+                                        ? "primary"
+                                        : "tertiary"
+                                    }
+                                    data-color="danger"
+                                    data-size="sm"
+                                    disabled={busy}
+                                    onClick={() => {
+                                      handleDelete(item.id)
+                                    }}
+                                  >
+                                    {confirmingDeleteId === item.id
+                                      ? t("Confirm delete?")
+                                      : t("Delete")}
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </List.Item>
+                      )
+                    })}
                   </List.Unordered>
                 )}
               </div>

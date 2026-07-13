@@ -1,0 +1,2 @@
+ALTER TABLE "shopping_list_items" ADD COLUMN "checked_by" integer;--> statement-breakpoint
+ALTER TABLE "shopping_list_items" ADD CONSTRAINT "shopping_list_items_checked_by_users_id_fk" FOREIGN KEY ("checked_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;

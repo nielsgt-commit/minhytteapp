@@ -20,6 +20,7 @@ type ItemRow = {
   section: "food" | "other"
   name: string
   checked: boolean
+  checked_by: number | null
   created_at: Temporal.Instant
   created_by: number | null
   assignee_ids: number[]
@@ -32,6 +33,7 @@ function itemRow(
     property_id: 1,
     section: "food",
     checked: false,
+    checked_by: null,
     created_at: Temporal.Instant.from("2026-07-01T10:00:00Z"),
     created_by: null,
     assignee_ids: [],
@@ -42,6 +44,7 @@ function itemRow(
 function makeHandlers(items: ItemRow[]): FakeHandlers {
   return {
     "shoppingItem.listForProperty": vi.fn(() => items),
+    "user.me": vi.fn(() => ({ id: 7, name: "Kari" })),
     "user.listForProperty": vi.fn(() => [
       { id: 7, name: "Kari" },
       { id: 8, name: "Ola" },
@@ -132,6 +135,58 @@ describe("ShoppingList", () => {
     await waitFor(() => {
       expect(handlers["shoppingItem.listForProperty"]).toHaveBeenCalled()
     })
+  })
+
+  test("an item checked by another user is attributed to them", async () => {
+    await renderList(
+      makeHandlers([
+        // Ola (another user) bought the milk; I (Kari, id 7) bought the bread.
+        itemRow({ id: 1, name: "Milk", checked: true, checked_by: 8 }),
+        itemRow({ id: 2, name: "Bread", checked: true, checked_by: 7 }),
+      ]),
+    )
+    await screen.findByText("Milk")
+    // Ola's check is named and the box is tinted; my own check is neither.
+    // The tint class sits on the Checkbox wrapper (the CSS var inherits down).
+    expect(screen.getByText("· Ola")).toBeInTheDocument()
+    expect(
+      screen
+        .getByRole("checkbox", { name: "Milk" })
+        .closest('[class*="checkedByOther"]'),
+    ).not.toBeNull()
+    expect(screen.queryByText("· Kari")).not.toBeInTheDocument()
+    expect(
+      screen
+        .getByRole("checkbox", { name: "Bread" })
+        .closest('[class*="checkedByOther"]'),
+    ).toBeNull()
+  })
+
+  test("a checked item holds its position briefly before sinking", async () => {
+    const handlers = makeHandlers([
+      itemRow({ id: 1, name: "Milk" }),
+      itemRow({ id: 2, name: "Bread" }),
+    ])
+    // Never settles, so the optimistic checked=true survives (no refetch).
+    handlers["shoppingItem.update"] = () => new Promise(() => undefined)
+    const user = userEvent.setup()
+    await renderList(handlers)
+
+    await user.click(await screen.findByRole("checkbox", { name: "Milk" }))
+    await waitFor(() => {
+      expect(screen.getByRole("checkbox", { name: "Milk" })).toBeChecked()
+    })
+    const order = () =>
+      screen.getAllByRole("checkbox").map(c => c.getAttribute("aria-label"))
+    // Checked, but still in place while the hold lasts...
+    expect(order()).toEqual(["Milk", "Bread"])
+    // ...then it sinks below the unchecked items.
+    await waitFor(
+      () => {
+        expect(order()).toEqual(["Bread", "Milk"])
+      },
+      { timeout: 2000 },
+    )
   })
 
   test("delete is a two-tap action whose armed state times out", async () => {
