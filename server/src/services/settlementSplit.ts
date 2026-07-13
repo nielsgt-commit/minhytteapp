@@ -19,6 +19,7 @@ import {
   usersTable,
 } from "../db/schema/users.schema.ts"
 import { Temporal, plainDateFromDb } from "../shared/temporal.ts"
+import { guestsByBooking } from "./booking.ts"
 import { normalizeWhat, resolveOccupancy } from "../shared/splitPolicy.ts"
 import type {
   SplitPolicyConfig,
@@ -112,6 +113,9 @@ export type SplitInput = {
     end_date: string
     occupant_user_ids: number[]
     extra_count: number
+    // How many of the extras are child visitors; they weigh child_weight in a
+    // weighted_by_occupancy split, exactly like child members.
+    extra_child_count?: number
   }[]
   priorityWeeks: { user_group_id: number; iso_week: number }[]
 }
@@ -247,6 +251,29 @@ function isMainGroupsOnly(who: readonly SplitPolicyWho[]): boolean {
   return who.length === 1 && who[0].kind === "main_groups"
 }
 
+// Extras persisted by a reviewer are bare names; recover which of them are
+// children by consuming matching recorded guests (one per identical name).
+// Names the reviewer typed that match no recorded guest count as adults.
+export function countChildExtras(
+  extraNames: readonly string[],
+  guests: readonly { name: string; is_child: boolean }[],
+): number {
+  const childPool = new Map<string, number>()
+  for (const g of guests) {
+    if (!g.is_child) continue
+    childPool.set(g.name, (childPool.get(g.name) ?? 0) + 1)
+  }
+  let count = 0
+  for (const name of extraNames) {
+    const left = childPool.get(name) ?? 0
+    if (left > 0) {
+      childPool.set(name, left - 1)
+      count++
+    }
+  }
+  return count
+}
+
 export function computePolicySplit(
   config: SplitPolicyConfig,
   input: SplitInput,
@@ -323,10 +350,15 @@ export function computePolicySplit(
         (extraDaysByBooker.get(b.booker_id) ?? 0) + b.extra_count * days,
       )
       if (occupancy.include_extra_guests) {
+        // Mirror the member weighting above: child visitors scale by
+        // child_weight, adult visitors count 1.
+        const childExtras = Math.min(b.extra_child_count ?? 0, b.extra_count)
+        const weightedExtras =
+          b.extra_count - childExtras + childExtras * occupancy.child_weight
         extraWeightByBooker.set(
           b.booker_id,
           (extraWeightByBooker.get(b.booker_id) ?? 0) +
-            b.extra_count * windowDays,
+            weightedExtras * windowDays,
         )
       }
     }
@@ -777,13 +809,22 @@ export async function loadSplitInput(
       list.push(o.user_id)
       occupantsByBooking.set(o.booking_id, list)
     }
-    bookings = eligible.map(b => ({
-      booker_id: b.booker_id,
-      start_date: b.start_date,
-      end_date: b.end_date,
-      occupant_user_ids: occupantsByBooking.get(b.id) ?? [],
-      extra_count: (adjustmentsByBooking.get(b.id)?.extra_names ?? []).length,
-    }))
+    // A booking the reviewer never touched defaults its extras to the guests
+    // recorded on it; an existing adjustment row wins, even when cleared.
+    const guestsById = await guestsByBooking(db, bookingIds)
+    bookings = eligible.map(b => {
+      const guests = guestsById.get(b.id) ?? []
+      const extraNames =
+        adjustmentsByBooking.get(b.id)?.extra_names ?? guests.map(g => g.name)
+      return {
+        booker_id: b.booker_id,
+        start_date: b.start_date,
+        end_date: b.end_date,
+        occupant_user_ids: occupantsByBooking.get(b.id) ?? [],
+        extra_count: extraNames.length,
+        extra_child_count: countChildExtras(extraNames, guests),
+      }
+    })
   }
 
   const priorityWeeks = parameters.includes("time_conditions")

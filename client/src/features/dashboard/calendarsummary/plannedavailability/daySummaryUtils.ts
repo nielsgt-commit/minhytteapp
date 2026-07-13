@@ -1,6 +1,7 @@
 import type { Temporal } from "temporal-polyfill"
 import {
   GUEST_FILTER,
+  guestsOnDay,
   occupantsOnDay,
   TENT_ROOM_ID,
 } from "@server/shared/bedOccupancy.ts"
@@ -19,11 +20,19 @@ export type OccupantInfo = {
   sleeps_separately?: boolean
 }
 
+export type GuestInfo = {
+  guest_id: number
+  name: string
+  room_id: number | null
+  sleeps_separately?: boolean
+}
+
 export type BookingInfo = {
   status: string
   start_date: Temporal.PlainDate
   end_date: Temporal.PlainDate
   occupants: OccupantInfo[]
+  guests?: GuestInfo[]
 }
 
 export type GuestChip = {
@@ -51,13 +60,17 @@ export function roomGroupsForDay(
   unassignedLabel: string,
   tentLabel: string,
 ): RoomGroup[] {
-  // Occupants don't carry their booking's status, so stamp it on before the
-  // day filter; the dedupe in occupantsOnDay then picks the flag along with
-  // the entry it keeps.
+  // Occupants/guests don't carry their booking's status, so stamp it on
+  // before the day filter; the dedupe in occupantsOnDay then picks the flag
+  // along with the entry it keeps.
   const stamped = bookings.map(b => ({
     ...b,
     occupants: b.occupants.map(o => ({
       ...o,
+      pending: b.status === "pending",
+    })),
+    guests: (b.guests ?? []).map(g => ({
+      ...g,
       pending: b.status === "pending",
     })),
   }))
@@ -70,6 +83,18 @@ export function roomGroupsForDay(
       name: o.user_name ?? `#${String(o.user_id)}`,
       queued: o.queued === true,
       pending: o.pending,
+    })
+    byRoom.set(key, guests)
+  }
+  // Named visitors group like occupants; negated ids keep them from
+  // colliding with user ids in the per-room chip maps.
+  for (const g of guestsOnDay(stamped, iso, GUEST_FILTER)) {
+    const key = g.sleeps_separately === true ? TENT_ROOM_ID : g.room_id
+    const guests = byRoom.get(key) ?? new Map<number, GuestChip>()
+    guests.set(-g.guest_id, {
+      name: g.name,
+      queued: false,
+      pending: g.pending,
     })
     byRoom.set(key, guests)
   }

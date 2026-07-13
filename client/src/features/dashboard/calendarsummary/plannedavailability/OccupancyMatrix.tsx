@@ -28,11 +28,19 @@ type Occupant = {
   sleeps_separately?: boolean
 }
 
+type Guest = {
+  guest_id: number
+  name: string
+  room_id: number | null
+  sleeps_separately?: boolean
+}
+
 type Booking = {
   status: string
   start_date: Temporal.PlainDate
   end_date: Temporal.PlainDate
   occupants: Occupant[]
+  guests?: Guest[]
 }
 
 type Room = {
@@ -138,6 +146,25 @@ export function OccupancyMatrix({ days, bookings, rooms }: Props) {
         dayUsersByRoom.get(key) ??
         Array.from({ length: 7 }, () => new Set<number>())
       for (let c = startCol; c <= endCol; c++) sets[c].add(o.user_id)
+      dayUsersByRoom.set(key, sets)
+    }
+    // Named visitors get their own bars; negated ids keep them apart from
+    // user ids in the per-day sets.
+    for (const g of b.guests ?? []) {
+      const key =
+        g.sleeps_separately === true
+          ? TENT
+          : g.room_id == null
+            ? UNASSIGNED
+            : String(g.room_id)
+      const bars = barsByRoom.get(key) ?? []
+      bars.push({ userId: -g.guest_id, name: g.name, startCol, endCol })
+      barsByRoom.set(key, bars)
+
+      const sets =
+        dayUsersByRoom.get(key) ??
+        Array.from({ length: 7 }, () => new Set<number>())
+      for (let c = startCol; c <= endCol; c++) sets[c].add(-g.guest_id)
       dayUsersByRoom.set(key, sets)
     }
   }

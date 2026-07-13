@@ -112,6 +112,17 @@ function PlanStayFlowContent({
     },
   )
 
+  // Draft guests as pseudo-users so the room/confirm steps can resolve their
+  // synthetic negative ids to names.
+  const usersWithGuests = [
+    ...users,
+    ...draft.guests.map(g => ({
+      id: g.user_id,
+      name: g.name,
+      is_child: g.is_child,
+    })),
+  ]
+
   // Calendar dots show who else is around; exclude the stay being edited so
   // its own (possibly changing) dates don't double-count.
   const dotsByDay = useMemo(
@@ -187,7 +198,7 @@ function PlanStayFlowContent({
         isFetching={isFetching}
         propertyStructures={propertyStructures}
         propertyRooms={propertyRooms}
-        users={users}
+        users={usersWithGuests}
         occupantsByRoom={occupancy.occupantsByRoom}
         existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
         adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
@@ -214,7 +225,7 @@ function PlanStayFlowContent({
           isActive
           draft={draft}
           dispatch={dispatch}
-          users={users}
+          users={usersWithGuests}
           propertyStructures={propertyStructures}
           propertyRooms={propertyRooms}
           occupantsByRoom={occupancy.occupantsByRoom}

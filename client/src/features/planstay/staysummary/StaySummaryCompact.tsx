@@ -269,6 +269,30 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
         Temporal.PlainDate.compare(b.start_date, focusEnd) >= 0
       )
         continue
+      const barOccupants = [
+        ...b.occupants.map(x => ({
+          name: x.user_name ?? `#${String(x.user_id)}`,
+          queued: x.queued,
+          roomId: x.room_id,
+          sleepsSeparately: x.sleeps_separately,
+        })),
+        ...b.guests.map(g => ({
+          name: g.name,
+          queued: false,
+          roomId: g.room_id,
+          sleepsSeparately: g.sleeps_separately,
+        })),
+      ]
+      const bar = (queued: boolean): Bar => ({
+        bookingId: b.id,
+        start: b.start_date,
+        end: b.end_date,
+        queued,
+        bookerName: b.booker_name ?? `#${String(b.booker_id)}`,
+        status: b.status,
+        notes: b.notes,
+        occupants: barOccupants,
+      })
       for (const o of b.occupants) {
         let lane = byUser.get(o.user_id)
         if (!lane) {
@@ -280,21 +304,22 @@ export function StaySummaryCompact({ propertyId }: { propertyId: number }) {
           }
           byUser.set(o.user_id, lane)
         }
-        lane.bars.push({
-          bookingId: b.id,
-          start: b.start_date,
-          end: b.end_date,
-          queued: o.queued,
-          bookerName: b.booker_name ?? `#${String(b.booker_id)}`,
-          status: b.status,
-          notes: b.notes,
-          occupants: b.occupants.map(x => ({
-            name: x.user_name ?? `#${String(x.user_id)}`,
-            queued: x.queued,
-            roomId: x.room_id,
-            sleepsSeparately: x.sleeps_separately,
-          })),
-        })
+        lane.bars.push(bar(o.queued))
+      }
+      // Named visitors get their own ungrouped lanes; negated ids keep them
+      // from colliding with user lanes.
+      for (const g of b.guests) {
+        let lane = byUser.get(-g.guest_id)
+        if (!lane) {
+          lane = {
+            userId: -g.guest_id,
+            name: g.name,
+            groupId: 0,
+            bars: [],
+          }
+          byUser.set(-g.guest_id, lane)
+        }
+        lane.bars.push(bar(false))
       }
     }
     // Group families together, then alphabetical within a group.

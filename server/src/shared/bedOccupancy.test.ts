@@ -4,6 +4,7 @@ import {
   BED_FILTER,
   GUEST_FILTER,
   bedAvailabilityForDay,
+  guestsOnDay,
   occupantsOnDay,
   roomTotalCapacity,
   type AvailabilityRoom,
@@ -14,9 +15,7 @@ const pd = (iso: string) => Temporal.PlainDate.from(iso)
 
 const DAY = "2030-07-02"
 
-function booking(
-  overrides: Partial<OccupancyBooking> = {},
-): OccupancyBooking {
+function booking(overrides: Partial<OccupancyBooking> = {}): OccupancyBooking {
   return {
     status: "confirmed",
     start_date: pd("2030-07-01"),
@@ -31,6 +30,12 @@ const occ = (
   room_id: number | null,
   extra: { queued?: boolean; sleeps_separately?: boolean } = {},
 ) => ({ user_id, room_id, ...extra })
+
+const guest = (
+  guest_id: number,
+  room_id: number | null,
+  extra: { sleeps_separately?: boolean } = {},
+) => ({ guest_id, room_id, ...extra })
 
 function room(overrides: Partial<AvailabilityRoom> = {}): AvailabilityRoom {
   return {
@@ -90,6 +95,28 @@ describe("occupantsOnDay", () => {
     ]
     expect(occupantsOnDay(bookings, DAY, GUEST_FILTER)).toHaveLength(2)
     expect(occupantsOnDay(bookings, DAY, BED_FILTER)).toHaveLength(1)
+  })
+})
+
+describe("guestsOnDay", () => {
+  test("includes guests of pending and confirmed bookings, never cancelled", () => {
+    const bookings = [
+      booking({ guests: [guest(1, 1)] }),
+      booking({ status: "pending", guests: [guest(2, null)] }),
+      booking({ status: "cancelled", guests: [guest(3, 1)] }),
+    ]
+    const ids = guestsOnDay(bookings, DAY, GUEST_FILTER).map(g => g.guest_id)
+    expect(ids.sort()).toEqual([1, 2])
+  })
+
+  test("respects the booking's date range", () => {
+    const b = [booking({ guests: [guest(1, 1)] })]
+    expect(guestsOnDay(b, "2030-07-01", GUEST_FILTER)).toHaveLength(1)
+    expect(guestsOnDay(b, "2030-06-30", GUEST_FILTER)).toHaveLength(0)
+  })
+
+  test("bookings without a guests array count zero guests", () => {
+    expect(guestsOnDay([booking()], DAY, GUEST_FILTER)).toHaveLength(0)
   })
 })
 
@@ -158,6 +185,22 @@ describe("bedAvailabilityForDay", () => {
     const res = bedAvailabilityForDay([room()], bookings, DAY)
     expect(res.rooms[0]).toMatchObject({ occupied: 1 })
     expect(res.unassignedGuests).toBe(0)
+  })
+
+  test("guests hold beds like occupants; unroomed and tent guests follow the same rules", () => {
+    const bookings = [
+      booking({
+        occupants: [occ(1, 1)],
+        guests: [
+          guest(1, 1),
+          guest(2, null),
+          guest(3, null, { sleeps_separately: true }),
+        ],
+      }),
+    ]
+    const res = bedAvailabilityForDay([room()], bookings, DAY)
+    expect(res.rooms[0]).toMatchObject({ occupied: 2, available: 2 })
+    expect(res.unassignedGuests).toBe(1)
   })
 
   test("available never goes below zero", () => {

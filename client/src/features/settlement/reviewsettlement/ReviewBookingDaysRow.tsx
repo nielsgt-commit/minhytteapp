@@ -44,6 +44,12 @@ type Booking = {
   status: "pending" | "confirmed" | "cancelled"
   notes: string | null
   occupants: BookingOccupant[]
+  guests: {
+    name: string
+    is_child: boolean
+    room_id: number | null
+    sleeps_separately: boolean
+  }[]
 }
 
 // Draft state for an in-progress edit; null when the row is read-only.
@@ -185,6 +191,14 @@ export function ReviewBookingDaysRow({
         occupants: userOccupants.map(u => ({
           user_id: u.user_id,
           room_id: u.room_id ?? undefined,
+        })),
+        // Extras edited here are settlement adjustments, not booking guests —
+        // pass the booking's own guest rows through untouched.
+        guests: booking.guests.map(g => ({
+          name: g.name,
+          is_child: g.is_child,
+          room_id: g.room_id,
+          sleeps_separately: g.sleeps_separately,
         })),
       },
       {

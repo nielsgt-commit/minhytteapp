@@ -46,6 +46,7 @@ function isDraftSubmittable(d: BookingDraft): d is SubmittableDraft {
 }
 
 function recordToDraft(r: BookingDraftRecord): BookingDraft {
+  const guests = r.guests ?? []
   return {
     property_id: r.property_id,
     booker_id: r.booker_id,
@@ -53,13 +54,54 @@ function recordToDraft(r: BookingDraftRecord): BookingDraft {
     end_date: r.end_date,
     status: r.status,
     notes: r.notes ?? "",
-    occupants: r.occupants.map(o => ({
-      user_id: o.user_id,
-      room_id: o.room_id,
-      queued: o.queued,
-      sleeps_separately: o.sleeps_separately ?? false,
+    occupants: [
+      ...r.occupants.map(o => ({
+        user_id: o.user_id,
+        room_id: o.room_id,
+        queued: o.queued,
+        sleeps_separately: o.sleeps_separately ?? false,
+      })),
+      ...guests.map((g, i) => ({
+        user_id: -(i + 1),
+        room_id: g.room_id,
+        queued: false,
+        sleeps_separately: g.sleeps_separately ?? false,
+      })),
+    ],
+    guests: guests.map((g, i) => ({
+      user_id: -(i + 1),
+      name: g.name,
+      is_child: g.is_child,
     })),
   }
+}
+
+// Split the draft's occupant list back into real occupants and named guests
+// (negative synthetic ids) for the create/update payload.
+export function splitDraftOccupants(d: BookingDraft) {
+  const guestByKey = new Map(d.guests.map(g => [g.user_id, g]))
+  const occupants = []
+  const guests = []
+  for (const o of d.occupants) {
+    if (o.user_id > 0) {
+      occupants.push({
+        user_id: o.user_id,
+        room_id: o.room_id,
+        queued: o.queued,
+        sleeps_separately: o.sleeps_separately,
+      })
+      continue
+    }
+    const g = guestByKey.get(o.user_id)
+    if (!g) continue
+    guests.push({
+      name: g.name,
+      is_child: g.is_child,
+      room_id: o.room_id,
+      sleeps_separately: o.sleeps_separately,
+    })
+  }
+  return { occupants, guests }
 }
 
 export function useBookingForm(
@@ -100,6 +142,7 @@ export function useBookingForm(
   const runMutation = async (d: BookingDraft): Promise<SubmitState> => {
     if (!isDraftSubmittable(d)) return INITIAL_SUBMIT_STATE
     try {
+      const { occupants, guests } = splitDraftOccupants(d)
       const payload = {
         property_id: d.property_id,
         // The draft keeps ISO strings; convert at the tRPC boundary.
@@ -107,12 +150,8 @@ export function useBookingForm(
         end_date: Temporal.PlainDate.from(d.end_date),
         status: d.status,
         notes: d.notes.trim() !== "" ? d.notes : null,
-        occupants: d.occupants.map(o => ({
-          user_id: o.user_id,
-          room_id: o.room_id,
-          queued: o.queued,
-          sleeps_separately: o.sleeps_separately,
-        })),
+        occupants,
+        guests,
       }
       if (mode.kind === "edit") {
         await updateMutation.mutateAsync({ id: mode.bookingId, ...payload })
@@ -151,7 +190,8 @@ export function useBookingForm(
     selectedUserId != null &&
     draft.start_date != null &&
     draft.end_date != null &&
-    draft.occupants.length > 0 &&
+    // The server requires at least one real (user) occupant per booking.
+    draft.occupants.some(o => o.user_id > 0) &&
     !isPending
 
   return {

@@ -106,6 +106,11 @@ export function PriorityWeekSummary({
       list.push(o.user_name ?? `#${String(o.user_id)}`)
       guestsByRoom.set(o.room_id, list)
     }
+    for (const g of b.guests) {
+      const list = guestsByRoom.get(g.room_id) ?? []
+      list.push(g.name)
+      guestsByRoom.set(g.room_id, list)
+    }
 
     for (const [roomId, guests] of guestsByRoom) {
       const room = roomId == null ? undefined : roomById.get(roomId)

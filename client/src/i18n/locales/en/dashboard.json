@@ -130,5 +130,6 @@
   "Year": "Year",
   "You're not staying yourself": "You're not staying yourself",
   "You're the only guest — ask {{name}} to cancel the stay instead.": "You're the only guest — ask {{name}} to cancel the stay instead.",
-  "{{name}}'s week": "{{name}}'s week"
+  "{{name}}'s week": "{{name}}'s week",
+  " (visitor)": " (visitor)"
 }

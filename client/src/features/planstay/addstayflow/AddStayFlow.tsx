@@ -83,6 +83,16 @@ export function AddStayFlow({
     propertyStructureIds.has(r.structure_id),
   )
   const otherUsers = users.filter(u => u.id !== selectedUserId)
+  // Draft guests as pseudo-users so the room/confirm steps can resolve their
+  // synthetic negative ids to names.
+  const usersWithGuests = [
+    ...users,
+    ...draft.guests.map(g => ({
+      id: g.user_id,
+      name: g.name,
+      is_child: g.is_child,
+    })),
+  ]
 
   const occupancy = useOccupancyData({
     bookings,
@@ -140,7 +150,7 @@ export function AddStayFlow({
           isFetching={isFetching}
           propertyStructures={propertyStructures}
           propertyRooms={propertyRooms}
-          users={users}
+          users={usersWithGuests}
           occupantsByRoom={occupancy.occupantsByRoom}
           existingOccupantsByRoom={occupancy.existingOccupantsByRoom}
           adultInKidOnlyByRoom={occupancy.adultInKidOnlyByRoom}
@@ -161,7 +171,7 @@ export function AddStayFlow({
           isActive={currentStep === 4}
           draft={draft}
           dispatch={dispatch}
-          users={users}
+          users={usersWithGuests}
           propertyStructures={propertyStructures}
           propertyRooms={propertyRooms}
           occupantsByRoom={occupancy.occupantsByRoom}

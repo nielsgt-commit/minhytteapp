@@ -3,6 +3,7 @@ import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
 import { z } from "zod"
 import type { db as dbClient } from "../../db/client.ts"
 import {
+  bookingGuestsTable,
   bookingOccupantsTable,
   bookingRoomsTable,
   bookingTable,
@@ -29,6 +30,8 @@ import {
   computeBookingRooms,
   computeOccupantQueued,
   dedupeOccupants,
+  guestAllocationEntries,
+  guestRowValues,
   occupantRowValues,
   resolveRoomsAndUsers,
 } from "../../services/booking.ts"
@@ -42,6 +45,13 @@ const bookingOccupantInput = z.object({
   sleeps_separately: z.boolean().optional().default(false),
 })
 
+const bookingGuestInput = z.object({
+  name: z.string().trim().min(1).max(255),
+  is_child: z.boolean().optional().default(false),
+  room_id: z.number().int().positive().nullable().optional(),
+  sleeps_separately: z.boolean().optional().default(false),
+})
+
 const bookingFields = {
   property_id: z.number().int().positive(),
   start_date: zPlainDate,
@@ -51,6 +61,7 @@ const bookingFields = {
   occupants: z.array(bookingOccupantInput).min(1, {
     error: "at least one occupant is required",
   }),
+  guests: z.array(bookingGuestInput).max(50).optional().default([]),
 }
 
 const dateOrder = {
@@ -114,7 +125,7 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
   if (bookings.length === 0) return []
 
   const ids = bookings.map(b => b.id)
-  const [rooms, occupants] = await Promise.all([
+  const [rooms, occupants, guests] = await Promise.all([
     db
       .select()
       .from(bookingRoomsTable)
@@ -134,12 +145,24 @@ async function loadBookings(db: Db, filter?: { property_id: number }) {
       .from(bookingOccupantsTable)
       .leftJoin(usersTable, eq(usersTable.id, bookingOccupantsTable.user_id))
       .where(inArray(bookingOccupantsTable.booking_id, ids)),
+    db
+      .select({
+        guest_id: bookingGuestsTable.id,
+        booking_id: bookingGuestsTable.booking_id,
+        name: bookingGuestsTable.name,
+        is_child: bookingGuestsTable.is_child,
+        room_id: bookingGuestsTable.room_id,
+        sleeps_separately: bookingGuestsTable.sleeps_separately,
+      })
+      .from(bookingGuestsTable)
+      .where(inArray(bookingGuestsTable.booking_id, ids)),
   ])
 
   return bookings.map(b => ({
     ...toWireBooking(b),
     rooms: rooms.filter(r => r.booking_id === b.id),
     occupants: occupants.filter(o => o.booking_id === b.id),
+    guests: guests.filter(g => g.booking_id === b.id),
   }))
 }
 
@@ -164,6 +187,16 @@ export const bookingRouter = router({
             sleeps_separately: z.boolean().optional(),
           }),
         ),
+        guests: z
+          .array(
+            z.object({
+              is_child: z.boolean().optional().default(false),
+              room_id: z.number().int().positive().nullable().optional(),
+              sleeps_separately: z.boolean().optional(),
+            }),
+          )
+          .optional()
+          .default([]),
         exclude_booking_id: z.number().int().positive().optional(),
       }),
     )
@@ -199,7 +232,11 @@ export const bookingRouter = router({
           ),
         )
 
-      if (overlappingBookingsRaw.length === 0 && occupants.length === 0) {
+      if (
+        overlappingBookingsRaw.length === 0 &&
+        occupants.length === 0 &&
+        input.guests.length === 0
+      ) {
         return {
           overlappingBookings: [],
           perRoom: [],
@@ -209,7 +246,7 @@ export const bookingRouter = router({
 
       const overlappingIds = overlappingBookingsRaw.map(b => b.id)
 
-      // 2. Load occupants of overlapping bookings
+      // 2. Load occupants and guests of overlapping bookings
       const existingOccupants =
         overlappingIds.length > 0
           ? await ctx.db
@@ -226,6 +263,18 @@ export const bookingRouter = router({
                 eq(usersTable.id, bookingOccupantsTable.user_id),
               )
               .where(inArray(bookingOccupantsTable.booking_id, overlappingIds))
+          : []
+      const existingGuests =
+        overlappingIds.length > 0
+          ? await ctx.db
+              .select({
+                id: bookingGuestsTable.id,
+                booking_id: bookingGuestsTable.booking_id,
+                room_id: bookingGuestsTable.room_id,
+                sleeps_separately: bookingGuestsTable.sleeps_separately,
+              })
+              .from(bookingGuestsTable)
+              .where(inArray(bookingGuestsTable.booking_id, overlappingIds))
           : []
 
       // 3. Compute shared days between draft range and each overlapping booking
@@ -322,22 +371,40 @@ export const bookingRouter = router({
         )
 
       // 5. Compute per-room capacity, placed, overflow
-      // Draft occupants by room
-      const draftByRoom = new Map<number, number[]>() // room_id → user_ids
+      // Guests join the placement math under synthetic negative ids: draft
+      // guests as -(index+1), existing guest rows offset far below so the two
+      // ranges can't collide. Real user ids are always positive.
+      const draftGuestId = (i: number) => -(i + 1)
+      const existingGuestId = (id: number) => -(1_000_000 + id)
+
+      // Draft occupants and guests by room
+      const draftByRoom = new Map<number, number[]>() // room_id → person ids
       for (const o of occupants) {
         if (o.room_id == null) continue
         const list = draftByRoom.get(o.room_id) ?? []
         list.push(o.user_id)
         draftByRoom.set(o.room_id, list)
       }
+      input.guests.forEach((g, i) => {
+        if (g.room_id == null || g.sleeps_separately === true) return
+        const list = draftByRoom.get(g.room_id) ?? []
+        list.push(draftGuestId(i))
+        draftByRoom.set(g.room_id, list)
+      })
 
-      // Existing occupants (from overlapping bookings) by room
+      // Existing occupants and guests (from overlapping bookings) by room
       const existingByRoom = new Map<number, number[]>()
       for (const o of existingOccupants) {
         if (o.room_id == null) continue
         const list = existingByRoom.get(o.room_id) ?? []
         list.push(o.user_id)
         existingByRoom.set(o.room_id, list)
+      }
+      for (const g of existingGuests) {
+        if (g.room_id == null || g.sleeps_separately) continue
+        const list = existingByRoom.get(g.room_id) ?? []
+        list.push(existingGuestId(g.id))
+        existingByRoom.set(g.room_id, list)
       }
 
       // Load user info for capacity computation
@@ -359,6 +426,13 @@ export const bookingRouter = router({
               .where(inArray(usersTable.id, allUserIds))
           : []
       const userMap = new Map(usersData.map(u => [u.id, u]))
+      input.guests.forEach((g, i) => {
+        userMap.set(draftGuestId(i), {
+          id: draftGuestId(i),
+          name: "",
+          is_child: g.is_child,
+        })
+      })
 
       // Rooms touched by draft or existing occupants
       const touchedRoomIds = new Set([
@@ -436,7 +510,10 @@ export const bookingRouter = router({
           .filter(o => !o.sleeps_separately)
           .map(o => o.user_id),
       ])
-      const totalPlaced = allPlacedUserIds.size
+      const placedGuestCount =
+        input.guests.filter(g => g.sleeps_separately !== true).length +
+        existingGuests.filter(g => !g.sleeps_separately).length
+      const totalPlaced = allPlacedUserIds.size + placedGuestCount
 
       return {
         overlappingBookings,
@@ -454,13 +531,16 @@ export const bookingRouter = router({
     .mutation(async ({ ctx, input }) => {
       const bookerId = ctx.user.id
       const occupants = dedupeOccupants(input.occupants)
+      const guestAlloc = guestAllocationEntries(input.guests)
+      const allPersons = [...occupants, ...guestAlloc.occupants]
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
         input.property_id,
-        occupants,
+        allPersons,
       )
+      for (const u of guestAlloc.users) userById.set(u.id, u)
       const { bookingRooms, overflowByRoom } = computeBookingRooms(
-        occupants,
+        allPersons,
         roomById,
         userById,
       )
@@ -496,6 +576,11 @@ export const bookingRouter = router({
         await tx
           .insert(bookingOccupantsTable)
           .values(occupantRowValues(created.id, occupants, occupantQueued))
+        if (input.guests.length > 0) {
+          await tx
+            .insert(bookingGuestsTable)
+            .values(guestRowValues(created.id, input.guests))
+        }
 
         return toWireBooking(created)
       })
@@ -533,13 +618,16 @@ export const bookingRouter = router({
 
       const bookerId = existing.booker_id
       const occupants = dedupeOccupants(input.occupants)
+      const guestAlloc = guestAllocationEntries(input.guests)
+      const allPersons = [...occupants, ...guestAlloc.occupants]
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
         input.property_id,
-        occupants,
+        allPersons,
       )
+      for (const u of guestAlloc.users) userById.set(u.id, u)
       const { bookingRooms, overflowByRoom } = computeBookingRooms(
-        occupants,
+        allPersons,
         roomById,
         userById,
       )
@@ -593,6 +681,40 @@ export const bookingRouter = router({
             forbid("non-booker may only remove themselves from this booking")
           }
         }
+
+        // Guest rows carry no ids on the wire, so compare them as a multiset.
+        const existingGuests = await ctx.db
+          .select({
+            name: bookingGuestsTable.name,
+            is_child: bookingGuestsTable.is_child,
+            room_id: bookingGuestsTable.room_id,
+            sleeps_separately: bookingGuestsTable.sleeps_separately,
+          })
+          .from(bookingGuestsTable)
+          .where(eq(bookingGuestsTable.booking_id, input.id))
+        const guestKey = (g: {
+          name: string
+          is_child: boolean
+          room_id?: number | null
+          sleeps_separately: boolean
+        }) =>
+          JSON.stringify([
+            g.name,
+            g.is_child,
+            g.room_id ?? null,
+            g.sleeps_separately,
+          ])
+        const sortedKeys = (
+          gs: {
+            name: string
+            is_child: boolean
+            room_id?: number | null
+            sleeps_separately: boolean
+          }[],
+        ) => gs.map(guestKey).sort().join("\n")
+        if (sortedKeys(input.guests) !== sortedKeys(existingGuests)) {
+          forbid("non-booker may only remove themselves from this booking")
+        }
       }
 
       await assertBookingsUnlocked(ctx.db, input.property_id, [
@@ -641,6 +763,15 @@ export const bookingRouter = router({
         await tx
           .insert(bookingOccupantsTable)
           .values(occupantRowValues(input.id, occupants, occupantQueued))
+
+        await tx
+          .delete(bookingGuestsTable)
+          .where(eq(bookingGuestsTable.booking_id, input.id))
+        if (input.guests.length > 0) {
+          await tx
+            .insert(bookingGuestsTable)
+            .values(guestRowValues(input.id, input.guests))
+        }
 
         return toWireBooking(updated)
       })
@@ -744,20 +875,32 @@ export const bookingRouter = router({
       const rewriteOccupants = remaining.length !== existingOccupants.length
 
       // Removing an occupant frees beds, so recompute the derived room
-      // allocation the same way `update` does.
+      // allocation the same way `update` does — guests keep their beds.
       const occupants = remaining.map(o => ({
         user_id: o.user_id,
         room_id: o.room_id,
         queued: o.queued,
         sleeps_separately: o.sleeps_separately,
       }))
+      const existingGuests = await ctx.db
+        .select({
+          name: bookingGuestsTable.name,
+          is_child: bookingGuestsTable.is_child,
+          room_id: bookingGuestsTable.room_id,
+          sleeps_separately: bookingGuestsTable.sleeps_separately,
+        })
+        .from(bookingGuestsTable)
+        .where(eq(bookingGuestsTable.booking_id, input.id))
+      const guestAlloc = guestAllocationEntries(existingGuests)
+      const allPersons = [...occupants, ...guestAlloc.occupants]
       const { roomById, userById } = await resolveRoomsAndUsers(
         ctx.db,
         input.property_id,
-        occupants,
+        allPersons,
       )
+      for (const u of guestAlloc.users) userById.set(u.id, u)
       const { bookingRooms, overflowByRoom } = computeBookingRooms(
-        occupants,
+        allPersons,
         roomById,
         userById,
       )

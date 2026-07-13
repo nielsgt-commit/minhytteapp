@@ -127,5 +127,6 @@
   "You're the only guest — ask {{name}} to cancel the stay instead.": "Du er den eneste gjesten — be {{name}} avlyse oppholdet i stedet.",
   "{{name}}'s week": "{{name}}s uke",
   "{{vehicle}} — free": "{{vehicle}} — ledig",
-  "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}"
+  "{{vehicle}} — taken by {{userName}}": "{{vehicle}} — tatt av {{userName}}",
+  " (visitor)": " (besøkende)"
 }

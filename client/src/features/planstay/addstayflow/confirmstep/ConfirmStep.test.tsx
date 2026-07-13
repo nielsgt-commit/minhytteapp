@@ -21,6 +21,7 @@ function makeDraft(overrides: Partial<BookingDraft> = {}): BookingDraft {
     occupants: [
       { user_id: 1, room_id: null, queued: false, sleeps_separately: false },
     ],
+    guests: [],
     ...overrides,
   }
 }

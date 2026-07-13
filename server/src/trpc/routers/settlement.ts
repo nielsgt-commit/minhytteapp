@@ -17,6 +17,8 @@ import {
   userGroupsTable,
   usersTable,
 } from "../../db/schema/users.schema.ts"
+import { bookingTable } from "../../db/schema/booking.schema.ts"
+import { guestNamesByBooking } from "../../services/booking.ts"
 import { instantFromDateOrNull } from "../../shared/temporal.ts"
 import { wireMap } from "../util/wire.ts"
 import { SETTLEMENT_PHASES } from "../../shared/splitPolicy.ts"
@@ -358,7 +360,7 @@ export const settlementRouter = router({
         input.settlementId,
       )
       await assertPropertyMember(ctx.db, ctx.user, propertyId)
-      return ctx.db
+      const rows = await ctx.db
         .select({
           booking_id: settlementBookingAdjustmentsTable.booking_id,
           excluded: settlementBookingAdjustmentsTable.excluded,
@@ -371,6 +373,23 @@ export const settlementRouter = router({
             input.settlementId,
           ),
         )
+      // Bookings the reviewer hasn't touched show their recorded guests as
+      // pre-filled extras; a persisted adjustment row always wins.
+      const adjusted = new Set(rows.map(r => r.booking_id))
+      const propertyBookingIds = (
+        await ctx.db
+          .select({ id: bookingTable.id })
+          .from(bookingTable)
+          .where(eq(bookingTable.property_id, propertyId))
+      ).map(b => b.id)
+      const guestNames = await guestNamesByBooking(
+        ctx.db,
+        propertyBookingIds.filter(id => !adjusted.has(id)),
+      )
+      for (const [booking_id, names] of guestNames) {
+        rows.push({ booking_id, excluded: false, extra_names: names })
+      }
+      return rows
     }),
 
   setBookingExcluded: protectedProcedure
@@ -393,12 +412,19 @@ export const settlementRouter = router({
         ctx.user.id,
         await isPropertyHead(ctx.db, ctx.user, propertyId),
       )
+      // First-touch insert keeps the guest pre-fill; toggling exclusion must
+      // not silently drop the booking's recorded guests from the extras.
+      const prefill =
+        (await guestNamesByBooking(ctx.db, [input.bookingId])).get(
+          input.bookingId,
+        ) ?? []
       await ctx.db
         .insert(settlementBookingAdjustmentsTable)
         .values({
           settlement_id: input.settlementId,
           booking_id: input.bookingId,
           excluded: input.excluded,
+          extra_names: prefill,
         })
         .onConflictDoUpdate({
           target: [

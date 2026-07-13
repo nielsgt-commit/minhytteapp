@@ -1,7 +1,10 @@
 import { afterAll, describe, expect, it } from "vitest"
 import { eq } from "drizzle-orm"
 import { db, pool } from "../../db/client.ts"
-import { bookingOccupantsTable } from "../../db/schema/booking.schema.ts"
+import {
+  bookingGuestsTable,
+  bookingOccupantsTable,
+} from "../../db/schema/booking.schema.ts"
 import {
   propertyOwnersTable,
   propertyTable,
@@ -202,6 +205,110 @@ describe("booker need not be an occupant", () => {
         occupants: [occ(kid.id)],
       })
       expect(await occupantIds(tx, created.id)).toEqual([kid.id])
+    })
+  })
+})
+
+describe("named guests", () => {
+  async function guestRows(tx: Tx, bookingId: number) {
+    const rows = await tx
+      .select({
+        name: bookingGuestsTable.name,
+        is_child: bookingGuestsTable.is_child,
+      })
+      .from(bookingGuestsTable)
+      .where(eq(bookingGuestsTable.booking_id, bookingId))
+    return rows.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  it("creates and lists guests alongside occupants", async () => {
+    await withRollback(async tx => {
+      const { prop, anna } = await seed(tx)
+      const caller = createCaller(ctxFor(tx, authUser(anna)))
+      const created = await caller.booking.create({
+        property_id: prop.id,
+        start_date: START,
+        end_date: END,
+        occupants: [occ(anna.id)],
+        guests: [
+          { name: "Kari", is_child: false },
+          { name: "Lille Ola", is_child: true },
+        ],
+      })
+      expect(await guestRows(tx, created.id)).toEqual([
+        { name: "Kari", is_child: false },
+        { name: "Lille Ola", is_child: true },
+      ])
+      const listed = await caller.booking.listForProperty({
+        property_id: prop.id,
+      })
+      const withGuests = listed.find(b => b.id === created.id)
+      expect(withGuests?.guests.map(g => g.name).sort()).toEqual([
+        "Kari",
+        "Lille Ola",
+      ])
+    })
+  })
+
+  it("update replaces the guest list", async () => {
+    await withRollback(async tx => {
+      const { prop, anna } = await seed(tx)
+      const caller = createCaller(ctxFor(tx, authUser(anna)))
+      const created = await caller.booking.create({
+        property_id: prop.id,
+        start_date: START,
+        end_date: END,
+        occupants: [occ(anna.id)],
+        guests: [{ name: "Kari", is_child: false }],
+      })
+      await caller.booking.update({
+        id: created.id,
+        property_id: prop.id,
+        start_date: START,
+        end_date: END,
+        occupants: [occ(anna.id)],
+        guests: [{ name: "Per", is_child: false }],
+      })
+      expect(await guestRows(tx, created.id)).toEqual([
+        { name: "Per", is_child: false },
+      ])
+    })
+  })
+
+  it("non-booker self-removal must pass the guest list through unchanged", async () => {
+    await withRollback(async tx => {
+      const { prop, anna, bjorn } = await seed(tx)
+      const asAnna = createCaller(ctxFor(tx, authUser(anna)))
+      const created = await asAnna.booking.create({
+        property_id: prop.id,
+        start_date: START,
+        end_date: END,
+        occupants: [occ(anna.id), occ(bjorn.id)],
+        guests: [{ name: "Kari", is_child: false }],
+      })
+      const asBjorn = createCaller(ctxFor(tx, authUser(bjorn)))
+      await expect(
+        asBjorn.booking.update({
+          id: created.id,
+          property_id: prop.id,
+          start_date: START,
+          end_date: END,
+          occupants: [occ(anna.id)],
+          guests: [],
+        }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" })
+      await asBjorn.booking.update({
+        id: created.id,
+        property_id: prop.id,
+        start_date: START,
+        end_date: END,
+        occupants: [occ(anna.id)],
+        guests: [{ name: "Kari", is_child: false }],
+      })
+      expect(await occupantIds(tx, created.id)).toEqual([anna.id])
+      expect(await guestRows(tx, created.id)).toEqual([
+        { name: "Kari", is_child: false },
+      ])
     })
   })
 })

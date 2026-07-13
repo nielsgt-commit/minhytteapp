@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm"
 import {
+  bookingGuestsTable,
   bookingOccupantsTable,
   bookingRoomsTable,
   bookingTable,
@@ -254,6 +255,7 @@ export const bookingRelations = relations(bookingTable, ({ one, many }) => ({
   }),
   rooms: many(bookingRoomsTable),
   occupants: many(bookingOccupantsTable),
+  guests: many(bookingGuestsTable),
   expenses: many(expensesTable),
 }))
 
@@ -266,6 +268,20 @@ export const bookingRoomsRelations = relations(
     }),
     room: one(roomTable, {
       fields: [bookingRoomsTable.room_id],
+      references: [roomTable.id],
+    }),
+  }),
+)
+
+export const bookingGuestsRelations = relations(
+  bookingGuestsTable,
+  ({ one }) => ({
+    booking: one(bookingTable, {
+      fields: [bookingGuestsTable.booking_id],
+      references: [bookingTable.id],
+    }),
+    room: one(roomTable, {
+      fields: [bookingGuestsTable.room_id],
       references: [roomTable.id],
     }),
   }),

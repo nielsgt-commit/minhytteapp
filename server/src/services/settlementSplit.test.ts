@@ -3,6 +3,7 @@ import {
   type SplitInput,
   computePolicySplit,
   computeTransfers,
+  countChildExtras,
   inclusiveDayCount,
 } from "./settlementSplit.ts"
 import {
@@ -210,6 +211,45 @@ describe("computePolicySplit", () => {
       ALL,
     )
     expect(sharesByGroup(withoutExtras)).toEqual({ A: 75, B: 75 })
+  })
+
+  it("weights child visitors by child_weight, like child members", () => {
+    const bookings = [
+      {
+        booker_id: 1,
+        start_date: "2026-07-01",
+        end_date: "2026-07-05",
+        occupant_user_ids: [1],
+        extra_count: 2,
+        extra_child_count: 1,
+      },
+      {
+        booker_id: 3,
+        start_date: "2026-08-01",
+        end_date: "2026-08-05",
+        occupant_user_ids: [3],
+        extra_count: 0,
+      },
+    ]
+    // A: user 1 (5 days) + adult visitor (5) + child visitor (5 × 0.5) = 12.5;
+    // B: user 3 (5 days). 175 splits 125 / 50.
+    const result = computePolicySplit(
+      config(
+        { ...equallyMainGroups, how: { kind: "weighted_by_occupancy" } },
+        [],
+        undefined,
+        {
+          window: { kind: "year" },
+          include_extra_guests: true,
+          child_weight: 0.5,
+        },
+      ),
+      makeInput({ bookings, expenses: [expense(175, 1)] }),
+      ALL,
+    )
+    expect(sharesByGroup(result)).toEqual({ A: 125, B: 50 })
+    // The informational booking-days column stays unweighted, like members'.
+    expect(result.groups.find(g => g.group_name === "A")?.booking_days).toBe(15)
   })
 
   it("falls back to equally when occupancy weights are all zero", () => {
@@ -730,6 +770,25 @@ describe("computePolicySplit", () => {
     const result = computePolicySplit(config(equallyMainGroups), input, ALL)
     const sum = result.groups.reduce((s, g) => s + g.total_share, 0)
     expect(sum).toBe(100)
+  })
+})
+
+describe("countChildExtras", () => {
+  const guests = [
+    { name: "Kari", is_child: true },
+    { name: "Kari", is_child: false },
+    { name: "Ola", is_child: true },
+  ]
+
+  it("matches extras to recorded child guests as a multiset", () => {
+    expect(countChildExtras(["Kari", "Ola"], guests)).toBe(2)
+    // Only one recorded Kari is a child; the second typed Kari is the adult.
+    expect(countChildExtras(["Kari", "Kari"], guests)).toBe(1)
+  })
+
+  it("names matching no recorded guest count as adults", () => {
+    expect(countChildExtras(["Per"], guests)).toBe(0)
+    expect(countChildExtras([], guests)).toBe(0)
   })
 })
 

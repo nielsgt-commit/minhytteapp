@@ -10,6 +10,7 @@
 import { TRPCError } from "@trpc/server"
 import { and, eq, inArray } from "drizzle-orm"
 import type { db as dbClient } from "../db/client.ts"
+import { bookingGuestsTable } from "../db/schema/booking.schema.ts"
 import { structuresTable, roomTable } from "../db/schema/property.schema.ts"
 import { settlementsTable } from "../db/schema/settlement.schema.ts"
 import { usersTable } from "../db/schema/users.schema.ts"
@@ -25,6 +26,36 @@ export type OccupantInput = {
   room_id?: number | null
   queued: boolean
   sleeps_separately: boolean
+}
+
+export type GuestInput = {
+  name: string
+  is_child: boolean
+  room_id?: number | null
+  sleeps_separately: boolean
+}
+
+// Guests take part in room/bed allocation as occupant-shaped entries under
+// synthetic negative user_ids (real ids are serial, so they can't collide).
+// The ids never leave the allocation math: guests are never queued and their
+// rows are inserted from the GuestInput list, not from these entries.
+export function guestAllocationEntries(guests: GuestInput[]): {
+  occupants: OccupantInput[]
+  users: UserRow[]
+} {
+  const occupants: OccupantInput[] = []
+  const users: UserRow[] = []
+  guests.forEach((g, i) => {
+    const id = -(i + 1)
+    occupants.push({
+      user_id: id,
+      room_id: g.room_id ?? null,
+      queued: false,
+      sleeps_separately: g.sleeps_separately,
+    })
+    users.push({ id, name: g.name, is_child: g.is_child })
+  })
+  return { occupants, users }
 }
 
 export async function assertBookingsUnlocked(
@@ -190,7 +221,11 @@ export async function resolveRoomsAndUsers(
   for (const o of occupants) {
     if (o.room_id != null) roomIds.add(o.room_id)
   }
-  const userIds = [...new Set(occupants.map(o => o.user_id))]
+  // Synthetic guest entries (negative ids) validate their rooms like anyone
+  // else but have no users row to resolve.
+  const userIds = [...new Set(occupants.map(o => o.user_id))].filter(
+    id => id > 0,
+  )
 
   const [rooms, users] = await Promise.all([
     roomIds.size > 0
@@ -337,5 +372,49 @@ export function occupantRowValues(
       ? false
       : (occupantQueued.get(o.user_id) ?? false),
     sleeps_separately: o.sleeps_separately,
+  }))
+}
+
+// Recorded guests per booking, for settlement extras: a booking with no
+// adjustment row defaults its extra names to the guests recorded on it, and
+// the child flags let the split weight child visitors like child members.
+export async function guestsByBooking(
+  db: Db,
+  bookingIds: number[],
+): Promise<Map<number, { name: string; is_child: boolean }[]>> {
+  if (bookingIds.length === 0) return new Map()
+  const rows = await db
+    .select({
+      booking_id: bookingGuestsTable.booking_id,
+      name: bookingGuestsTable.name,
+      is_child: bookingGuestsTable.is_child,
+    })
+    .from(bookingGuestsTable)
+    .where(inArray(bookingGuestsTable.booking_id, bookingIds))
+    .orderBy(bookingGuestsTable.id)
+  const byBooking = new Map<number, { name: string; is_child: boolean }[]>()
+  for (const r of rows) {
+    const list = byBooking.get(r.booking_id) ?? []
+    list.push({ name: r.name, is_child: r.is_child })
+    byBooking.set(r.booking_id, list)
+  }
+  return byBooking
+}
+
+export async function guestNamesByBooking(
+  db: Db,
+  bookingIds: number[],
+): Promise<Map<number, string[]>> {
+  const guests = await guestsByBooking(db, bookingIds)
+  return new Map([...guests].map(([id, list]) => [id, list.map(g => g.name)]))
+}
+
+export function guestRowValues(bookingId: number, guests: GuestInput[]) {
+  return guests.map(g => ({
+    booking_id: bookingId,
+    name: g.name,
+    is_child: g.is_child,
+    room_id: g.sleeps_separately ? null : (g.room_id ?? null),
+    sleeps_separately: g.sleeps_separately,
   }))
 }

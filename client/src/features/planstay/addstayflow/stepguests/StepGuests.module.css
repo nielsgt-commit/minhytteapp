@@ -8,3 +8,10 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+.guestChildList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-block: 0.5rem;
+}

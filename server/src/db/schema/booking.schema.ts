@@ -80,3 +80,16 @@ export const bookingOccupantsTable = pgTable(
   },
   t => [primaryKey({ columns: [t.booking_id, t.user_id] })],
 )
+
+// Named visitors who aren't app users. A guest belongs to exactly one booking
+// (no identity across stays) and shares the booking's status — no queueing.
+export const bookingGuestsTable = pgTable("booking_guests", {
+  id: serial("id").primaryKey(),
+  booking_id: integer("booking_id")
+    .notNull()
+    .references(() => bookingTable.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  is_child: boolean("is_child").notNull().default(false),
+  room_id: integer("room_id").references(() => roomTable.id),
+  sleeps_separately: boolean("sleeps_separately").notNull().default(false),
+})

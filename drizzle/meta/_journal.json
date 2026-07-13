@@ -610,6 +610,13 @@
       "when": 1783954645361,
       "tag": "0086_aberrant_magik",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1783972994068,
+      "tag": "0087_silky_scalphunter",
+      "breakpoints": true
     }
   ]
 }

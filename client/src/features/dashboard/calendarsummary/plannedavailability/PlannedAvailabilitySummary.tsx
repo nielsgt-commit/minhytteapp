@@ -25,6 +25,7 @@ import { OccupancyMatrix } from "./OccupancyMatrix"
 import { roomGroupsForDay } from "./daySummaryUtils"
 import {
   GUEST_FILTER,
+  guestsOnDay as visitorsOnDay,
   isOccupying,
   occupantsOnDay,
 } from "@server/shared/bedOccupancy.ts"
@@ -217,7 +218,8 @@ export function PlannedAvailabilitySummary({
   const propertyBookings = bookings.filter(b => isOccupying(b.status))
 
   const guestsOnDay = (iso: string) =>
-    occupantsOnDay(propertyBookings, iso, GUEST_FILTER).length
+    occupantsOnDay(propertyBookings, iso, GUEST_FILTER).length +
+    visitorsOnDay(propertyBookings, iso, GUEST_FILTER).length
 
   const roomById = new Map(rooms.map(r => [r.id, r]))
 

@@ -34,6 +34,7 @@
 export type {
   BookingDraft,
   BookingStatus,
+  GuestDraft,
   OccupantDraft,
   OverlappingBooking,
   PerRoomConflict,
@@ -44,6 +45,7 @@ export type {
 } from "./types.ts"
 
 export {
+  addGuest,
   addOccupant,
   assignOccupantToRoom,
   bookingDraftReducer,
@@ -54,6 +56,7 @@ export {
   resetDraft,
   setBooker,
   setDates,
+  setGuestChild,
   setNotes,
   setOccupantSeparate,
   setStatus,

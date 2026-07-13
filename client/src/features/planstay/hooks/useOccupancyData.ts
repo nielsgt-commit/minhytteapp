@@ -23,7 +23,18 @@ type Booking = {
     sleeps_separately?: boolean
     user_name: string | null
   }[]
+  guests?: {
+    guest_id: number
+    name: string
+    is_child: boolean
+    room_id: number | null
+    sleeps_separately: boolean
+  }[]
 }
+
+// Persisted guests join the client-side capacity math under synthetic ids far
+// below the draft's own negative guest ids, so the two can never collide.
+const existingGuestId = (guest_id: number) => -(1_000_000 + guest_id)
 
 type Structure = { id: number; category: string }
 
@@ -59,6 +70,7 @@ export function useOccupancyData({
         dayCount += b.occupants.filter(
           o => !o.queued && o.sleeps_separately !== true,
         ).length
+        dayCount += (b.guests ?? []).filter(g => !g.sleeps_separately).length
       }
       if (dayCount > peak) peak = dayCount
       cur = cur.add({ days: 1 })
@@ -122,6 +134,24 @@ export function useOccupancyData({
       })
       existingOccupantsByRoom.set(o.room_id, list)
     }
+    for (const g of b.guests ?? []) {
+      if (g.sleeps_separately) {
+        existingTent.push({
+          user_id: existingGuestId(g.guest_id),
+          user_name: g.name,
+          queued: false,
+        })
+        continue
+      }
+      if (g.room_id == null) continue
+      const list = existingOccupantsByRoom.get(g.room_id) ?? []
+      list.push({
+        user_id: existingGuestId(g.guest_id),
+        user_name: g.name,
+        queued: false,
+      })
+      existingOccupantsByRoom.set(g.room_id, list)
+    }
   }
 
   const roomOverCapacityDays = (() => {
@@ -156,6 +186,11 @@ export function useOccupancyData({
             if (o.room_id !== room.id) continue
             if (o.queued) continue
             placed.add(o.user_id)
+          }
+          for (const g of b.guests ?? []) {
+            if (g.room_id !== room.id) continue
+            if (g.sleeps_separately) continue
+            placed.add(existingGuestId(g.guest_id))
           }
         }
         if (placed.size > bedCapacity(room)) {

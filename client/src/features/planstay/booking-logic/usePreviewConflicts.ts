@@ -13,6 +13,11 @@ type PreviewInput = {
     room_id?: number | null
     sleeps_separately?: boolean
   }[]
+  guests: {
+    is_child: boolean
+    room_id?: number | null
+    sleeps_separately?: boolean
+  }[]
   exclude_booking_id?: number
 }
 
@@ -28,16 +33,27 @@ function extractInput(
   ) {
     return null
   }
+  const childByGuestId = new Map(draft.guests.map(g => [g.user_id, g.is_child]))
   return {
     property_id: draft.property_id,
-    // The draft keeps ISO strings; convert at the tRPC boundary.
+    // The draft keeps ISO strings; convert at the tRPC boundary. Guests ride
+    // in occupants under negative ids — split them back out for the wire.
     start_date: Temporal.PlainDate.from(draft.start_date),
     end_date: Temporal.PlainDate.from(draft.end_date),
-    occupants: draft.occupants.map(o => ({
-      user_id: o.user_id,
-      room_id: o.room_id,
-      sleeps_separately: o.sleeps_separately,
-    })),
+    occupants: draft.occupants
+      .filter(o => o.user_id > 0)
+      .map(o => ({
+        user_id: o.user_id,
+        room_id: o.room_id,
+        sleeps_separately: o.sleeps_separately,
+      })),
+    guests: draft.occupants
+      .filter(o => o.user_id < 0)
+      .map(o => ({
+        is_child: childByGuestId.get(o.user_id) ?? false,
+        room_id: o.room_id,
+        sleeps_separately: o.sleeps_separately,
+      })),
     ...(excludeBookingId != null
       ? { exclude_booking_id: excludeBookingId }
       : {}),
@@ -57,6 +73,7 @@ const FALLBACK_INPUT: PreviewInput = {
   start_date: Temporal.PlainDate.from("2000-01-01"),
   end_date: Temporal.PlainDate.from("2000-01-01"),
   occupants: [],
+  guests: [],
 }
 
 export function usePreviewConflicts(
@@ -71,7 +88,7 @@ export function usePreviewConflicts(
 
   const input = useMemo(
     () => extractInput(draft, excludeBookingId),
-    // extractInput reads exactly these four draft fields; listing them
+    // extractInput reads exactly these five draft fields; listing them
     // (not `draft`) keeps the memo stable across unrelated draft changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -79,6 +96,7 @@ export function usePreviewConflicts(
       draft.start_date,
       draft.end_date,
       draft.occupants,
+      draft.guests,
       excludeBookingId,
     ],
   )

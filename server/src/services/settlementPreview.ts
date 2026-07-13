@@ -44,6 +44,7 @@ import {
   inclusiveDayCount,
   loadSplitInput,
 } from "./settlementSplit.ts"
+import { guestNamesByBooking } from "./booking.ts"
 import { listSettlementHeads } from "./settlementPhase.ts"
 
 type Db = typeof dbClient
@@ -294,6 +295,8 @@ export async function computePreviewSplit(
     list.push(o.user_id)
     occupantsByBooking.set(o.booking_id, list)
   }
+  // Untouched bookings default their extras to the guests recorded on them.
+  const guestNames = await guestNamesByBooking(db, bookingIds)
 
   const daysByGroup = new Map<number, number>()
   for (const b of eligible) {
@@ -304,7 +307,8 @@ export async function computePreviewSplit(
       if (g == null) continue
       daysByGroup.set(g, (daysByGroup.get(g) ?? 0) + days)
     }
-    const extras = adjustmentsByBooking.get(b.id)?.extra_names ?? []
+    const extras =
+      adjustmentsByBooking.get(b.id)?.extra_names ?? guestNames.get(b.id) ?? []
     if (extras.length > 0) {
       const bookerGroup = userToGroup.get(b.booker_id)
       if (bookerGroup != null) {

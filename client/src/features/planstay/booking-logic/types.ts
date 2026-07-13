@@ -14,6 +14,15 @@ export type OccupantDraft = {
   sleeps_separately: boolean
 }
 
+// A named non-user guest. Guests ride along in `occupants` under synthetic
+// negative user_ids so room/tent assignment works unchanged; this registry
+// maps those ids back to a name and child flag for display and submission.
+export type GuestDraft = {
+  user_id: number
+  name: string
+  is_child: boolean
+}
+
 export type BookingDraft = {
   property_id: number | null
   booker_id: number | null
@@ -22,6 +31,7 @@ export type BookingDraft = {
   status: BookingStatus
   notes: string
   occupants: OccupantDraft[]
+  guests: GuestDraft[]
 }
 
 // ---- previewConflicts output types ----

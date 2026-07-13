@@ -57,6 +57,23 @@ type BookingShape = {
     sleeps_separately: boolean
     user_name: string | null
   }[]
+  guests: {
+    name: string
+    is_child: boolean
+    room_id: number | null
+    sleeps_separately: boolean
+  }[]
+}
+
+// booking.update replaces the guest rows with whatever the payload carries, so
+// every update — even one that only touches occupants — must send them along.
+function guestsPayload(b: BookingShape) {
+  return b.guests.map(g => ({
+    name: g.name,
+    is_child: g.is_child,
+    room_id: g.room_id,
+    sleeps_separately: g.sleeps_separately,
+  }))
 }
 
 function bookingToRecord(b: BookingShape): BookingDraftRecord {
@@ -74,6 +91,7 @@ function bookingToRecord(b: BookingShape): BookingDraftRecord {
       queued: o.queued,
       sleeps_separately: o.sleeps_separately,
     })),
+    guests: guestsPayload(b),
   }
 }
 
@@ -98,8 +116,7 @@ export function MyPlannedStay() {
   // still manage them after removing herself.
   const myBookings = active
     .filter(
-      b =>
-        b.occupants.some(o => o.user_id === me.id) || b.booker_id === me.id,
+      b => b.occupants.some(o => o.user_id === me.id) || b.booker_id === me.id,
     )
     // Newest stay on top.
     .sort((a, b) => Temporal.PlainDate.compare(b.start_date, a.start_date))
@@ -151,6 +168,7 @@ export function MyPlannedStay() {
           queued: o.queued,
           sleeps_separately: o.sleeps_separately,
         })),
+      guests: guestsPayload(b),
     })
   }
 
@@ -275,9 +293,12 @@ export function MyPlannedStay() {
             <h3 className={styles.monthHeading}>{group.label}</h3>
             <ul className={styles.list}>
               {group.bookings.map(b => {
-                const companionNames = b.occupants
-                  .filter(o => o.user_id !== me.id)
-                  .map(o => o.user_name ?? `#${String(o.user_id)}`)
+                const companionNames = [
+                  ...b.occupants
+                    .filter(o => o.user_id !== me.id)
+                    .map(o => o.user_name ?? `#${String(o.user_id)}`),
+                  ...b.guests.map(g => `${g.name}${t(" (visitor)")}`),
+                ]
                 // Others at the cabin in the same period: occupants of other
                 // overlapping bookings, minus everyone already on this stay.
                 // Mirrors StayAvailabilityPanel: prefer the confirmed entry
@@ -318,9 +339,7 @@ export function MyPlannedStay() {
                 const isConfirmingDelete = confirmingDeleteId === b.id
                 const isConfirmingRemove = confirmingRemoveId === b.id
                 const canEdit = b.booker_id === me.id
-                const meIsOccupant = b.occupants.some(
-                  o => o.user_id === me.id,
-                )
+                const meIsOccupant = b.occupants.some(o => o.user_id === me.id)
                 const eligibleNewBookers = b.occupants.filter(
                   o => o.user_id !== me.id && !childUserIds.has(o.user_id),
                 )
@@ -617,6 +636,7 @@ export function MyPlannedStay() {
                                             sleeps_separately:
                                               o.sleeps_separately,
                                           })),
+                                          guests: guestsPayload(b),
                                         })
                                       }}
                                     >
@@ -651,8 +671,7 @@ export function MyPlannedStay() {
                                           id: b.id,
                                           new_booker_id: handOver.newBookerId,
                                           remove_self:
-                                            handOver.removeSelf &&
-                                            meIsOccupant,
+                                            handOver.removeSelf && meIsOccupant,
                                         })
                                         setHandOver(null)
                                       }}

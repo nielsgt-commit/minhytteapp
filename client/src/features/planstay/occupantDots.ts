@@ -11,6 +11,7 @@ type DotBooking = {
     parent_user_id: number | null
     queued: boolean
   }[]
+  guests?: { guest_id: number }[]
 }
 
 type DotGroup = {
@@ -61,6 +62,8 @@ export function buildOccupantDots(
             : 0),
         pending,
       }))
+    // Named visitors have no family group; they still count as heads.
+    occDots.push(...(b.guests ?? []).map(() => ({ gid: 0, pending })))
     if (occDots.length === 0) continue
 
     const startIso = b.start_date.toString()

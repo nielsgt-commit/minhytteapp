@@ -31,13 +31,24 @@ export type OccupancyOccupant = {
   sleeps_separately?: boolean
 }
 
-export type OccupancyBooking<O extends OccupancyOccupant = OccupancyOccupant> =
-  {
-    status: string
-    start_date: Temporal.PlainDate
-    end_date: Temporal.PlainDate
-    occupants: readonly O[]
-  }
+// A named non-user visitor. Guests belong to exactly one booking, share its
+// status, and can never be queued — they always occupy when the booking does.
+export type OccupancyGuest = {
+  guest_id: number
+  room_id: number | null
+  sleeps_separately?: boolean
+}
+
+export type OccupancyBooking<
+  O extends OccupancyOccupant = OccupancyOccupant,
+  G extends OccupancyGuest = OccupancyGuest,
+> = {
+  status: string
+  start_date: Temporal.PlainDate
+  end_date: Temporal.PlainDate
+  occupants: readonly O[]
+  guests?: readonly G[]
+}
 
 // end_date is inclusive: the booking occupies [start_date, end_date].
 export function bookingCoversDay(
@@ -83,6 +94,22 @@ export function occupantsOnDay<O extends OccupancyOccupant>(
     }
   }
   return [...byUser.values()]
+}
+
+// Guests at the property on `iso`. No dedupe: a guest row exists on exactly
+// one booking, so overlapping bookings can never hold the same guest twice.
+export function guestsOnDay<G extends OccupancyGuest>(
+  bookings: readonly OccupancyBooking<OccupancyOccupant, G>[],
+  iso: string,
+  filter: StayFilter,
+): G[] {
+  const out: G[] = []
+  for (const b of bookings) {
+    if (!filter.statuses.includes(b.status as BookingStatus)) continue
+    if (!bookingCoversDay(b, iso)) continue
+    for (const g of b.guests ?? []) out.push(g)
+  }
+  return out
 }
 
 export type BedCounts = {
@@ -138,7 +165,11 @@ export function bedAvailabilityForDay(
 
   const occupiedByRoom = new Map<number, number>()
   let unassignedGuests = 0
-  for (const o of occupantsOnDay(bookings, iso, BED_FILTER)) {
+  const persons: { room_id: number | null; sleeps_separately?: boolean }[] = [
+    ...occupantsOnDay(bookings, iso, BED_FILTER),
+    ...guestsOnDay(bookings, iso, BED_FILTER),
+  ]
+  for (const o of persons) {
     if (o.sleeps_separately === true) continue
     if (o.room_id != null && habitableIds.has(o.room_id)) {
       occupiedByRoom.set(o.room_id, (occupiedByRoom.get(o.room_id) ?? 0) + 1)
