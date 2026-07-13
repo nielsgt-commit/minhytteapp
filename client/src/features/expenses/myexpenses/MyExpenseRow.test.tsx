@@ -91,10 +91,25 @@ describe("MyExpenseRow", () => {
         onDelete={onDelete}
       />,
     )
-    await user.click(screen.getByRole("button", { name: "Edit" }))
-    await user.click(screen.getByRole("button", { name: "Delete" }))
+    // Both the inline buttons and the kebab menu items match by name.
+    await user.click(screen.getAllByRole("button", { name: "Edit" })[0])
+    await user.click(screen.getAllByRole("button", { name: "Delete" })[0])
     expect(onEdit).toHaveBeenCalledTimes(1)
     expect(onDelete).toHaveBeenCalledTimes(1)
+  })
+
+  test("shows the description when present", () => {
+    render(
+      <MyExpenseRow
+        expense={makeExpense({ description: "Ferry tickets" })}
+        deletePending={false}
+        receiptDatePending={false}
+        onReceiptDateChange={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
+      />,
+    )
+    expect(screen.getByText("Ferry tickets")).toBeInTheDocument()
   })
 
   test("disables both buttons while deletePending", () => {
@@ -108,7 +123,11 @@ describe("MyExpenseRow", () => {
         onDelete={() => {}}
       />,
     )
-    expect(screen.getByRole("button", { name: "Edit" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled()
+    for (const btn of [
+      ...screen.getAllByRole("button", { name: "Edit" }),
+      ...screen.getAllByRole("button", { name: "Delete" }),
+    ]) {
+      expect(btn).toBeDisabled()
+    }
   })
 })

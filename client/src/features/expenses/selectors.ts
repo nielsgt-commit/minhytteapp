@@ -18,6 +18,16 @@ export function selectExpensesToReview(
     .sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
 }
 
+export function selectApprovedExpenses(
+  expenses: ExpenseRow[],
+  memberIds: Set<number>,
+): ExpenseRow[] {
+  return expenses
+    .filter(e => e.status === "reimbursed" && memberIds.has(e.payer_id))
+    .slice()
+    .sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
+}
+
 export function selectMyExpenses(
   expenses: ExpenseRow[],
   meId: number,

@@ -17,17 +17,62 @@ const drafts: ExpenseDraft[] = [
 ]
 
 describe("DraftList", () => {
-  test("renders nothing when drafts is empty", () => {
-    const { container } = render(
-      <DraftList drafts={[]} total={0} pending={false} onRemove={() => {}} />,
+  test("renders a hint and a zero total when drafts is empty", () => {
+    render(
+      <DraftList
+        drafts={[]}
+        preview={null}
+        total={0}
+        pending={false}
+        onRemove={() => {}}
+      />,
     )
-    expect(container.firstChild).toBeNull()
+    expect(
+      screen.getByText(
+        "Add one or more expenses below, press Submit when you are done.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText("Total")).toBeInTheDocument()
+    expect(screen.getByText("0")).toBeInTheDocument()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
+
+  test("shows a preview row instead of the hint while a category is open", () => {
+    render(
+      <DraftList
+        drafts={[]}
+        preview={{ category: "food", amount: "250" }}
+        total={0}
+        pending={false}
+        onRemove={() => {}}
+      />,
+    )
+    expect(screen.getByText("food — 250")).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "Add one or more expenses below, press Submit when you are done.",
+      ),
+    ).not.toBeInTheDocument()
+  })
+
+  test("preview row shows an ellipsis until an amount is typed", () => {
+    render(
+      <DraftList
+        drafts={[]}
+        preview={{ category: "food", amount: "" }}
+        total={0}
+        pending={false}
+        onRemove={() => {}}
+      />,
+    )
+    expect(screen.getByText("food — …")).toBeInTheDocument()
   })
 
   test("renders one row per draft plus a total row", () => {
     render(
       <DraftList
         drafts={drafts}
+        preview={null}
         total={150}
         pending={false}
         onRemove={() => {}}
@@ -45,6 +90,7 @@ describe("DraftList", () => {
     render(
       <DraftList
         drafts={drafts}
+        preview={null}
         total={150}
         pending={false}
         onRemove={onRemove}
@@ -59,6 +105,7 @@ describe("DraftList", () => {
     render(
       <DraftList
         drafts={drafts}
+        preview={null}
         total={150}
         pending={true}
         onRemove={() => {}}

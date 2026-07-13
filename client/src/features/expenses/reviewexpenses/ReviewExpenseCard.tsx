@@ -2,7 +2,6 @@ import {
   Button,
   Card,
   Dialog,
-  Divider,
   Heading,
   Paragraph,
   Skeleton,
@@ -12,6 +11,7 @@ import { ReceiptIcon } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
 import styles from "./ReviewExpenses.module.css"
 import type { ExpenseRow } from "../types.ts"
+import { CardKebabMenu } from "@/components/shared/CardKebabMenu"
 
 type Props = {
   expense: ExpenseRow
@@ -31,11 +31,42 @@ export function ReviewExpenseCard({
     <Card asChild>
       <article>
         <Card.Block className={styles.row} data-size="sm">
-          <Paragraph asChild data-size="sm">
-            <span className={styles.category}>
-              {expense.expense_types[0] ?? t("(no category)")}
-            </span>
-          </Paragraph>
+          <div className={styles.cardHeader}>
+            <div className={styles.headerRow}>
+              <Paragraph asChild data-size="sm">
+                <span className={styles.category}>
+                  {expense.expense_types[0] ?? t("(no category)")}
+                </span>
+              </Paragraph>
+              <span className={styles.menu}>
+                <CardKebabMenu
+                  ariaLabel={t("Expense actions")}
+                  items={[
+                    {
+                      label: t("Approve and mark as reimbursed"),
+                      disabled: pending,
+                      onSelect: () => {
+                        onReimburse(expense)
+                      },
+                    },
+                    {
+                      label: t("Reject"),
+                      danger: true,
+                      disabled: pending,
+                      onSelect: () => {
+                        onReject(expense)
+                      },
+                    },
+                  ]}
+                />
+              </span>
+            </div>
+            {expense.description.trim() !== "" && (
+              <Paragraph className={styles.description} data-size="sm">
+                {expense.description}
+              </Paragraph>
+            )}
+          </div>
           <span className={styles.receipt}>
             {expense.receipt_url && (
               <Dialog.TriggerContext>
@@ -80,7 +111,6 @@ export function ReviewExpenseCard({
           <Tag className={styles.name} data-color="info" data-size="sm">
             {expense.payer_name ?? `#${String(expense.payer_id)}`}
           </Tag>
-          <Divider className={styles.divider} />
           <div className={styles.actions}>
             <Button
               variant="secondary"

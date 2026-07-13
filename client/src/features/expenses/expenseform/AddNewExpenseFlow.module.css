@@ -23,6 +23,20 @@
   min-width: 0;
 }
 
+.emptyHint {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.helperText {
+  color: var(--ds-color-neutral-text-subtle);
+  margin-top: -0.5rem;
+}
+
+.previewItem {
+  color: var(--ds-color-neutral-text-subtle);
+  font-style: italic;
+}
+
 .totalRow {
   display: flex;
   justify-content: space-between;

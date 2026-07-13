@@ -17,17 +17,55 @@
   gap: 0.75rem;
 }
 
+.content {
+  padding: 0;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 .row {
   display: grid;
-  grid-template-columns: auto auto auto 1fr auto auto auto auto;
-  grid-template-areas: "category submitter name . sumLabel amount receipt actions";
+  grid-template-columns: auto auto 1fr auto auto auto auto;
+  grid-template-areas:
+    "header header header header header header header"
+    "submitter name . sumLabel amount receipt actions";
   align-items: baseline;
   gap: 1rem;
   justify-content: space-between;
 }
 
+/* Category pill on the left, kebab menu pinned to the right, on one row;
+   the free-text description sits below them. */
+.cardHeader {
+  grid-area: header;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.description {
+  margin: 0;
+}
+
+.menu {
+  display: none;
+}
+
 .category {
-  grid-area: category;
   display: inline-flex;
   align-items: baseline;
   padding: 0.125rem 0.625rem;
@@ -65,9 +103,6 @@
   grid-area: submitter;
   margin: 0;
 }
-.divider {
-  display: none;
-}
 
 .dialogImage {
   width: 100%;
@@ -78,15 +113,20 @@
   .row {
     grid-template-columns: auto auto auto;
     grid-template-areas:
-      "category   .       receipt"
+      "header     header  header"
       "submitter  .       name"
       "sumLabel   .       amount"
-      "divider    divider divider"
-      "actions    actions actions";
+      "receipt    receipt receipt";
     row-gap: 0.5rem;
     column-gap: 0.5rem;
   }
-  .category {
+  .menu {
+    display: inline-flex;
+  }
+  .actions {
+    display: none;
+  }
+  .receipt {
     justify-self: start;
   }
   .submittedByLabel {
@@ -106,15 +146,5 @@
   }
   .amountGroup {
     justify-self: end;
-  }
-  .divider {
-    display: block;
-    grid-area: divider;
-    width: 100%;
-    margin: 0;
-  }
-  .actions {
-    justify-self: stretch;
-    justify-content: flex-end;
   }
 }

@@ -10,9 +10,10 @@ import { QueryBoundary } from "@/components/shared/query-states/QueryBoundary"
 import { ReviewExpenseCard } from "./ReviewExpenseCard.tsx"
 import { ReviewHeader } from "./ReviewHeader.tsx"
 import { EmptyReviewState } from "./EmptyReviewState.tsx"
+import { ApprovedExpenses } from "./ApprovedExpenses.tsx"
 import { useReviewMutations } from "./useReviewMutations.ts"
 import type { ExpenseRow } from "../types.ts"
-import { selectExpensesToReview } from "../selectors.ts"
+import { selectApprovedExpenses, selectExpensesToReview } from "../selectors.ts"
 import { type SettlementPhase } from "@server/shared/splitPolicy.ts"
 import { useTRPC } from "@/trpc/trpc.ts"
 
@@ -61,6 +62,7 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
     memberIds,
     me.id,
   )
+  const approved = selectApprovedExpenses(expenses as ExpenseRow[], memberIds)
 
   const review = useReviewMutations({
     settlementId,
@@ -80,12 +82,10 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
     )
   }
 
-  const header = <ReviewHeader />
-
-  if (toReview.length === 0) {
-    return (
-      <>
-        {header}
+  return (
+    <>
+      <ReviewHeader />
+      {toReview.length === 0 ? (
         <EmptyReviewState
           phase={phase}
           next={next}
@@ -100,25 +100,21 @@ function ReviewExpensesContent({ settlementId, phase, next }: Props) {
             })
           }}
         />
-      </>
-    )
-  }
-
-  return (
-    <>
-      {header}
-      <div className={styles.list}>
-        <ErrorAlert error={status.error} />
-        {toReview.map(e => (
-          <ReviewExpenseCard
-            key={e.id}
-            expense={e}
-            pending={status.pending}
-            onReimburse={review.reimburse}
-            onReject={review.reject}
-          />
-        ))}
-      </div>
+      ) : (
+        <div className={styles.list}>
+          <ErrorAlert error={status.error} />
+          {toReview.map(e => (
+            <ReviewExpenseCard
+              key={e.id}
+              expense={e}
+              pending={status.pending}
+              onReimburse={review.reimburse}
+              onReject={review.reject}
+            />
+          ))}
+        </div>
+      )}
+      <ApprovedExpenses expenses={approved} />
     </>
   )
 }

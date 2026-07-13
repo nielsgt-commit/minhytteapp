@@ -1,10 +1,11 @@
-import { Button, Divider, Paragraph, Tag } from "@digdir/designsystemet-react"
+import { Button, Paragraph, Tag } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import type { Temporal } from "temporal-polyfill"
 import styles from "./MyExpenses.module.css"
 import { STATUS_COLOR } from "../expenseStatus.ts"
 import type { ExpenseRow } from "../types.ts"
 import { ReceiptDateButton } from "@/components/shared/ReceiptDateButton"
+import { CardKebabMenu } from "@/components/shared/CardKebabMenu"
 
 type Props = {
   expense: ExpenseRow
@@ -31,9 +32,32 @@ export function MyExpenseRow({
 
   return (
     <>
-      <Paragraph asChild data-size="sm">
-        <span className={styles.category}>{categoryLabel}</span>
-      </Paragraph>
+      <div className={styles.cardHeader}>
+        <div className={styles.headerRow}>
+          <Paragraph asChild data-size="sm">
+            <span className={styles.category}>{categoryLabel}</span>
+          </Paragraph>
+          <span className={styles.menu}>
+            <CardKebabMenu
+              ariaLabel={t("Expense actions")}
+              items={[
+                { label: t("Edit"), disabled: deletePending, onSelect: onEdit },
+                {
+                  label: t("Delete"),
+                  danger: true,
+                  disabled: deletePending,
+                  onSelect: onDelete,
+                },
+              ]}
+            />
+          </span>
+        </div>
+        {expense.description.trim() !== "" && (
+          <Paragraph className={styles.description} data-size="sm">
+            {expense.description}
+          </Paragraph>
+        )}
+      </div>
       <Paragraph className={styles.statusLabel} data-size="sm">
         {t("Status")}
       </Paragraph>
@@ -62,7 +86,6 @@ export function MyExpenseRow({
           <span>{t(",-")}</span>
         </Paragraph>
       </div>
-      <Divider className={styles.divider} />
       <div className={styles.actions}>
         <Button
           variant="tertiary"

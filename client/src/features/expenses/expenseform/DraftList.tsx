@@ -5,16 +5,27 @@ import type { ExpenseDraft } from "./useExpenseDrafts.ts"
 
 type Props = {
   drafts: ExpenseDraft[]
+  preview: { category: string; amount: string } | null
   total: number
   pending: boolean
   onRemove: (id: string) => void
 }
 
-export function DraftList({ drafts, total, pending, onRemove }: Props) {
+export function DraftList({
+  drafts,
+  preview,
+  total,
+  pending,
+  onRemove,
+}: Props) {
   const { t } = useTranslation("expenses")
-  if (drafts.length === 0) return null
   return (
     <ul className={styles.draftList}>
+      {drafts.length === 0 && preview == null && (
+        <li className={styles.emptyHint}>
+          {t("Add one or more expenses below, press Submit when you are done.")}
+        </li>
+      )}
       {drafts.map(d => (
         <li key={d.id} className={styles.draftItem}>
           <span className={styles.draftLabel}>
@@ -34,6 +45,11 @@ export function DraftList({ drafts, total, pending, onRemove }: Props) {
           </Button>
         </li>
       ))}
+      {preview != null && (
+        <li className={styles.previewItem}>
+          {preview.category} — {preview.amount === "" ? "…" : preview.amount}
+        </li>
+      )}
       <li className={styles.totalRow}>
         <strong>{t("Total")}</strong>
         <strong>{total}</strong>

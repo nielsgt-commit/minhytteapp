@@ -18,13 +18,24 @@
   justify-content: space-between;
 }
 
-/* Category pill on the left, kebab menu pinned to the right, on one row. */
+/* Category pill on the left, kebab menu pinned to the right, on one row;
+   the free-text description sits below them. */
 .cardHeader {
   grid-area: header;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.headerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.description {
+  margin: 0;
 }
 
 .category {

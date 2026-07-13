@@ -89,12 +89,27 @@ describe("ReviewExpenseCard", () => {
         onReject={onReject}
       />,
     )
+    // Both the inline buttons and the kebab menu items match by name.
     await user.click(
-      screen.getByRole("button", { name: "Approve and mark as reimbursed" }),
+      screen.getAllByRole("button", {
+        name: "Approve and mark as reimbursed",
+      })[0],
     )
-    await user.click(screen.getByRole("button", { name: "Reject" }))
+    await user.click(screen.getAllByRole("button", { name: "Reject" })[0])
     expect(onReimburse).toHaveBeenCalledWith(expense)
     expect(onReject).toHaveBeenCalledWith(expense)
+  })
+
+  test("shows the description when present", () => {
+    render(
+      <ReviewExpenseCard
+        expense={makeExpense({ description: "Ferry tickets" })}
+        pending={false}
+        onReimburse={() => {}}
+        onReject={() => {}}
+      />,
+    )
+    expect(screen.getByText("Ferry tickets")).toBeInTheDocument()
   })
 
   test("disables both action buttons when pending", () => {
@@ -106,9 +121,13 @@ describe("ReviewExpenseCard", () => {
         onReject={() => {}}
       />,
     )
-    expect(
-      screen.getByRole("button", { name: "Approve and mark as reimbursed" }),
-    ).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Reject" })).toBeDisabled()
+    for (const btn of [
+      ...screen.getAllByRole("button", {
+        name: "Approve and mark as reimbursed",
+      }),
+      ...screen.getAllByRole("button", { name: "Reject" }),
+    ]) {
+      expect(btn).toBeDisabled()
+    }
   })
 })

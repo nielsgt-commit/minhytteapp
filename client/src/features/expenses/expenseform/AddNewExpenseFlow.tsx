@@ -1,4 +1,10 @@
-import { Card, Divider, Heading, Textfield } from "@digdir/designsystemet-react"
+import {
+  Card,
+  Divider,
+  Heading,
+  Paragraph,
+  Textfield,
+} from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import styles from "./AddNewExpenseFlow.module.css"
 import { useExpenseEditor } from "./useExpenseEditor"
@@ -38,7 +44,11 @@ export function AddNewExpenseFlow({
       parsedAmount <= 0
     )
       return
-    drafts.add(editor.openCategory, Math.floor(parsedAmount), editor.receiptDate)
+    drafts.add(
+      editor.openCategory,
+      Math.floor(parsedAmount),
+      editor.receiptDate,
+    )
     editor.close()
   }
 
@@ -56,16 +66,25 @@ export function AddNewExpenseFlow({
           <div className={styles.container}>
             <DraftList
               drafts={drafts.drafts}
+              preview={
+                editor.openCategory == null
+                  ? null
+                  : { category: editor.openCategory, amount: editor.amount }
+              }
               total={drafts.total}
               pending={pending}
               onRemove={drafts.remove}
             />
 
-            {drafts.drafts.length > 0 && <Divider />}
+            <Divider />
 
             <Heading level={2} data-size="sm">
               {t("Category")}
             </Heading>
+
+            <Paragraph data-size="xs" className={styles.helperText}>
+              {t("What did you pay for?")}
+            </Paragraph>
 
             <CategoryPicker
               categories={categories}

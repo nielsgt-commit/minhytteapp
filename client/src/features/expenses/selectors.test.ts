@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
 import { Temporal } from "temporal-polyfill"
-import { selectExpensesToReview, selectMyExpenses } from "./selectors.ts"
+import {
+  selectApprovedExpenses,
+  selectExpensesToReview,
+  selectMyExpenses,
+} from "./selectors.ts"
 import type { ExpenseRow, Status } from "./types.ts"
 
 const pd = (iso: string) => Temporal.PlainDate.from(iso)
@@ -64,6 +68,42 @@ describe("selectExpensesToReview", () => {
     const before = expenses.map(e => e.id)
     selectExpensesToReview(expenses, members, reviewer)
     expect(expenses.map(e => e.id)).toEqual(before)
+  })
+})
+
+describe("selectApprovedExpenses", () => {
+  const members = new Set([2, 3])
+
+  test("keeps only reimbursed expenses from group members", () => {
+    const expenses = [
+      makeExpense({ id: 1, payer_id: 2, status: "reimbursed" }),
+      makeExpense({ id: 2, payer_id: 2, status: "submitted" }),
+      makeExpense({ id: 3, payer_id: 99, status: "reimbursed" }), // outsider
+      makeExpense({ id: 4, payer_id: 3, status: "rejected" }),
+      makeExpense({ id: 5, payer_id: 3, status: "reimbursed" }),
+    ]
+    const ids = selectApprovedExpenses(expenses, members).map(e => e.id)
+    expect(ids).toEqual([1, 5])
+  })
+
+  test("sorts by date ascending", () => {
+    const expenses = [
+      makeExpense({
+        id: 1,
+        payer_id: 2,
+        status: "reimbursed",
+        date: pd("2026-03-01"),
+      }),
+      makeExpense({
+        id: 2,
+        payer_id: 3,
+        status: "reimbursed",
+        date: pd("2026-01-01"),
+      }),
+    ]
+    expect(selectApprovedExpenses(expenses, members).map(e => e.id)).toEqual([
+      2, 1,
+    ])
   })
 })
 
