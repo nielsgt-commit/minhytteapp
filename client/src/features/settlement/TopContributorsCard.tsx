@@ -73,7 +73,7 @@ export function TopContributorsCard({
             </Paragraph>
           ) : (
             <ul className={styles.list}>
-              {contributors.slice(0, 5).map(c => (
+              {contributors.map(c => (
                 <li key={c.payer_id} className={styles.row}>
                   <span className={styles.rowLabel}>{c.name}</span>
                   <span className={styles.bar}>
