@@ -2,6 +2,7 @@ import { useSelectedPropertyId } from "@/selection/useSelection"
 import { useState } from "react"
 import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
 import {
+  Alert,
   Button,
   Card,
   Checkbox,
@@ -481,14 +482,16 @@ export function MyPlannedStay() {
                               )}
                             </div>
                             {othersInPeriod.length > 0 && (
-                              <div className={styles.companions}>
-                                <span>{t("During this period:")}</span>
-                                {othersInPeriod.map(n => (
-                                  <Tag key={n} data-color="neutral">
-                                    {n}
-                                  </Tag>
-                                ))}
-                              </div>
+                              <Alert data-color="info">
+                                <div className={styles.companions}>
+                                  <span>{t("During this period:")}</span>
+                                  {othersInPeriod.map(n => (
+                                    <Tag key={n} data-color="neutral">
+                                      {n}
+                                    </Tag>
+                                  ))}
+                                </div>
+                              </Alert>
                             )}
                             {!canEdit && (
                               <div className={styles.companions}>
