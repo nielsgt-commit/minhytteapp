@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Chip,
   Divider,
   Dropdown,
   Heading,
@@ -55,6 +56,12 @@ export function ShoppingList() {
       { enabled: selectedPropertyId != null },
     ),
   )
+  const { data: users } = useQuery(
+    trpc.user.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
+    ),
+  )
 
   const shoppingKeys = [trpc.shoppingItem.pathKey()]
   // Optimistic add so the new item appears immediately. The temp id is larger
@@ -78,6 +85,7 @@ export function ShoppingList() {
               checked: false,
               created_at: Temporal.Now.instant(),
               created_by: null,
+              assignee_ids: [],
             },
           ]
         })
@@ -116,6 +124,51 @@ export function ShoppingList() {
     }),
     shoppingKeys,
   )
+  const assignMutation = useMutationWithInvalidation(
+    trpc.shoppingItem.setAssignee.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old =>
+          old?.map(i =>
+            i.id === vars.id && !i.assignee_ids.includes(vars.user_id)
+              ? { ...i, assignee_ids: [...i.assignee_ids, vars.user_id] }
+              : i,
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
+    shoppingKeys,
+  )
+  const unassignMutation = useMutationWithInvalidation(
+    trpc.shoppingItem.removeAssignee.mutationOptions({
+      onMutate: async vars => {
+        await qc.cancelQueries({ queryKey: listKey })
+        const previous = qc.getQueryData(listKey)
+        qc.setQueryData(listKey, old =>
+          old?.map(i =>
+            i.id === vars.id
+              ? {
+                  ...i,
+                  assignee_ids: i.assignee_ids.filter(
+                    id => id !== vars.user_id,
+                  ),
+                }
+              : i,
+          ),
+        )
+        return { previous }
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) qc.setQueryData(listKey, ctx.previous)
+      },
+    }),
+    shoppingKeys,
+  )
   const deleteMutation = useMutationWithInvalidation(
     trpc.shoppingItem.delete.mutationOptions(),
     shoppingKeys,
@@ -128,6 +181,8 @@ export function ShoppingList() {
   const { error } = useMutationsStatus(
     createMutation,
     updateMutation,
+    assignMutation,
+    unassignMutation,
     deleteMutation,
     clearSectionMutation,
   )
@@ -138,6 +193,9 @@ export function ShoppingList() {
   const busy = deleteMutation.isPending || clearSectionMutation.isPending
 
   const [editingId, setEditingId] = useState<number | null>(null)
+
+  // Which row (if any) has its inline "Assign to…" chip picker open.
+  const [assigningId, setAssigningId] = useState<number | null>(null)
 
   // Delete is a two-tap action: the first tap arms the item's Delete button,
   // a second tap on the same spot confirms. The armed state auto-clears after a
@@ -185,6 +243,20 @@ export function ShoppingList() {
       setConfirmingDeleteId(id)
     }
   }
+
+  const toggleAssignee = (itemId: number, userId: number, next: boolean) => {
+    if (selectedPropertyId == null) return
+    const vars = {
+      property_id: selectedPropertyId,
+      id: itemId,
+      user_id: userId,
+    }
+    if (next) assignMutation.mutate(vars)
+    else unassignMutation.mutate(vars)
+  }
+
+  const userRows = users ?? []
+  const userById = new Map(userRows.map(u => [u.id, u.name]))
 
   const sectionLabel = (section: Section) =>
     section === "food" ? t("Food") : t("Other")
@@ -373,15 +445,59 @@ export function ShoppingList() {
                           </form>
                         ) : (
                           <>
-                            <Paragraph
-                              className={`${styles.name} ${
-                                item.checked ? styles.done : ""
-                              }`}
-                              data-size="sm"
-                            >
-                              {item.name}
-                            </Paragraph>
-                            {isMobile ? (
+                            <div className={styles.textCol}>
+                              <Paragraph
+                                className={`${styles.name} ${
+                                  item.checked ? styles.done : ""
+                                }`}
+                                data-size="sm"
+                              >
+                                {item.name}
+                              </Paragraph>
+                              {item.assignee_ids.length > 0 && (
+                                <Paragraph
+                                  className={styles.assignees}
+                                  data-size="sm"
+                                >
+                                  {item.assignee_ids
+                                    .map(id => userById.get(id))
+                                    .filter((n): n is string => n != null)
+                                    .join(", ")}
+                                </Paragraph>
+                              )}
+                            </div>
+                            {assigningId === item.id ? (
+                              <>
+                                <div className={styles.assignChips}>
+                                  {userRows.map(u => (
+                                    <Chip.Checkbox
+                                      key={u.id}
+                                      data-size="sm"
+                                      data-color="accent"
+                                      checked={item.assignee_ids.includes(u.id)}
+                                      onChange={e => {
+                                        toggleAssignee(
+                                          item.id,
+                                          u.id,
+                                          e.target.checked,
+                                        )
+                                      }}
+                                    >
+                                      {u.name}
+                                    </Chip.Checkbox>
+                                  ))}
+                                </div>
+                                <Button
+                                  variant="tertiary"
+                                  data-size="sm"
+                                  onClick={() => {
+                                    setAssigningId(null)
+                                  }}
+                                >
+                                  {t("Close")}
+                                </Button>
+                              </>
+                            ) : isMobile ? (
                               <Dropdown.TriggerContext>
                                 <Dropdown.Trigger
                                   variant="tertiary"
@@ -420,6 +536,17 @@ export function ShoppingList() {
                                     </Dropdown.Item>
                                     <Dropdown.Item>
                                       <Dropdown.Button
+                                        onClick={() => {
+                                          setMenuOpenId(null)
+                                          setConfirmingDeleteId(null)
+                                          setAssigningId(item.id)
+                                        }}
+                                      >
+                                        {t("Assign to...")}
+                                      </Dropdown.Button>
+                                    </Dropdown.Item>
+                                    <Dropdown.Item>
+                                      <Dropdown.Button
                                         data-color="danger"
                                         onClick={() => {
                                           handleDelete(item.id)
@@ -445,6 +572,17 @@ export function ShoppingList() {
                                   }}
                                 >
                                   {t("Edit")}
+                                </Button>
+                                <Button
+                                  variant="tertiary"
+                                  data-size="sm"
+                                  disabled={busy}
+                                  onClick={() => {
+                                    setConfirmingDeleteId(null)
+                                    setAssigningId(item.id)
+                                  }}
+                                >
+                                  {t("Assign to...")}
                                 </Button>
                                 <Button
                                   variant={

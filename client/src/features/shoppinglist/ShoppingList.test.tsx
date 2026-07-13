@@ -22,6 +22,7 @@ type ItemRow = {
   checked: boolean
   created_at: Temporal.Instant
   created_by: number | null
+  assignee_ids: number[]
 }
 
 function itemRow(
@@ -33,6 +34,7 @@ function itemRow(
     checked: false,
     created_at: Temporal.Instant.from("2026-07-01T10:00:00Z"),
     created_by: null,
+    assignee_ids: [],
     ...over,
   }
 }
@@ -40,6 +42,10 @@ function itemRow(
 function makeHandlers(items: ItemRow[]): FakeHandlers {
   return {
     "shoppingItem.listForProperty": vi.fn(() => items),
+    "user.listForProperty": vi.fn(() => [
+      { id: 7, name: "Kari" },
+      { id: 8, name: "Ola" },
+    ]),
   }
 }
 
@@ -164,14 +170,38 @@ describe("ShoppingList", () => {
     })
   })
 
+  test("assigning a user shows their name in the row optimistically", async () => {
+    const handlers = makeHandlers([itemRow({ id: 1, name: "Milk" })])
+    const assignHandler = vi.fn(() => new Promise(() => undefined))
+    handlers["shoppingItem.setAssignee"] = assignHandler
+    const user = userEvent.setup()
+    await renderList(handlers)
+
+    await screen.findByText("Milk")
+    await user.click(screen.getByRole("button", { name: "Assign to..." }))
+    await user.click(await screen.findByRole("checkbox", { name: "Kari" }))
+
+    expect(assignHandler).toHaveBeenCalledWith({
+      property_id: 1,
+      id: 1,
+      user_id: 7,
+    })
+    // The assignee line renders the user's name (optimistic cache edit).
+    const row = screen
+      .getAllByRole("listitem")
+      .find(r => r.textContent.includes("Milk"))
+    await waitFor(() => {
+      expect(row?.textContent).toContain("Kari")
+    })
+  })
+
   test("clear list empties only the armed section after confirmation", async () => {
     let rows = [
       itemRow({ id: 1, name: "Milk" }),
       itemRow({ id: 2, name: "Soap", section: "other" }),
     ]
-    const handlers: FakeHandlers = {
-      "shoppingItem.listForProperty": vi.fn(() => rows),
-    }
+    const handlers = makeHandlers(rows)
+    handlers["shoppingItem.listForProperty"] = vi.fn(() => rows)
     const clearHandler = vi.fn((input: unknown) => {
       const { section } = input as { section: "food" | "other" }
       rows = rows.filter(r => r.section !== section)
@@ -205,9 +235,8 @@ describe("ShoppingList", () => {
 
   test("renaming an item saves and leaves edit mode", async () => {
     let rows = [itemRow({ id: 1, name: "Milk" })]
-    const handlers: FakeHandlers = {
-      "shoppingItem.listForProperty": vi.fn(() => rows),
-    }
+    const handlers = makeHandlers(rows)
+    handlers["shoppingItem.listForProperty"] = vi.fn(() => rows)
     const updateHandler = vi.fn(() => {
       rows = [itemRow({ id: 1, name: "Oat milk" })]
       return { ok: true }

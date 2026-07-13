@@ -1,7 +1,10 @@
 import { and, asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
-import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
+import {
+  shoppingItemAssigneesTable,
+  shoppingListItemsTable,
+} from "../../db/schema/shopping.schema.ts"
 import { wireMap } from "../util/wire.ts"
 import {
   assertPropertyMember,
@@ -9,7 +12,10 @@ import {
   protectedProcedure,
   router,
 } from "../init.ts"
-import { resolvePropertyIdFromShoppingItem } from "../util/propertyAccess.ts"
+import {
+  assertUserIsPropertyMember,
+  resolvePropertyIdFromShoppingItem,
+} from "../util/propertyAccess.ts"
 
 // Wire mapping: created_at (timestamp) → Temporal.Instant.
 const toWireShoppingItem = wireMap({ created_at: "instant" })
@@ -37,7 +43,28 @@ export const shoppingItemRouter = router({
       .from(shoppingListItemsTable)
       .where(eq(shoppingListItemsTable.property_id, input.property_id))
       .orderBy(asc(shoppingListItemsTable.id))
-    return rows.map(r => toWireShoppingItem(r))
+    const assigneeRows = await ctx.db
+      .select({
+        item_id: shoppingItemAssigneesTable.item_id,
+        user_id: shoppingItemAssigneesTable.user_id,
+      })
+      .from(shoppingItemAssigneesTable)
+      .innerJoin(
+        shoppingListItemsTable,
+        eq(shoppingListItemsTable.id, shoppingItemAssigneesTable.item_id),
+      )
+      .where(eq(shoppingListItemsTable.property_id, input.property_id))
+      .orderBy(shoppingItemAssigneesTable.id)
+    const assigneesByItem = new Map<number, number[]>()
+    for (const a of assigneeRows) {
+      const list = assigneesByItem.get(a.item_id)
+      if (list) list.push(a.user_id)
+      else assigneesByItem.set(a.item_id, [a.user_id])
+    }
+    return rows.map(row => ({
+      ...toWireShoppingItem(row),
+      assignee_ids: assigneesByItem.get(row.id) ?? [],
+    }))
   }),
 
   create: propertyAdminProcedure
@@ -70,6 +97,63 @@ export const shoppingItemRouter = router({
         .where(eq(shoppingListItemsTable.id, id))
         .returning()
       return toWireShoppingItem(updated)
+    }),
+
+  setAssignee: propertyAdminProcedure
+    .input(
+      z.object({
+        property_id: z.number().int().positive(),
+        id: z.number().int().positive(),
+        user_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolvePropertyIdFromShoppingItem(
+        ctx.db,
+        input.id,
+      )
+      if (existingPropertyId !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "shopping item does not belong to this property",
+        })
+      }
+      await assertUserIsPropertyMember(ctx.db, input.user_id, input.property_id)
+      await ctx.db
+        .insert(shoppingItemAssigneesTable)
+        .values({ item_id: input.id, user_id: input.user_id })
+        .onConflictDoNothing()
+      return { ok: true as const }
+    }),
+
+  removeAssignee: propertyAdminProcedure
+    .input(
+      z.object({
+        property_id: z.number().int().positive(),
+        id: z.number().int().positive(),
+        user_id: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingPropertyId = await resolvePropertyIdFromShoppingItem(
+        ctx.db,
+        input.id,
+      )
+      if (existingPropertyId !== input.property_id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "shopping item does not belong to this property",
+        })
+      }
+      await ctx.db
+        .delete(shoppingItemAssigneesTable)
+        .where(
+          and(
+            eq(shoppingItemAssigneesTable.item_id, input.id),
+            eq(shoppingItemAssigneesTable.user_id, input.user_id),
+          ),
+        )
+      return { ok: true as const }
     }),
 
   clearSection: propertyAdminProcedure

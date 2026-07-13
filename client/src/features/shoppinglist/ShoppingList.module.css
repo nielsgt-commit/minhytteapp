@@ -63,10 +63,46 @@
   border-bottom: none;
 }
 
-.name {
+.textCol {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.name {
+  min-width: 0;
   margin: 0;
+}
+
+.assignees {
+  color: var(--ds-color-neutral-text-subtle);
+  margin: 0;
+}
+
+.assignChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-1);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Pure name-pills, as in the dinner-responsible picker: hide the checkbox
+   square inside Chip.Checkbox (the checked fill comes from
+   .ds-chip:has(input:checked), which still applies) and restore the round pill
+   radius that the checkbox variant switches off. */
+.assignChips :global(.ds-chip) > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.assignChips :global(.ds-chip):has(input[type="checkbox"]) {
+  border-radius: var(--ds-border-radius-full);
+  padding-inline: var(--ds-size-3);
 }
 
 .done {
