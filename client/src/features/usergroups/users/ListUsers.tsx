@@ -8,6 +8,7 @@ import {
   Heading,
   List,
   Paragraph,
+  Tag,
   Textfield,
 } from "@digdir/designsystemet-react"
 import { ExclamationmarkTriangleFillIcon } from "@navikt/aksel-icons"
@@ -18,6 +19,7 @@ import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation
 import { fdBoolean, fdString } from "@/utils/formData.ts"
 import { isSyntheticEmail } from "@/utils/syntheticEmail.ts"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
+import { AddUserRow } from "./AddUserRow"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
@@ -39,6 +41,16 @@ export function ListUsers({ canEdit }: ListUsersProps) {
   const { data: me } = useQuery(trpc.user.me.queryOptions())
   const isAdmin = me?.is_admin ?? false
 
+  // allowedEmail.list is head/admin-guarded on the server, so only fetch it
+  // when this client can edit — otherwise regular members would get a 403.
+  const invitesQuery = useQuery({
+    ...trpc.allowedEmail.list.queryOptions({ property_id: propertyId }),
+    enabled: canEdit,
+  })
+  const pendingInvites = (invitesQuery.data ?? []).filter(
+    e => e.used_at == null,
+  )
+
   const userAndGroupKeys = [trpc.user.pathKey(), trpc.userGroup.pathKey()]
   const updateUser = useMutationWithInvalidation(
     trpc.user.update.mutationOptions(),
@@ -48,12 +60,17 @@ export function ListUsers({ canEdit }: ListUsersProps) {
     trpc.user.delete.mutationOptions(),
     userAndGroupKeys,
   )
+  const removeInvite = useMutationWithInvalidation(
+    trpc.allowedEmail.remove.mutationOptions(),
+    [trpc.allowedEmail.list.queryKey()],
+  )
 
   const [editingId, setEditingId] = useState<number | null>(null)
 
   const { pending, error: lastError } = useMutationsStatus(
     updateUser,
     deleteUser,
+    removeInvite,
   )
 
   const handleSubmit = (userId: number) => async (fd: FormData) => {
@@ -78,6 +95,13 @@ export function ListUsers({ canEdit }: ListUsersProps) {
   const handleDelete = (userId: number, userName: string) => {
     if (!window.confirm(t('Delete user "{{userName}}"?', { userName }))) return
     deleteUser.mutate({ id: userId })
+  }
+
+  const handleRemoveInvite = (inviteId: number, email: string) => {
+    if (!window.confirm(t("Remove {{email}} from the allowlist?", { email }))) {
+      return
+    }
+    removeInvite.mutate({ id: inviteId })
   }
 
   const renderEditForm = (u: (typeof users)[number]) => (
@@ -142,10 +166,11 @@ export function ListUsers({ canEdit }: ListUsersProps) {
     <section>
       <ErrorAlert error={lastError} />
 
-      {users.length === 0 ? (
+      {users.length === 0 && pendingInvites.length === 0 && !canEdit ? (
         <EmptyState title={t("No users yet.")} />
       ) : (
         <List.Unordered className={styles.list}>
+          {canEdit && <AddUserRow />}
           {users.map(u => {
             const roles =
               [u.is_admin ? t("admin") : null, u.is_child ? t("child") : null]
@@ -211,6 +236,39 @@ export function ListUsers({ canEdit }: ListUsersProps) {
               </Card>
             )
           })}
+          {pendingInvites.map(inv => (
+            <Card asChild key={`invite-${String(inv.id)}`}>
+              <List.Item>
+                <Card.Block>
+                  <Heading level={4}>{inv.name ?? inv.email}</Heading>
+                  {inv.name != null && <Paragraph>{inv.email}</Paragraph>}
+                  <Paragraph>
+                    <Tag>{t("Pending")}</Tag>
+                    {inv.added_by_name != null && (
+                      <span style={{ marginInlineStart: "var(--ds-size-2)" }}>
+                        {t("added by {{name}}", { name: inv.added_by_name })}
+                      </span>
+                    )}
+                  </Paragraph>
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    data-color="danger"
+                    data-size="sm"
+                    disabled={pending}
+                    aria-label={t("Remove invite {{email}}", {
+                      email: inv.email,
+                    })}
+                    onClick={() => {
+                      handleRemoveInvite(inv.id, inv.email)
+                    }}
+                  >
+                    {t("Remove")}
+                  </Button>
+                </Card.Block>
+              </List.Item>
+            </Card>
+          ))}
         </List.Unordered>
       )}
     </section>

@@ -47,6 +47,7 @@ export const allowedEmailRouter = router({
         .select({
           id: allowedEmailsTable.id,
           email: allowedEmailsTable.email,
+          name: allowedEmailsTable.name,
           property_id: allowedEmailsTable.property_id,
           user_group_id: allowedEmailsTable.user_group_id,
           ownership_pct: allowedEmailsTable.ownership_pct,
@@ -74,6 +75,7 @@ export const allowedEmailRouter = router({
     .input(
       z.object({
         email: z.email(),
+        name: z.string().trim().min(1).max(255).nullable().optional(),
         property_id: z.number().int().positive().nullable().optional(),
         user_group_id: z.number().int().positive().nullable().optional(),
         ownership_pct: z
@@ -87,6 +89,7 @@ export const allowedEmailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const email = normalizeEmail(input.email)
+      const name = input.name ?? null
       const property_id = input.property_id ?? null
       const user_group_id = input.user_group_id ?? null
       const ownership_pct = input.ownership_pct ?? null
@@ -251,6 +254,7 @@ export const allowedEmailRouter = router({
               .insert(allowedEmailsTable)
               .values({
                 email,
+                name,
                 property_id,
                 user_group_id,
                 ownership_pct: ownership_pct_str,
@@ -271,6 +275,7 @@ export const allowedEmailRouter = router({
           .insert(allowedEmailsTable)
           .values({
             email,
+            name,
             property_id,
             user_group_id,
             ownership_pct: ownership_pct_str,

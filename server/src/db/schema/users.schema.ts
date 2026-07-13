@@ -110,6 +110,7 @@ export const allowedEmailsTable = pgTable(
   {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     email: varchar("email", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }),
     property_id: integer("property_id").references(
       (): AnyPgColumn => propertyTable.id,
     ),

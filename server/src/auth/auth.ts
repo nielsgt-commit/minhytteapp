@@ -22,6 +22,7 @@ async function applyInvitesForNewUser(new_user_id: number, email: string) {
   const invites = await db
     .select({
       id: allowedEmailsTable.id,
+      name: allowedEmailsTable.name,
       property_id: allowedEmailsTable.property_id,
       user_group_id: allowedEmailsTable.user_group_id,
       ownership_pct: allowedEmailsTable.ownership_pct,
@@ -98,6 +99,21 @@ async function applyInvitesForNewUser(new_user_id: number, email: string) {
       .update(allowedEmailsTable)
       .set({ used_at: now, used_by_user_id: new_user_id })
       .where(eq(allowedEmailsTable.id, inv.id))
+  }
+
+  // Magic-link sign-up collects no name, so a fresh user's name is blank.
+  // Fill it from the invite, but never overwrite a name the user already has.
+  const inviteName = invites.map(inv => inv.name).find(n => n != null) ?? null
+  if (inviteName != null) {
+    await db
+      .update(usersTable)
+      .set({ name: inviteName })
+      .where(
+        and(
+          eq(usersTable.id, new_user_id),
+          eq(sql`coalesce(${usersTable.name}, '')`, ""),
+        ),
+      )
   }
 
   // The invitee is joining an existing property — they have nothing to set
