@@ -6,6 +6,7 @@ import styles from "./SelectionToast.module.css"
 type Props = {
   message: string
   onDismiss: () => void
+  durationMs?: number
 }
 
 /**
@@ -16,13 +17,17 @@ type Props = {
  * (e.g. wrapped in useCallback) so the auto-dismiss timer only resets when
  * `message` changes.
  */
-export function SelectionToast({ message, onDismiss }: Props) {
+export function SelectionToast({
+  message,
+  onDismiss,
+  durationMs = 3000,
+}: Props) {
   useEffect(() => {
-    const id = setTimeout(onDismiss, 3000)
+    const id = setTimeout(onDismiss, durationMs)
     return () => {
       clearTimeout(id)
     }
-  }, [message, onDismiss])
+  }, [message, onDismiss, durationMs])
 
   return createPortal(
     <div className={styles.toast} role="status" aria-live="polite">

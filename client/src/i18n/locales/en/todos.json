@@ -15,6 +15,7 @@
   "Edit todo": "Edit todo",
   "Save": "Save",
   "Move to...": "Move to...",
+  "You'll now find it in the todo list on {{name}}.": "You'll now find it in the todo list on {{name}}.",
   "Assign to...": "Assign to...",
   "Close": "Close",
   "Cancel": "Cancel",

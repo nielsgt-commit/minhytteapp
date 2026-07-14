@@ -15,6 +15,7 @@
   "Edit todo": "Rediger oppgave",
   "Save": "Lagre",
   "Move to...": "Flytt til...",
+  "You'll now find it in the todo list on {{name}}.": "Du finner den nå i oppgavelisten på {{name}}.",
   "Assign to...": "Tildel til...",
   "Close": "Lukk",
   "Cancel": "Avbryt",

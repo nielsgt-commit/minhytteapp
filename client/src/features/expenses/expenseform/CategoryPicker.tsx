@@ -22,6 +22,7 @@ export function CategoryPicker({
         <Chip.Button
           key={c.id}
           type="button"
+          data-size="lg"
           disabled={pending || openCategory === c.name}
           onClick={() => {
             onOpenCategory(c.name)

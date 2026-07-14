@@ -1,5 +1,5 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   Button,
@@ -30,6 +30,7 @@ import { useIsMobile } from "@/hooks/useIsMobile"
 import type { PageHelpContent } from "@/components/shared/PageHelp"
 import { NO_TARGET, parseTargetToken } from "./targetToken"
 import { TargetSelect } from "./TargetSelect"
+import { SelectionToast } from "@/components/core/header/SelectionToast"
 
 export function Todos() {
   const { t } = useTranslation("todos")
@@ -257,6 +258,13 @@ export function Todos() {
   // Which row (if any) is being edited inline.
   const [editingId, setEditingId] = useState<number | null>(null)
 
+  // Confirmation shown after a successful "Move to…": the todo vanishes from
+  // this list, so tell the user where it now lives.
+  const [moveToast, setMoveToast] = useState<string | null>(null)
+  const dismissMoveToast = useCallback(() => {
+    setMoveToast(null)
+  }, [])
+
   const handleConfirmDelete = (id: number) => {
     setConfirmingDeleteId(null)
     deleteMutation.mutate({ id })
@@ -310,11 +318,26 @@ export function Todos() {
     if (selectedPropertyId == null) return
     const target = parseTargetToken(token)
     if (!target) return
+    const rowsForKind = {
+      structure: structureRows,
+      infrastructure: infrastructureRows,
+      equipment: equipmentRows,
+    }
+    const targetName = rowsForKind[target.kind].find(
+      r => r.id === target.id,
+    )?.name
     moveMutation.mutate(
       { property_id: selectedPropertyId, id, target },
       {
         onSuccess: () => {
           setMovingId(null)
+          if (targetName != null) {
+            setMoveToast(
+              t("You'll now find it in the todo list on {{name}}.", {
+                name: targetName,
+              }),
+            )
+          }
         },
       },
     )
@@ -334,10 +357,12 @@ export function Todos() {
     return b.id - a.id
   })
 
-  // The assign picker lives in a dialog (opened from the row's kebab menu /
-  // Assign to... button), so the row layout never has to make room for it.
+  // The assign and move pickers live in dialogs (opened from the row's kebab
+  // menu / action buttons), so the row layout never has to make room for them.
   const assigningTodo =
     assigningId == null ? undefined : todos.find(td => td.id === assigningId)
+  const movingTodo =
+    movingId == null ? undefined : todos.find(td => td.id === movingId)
 
   return (
     <div className={styles.wrap}>
@@ -436,27 +461,6 @@ export function Todos() {
                               }}
                             >
                               {t("Confirm delete")}
-                            </Button>
-                          </>
-                        ) : movingId === todo.id ? (
-                          <>
-                            <TargetSelect
-                              value={NO_TARGET}
-                              structures={structureRows}
-                              infrastructure={infrastructureRows}
-                              equipment={equipmentRows}
-                              onChange={token => {
-                                handleMove(todo.id, token)
-                              }}
-                            />
-                            <Button
-                              variant="tertiary"
-                              data-size="sm"
-                              onClick={() => {
-                                setMovingId(null)
-                              }}
-                            >
-                              {t("Cancel")}
                             </Button>
                           </>
                         ) : isMobile ? (
@@ -619,6 +623,50 @@ export function Todos() {
           </Button>
         </Dialog.Block>
       </Dialog>
+      <Dialog
+        open={movingTodo != null}
+        onClose={() => {
+          setMovingId(null)
+        }}
+      >
+        <Dialog.Block>
+          <Heading level={3} data-size="xs">
+            {movingTodo?.description}
+          </Heading>
+          <Paragraph data-size="sm">{t("Move to...")}</Paragraph>
+        </Dialog.Block>
+        <Dialog.Block>
+          {movingTodo != null && (
+            <TargetSelect
+              value={NO_TARGET}
+              structures={structureRows}
+              infrastructure={infrastructureRows}
+              equipment={equipmentRows}
+              onChange={token => {
+                handleMove(movingTodo.id, token)
+              }}
+            />
+          )}
+        </Dialog.Block>
+        <Dialog.Block>
+          <Button
+            variant="tertiary"
+            data-size="sm"
+            onClick={() => {
+              setMovingId(null)
+            }}
+          >
+            {t("Cancel")}
+          </Button>
+        </Dialog.Block>
+      </Dialog>
+      {moveToast != null && (
+        <SelectionToast
+          message={moveToast}
+          onDismiss={dismissMoveToast}
+          durationMs={3500}
+        />
+      )}
     </div>
   )
 }
