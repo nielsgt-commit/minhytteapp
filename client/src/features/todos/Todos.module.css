@@ -32,10 +32,14 @@
 }
 
 .row {
-  display: flex;
-  align-items: center;
+  /* checkbox | text | actions. A grid (not wrapping flex) so long text
+     shrinks and wraps inside its own column instead of pushing the whole
+     column — and the kebab — onto the next line. Top-aligned so the checkbox
+     and actions stay on the first text line. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
   gap: 0.5rem;
-  flex-wrap: wrap;
   padding: 0.5rem 0;
   margin: 0;
   border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
@@ -48,6 +52,10 @@
 .textCol {
   display: flex;
   flex-direction: column;
+  /* Centres a single line against the checkbox; wrapped text grows past the
+     min-height and starts on the checkbox's line. */
+  justify-content: center;
+  min-height: var(--ds-size-6);
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -102,9 +110,16 @@
   min-width: 0;
 }
 
+/* Compact row kebab: the default sm icon button is ~2 text lines tall, so on
+   wrapped items its icon looked vertically centred over the block. This keeps
+   it small enough to sit on the first line. */
+.kebab {
+  --dsc-button-size: var(--ds-size-8);
+}
+
 .editForm {
   display: flex;
-  flex: 1 1 auto;
+  grid-column: 1 / -1;
   gap: 0.5rem;
   align-items: center;
   min-width: 0;

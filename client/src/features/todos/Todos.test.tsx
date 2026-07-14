@@ -4,7 +4,7 @@
 // unmodified. Queries by role/label at page level so the suite survives
 // internal refactors of Todos.tsx.
 
-import { describe, expect, test, vi } from "vitest"
+import { beforeAll, describe, expect, test, vi } from "vitest"
 import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { Temporal } from "temporal-polyfill"
@@ -14,6 +14,20 @@ import {
   type FakeHandlers,
 } from "@/test-utils/fakeTrpcClient"
 import { Todos } from "./Todos"
+
+// jsdom does not implement <dialog> methods; stub them so the assign dialog's
+// content becomes visible/hidden the way the browser would show it.
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function (
+    this: HTMLDialogElement,
+  ) {
+    this.open = true
+  })
+  HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
+    this.open = false
+    this.dispatchEvent(new Event("close"))
+  })
+})
 
 type TodoRow = {
   id: number

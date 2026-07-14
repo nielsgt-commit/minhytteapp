@@ -6,7 +6,9 @@ import {
   Card,
   Checkbox,
   Chip,
+  Dialog,
   Dropdown,
+  Heading,
   List,
   Paragraph,
   Textfield,
@@ -332,6 +334,11 @@ export function Todos() {
     return b.id - a.id
   })
 
+  // The assign picker lives in a dialog (opened from the row's kebab menu /
+  // Assign to... button), so the row layout never has to make room for it.
+  const assigningTodo =
+    assigningId == null ? undefined : todos.find(td => td.id === assigningId)
+
   return (
     <div className={styles.wrap}>
       <PageHeader title={t("Todos")} help={help} />
@@ -431,37 +438,6 @@ export function Todos() {
                               {t("Confirm delete")}
                             </Button>
                           </>
-                        ) : assigningId === todo.id ? (
-                          <>
-                            <div className={styles.assignChips}>
-                              {userRows.map(u => (
-                                <Chip.Checkbox
-                                  key={u.id}
-                                  data-size="sm"
-                                  data-color="accent"
-                                  checked={todo.assignee_ids.includes(u.id)}
-                                  onChange={e => {
-                                    toggleAssignee(
-                                      todo.id,
-                                      u.id,
-                                      e.target.checked,
-                                    )
-                                  }}
-                                >
-                                  {u.name}
-                                </Chip.Checkbox>
-                              ))}
-                            </div>
-                            <Button
-                              variant="tertiary"
-                              data-size="sm"
-                              onClick={() => {
-                                setAssigningId(null)
-                              }}
-                            >
-                              {t("Close")}
-                            </Button>
-                          </>
                         ) : movingId === todo.id ? (
                           <>
                             <TargetSelect
@@ -489,6 +465,7 @@ export function Todos() {
                               variant="tertiary"
                               data-size="sm"
                               icon
+                              className={styles.kebab}
                               aria-label={t("Todo actions")}
                               onClick={() => {
                                 setMenuOpenId(
@@ -600,6 +577,48 @@ export function Todos() {
           )}
         </Card.Block>
       </Card>
+      <Dialog
+        open={assigningTodo != null}
+        onClose={() => {
+          setAssigningId(null)
+        }}
+      >
+        <Dialog.Block>
+          <Heading level={3} data-size="xs">
+            {assigningTodo?.description}
+          </Heading>
+          <Paragraph data-size="sm">{t("Assign to...")}</Paragraph>
+        </Dialog.Block>
+        <Dialog.Block>
+          <div className={styles.assignChips}>
+            {assigningTodo != null &&
+              userRows.map(u => (
+                <Chip.Checkbox
+                  key={u.id}
+                  data-size="sm"
+                  data-color="accent"
+                  checked={assigningTodo.assignee_ids.includes(u.id)}
+                  onChange={e => {
+                    toggleAssignee(assigningTodo.id, u.id, e.target.checked)
+                  }}
+                >
+                  {u.name}
+                </Chip.Checkbox>
+              ))}
+          </div>
+        </Dialog.Block>
+        <Dialog.Block>
+          <Button
+            variant="tertiary"
+            data-size="sm"
+            onClick={() => {
+              setAssigningId(null)
+            }}
+          >
+            {t("Close")}
+          </Button>
+        </Dialog.Block>
+      </Dialog>
     </div>
   )
 }

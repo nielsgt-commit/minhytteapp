@@ -7,6 +7,7 @@ import {
   Card,
   Checkbox,
   Chip,
+  Dialog,
   Divider,
   Dropdown,
   Heading,
@@ -376,6 +377,11 @@ export function ShoppingList() {
       }
     }
 
+  // The assign picker lives in a dialog (opened from the row's kebab menu /
+  // Assign to... button), so the row layout never has to make room for it.
+  const assigningItem =
+    assigningId == null ? undefined : items.find(i => i.id === assigningId)
+
   return (
     <section className={styles.page}>
       <PageHeader title={t("Shopping list")} help={help} />
@@ -533,45 +539,13 @@ export function ShoppingList() {
                                   </Paragraph>
                                 )}
                               </div>
-                              {assigningId === item.id ? (
-                                <>
-                                  <div className={styles.assignChips}>
-                                    {userRows.map(u => (
-                                      <Chip.Checkbox
-                                        key={u.id}
-                                        data-size="sm"
-                                        data-color="accent"
-                                        checked={item.assignee_ids.includes(
-                                          u.id,
-                                        )}
-                                        onChange={e => {
-                                          toggleAssignee(
-                                            item.id,
-                                            u.id,
-                                            e.target.checked,
-                                          )
-                                        }}
-                                      >
-                                        {u.name}
-                                      </Chip.Checkbox>
-                                    ))}
-                                  </div>
-                                  <Button
-                                    variant="tertiary"
-                                    data-size="sm"
-                                    onClick={() => {
-                                      setAssigningId(null)
-                                    }}
-                                  >
-                                    {t("Close")}
-                                  </Button>
-                                </>
-                              ) : isMobile ? (
+                              {isMobile ? (
                                 <Dropdown.TriggerContext>
                                   <Dropdown.Trigger
                                     variant="tertiary"
                                     data-size="sm"
                                     icon
+                                    className={styles.kebab}
                                     aria-label={t("Item actions")}
                                     disabled={busy}
                                     onClick={() => {
@@ -684,6 +658,48 @@ export function ShoppingList() {
           })}
         </Card.Block>
       </Card>
+      <Dialog
+        open={assigningItem != null}
+        onClose={() => {
+          setAssigningId(null)
+        }}
+      >
+        <Dialog.Block>
+          <Heading level={3} data-size="xs">
+            {assigningItem?.name}
+          </Heading>
+          <Paragraph data-size="sm">{t("Assign to...")}</Paragraph>
+        </Dialog.Block>
+        <Dialog.Block>
+          <div className={styles.assignChips}>
+            {assigningItem != null &&
+              userRows.map(u => (
+                <Chip.Checkbox
+                  key={u.id}
+                  data-size="sm"
+                  data-color="accent"
+                  checked={assigningItem.assignee_ids.includes(u.id)}
+                  onChange={e => {
+                    toggleAssignee(assigningItem.id, u.id, e.target.checked)
+                  }}
+                >
+                  {u.name}
+                </Chip.Checkbox>
+              ))}
+          </div>
+        </Dialog.Block>
+        <Dialog.Block>
+          <Button
+            variant="tertiary"
+            data-size="sm"
+            onClick={() => {
+              setAssigningId(null)
+            }}
+          >
+            {t("Close")}
+          </Button>
+        </Dialog.Block>
+      </Dialog>
     </section>
   )
 }

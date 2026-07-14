@@ -3,7 +3,7 @@
 // pattern). Covers the optimistic add/toggle cache edits, the two-tap
 // delete with its 4s auto-disarm timer, and section-scoped clearing.
 
-import { afterEach, describe, expect, test, vi } from "vitest"
+import { afterEach, beforeAll, describe, expect, test, vi } from "vitest"
 import { act, fireEvent, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { Temporal } from "temporal-polyfill"
@@ -13,6 +13,20 @@ import {
   type FakeHandlers,
 } from "@/test-utils/fakeTrpcClient"
 import { ShoppingList } from "./ShoppingList"
+
+// jsdom does not implement <dialog> methods; stub them so the assign dialog's
+// content becomes visible/hidden the way the browser would show it.
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function (
+    this: HTMLDialogElement,
+  ) {
+    this.open = true
+  })
+  HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
+    this.open = false
+    this.dispatchEvent(new Event("close"))
+  })
+})
 
 type ItemRow = {
   id: number
