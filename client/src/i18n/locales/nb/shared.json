@@ -21,5 +21,12 @@
   "Something went wrong": "Noe gikk galt",
   "Todos": "Oppgaver",
   "Try again": "Prøv igjen",
-  "{{label}} sections": "{{label}}-seksjoner"
+  "{{label}} sections": "{{label}}-seksjoner",
+  "Add photo": "Legg til bilde",
+  "Replace photo": "Bytt bilde",
+  "Remove photo": "Fjern bilde",
+  "Uploading photo…": "Laster opp bilde…",
+  "Photo of {{name}}": "Bilde av {{name}}",
+  "The photo is too large (max 10 MB).": "Bildet er for stort (maks 10 MB).",
+  "Could not upload the photo.": "Kunne ikke laste opp bildet."
 }

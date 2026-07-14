@@ -9,6 +9,7 @@ import { appRouter } from "./trpc/routers/_app.ts"
 import { createContext } from "./trpc/context.ts"
 import { auth } from "./auth/auth.ts"
 import { pool } from "./db/client.ts"
+import { imagesRoute } from "./routes/images.ts"
 
 const app = new Hono()
 
@@ -71,6 +72,8 @@ if (process.env.NODE_ENV === "production" && canonicalUrl) {
 }
 
 app.on(["POST", "GET"], "/api/auth/*", c => auth.handler(c.req.raw))
+
+app.route("/api/images", imagesRoute)
 
 const isDev = process.env.NODE_ENV !== "production"
 

@@ -113,7 +113,13 @@ export function StructureStats() {
                       name: b.name,
                       builtYear: b.built_year,
                     }
-                    return <MaintenanceCard key={b.id} scope={scope} />
+                    return (
+                      <MaintenanceCard
+                        key={b.id}
+                        scope={scope}
+                        imageId={b.image_id}
+                      />
+                    )
                   })}
                 </CardGallery>
               </div>
@@ -137,7 +143,13 @@ export function StructureStats() {
                     name: p.name,
                     builtYear: p.since_year,
                   }
-                  return <MaintenanceCard key={p.id} scope={scope} />
+                  return (
+                    <MaintenanceCard
+                      key={p.id}
+                      scope={scope}
+                      imageId={p.image_id}
+                    />
+                  )
                 })}
               </CardGallery>
             )}

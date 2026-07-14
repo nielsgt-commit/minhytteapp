@@ -1,6 +1,7 @@
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, getTableColumns } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
+import { imagesTable } from "../../db/schema/images.schema.ts"
 import { equipmentTable } from "../../db/schema/maintenance.schema.ts"
 import { wireMap } from "../util/wire.ts"
 import {
@@ -33,8 +34,9 @@ const updateInput = z.object({
 export const equipmentRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     const rows = await ctx.db
-      .select()
+      .select({ ...getTableColumns(equipmentTable), image_id: imagesTable.id })
       .from(equipmentTable)
+      .leftJoin(imagesTable, eq(imagesTable.equipment_id, equipmentTable.id))
       .where(eq(equipmentTable.property_id, input.property_id))
       .orderBy(asc(equipmentTable.id))
     return rows.map(r => toWireEquipment(r))
@@ -82,5 +84,16 @@ export const equipmentRouter = router({
         .where(eq(equipmentTable.id, input.id))
         .returning()
       return toWireEquipment(deleted)
+    }),
+
+  removeCover: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromEquipment(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      await ctx.db
+        .delete(imagesTable)
+        .where(eq(imagesTable.equipment_id, input.id))
+      return { ok: true }
     }),
 })

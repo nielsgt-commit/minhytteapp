@@ -18,5 +18,12 @@
   "Shopping list": "Shopping list",
   "Something went wrong": "Something went wrong",
   "Todos": "Todos",
-  "Try again": "Try again"
+  "Try again": "Try again",
+  "Add photo": "Add photo",
+  "Replace photo": "Replace photo",
+  "Remove photo": "Remove photo",
+  "Uploading photo…": "Uploading photo…",
+  "Photo of {{name}}": "Photo of {{name}}",
+  "The photo is too large (max 10 MB).": "The photo is too large (max 10 MB).",
+  "Could not upload the photo.": "Could not upload the photo."
 }

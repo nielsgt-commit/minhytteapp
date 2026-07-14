@@ -97,9 +97,11 @@ export async function assertPropertyHeadOrAdmin(
   await assertPropertyHead(db, user, propertyId, message)
 }
 
+// Accepts a minimal user shape so non-tRPC callers (the Hono image routes)
+// can authorize with the raw better-auth session user.
 export async function assertPropertyMember(
   db: Db,
-  user: AuthUser,
+  user: Pick<AuthUser, "id" | "is_admin">,
   propertyId: number,
 ) {
   if (user.is_admin) return

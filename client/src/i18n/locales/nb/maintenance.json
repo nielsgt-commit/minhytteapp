@@ -161,5 +161,9 @@
   "Yearly": "Årlig",
   "You're all caught up — no tasks assigned to you. Enjoy the day!": "Du er ajour — ingen oppgaver tildelt deg. Ha en fin dag!",
   "dugnad": "dugnad",
-  "just in time": "akkurat i tide"
+  "just in time": "akkurat i tide",
+  "Photo of {{name}}": "Bilde av {{name}}",
+  "Add photo": "Legg til bilde",
+  "Uploading photo…": "Laster opp bilde…",
+  "Change cover photo": "Bytt forsidebilde"
 }

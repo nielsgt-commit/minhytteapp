@@ -1,6 +1,7 @@
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, getTableColumns } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
+import { imagesTable } from "../../db/schema/images.schema.ts"
 import { infrastructureTable } from "../../db/schema/property.schema.ts"
 import {
   assertPropertyMember,
@@ -27,8 +28,15 @@ const updateInput = z.object({
 export const infrastructureRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     return ctx.db
-      .select()
+      .select({
+        ...getTableColumns(infrastructureTable),
+        image_id: imagesTable.id,
+      })
       .from(infrastructureTable)
+      .leftJoin(
+        imagesTable,
+        eq(imagesTable.infrastructure_id, infrastructureTable.id),
+      )
       .where(eq(infrastructureTable.property_id, input.property_id))
       .orderBy(asc(infrastructureTable.id))
   }),
@@ -78,5 +86,19 @@ export const infrastructureRouter = router({
         .where(eq(infrastructureTable.id, input.id))
         .returning()
       return deleted
+    }),
+
+  removeCover: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromInfrastructure(
+        ctx.db,
+        input.id,
+      )
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      await ctx.db
+        .delete(imagesTable)
+        .where(eq(imagesTable.infrastructure_id, input.id))
+      return { ok: true }
     }),
 })

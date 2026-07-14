@@ -16,6 +16,7 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
+import { CoverImageControl } from "@/components/shared/CoverImageControl"
 import { InlineEditField } from "@/components/shared/InlineEditField"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
@@ -361,6 +362,14 @@ export function ListPropertyStructures() {
                       </Paragraph>
                     )}
                   </div>
+
+                  <CoverImageControl
+                    target="structure"
+                    targetId={b.id}
+                    imageId={b.image_id}
+                    name={b.name}
+                    canEdit={canEdit && isExpanded}
+                  />
 
                   {isExpanded && (
                     <>

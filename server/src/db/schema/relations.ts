@@ -5,6 +5,7 @@ import {
   bookingRoomsTable,
   bookingTable,
 } from "./booking.schema.ts"
+import { imagesTable } from "./images.schema.ts"
 import {
   equipmentTable,
   inspectionsTable,
@@ -215,6 +216,7 @@ export const structuresRelations = relations(
     rooms: many(roomTable),
     maintenance: many(maintenanceTable),
     inspections: many(inspectionsTable),
+    coverImage: one(imagesTable),
   }),
 )
 
@@ -235,6 +237,7 @@ export const infrastructureRelations = relations(
     }),
     maintenance: many(maintenanceTable),
     inspections: many(inspectionsTable),
+    coverImage: one(imagesTable),
   }),
 )
 
@@ -408,8 +411,32 @@ export const equipmentRelations = relations(
     }),
     maintenance: many(maintenanceTable),
     inspections: many(inspectionsTable),
+    coverImage: one(imagesTable),
   }),
 )
+
+export const imagesRelations = relations(imagesTable, ({ one }) => ({
+  property: one(propertyTable, {
+    fields: [imagesTable.property_id],
+    references: [propertyTable.id],
+  }),
+  structure: one(structuresTable, {
+    fields: [imagesTable.structure_id],
+    references: [structuresTable.id],
+  }),
+  infrastructure: one(infrastructureTable, {
+    fields: [imagesTable.infrastructure_id],
+    references: [infrastructureTable.id],
+  }),
+  equipment: one(equipmentTable, {
+    fields: [imagesTable.equipment_id],
+    references: [equipmentTable.id],
+  }),
+  uploadedByUser: one(usersTable, {
+    fields: [imagesTable.uploaded_by],
+    references: [usersTable.id],
+  }),
+}))
 
 export const settlementsRelations = relations(
   settlementsTable,

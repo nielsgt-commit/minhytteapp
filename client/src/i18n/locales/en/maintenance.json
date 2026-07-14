@@ -131,5 +131,9 @@
   "Type description to confirm deletion": "Type description to confirm deletion",
   "URL": "URL",
   "Will be removed": "Will be removed",
-  "Yearly": "Yearly"
+  "Yearly": "Yearly",
+  "Photo of {{name}}": "Photo of {{name}}",
+  "Add photo": "Add photo",
+  "Uploading photo…": "Uploading photo…",
+  "Change cover photo": "Change cover photo"
 }

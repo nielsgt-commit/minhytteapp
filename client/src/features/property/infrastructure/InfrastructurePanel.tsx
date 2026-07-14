@@ -14,6 +14,7 @@ import { useCanEdit } from "@/hooks/useCanEdit"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
+import { CoverImageControl } from "@/components/shared/CoverImageControl"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
@@ -266,7 +267,18 @@ export function InfrastructurePanel({ propertyId }: Props) {
                       )}
                     </>
                   }
-                  form={renderEditForm(p)}
+                  form={
+                    <>
+                      {renderEditForm(p)}
+                      <CoverImageControl
+                        target="infrastructure"
+                        targetId={p.id}
+                        imageId={p.image_id}
+                        name={p.name}
+                        canEdit={canEdit}
+                      />
+                    </>
+                  }
                   actions={
                     <Button
                       variant="tertiary"

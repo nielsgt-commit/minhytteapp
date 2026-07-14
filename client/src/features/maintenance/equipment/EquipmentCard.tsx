@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import {
   Button,
   Card,
@@ -8,12 +8,16 @@ import {
 } from "@digdir/designsystemet-react"
 import { useTranslation } from "react-i18next"
 import {
+  CameraIcon,
   ClipboardCheckmarkIcon,
   ClockDashedIcon,
   ImageIcon,
   MenuElipsisVerticalIcon,
 } from "@navikt/aksel-icons"
 import styles from "./Equipment.module.css"
+import { coverImageUrl } from "@/components/shared/CoverImageControl"
+import { useCoverUpload } from "@/hooks/useCoverUpload"
+import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import type { EquipmentHistoryEntryData } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { EquipmentHistoryEntry } from "@/features/maintenance/equipment/EquipmentHistoryEntry.tsx"
 import { InspectionFlow } from "@/features/maintenance/inspectionflow/InspectionFlow.tsx"
@@ -29,6 +33,7 @@ type EquipmentItem = {
   model: string | null
   category: string | null
   acquired_year: number | null
+  image_id: number | null
 }
 
 export function EquipmentCard(props: {
@@ -42,6 +47,13 @@ export function EquipmentCard(props: {
   >("none")
   const [menuOpen, setMenuOpen] = useState(false)
   const { item, historyEntries } = props
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const upload = useCoverUpload("equipment", item.id)
+
+  const pickPhoto = () => {
+    fileInputRef.current?.click()
+  }
 
   const closeSheet = () => {
     setSheet("none")
@@ -98,6 +110,8 @@ export function EquipmentCard(props: {
 
   // On the narrowest phones the History/Todos labels stop fitting next to the
   // name, so collapse them into a kebab menu in the top-right corner instead.
+  // On desktop those stay inline buttons, but the kebab still appears once a
+  // cover photo is set — it's where "Change cover photo" lives.
   const kebabMenu = (
     <Dropdown.TriggerContext>
       <Dropdown.Trigger
@@ -119,30 +133,49 @@ export function EquipmentCard(props: {
         }}
       >
         <Dropdown.List>
-          <Dropdown.Item>
-            <Dropdown.Button
-              className={styles.menuItem}
-              onClick={() => {
-                setSheet("todos")
-                setMenuOpen(false)
-              }}
-            >
-              <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
-              {t("Todos")}
-            </Dropdown.Button>
-          </Dropdown.Item>
-          <Dropdown.Item>
-            <Dropdown.Button
-              className={styles.menuItem}
-              onClick={() => {
-                setSheet("history")
-                setMenuOpen(false)
-              }}
-            >
-              <ClockDashedIcon aria-hidden fontSize="1.25rem" />
-              {t("History")}
-            </Dropdown.Button>
-          </Dropdown.Item>
+          {isMobile && (
+            <Dropdown.Item>
+              <Dropdown.Button
+                className={styles.menuItem}
+                onClick={() => {
+                  setSheet("todos")
+                  setMenuOpen(false)
+                }}
+              >
+                <ClipboardCheckmarkIcon aria-hidden fontSize="1.25rem" />
+                {t("Todos")}
+              </Dropdown.Button>
+            </Dropdown.Item>
+          )}
+          {isMobile && (
+            <Dropdown.Item>
+              <Dropdown.Button
+                className={styles.menuItem}
+                onClick={() => {
+                  setSheet("history")
+                  setMenuOpen(false)
+                }}
+              >
+                <ClockDashedIcon aria-hidden fontSize="1.25rem" />
+                {t("History")}
+              </Dropdown.Button>
+            </Dropdown.Item>
+          )}
+          {item.image_id != null && (
+            <Dropdown.Item>
+              <Dropdown.Button
+                className={styles.menuItem}
+                disabled={upload.isPending}
+                onClick={() => {
+                  setMenuOpen(false)
+                  pickPhoto()
+                }}
+              >
+                <CameraIcon aria-hidden fontSize="1.25rem" />
+                {t("Change cover photo")}
+              </Dropdown.Button>
+            </Dropdown.Item>
+          )}
         </Dropdown.List>
       </Dropdown>
     </Dropdown.TriggerContext>
@@ -173,12 +206,40 @@ export function EquipmentCard(props: {
               {historyButton}
               {todosButton}
               {inspectButton}
+              {item.image_id != null && kebabMenu}
             </>
           )}
         </Card.Block>
-        {/* Placeholder slot for a future image/thumbnail of the equipment. */}
         <Card.Block className={styles.imageRow} data-size="sm">
-          <ImageIcon aria-hidden fontSize="1.25rem" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={e => {
+              const file = e.currentTarget.files?.[0]
+              e.currentTarget.value = ""
+              if (file) upload.mutate(file)
+            }}
+          />
+          <ErrorAlert error={upload.error} />
+          {item.image_id != null ? (
+            <img
+              src={coverImageUrl(item.image_id)}
+              alt={t("Photo of {{name}}", { name: item.name })}
+              className={styles.coverImage}
+            />
+          ) : (
+            <Button
+              variant="tertiary"
+              data-size="sm"
+              disabled={upload.isPending}
+              onClick={pickPhoto}
+            >
+              <ImageIcon aria-hidden fontSize="1.25rem" />
+              {upload.isPending ? t("Uploading photo…") : t("Add photo")}
+            </Button>
+          )}
         </Card.Block>
         {isMobile && (
           <Card.Block className={styles.inspectRow} data-size="sm">

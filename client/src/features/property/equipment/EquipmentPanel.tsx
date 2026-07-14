@@ -17,6 +17,7 @@ import { fdString } from "@/utils/formData"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useToggleState } from "@/hooks/useToggleState"
+import { CoverImageControl } from "@/components/shared/CoverImageControl"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { useCanEdit } from "@/hooks/useCanEdit"
 import { InlineEditRow } from "@/components/shared/InlineEditRow"
@@ -355,7 +356,18 @@ export function EquipmentPanel({ propertyId }: Props) {
                       )}
                     </>
                   }
-                  form={renderEditForm(item)}
+                  form={
+                    <>
+                      {renderEditForm(item)}
+                      <CoverImageControl
+                        target="equipment"
+                        targetId={item.id}
+                        imageId={item.image_id}
+                        name={item.name}
+                        canEdit={canEdit}
+                      />
+                    </>
+                  }
                   actions={
                     <Button
                       variant="tertiary"

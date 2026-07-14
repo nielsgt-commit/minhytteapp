@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
+import { imagesTable } from "../../db/schema/images.schema.ts"
 import {
   propertyTable,
   structuresTable,
@@ -40,12 +41,14 @@ export const structureRouter = router({
           property_name: propertyTable.name,
           category: structuresTable.category,
           built_year: structuresTable.built_year,
+          image_id: imagesTable.id,
         })
         .from(structuresTable)
         .leftJoin(
           propertyTable,
           eq(propertyTable.id, structuresTable.property_id),
         )
+        .leftJoin(imagesTable, eq(imagesTable.structure_id, structuresTable.id))
         .where(eq(structuresTable.property_id, input.property_id))
         .orderBy(asc(structuresTable.id))
     }),
@@ -92,5 +95,16 @@ export const structureRouter = router({
         .where(eq(structuresTable.id, input.id))
         .returning()
       return deleted
+    }),
+
+  removeCover: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const propertyId = await resolvePropertyIdFromStructure(ctx.db, input.id)
+      await assertPropertyMember(ctx.db, ctx.user, propertyId)
+      await ctx.db
+        .delete(imagesTable)
+        .where(eq(imagesTable.structure_id, input.id))
+      return { ok: true }
     }),
 })
