@@ -4,12 +4,15 @@
   gap: 0.5rem;
 }
 
+/* The control sits inside a padded Card.Block next to other content, so the
+   image bleeds out of that padding to fill the card edge-to-edge. Outside a
+   card the padding var is unset and the fallback keeps it a plain 100%. */
 .image {
   display: block;
-  width: 100%;
+  width: calc(100% + 2 * var(--dsc-card-padding, 0px));
+  margin-inline: calc(-1 * var(--dsc-card-padding, 0px));
   max-height: 240px;
   object-fit: cover;
-  border-radius: var(--ds-border-radius-md, 0.5rem);
 }
 
 .controls {
