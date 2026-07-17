@@ -9,6 +9,7 @@ import { expenseRouter } from "./expense.ts"
 import { expenseCategoryRouter } from "./expenseCategory.ts"
 import { infrastructureRouter } from "./infrastructure.ts"
 import { inspectionRouter } from "./inspection.ts"
+import { inventoryItemRouter } from "./inventoryItem.ts"
 import { maintenanceRouter } from "./maintenance.ts"
 import { parkingRouter } from "./parking.ts"
 import { priorityRouter } from "./priority.ts"
@@ -39,6 +40,7 @@ export const appRouter = router({
   expenseCategory: expenseCategoryRouter,
   infrastructure: infrastructureRouter,
   inspection: inspectionRouter,
+  inventoryItem: inventoryItemRouter,
   maintenance: maintenanceRouter,
   parking: parkingRouter,
   priority: priorityRouter,

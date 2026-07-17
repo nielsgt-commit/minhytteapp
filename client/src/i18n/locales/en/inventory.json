@@ -1,0 +1,20 @@
+{
+  "Add or select a property to keep a food inventory.": "Add or select a property to keep a food inventory.",
+  "New item": "New item",
+  "Add item...": "Add item...",
+  "Add": "Add",
+  "Nothing here yet.": "Nothing here yet.",
+  "Edit": "Edit",
+  "Edit item": "Edit item",
+  "Delete": "Delete",
+  "Confirm delete?": "Confirm delete?",
+  "Item actions": "Item actions",
+  "Save": "Save",
+  "Cancel": "Cancel",
+  "Name": "Name",
+  "Quantity": "Quantity",
+  "Location": "Location",
+  "Building": "Building",
+  "Room": "Room",
+  "None": "None"
+}

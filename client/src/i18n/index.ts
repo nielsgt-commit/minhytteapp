@@ -9,6 +9,7 @@ import enCore from "./locales/en/core.json"
 import enDashboard from "./locales/en/dashboard.json"
 import enExpenses from "./locales/en/expenses.json"
 import enHome from "./locales/en/home.json"
+import enInventory from "./locales/en/inventory.json"
 import enLayouts from "./locales/en/layouts.json"
 import enMaintenance from "./locales/en/maintenance.json"
 import enOnboarding from "./locales/en/onboarding.json"
@@ -29,6 +30,7 @@ import nbCore from "./locales/nb/core.json"
 import nbDashboard from "./locales/nb/dashboard.json"
 import nbExpenses from "./locales/nb/expenses.json"
 import nbHome from "./locales/nb/home.json"
+import nbInventory from "./locales/nb/inventory.json"
 import nbLayouts from "./locales/nb/layouts.json"
 import nbMaintenance from "./locales/nb/maintenance.json"
 import nbOnboarding from "./locales/nb/onboarding.json"
@@ -53,6 +55,7 @@ export const resources = {
     dashboard: enDashboard,
     expenses: enExpenses,
     home: enHome,
+    inventory: enInventory,
     layouts: enLayouts,
     maintenance: enMaintenance,
     onboarding: enOnboarding,
@@ -74,6 +77,7 @@ export const resources = {
     dashboard: nbDashboard,
     expenses: nbExpenses,
     home: nbHome,
+    inventory: nbInventory,
     layouts: nbLayouts,
     maintenance: nbMaintenance,
     onboarding: nbOnboarding,
@@ -105,6 +109,7 @@ void i18n
       "dashboard",
       "expenses",
       "home",
+      "inventory",
       "layouts",
       "maintenance",
       "onboarding",

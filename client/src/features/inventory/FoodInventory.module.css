@@ -1,0 +1,88 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.addRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.addRow button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  /* text | actions. A grid (not wrapping flex) so long text shrinks and wraps
+     inside its own column instead of pushing the actions onto the next line.
+     Top-aligned so the actions stay on the first text line. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  margin: 0;
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.textCol {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--ds-size-6);
+  min-width: 0;
+}
+
+.name {
+  min-width: 0;
+  margin: 0;
+}
+
+.meta {
+  color: var(--ds-color-neutral-text-subtle);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Compact row kebab, matching the shopping list rows. */
+.kebab {
+  --dsc-button-size: var(--ds-size-8);
+}
+
+.editFields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}

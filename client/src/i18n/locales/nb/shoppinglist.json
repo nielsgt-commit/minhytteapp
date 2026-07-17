@@ -1,6 +1,9 @@
 {
   "Shopping list": "Handleliste",
+  "Food inventory": "Matlager",
+  "Choose list": "Velg liste",
   "Keep a shared shopping list for the cabin. Add things under Food or Other, check them off when bought, and remove them when you're done.": "Hold en felles handleliste for hytta. Legg til ting under Mat eller Annet, kryss av når du har handlet, og fjern dem når du er ferdig.",
+  "Keep track of food you already have at the cabin. Add items with an optional quantity and where they are stored.": "Hold oversikt over maten dere allerede har på hytta. Legg til varer med valgfritt antall og hvor de er lagret.",
   "Food": "Mat",
   "Other": "Annet",
   "New item": "Ny vare",

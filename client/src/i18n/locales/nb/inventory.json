@@ -1,0 +1,20 @@
+{
+  "Add or select a property to keep a food inventory.": "Legg til eller velg en eiendom for å føre matlager.",
+  "New item": "Ny vare",
+  "Add item...": "Legg til vare...",
+  "Add": "Legg til",
+  "Nothing here yet.": "Ingenting her ennå.",
+  "Edit": "Rediger",
+  "Edit item": "Rediger vare",
+  "Delete": "Slett",
+  "Confirm delete?": "Bekreft sletting?",
+  "Item actions": "Handlinger",
+  "Save": "Lagre",
+  "Cancel": "Avbryt",
+  "Name": "Navn",
+  "Quantity": "Antall",
+  "Location": "Plassering",
+  "Building": "Bygning",
+  "Room": "Rom",
+  "None": "Ingen"
+}

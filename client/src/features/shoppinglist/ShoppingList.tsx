@@ -22,13 +22,11 @@ import { useTRPC } from "@/trpc/trpc.ts"
 import { useMutationWithInvalidation } from "@/hooks/useMutationWithInvalidation"
 import { useMutationsStatus } from "@/hooks/useMutationsStatus"
 import { SubmitButton } from "@/components/shared/SubmitButton"
-import { PageHeader } from "@/components/shared/PageHeader"
 import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
 import { useIsMobile } from "@/hooks/useIsMobile"
-import type { PageHelpContent } from "@/components/shared/PageHelp"
 
 type Section = "food" | "other"
 
@@ -48,12 +46,6 @@ export function ShoppingList() {
   const listKey = trpc.shoppingItem.listForProperty.queryKey({
     property_id: selectedPropertyId ?? 0,
   })
-
-  const help: PageHelpContent = {
-    intro: t(
-      "Keep a shared shopping list for the cabin. Add things under Food or Other, check them off when bought, and remove them when you're done.",
-    ),
-  }
 
   const { data: items, isLoading } = useQuery(
     trpc.shoppingItem.listForProperty.queryOptions(
@@ -290,22 +282,14 @@ export function ShoppingList() {
 
   if (selectedPropertyId == null) {
     return (
-      <section className={styles.page}>
-        <PageHeader title={t("Shopping list")} help={help} />
-        <EmptyState
-          title={t("Add or select a property to keep a shared shopping list.")}
-        />
-      </section>
+      <EmptyState
+        title={t("Add or select a property to keep a shared shopping list.")}
+      />
     )
   }
 
   if (isLoading || !items) {
-    return (
-      <section className={styles.page}>
-        <PageHeader title={t("Shopping list")} help={help} />
-        <CardSkeleton />
-      </section>
-    )
+    return <CardSkeleton />
   }
 
   const handleAdd = (section: Section) => async (fd: FormData) => {
@@ -383,8 +367,7 @@ export function ShoppingList() {
     assigningId == null ? undefined : items.find(i => i.id === assigningId)
 
   return (
-    <section className={styles.page}>
-      <PageHeader title={t("Shopping list")} help={help} />
+    <>
       <ErrorAlert error={error} />
       <Card>
         <Card.Block className={styles.sections}>
@@ -700,6 +683,6 @@ export function ShoppingList() {
           </Button>
         </Dialog.Block>
       </Dialog>
-    </section>
+    </>
   )
 }

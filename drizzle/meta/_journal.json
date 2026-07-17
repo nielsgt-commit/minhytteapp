@@ -645,6 +645,20 @@
       "when": 1784020187427,
       "tag": "0091_jittery_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1784262789535,
+      "tag": "0092_lame_legion",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1784262803704,
+      "tag": "0093_seed_food_inventory_category",
+      "breakpoints": true
     }
   ]
 }

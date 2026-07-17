@@ -13,6 +13,7 @@ import {
   roomTable,
   structuresTable,
 } from "../../db/schema/property.schema.ts"
+import { inventoryItemsTable } from "../../db/schema/inventory.schema.ts"
 import { shoppingListItemsTable } from "../../db/schema/shopping.schema.ts"
 import { todosTable } from "../../db/schema/todo.schema.ts"
 import {
@@ -128,6 +129,21 @@ export async function resolvePropertyIdFromShoppingItem(
       .limit(1)
   ).at(0)
   if (!row) throw notFound("shopping list item not found")
+  return row.property_id
+}
+
+export async function resolvePropertyIdFromInventoryItem(
+  db: Db,
+  inventoryItemId: number,
+): Promise<number> {
+  const row = (
+    await db
+      .select({ property_id: inventoryItemsTable.property_id })
+      .from(inventoryItemsTable)
+      .where(eq(inventoryItemsTable.id, inventoryItemId))
+      .limit(1)
+  ).at(0)
+  if (!row) throw notFound("inventory item not found")
   return row.property_id
 }
 

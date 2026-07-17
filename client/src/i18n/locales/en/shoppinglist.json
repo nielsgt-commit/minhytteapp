@@ -1,6 +1,9 @@
 {
   "Shopping list": "Shopping list",
+  "Food inventory": "Food inventory",
+  "Choose list": "Choose list",
   "Keep a shared shopping list for the cabin. Add things under Food or Other, check them off when bought, and remove them when you're done.": "Keep a shared shopping list for the cabin. Add things under Food or Other, check them off when bought, and remove them when you're done.",
+  "Keep track of food you already have at the cabin. Add items with an optional quantity and where they are stored.": "Keep track of food you already have at the cabin. Add items with an optional quantity and where they are stored.",
   "Food": "Food",
   "Other": "Other",
   "New item": "New item",
