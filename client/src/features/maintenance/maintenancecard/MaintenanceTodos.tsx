@@ -426,6 +426,16 @@ export function MaintenanceTodos({ scope }: { scope: MaintenanceScope }) {
                           data-size="sm"
                           disabled={pending || isConfirming}
                           onClick={() => {
+                            setEditingId(todo.id)
+                          }}
+                        >
+                          {t("Edit")}
+                        </Button>
+                        <Button
+                          variant="tertiary"
+                          data-size="sm"
+                          disabled={pending || isConfirming}
+                          onClick={() => {
                             startDone(todo)
                           }}
                         >
