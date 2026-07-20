@@ -659,6 +659,13 @@
       "when": 1784262803704,
       "tag": "0093_seed_food_inventory_category",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1784580184318,
+      "tag": "0094_food_sections_rename_food_category",
+      "breakpoints": true
     }
   ]
 }

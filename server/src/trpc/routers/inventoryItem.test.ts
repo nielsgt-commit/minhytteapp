@@ -1,7 +1,7 @@
 // Authz + location-ref seams for the inventory router: membership gates on
 // every procedure, cross-property structure/room refs are refused, a room
-// derives its structure server-side, and the Food category is lazily ensured
-// exactly once per property.
+// derives its structure server-side, and section categories are lazily
+// ensured exactly once per property+name.
 
 import { afterAll, describe, expect, it } from "vitest"
 import { eq } from "drizzle-orm"
@@ -99,6 +99,7 @@ describe("membership gates", () => {
       const item = await memberCaller.inventoryItem.create({
         property_id: prop.id,
         name: "Flour",
+        category: "Dry goods",
       })
 
       const outsiderCaller = createCaller(ctxFor(tx, authUser(outsider)))
@@ -109,6 +110,7 @@ describe("membership gates", () => {
         outsiderCaller.inventoryItem.create({
           property_id: prop.id,
           name: "Sneaky",
+          category: "Dry goods",
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" })
       await expect(
@@ -131,6 +133,7 @@ describe("membership gates", () => {
       const item = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Flour",
+        category: "Dry goods",
       })
 
       await expect(
@@ -154,6 +157,7 @@ describe("location refs", () => {
         caller.inventoryItem.create({
           property_id: prop.id,
           name: "Sheets",
+          category: "Dry goods",
           structure_id: foreignCabin.id,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" })
@@ -161,6 +165,7 @@ describe("location refs", () => {
         caller.inventoryItem.create({
           property_id: prop.id,
           name: "Sheets",
+          category: "Dry goods",
           room_id: foreignRoom.id,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" })
@@ -175,6 +180,7 @@ describe("location refs", () => {
       const derived = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Coffee",
+        category: "Dry goods",
         room_id: kitchen.id,
       })
       expect(derived.structure_id).toBe(cabin.id)
@@ -184,6 +190,7 @@ describe("location refs", () => {
         caller.inventoryItem.create({
           property_id: prop.id,
           name: "Coffee",
+          category: "Dry goods",
           structure_id: annex.id,
           room_id: kitchen.id,
         }),
@@ -198,6 +205,7 @@ describe("location refs", () => {
       const item = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Coffee",
+        category: "Dry goods",
         quantity: 2,
         location: "Top shelf",
         room_id: kitchen.id,
@@ -235,25 +243,42 @@ describe("location refs", () => {
   })
 })
 
-describe("food category ensure", () => {
-  it("creates the Food category once and reuses it", async () => {
+describe("section category ensure", () => {
+  it("creates each section category once and reuses it", async () => {
     await withRollback(async tx => {
       const { prop, member } = await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
-      // Freshly seeded property inside the tx: no category yet (the 0093 seed
-      // only covers properties that existed when the migration ran).
+      // Freshly seeded property inside the tx: no categories yet (the 0093
+      // seed only covers properties that existed when the migration ran).
       expect(await categoryRows(tx, prop.id)).toHaveLength(0)
 
-      await caller.inventoryItem.create({ property_id: prop.id, name: "Salt" })
+      await caller.inventoryItem.create({
+        property_id: prop.id,
+        name: "Salt",
+        category: "Spices",
+      })
       const afterFirst = await categoryRows(tx, prop.id)
       expect(afterFirst).toHaveLength(1)
-      expect(afterFirst[0].name).toBe("Food")
+      expect(afterFirst[0].name).toBe("Spices")
 
       await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Pepper",
+        category: "Spices",
       })
       expect(await categoryRows(tx, prop.id)).toHaveLength(1)
+
+      const canned = await caller.inventoryItem.create({
+        property_id: prop.id,
+        name: "Beans",
+        category: "Canned goods",
+      })
+      expect(canned.category).toBe("Canned goods")
+      const afterSecond = await categoryRows(tx, prop.id)
+      expect(afterSecond.map(c => c.name).sort()).toEqual([
+        "Canned goods",
+        "Spices",
+      ])
 
       const items = await tx
         .select()
@@ -262,7 +287,40 @@ describe("food category ensure", () => {
       expect(items.map(i => i.category_id)).toEqual([
         afterFirst[0].id,
         afterFirst[0].id,
+        afterSecond.find(c => c.name === "Canned goods")?.id,
       ])
+    })
+  })
+
+  it("moves an item to another section via update and reports it on list", async () => {
+    await withRollback(async tx => {
+      const { prop, member } = await seed(tx)
+      const caller = createCaller(ctxFor(tx, authUser(member)))
+      const item = await caller.inventoryItem.create({
+        property_id: prop.id,
+        name: "Tomatoes",
+        category: "Dry goods",
+      })
+
+      const moved = await caller.inventoryItem.update({
+        property_id: prop.id,
+        id: item.id,
+        category: "Canned goods",
+      })
+      expect(moved.category).toBe("Canned goods")
+
+      // A category-less update still reports the current section.
+      const renamed = await caller.inventoryItem.update({
+        property_id: prop.id,
+        id: item.id,
+        name: "Crushed tomatoes",
+      })
+      expect(renamed.category).toBe("Canned goods")
+
+      const listed = await caller.inventoryItem.listForProperty({
+        property_id: prop.id,
+      })
+      expect(listed.map(i => i.category)).toEqual(["Canned goods"])
     })
   })
 })

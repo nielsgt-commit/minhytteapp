@@ -19,19 +19,22 @@ import {
   resolvePropertyIdFromRoom,
   resolvePropertyIdFromStructure,
 } from "../util/propertyAccess.ts"
+import { FOOD_SECTIONS } from "../../shared/inventorySections.ts"
 
 type Db = typeof dbClient
 
 // Wire mapping: created_at (timestamp) → Temporal.Instant.
 const toWireInventoryItem = wireMap({ created_at: "instant" })
 
-// v1 has a single fixed category; new properties get it lazily on first write
-// rather than via a creation-hook, so every creation path (property router,
-// seed scripts) is covered. Race-safe: the partial unique index absorbs a
-// concurrent insert and the re-select picks up the winner's row.
-async function ensureFoodCategoryId(
+// Sections exist as per-property category rows; a property gets each lazily on
+// first write rather than via a creation-hook, so every creation path
+// (property router, seed scripts) is covered. Race-safe: the partial unique
+// index absorbs a concurrent insert and the re-select picks up the winner's
+// row.
+async function ensureCategoryId(
   db: Db,
   propertyId: number,
+  name: string,
 ): Promise<number> {
   const find = async () =>
     (
@@ -41,7 +44,7 @@ async function ensureFoodCategoryId(
         .where(
           and(
             eq(inventoryCategoriesTable.property_id, propertyId),
-            eq(inventoryCategoriesTable.name, "Food"),
+            eq(inventoryCategoriesTable.name, name),
             isNull(inventoryCategoriesTable.archived_at),
           ),
         )
@@ -52,7 +55,7 @@ async function ensureFoodCategoryId(
   const created = (
     await db
       .insert(inventoryCategoriesTable)
-      .values({ property_id: propertyId, name: "Food" })
+      .values({ property_id: propertyId, name })
       .onConflictDoNothing()
       .returning()
   ).at(0)
@@ -127,6 +130,7 @@ const optionalFields = {
 const createInput = z.object({
   property_id: z.number().int().positive(),
   name: z.string().min(1, { error: "name is required" }).max(255),
+  category: z.enum(FOOD_SECTIONS),
   ...optionalFields,
 })
 
@@ -134,11 +138,12 @@ const updateInput = z.object({
   property_id: z.number().int().positive(),
   id: z.number().int().positive(),
   name: z.string().min(1, { error: "name is required" }).max(255).optional(),
+  category: z.enum(FOOD_SECTIONS).optional(),
   ...optionalFields,
 })
 
-// category_id is deliberately kept off the wire: v1 has only the implicit
-// Food category, and omitting it keeps optimistic client cache rows
+// The wire carries the category NAME (the section), not category_id: the
+// name is what the client groups by, and it keeps optimistic cache rows
 // constructible without inventing a category id.
 const wireColumns = {
   id: inventoryItemsTable.id,
@@ -155,8 +160,12 @@ const wireColumns = {
 export const inventoryItemRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     const rows = await ctx.db
-      .select(wireColumns)
+      .select({ ...wireColumns, category: inventoryCategoriesTable.name })
       .from(inventoryItemsTable)
+      .innerJoin(
+        inventoryCategoriesTable,
+        eq(inventoryItemsTable.category_id, inventoryCategoriesTable.id),
+      )
       .where(eq(inventoryItemsTable.property_id, input.property_id))
       .orderBy(asc(inventoryItemsTable.id))
     return rows.map(toWireInventoryItem)
@@ -166,7 +175,11 @@ export const inventoryItemRouter = router({
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       const refs = await resolveLocationRefs(ctx.db, input.property_id, input)
-      const categoryId = await ensureFoodCategoryId(ctx.db, input.property_id)
+      const categoryId = await ensureCategoryId(
+        ctx.db,
+        input.property_id,
+        input.category,
+      )
       const [created] = await ctx.db
         .insert(inventoryItemsTable)
         .values({
@@ -179,7 +192,7 @@ export const inventoryItemRouter = router({
           created_by: ctx.user.id,
         })
         .returning(wireColumns)
-      return toWireInventoryItem(created)
+      return { ...toWireInventoryItem(created), category: input.category }
     }),
 
   update: propertyAdminProcedure
@@ -197,6 +210,13 @@ export const inventoryItemRouter = router({
       }
       const patch: Partial<typeof inventoryItemsTable.$inferInsert> = {}
       if (input.name !== undefined) patch.name = input.name
+      if (input.category !== undefined) {
+        patch.category_id = await ensureCategoryId(
+          ctx.db,
+          input.property_id,
+          input.category,
+        )
+      }
       if ("quantity" in input) patch.quantity = input.quantity ?? null
       if ("location" in input) patch.location = emptyToNull(input.location)
       // Location refs are set as a pair whenever either is touched (the edit
@@ -210,8 +230,21 @@ export const inventoryItemRouter = router({
         .update(inventoryItemsTable)
         .set(patch)
         .where(eq(inventoryItemsTable.id, input.id))
-        .returning(wireColumns)
-      return toWireInventoryItem(updated)
+        .returning({
+          ...wireColumns,
+          category_id: inventoryItemsTable.category_id,
+        })
+      const category =
+        input.category ??
+        (
+          await ctx.db
+            .select({ name: inventoryCategoriesTable.name })
+            .from(inventoryCategoriesTable)
+            .where(eq(inventoryCategoriesTable.id, updated.category_id))
+            .limit(1)
+        )[0].name
+      const { category_id: _categoryId, ...row } = updated
+      return { ...toWireInventoryItem(row), category }
     }),
 
   delete: protectedProcedure

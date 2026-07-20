@@ -37,8 +37,11 @@ describe("ShoppingPage", () => {
     expect(
       await screen.findByRole("heading", { name: "Food inventory" }),
     ).toBeInTheDocument()
-    // The shopping sections are gone; the inventory add-row is present.
-    expect(screen.queryByText("Other")).not.toBeInTheDocument()
-    expect(screen.getByLabelText("New item")).toBeInTheDocument()
+    // The shopping sections are gone; the inventory sections are present.
+    expect(screen.queryByText("Food")).not.toBeInTheDocument()
+    expect(screen.getByLabelText("New item in Dry goods")).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Canned goods" }),
+    ).toBeInTheDocument()
   })
 })

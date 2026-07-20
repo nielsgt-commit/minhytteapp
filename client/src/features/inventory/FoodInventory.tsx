@@ -27,11 +27,19 @@ import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
 import { useIsMobile } from "@/hooks/useIsMobile"
+import {
+  FOOD_SECTIONS,
+  type FoodSection,
+} from "@server/shared/inventorySections.ts"
 
 // A number input's raw value → optional positive quantity (empty/invalid → null).
 function parseQuantity(raw: string): number | null {
   const n = Number.parseInt(raw, 10)
   return Number.isNaN(n) || n < 1 ? null : n
+}
+
+function isFoodSection(value: string): value is FoodSection {
+  return (FOOD_SECTIONS as readonly string[]).includes(value)
 }
 
 export function FoodInventory() {
@@ -85,6 +93,7 @@ export function FoodInventory() {
               id: nextId,
               property_id: vars.property_id,
               name: vars.name,
+              category: vars.category,
               quantity: vars.quantity ?? null,
               location: vars.location ?? null,
               structure_id: vars.structure_id ?? null,
@@ -113,6 +122,9 @@ export function FoodInventory() {
               ? {
                   ...i,
                   ...(vars.name !== undefined && { name: vars.name }),
+                  ...(vars.category !== undefined && {
+                    category: vars.category,
+                  }),
                   ...("quantity" in vars && {
                     quantity: vars.quantity ?? null,
                   }),
@@ -187,13 +199,14 @@ export function FoodInventory() {
   const structureById = new Map(structureRows.map(s => [s.id, s.name]))
   const roomById = new Map(roomRows.map(r => [r.id, r.name]))
 
-  const handleAdd = async (fd: FormData) => {
+  const handleAdd = (category: FoodSection) => async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
     if (!name) return
     try {
       await createMutation.mutateAsync({
         property_id: selectedPropertyId,
         name,
+        category,
       })
     } catch {
       // Surfaced via the aggregated ErrorAlert below.
@@ -220,12 +233,14 @@ export function FoodInventory() {
 
   const handleSave = (item: (typeof items)[number]) => async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
-    if (!name) return
+    const category = fdString(fd, "category")
+    if (!name || !isFoodSection(category)) return
     try {
       await updateMutation.mutateAsync({
         property_id: selectedPropertyId,
         id: item.id,
         name,
+        category,
         quantity: parseQuantity(fdString(fd, "quantity")),
         location: fdString(fd, "location").trim() || null,
         structure_id: editBuildingId,
@@ -240,131 +255,150 @@ export function FoodInventory() {
   const editingItem =
     editingId == null ? undefined : items.find(i => i.id === editingId)
 
+  // One group per fixed section, plus a trailing read-only group for any item
+  // whose category predates the sections (or was edited outside the app).
+  const sections: {
+    key: FoodSection | null
+    label: string
+    items: typeof items
+  }[] = FOOD_SECTIONS.map(section => ({
+    key: section,
+    label: t(section),
+    items: items.filter(i => i.category === section),
+  }))
+  const otherItems = items.filter(i => !isFoodSection(i.category))
+  if (otherItems.length > 0) {
+    sections.push({ key: null, label: t("Other"), items: otherItems })
+  }
+
+  const renderItem = (item: (typeof items)[number]) => {
+    const meta = [
+      item.quantity != null ? `× ${String(item.quantity)}` : null,
+      item.location,
+      item.structure_id != null ? structureById.get(item.structure_id) : null,
+      item.room_id != null ? roomById.get(item.room_id) : null,
+    ].filter((part): part is string => part != null && part !== "")
+    return (
+      <List.Item className={styles.row} key={item.id}>
+        <div className={styles.textCol}>
+          <Paragraph className={styles.name} data-size="sm">
+            {item.name}
+          </Paragraph>
+          {meta.length > 0 && (
+            <Paragraph className={styles.meta} data-size="sm">
+              {meta.join(" · ")}
+            </Paragraph>
+          )}
+        </div>
+        {isMobile ? (
+          <Dropdown.TriggerContext>
+            <Dropdown.Trigger
+              variant="tertiary"
+              data-size="sm"
+              icon
+              className={styles.kebab}
+              aria-label={t("Item actions")}
+              disabled={busy}
+              onClick={() => {
+                setMenuOpenId(menuOpenId === item.id ? null : item.id)
+                setConfirmingDeleteId(null)
+              }}
+            >
+              <MenuElipsisVerticalIcon aria-hidden />
+            </Dropdown.Trigger>
+            <Dropdown
+              placement="bottom-end"
+              open={menuOpenId === item.id}
+              onClose={() => {
+                setMenuOpenId(null)
+                setConfirmingDeleteId(null)
+              }}
+            >
+              <Dropdown.List>
+                <Dropdown.Item>
+                  <Dropdown.Button
+                    onClick={() => {
+                      openEdit(item)
+                    }}
+                  >
+                    {t("Edit")}
+                  </Dropdown.Button>
+                </Dropdown.Item>
+                <Dropdown.Item>
+                  <Dropdown.Button
+                    data-color="danger"
+                    onClick={() => {
+                      handleDelete(item.id)
+                    }}
+                  >
+                    {confirmingDeleteId === item.id
+                      ? t("Confirm delete?")
+                      : t("Delete")}
+                  </Dropdown.Button>
+                </Dropdown.Item>
+              </Dropdown.List>
+            </Dropdown>
+          </Dropdown.TriggerContext>
+        ) : (
+          <div className={styles.actions}>
+            <Button
+              variant="tertiary"
+              data-size="sm"
+              disabled={busy}
+              onClick={() => {
+                openEdit(item)
+              }}
+            >
+              {t("Edit")}
+            </Button>
+            <Button
+              variant={confirmingDeleteId === item.id ? "primary" : "tertiary"}
+              data-color="danger"
+              data-size="sm"
+              disabled={busy}
+              onClick={() => {
+                handleDelete(item.id)
+              }}
+            >
+              {confirmingDeleteId === item.id
+                ? t("Confirm delete?")
+                : t("Delete")}
+            </Button>
+          </div>
+        )}
+      </List.Item>
+    )
+  }
+
   return (
     <>
       <ErrorAlert error={error} />
       <Card>
         <Card.Block className={styles.body}>
-          <form action={handleAdd} className={styles.addRow}>
-            <Textfield
-              aria-label={t("New item")}
-              name="name"
-              placeholder={t("Add item...")}
-            />
-            <SubmitButton>{t("Add")}</SubmitButton>
-          </form>
-          {items.length === 0 ? (
-            <Paragraph data-size="sm">{t("Nothing here yet.")}</Paragraph>
-          ) : (
-            <List.Unordered className={styles.list}>
-              {items.map(item => {
-                const meta = [
-                  item.quantity != null ? `× ${String(item.quantity)}` : null,
-                  item.location,
-                  item.structure_id != null
-                    ? structureById.get(item.structure_id)
-                    : null,
-                  item.room_id != null ? roomById.get(item.room_id) : null,
-                ].filter((part): part is string => part != null && part !== "")
-                return (
-                  <List.Item className={styles.row} key={item.id}>
-                    <div className={styles.textCol}>
-                      <Paragraph className={styles.name} data-size="sm">
-                        {item.name}
-                      </Paragraph>
-                      {meta.length > 0 && (
-                        <Paragraph className={styles.meta} data-size="sm">
-                          {meta.join(" · ")}
-                        </Paragraph>
-                      )}
-                    </div>
-                    {isMobile ? (
-                      <Dropdown.TriggerContext>
-                        <Dropdown.Trigger
-                          variant="tertiary"
-                          data-size="sm"
-                          icon
-                          className={styles.kebab}
-                          aria-label={t("Item actions")}
-                          disabled={busy}
-                          onClick={() => {
-                            setMenuOpenId(
-                              menuOpenId === item.id ? null : item.id,
-                            )
-                            setConfirmingDeleteId(null)
-                          }}
-                        >
-                          <MenuElipsisVerticalIcon aria-hidden />
-                        </Dropdown.Trigger>
-                        <Dropdown
-                          placement="bottom-end"
-                          open={menuOpenId === item.id}
-                          onClose={() => {
-                            setMenuOpenId(null)
-                            setConfirmingDeleteId(null)
-                          }}
-                        >
-                          <Dropdown.List>
-                            <Dropdown.Item>
-                              <Dropdown.Button
-                                onClick={() => {
-                                  openEdit(item)
-                                }}
-                              >
-                                {t("Edit")}
-                              </Dropdown.Button>
-                            </Dropdown.Item>
-                            <Dropdown.Item>
-                              <Dropdown.Button
-                                data-color="danger"
-                                onClick={() => {
-                                  handleDelete(item.id)
-                                }}
-                              >
-                                {confirmingDeleteId === item.id
-                                  ? t("Confirm delete?")
-                                  : t("Delete")}
-                              </Dropdown.Button>
-                            </Dropdown.Item>
-                          </Dropdown.List>
-                        </Dropdown>
-                      </Dropdown.TriggerContext>
-                    ) : (
-                      <div className={styles.actions}>
-                        <Button
-                          variant="tertiary"
-                          data-size="sm"
-                          disabled={busy}
-                          onClick={() => {
-                            openEdit(item)
-                          }}
-                        >
-                          {t("Edit")}
-                        </Button>
-                        <Button
-                          variant={
-                            confirmingDeleteId === item.id
-                              ? "primary"
-                              : "tertiary"
-                          }
-                          data-color="danger"
-                          data-size="sm"
-                          disabled={busy}
-                          onClick={() => {
-                            handleDelete(item.id)
-                          }}
-                        >
-                          {confirmingDeleteId === item.id
-                            ? t("Confirm delete?")
-                            : t("Delete")}
-                        </Button>
-                      </div>
-                    )}
-                  </List.Item>
-                )
-              })}
-            </List.Unordered>
-          )}
+          {sections.map(({ key, label, items: sectionItems }) => (
+            <section key={key ?? "other"} className={styles.section}>
+              <Heading level={3} data-size="2xs">
+                {label}
+              </Heading>
+              {key != null && (
+                <form action={handleAdd(key)} className={styles.addRow}>
+                  <Textfield
+                    aria-label={t("New item in {{section}}", {
+                      section: label,
+                    })}
+                    name="name"
+                    placeholder={t("Add item...")}
+                  />
+                  <SubmitButton>{t("Add")}</SubmitButton>
+                </form>
+              )}
+              {sectionItems.length > 0 && (
+                <List.Unordered className={styles.list}>
+                  {sectionItems.map(renderItem)}
+                </List.Unordered>
+              )}
+            </section>
+          ))}
         </Card.Block>
       </Card>
       <Dialog
@@ -391,6 +425,31 @@ export function FoodInventory() {
                 defaultValue={editingItem.name}
                 required
               />
+              <Field>
+                <Label>{t("Category")}</Label>
+                <Select
+                  name="category"
+                  defaultValue={
+                    isFoodSection(editingItem.category)
+                      ? editingItem.category
+                      : ""
+                  }
+                  required
+                >
+                  {/* A legacy category shows as a disabled placeholder so
+                      saving forces a pick of a real section. */}
+                  {!isFoodSection(editingItem.category) && (
+                    <Select.Option value="" disabled>
+                      {editingItem.category}
+                    </Select.Option>
+                  )}
+                  {FOOD_SECTIONS.map(section => (
+                    <Select.Option key={section} value={section}>
+                      {t(section)}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Field>
               <Textfield
                 label={t("Quantity")}
                 name="quantity"

@@ -32,6 +32,7 @@ type ItemRow = {
   id: number
   property_id: number
   name: string
+  category: string
   quantity: number | null
   location: string | null
   structure_id: number | null
@@ -45,6 +46,7 @@ function itemRow(
 ): ItemRow {
   return {
     property_id: 1,
+    category: "Dry goods",
     quantity: null,
     location: null,
     structure_id: null,
@@ -112,6 +114,33 @@ describe("FoodInventory", () => {
     ).toBeInTheDocument()
   })
 
+  test("groups items under their section headings", async () => {
+    await renderList(
+      makeHandlers([
+        itemRow({ id: 1, name: "Flour", category: "Dry goods" }),
+        itemRow({ id: 2, name: "Beans", category: "Canned goods" }),
+        itemRow({ id: 3, name: "Old thing", category: "Food" }),
+      ]),
+    )
+    await screen.findByText("Flour")
+    // All four fixed sections render a heading with their own add input; the
+    // legacy category lands in a trailing read-only "Other" group.
+    for (const section of [
+      "Dry goods",
+      "Canned goods",
+      "Spices",
+      "Condiments",
+    ]) {
+      expect(screen.getByRole("heading", { name: section })).toBeInTheDocument()
+      expect(
+        screen.getByLabelText(`New item in ${section}`),
+      ).toBeInTheDocument()
+    }
+    expect(screen.getByRole("heading", { name: "Other" })).toBeInTheDocument()
+    expect(screen.queryByLabelText("New item in Other")).not.toBeInTheDocument()
+    expect(screen.getByText("Old thing")).toBeInTheDocument()
+  })
+
   test("adds an item optimistically and rolls back on error", async () => {
     const handlers = makeHandlers([itemRow({ id: 1, name: "Salt" })])
     handlers["inventoryItem.create"] = () =>
@@ -120,8 +149,11 @@ describe("FoodInventory", () => {
     await renderList(handlers)
 
     await screen.findByText("Salt")
-    await user.type(screen.getByLabelText("New item"), "Doomed beans")
-    await user.click(screen.getByRole("button", { name: "Add" }))
+    await user.type(
+      screen.getByLabelText("New item in Dry goods"),
+      "Doomed beans",
+    )
+    await user.click(screen.getAllByRole("button", { name: "Add" })[0])
 
     expect(await screen.findByRole("alert")).toBeInTheDocument()
     await waitFor(() => {
@@ -190,6 +222,7 @@ describe("FoodInventory", () => {
         property_id: 1,
         id: 1,
         name: "Dark roast",
+        category: "Dry goods",
         quantity: 3,
         location: "Top shelf",
         structure_id: 10,
