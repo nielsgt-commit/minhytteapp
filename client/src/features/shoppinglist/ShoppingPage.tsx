@@ -41,6 +41,7 @@ export function ShoppingPage() {
         }}
         data-size="sm"
         data-toggle-group={t("Choose list")}
+        className={styles.viewToggle}
       >
         <ToggleGroup.Item value="shopping">
           {t("Shopping list")}
