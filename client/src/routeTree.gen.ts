@@ -20,6 +20,7 @@ import { Route as AuthedPlanleggoppholdRouteImport } from './routes/_authed/plan
 import { Route as AuthedOversiktRouteImport } from './routes/_authed/oversikt'
 import { Route as AuthedOppgjorRouteImport } from './routes/_authed/oppgjor'
 import { Route as AuthedOppgaverRouteImport } from './routes/_authed/oppgaver'
+import { Route as AuthedKontakterRouteImport } from './routes/_authed/kontakter'
 import { Route as AuthedInventarRouteImport } from './routes/_authed/inventar'
 import { Route as AuthedInnstillingerRouteImport } from './routes/_authed/innstillinger'
 import { Route as AuthedHandlelisteRouteImport } from './routes/_authed/handleliste'
@@ -92,6 +93,11 @@ const AuthedOppgjorRoute = AuthedOppgjorRouteImport.update({
 const AuthedOppgaverRoute = AuthedOppgaverRouteImport.update({
   id: '/oppgaver',
   path: '/oppgaver',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedKontakterRoute = AuthedKontakterRouteImport.update({
+  id: '/kontakter',
+  path: '/kontakter',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedInventarRoute = AuthedInventarRouteImport.update({
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/handleliste': typeof AuthedHandlelisteRoute
   '/innstillinger': typeof AuthedInnstillingerRoute
   '/inventar': typeof AuthedInventarRoute
+  '/kontakter': typeof AuthedKontakterRoute
   '/oppgaver': typeof AuthedOppgaverRoute
   '/oppgjor': typeof AuthedOppgjorRoute
   '/oversikt': typeof AuthedOversiktRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/handleliste': typeof AuthedHandlelisteRoute
   '/innstillinger': typeof AuthedInnstillingerRoute
   '/inventar': typeof AuthedInventarRoute
+  '/kontakter': typeof AuthedKontakterRoute
   '/oppgaver': typeof AuthedOppgaverRoute
   '/oppgjor': typeof AuthedOppgjorRoute
   '/oversikt': typeof AuthedOversiktRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/_authed/handleliste': typeof AuthedHandlelisteRoute
   '/_authed/innstillinger': typeof AuthedInnstillingerRoute
   '/_authed/inventar': typeof AuthedInventarRoute
+  '/_authed/kontakter': typeof AuthedKontakterRoute
   '/_authed/oppgaver': typeof AuthedOppgaverRoute
   '/_authed/oppgjor': typeof AuthedOppgjorRoute
   '/_authed/oversikt': typeof AuthedOversiktRoute
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/handleliste'
     | '/innstillinger'
     | '/inventar'
+    | '/kontakter'
     | '/oppgaver'
     | '/oppgjor'
     | '/oversikt'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/handleliste'
     | '/innstillinger'
     | '/inventar'
+    | '/kontakter'
     | '/oppgaver'
     | '/oppgjor'
     | '/oversikt'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/_authed/handleliste'
     | '/_authed/innstillinger'
     | '/_authed/inventar'
+    | '/_authed/kontakter'
     | '/_authed/oppgaver'
     | '/_authed/oppgjor'
     | '/_authed/oversikt'
@@ -489,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/oppgaver'
       fullPath: '/oppgaver'
       preLoaderRoute: typeof AuthedOppgaverRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/kontakter': {
+      id: '/_authed/kontakter'
+      path: '/kontakter'
+      fullPath: '/kontakter'
+      preLoaderRoute: typeof AuthedKontakterRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/inventar': {
@@ -705,6 +724,7 @@ interface AuthedRouteChildren {
   AuthedHandlelisteRoute: typeof AuthedHandlelisteRoute
   AuthedInnstillingerRoute: typeof AuthedInnstillingerRoute
   AuthedInventarRoute: typeof AuthedInventarRoute
+  AuthedKontakterRoute: typeof AuthedKontakterRoute
   AuthedOppgaverRoute: typeof AuthedOppgaverRoute
   AuthedOppgjorRoute: typeof AuthedOppgjorRoute
   AuthedOversiktRoute: typeof AuthedOversiktRoute
@@ -718,6 +738,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedHandlelisteRoute: AuthedHandlelisteRoute,
   AuthedInnstillingerRoute: AuthedInnstillingerRoute,
   AuthedInventarRoute: AuthedInventarRoute,
+  AuthedKontakterRoute: AuthedKontakterRoute,
   AuthedOppgaverRoute: AuthedOppgaverRoute,
   AuthedOppgjorRoute: AuthedOppgjorRoute,
   AuthedOversiktRoute: AuthedOversiktRoute,

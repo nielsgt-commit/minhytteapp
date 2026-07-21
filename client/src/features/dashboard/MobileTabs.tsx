@@ -7,6 +7,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   PackageIcon,
+  PersonGroupIcon,
   ShoppingBasketIcon,
 } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
@@ -86,6 +87,26 @@ function InventoryFab() {
   )
 }
 
+// A floating contacts button that links to the property contact list. Always
+// visible, in a stable slot above the inventory FAB.
+function ContactsFab() {
+  const { t } = useTranslation("dashboard")
+  const navigate = useNavigate()
+
+  return (
+    <button
+      type="button"
+      className={styles.contactsFab}
+      aria-label={t("Contacts")}
+      onClick={() => {
+        void navigate({ to: "/kontakter" })
+      }}
+    >
+      <PersonGroupIcon aria-hidden fontSize="1.5rem" />
+    </button>
+  )
+}
+
 // snapping the gallery back to the first ("Now") page.
 
 // Gallery page indices, in child order below.
@@ -121,6 +142,7 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
         <MobileWeekPanel galleryActive={activePage === WEEK_PAGE} />
         <MobileYearPanel propertyId={propertyId} />
       </CardGallery>
+      <ContactsFab />
       <InventoryFab />
       <ShoppingBasketFab propertyId={propertyId} />
     </>

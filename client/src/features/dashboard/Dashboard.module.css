@@ -63,6 +63,28 @@
   cursor: pointer;
 }
 
+/* Floating contacts button. Same chrome again, one more stable slot above
+   the inventory FAB. */
+.contactsFab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(96px + 1rem + env(safe-area-inset-bottom) + 0.5rem + 6.5rem);
+  z-index: 99;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ds-font-size-4);
+  width: 2.625em;
+  height: 2.625em;
+  padding: 0;
+  background: var(--ds-color-background-default);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: 50%;
+  color: var(--ds-color-neutral-text-subtle);
+  cursor: pointer;
+}
+
 /* Floating scroll-to-today button on the "This week" page. Centred just above
    the gallery's floating dot pill: the pill's bottom offset (96px nav + its
    extra 1rem bottom-fill padding + safe-area + 0.5rem, see `.dots.floating`
