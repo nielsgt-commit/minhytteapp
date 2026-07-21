@@ -292,6 +292,38 @@ describe("section category ensure", () => {
     })
   })
 
+  it("accepts general sections and rejects an unknown category", async () => {
+    await withRollback(async tx => {
+      const { prop, member } = await seed(tx)
+      const caller = createCaller(ctxFor(tx, authUser(member)))
+
+      const rod = await caller.inventoryItem.create({
+        property_id: prop.id,
+        name: "Fishing rod",
+        category: "Outdoor & fishing",
+      })
+      expect(rod.category).toBe("Outdoor & fishing")
+      const grater = await caller.inventoryItem.create({
+        property_id: prop.id,
+        name: "Cheese grater",
+        category: "Kitchen equipment",
+      })
+      expect(grater.category).toBe("Kitchen equipment")
+      expect((await categoryRows(tx, prop.id)).map(c => c.name).sort()).toEqual(
+        ["Kitchen equipment", "Outdoor & fishing"],
+      )
+
+      await expect(
+        caller.inventoryItem.create({
+          property_id: prop.id,
+          name: "Mystery",
+          // @ts-expect-error - not a section; zod must refuse it
+          category: "Miscellaneous",
+        }),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+    })
+  })
+
   it("moves an item to another section via update and reports it on list", async () => {
     await withRollback(async tx => {
       const { prop, member } = await seed(tx)

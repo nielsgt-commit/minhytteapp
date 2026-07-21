@@ -19,7 +19,7 @@ import {
   resolvePropertyIdFromRoom,
   resolvePropertyIdFromStructure,
 } from "../util/propertyAccess.ts"
-import { FOOD_SECTIONS } from "../../shared/inventorySections.ts"
+import { ALL_SECTIONS } from "../../shared/inventorySections.ts"
 
 type Db = typeof dbClient
 
@@ -130,7 +130,7 @@ const optionalFields = {
 const createInput = z.object({
   property_id: z.number().int().positive(),
   name: z.string().min(1, { error: "name is required" }).max(255),
-  category: z.enum(FOOD_SECTIONS),
+  category: z.enum(ALL_SECTIONS),
   ...optionalFields,
 })
 
@@ -138,7 +138,7 @@ const updateInput = z.object({
   property_id: z.number().int().positive(),
   id: z.number().int().positive(),
   name: z.string().min(1, { error: "name is required" }).max(255).optional(),
-  category: z.enum(FOOD_SECTIONS).optional(),
+  category: z.enum(ALL_SECTIONS).optional(),
   ...optionalFields,
 })
 

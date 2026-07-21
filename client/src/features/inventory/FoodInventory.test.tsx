@@ -120,6 +120,7 @@ describe("FoodInventory", () => {
         itemRow({ id: 1, name: "Flour", category: "Dry goods" }),
         itemRow({ id: 2, name: "Beans", category: "Canned goods" }),
         itemRow({ id: 3, name: "Old thing", category: "Food" }),
+        itemRow({ id: 4, name: "Hammer", category: "Tools" }),
       ]),
     )
     await screen.findByText("Flour")
@@ -139,6 +140,12 @@ describe("FoodInventory", () => {
     expect(screen.getByRole("heading", { name: "Other" })).toBeInTheDocument()
     expect(screen.queryByLabelText("New item in Other")).not.toBeInTheDocument()
     expect(screen.getByText("Old thing")).toBeInTheDocument()
+    // A general-inventory item belongs to /inventar: it must not surface here,
+    // neither as its own section nor under "Other".
+    expect(
+      screen.queryByRole("heading", { name: "Tools" }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Hammer")).not.toBeInTheDocument()
   })
 
   test("adds an item optimistically and rolls back on error", async () => {

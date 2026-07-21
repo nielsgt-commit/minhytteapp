@@ -10,6 +10,7 @@ const navLinks = linkOptions([
   { to: "/vedlikehold", label: "Maintenance" },
   { to: "/utlegg", label: "Expenses" },
   { to: "/handleliste", label: "Shopping list" },
+  { to: "/inventar", label: "Inventory" },
   { to: "/oppgaver", label: "Todos" },
   { to: "/oppgjor", label: "Settlement" },
 ])
@@ -24,6 +25,7 @@ export function NavTabs({ children }: { children: ReactNode }) {
     Maintenance: t("Maintenance"),
     Expenses: t("Expenses"),
     "Shopping list": t("Shopping list"),
+    Inventory: t("Inventory"),
     Todos: t("Todos"),
     Settlement: t("Settlement"),
   }

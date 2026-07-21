@@ -13,3 +13,4 @@
 // ============================================================
 
 export { FoodInventory } from "./FoodInventory.tsx"
+export { GeneralInventoryPage } from "./GeneralInventoryPage.tsx"

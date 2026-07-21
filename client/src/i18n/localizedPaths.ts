@@ -36,6 +36,7 @@ export const LOCALIZED_PATHS: readonly (readonly [nb: string, en: string])[] = [
   ["/vedlikehold", "/maintenance"],
   ["/oppgjor", "/settlement"],
   ["/handleliste", "/shoppinglist"],
+  ["/inventar", "/inventory"],
   ["/innstillinger", "/usersettings"],
 ]
 

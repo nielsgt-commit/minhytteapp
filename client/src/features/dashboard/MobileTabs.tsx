@@ -6,6 +6,7 @@ import { Badge, Card, Divider, Heading } from "@digdir/designsystemet-react"
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  PackageIcon,
   ShoppingBasketIcon,
 } from "@navikt/aksel-icons"
 import { useTranslation } from "react-i18next"
@@ -63,6 +64,28 @@ function ShoppingBasketFab({ propertyId }: { propertyId: number }) {
   )
 }
 
+// A floating package button that links to the general inventory. Always
+// visible (the inventory is a browsing destination, meaningful when empty),
+// in a stable slot above the basket FAB so it never jumps when the basket
+// appears or disappears.
+function InventoryFab() {
+  const { t } = useTranslation("dashboard")
+  const navigate = useNavigate()
+
+  return (
+    <button
+      type="button"
+      className={styles.inventoryFab}
+      aria-label={t("Inventory")}
+      onClick={() => {
+        void navigate({ to: "/inventar" })
+      }}
+    >
+      <PackageIcon aria-hidden fontSize="1.5rem" />
+    </button>
+  )
+}
+
 // snapping the gallery back to the first ("Now") page.
 
 // Gallery page indices, in child order below.
@@ -98,6 +121,7 @@ export function MobileTabs({ propertyId }: { propertyId: number }) {
         <MobileWeekPanel galleryActive={activePage === WEEK_PAGE} />
         <MobileYearPanel propertyId={propertyId} />
       </CardGallery>
+      <InventoryFab />
       <ShoppingBasketFab propertyId={propertyId} />
     </>
   )
