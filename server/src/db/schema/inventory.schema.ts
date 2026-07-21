@@ -54,4 +54,7 @@ export const inventoryItemsTable = pgTable("inventory_items", {
   }),
   created_at: timestamp("created_at").notNull().defaultNow(),
   created_by: integer("created_by").references(() => usersTable.id),
+  // Null until first edited: "last touched" falls back to created_at/by.
+  updated_at: timestamp("updated_at"),
+  updated_by: integer("updated_by").references(() => usersTable.id),
 })

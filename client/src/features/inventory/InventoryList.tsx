@@ -26,6 +26,7 @@ import { CardSkeleton } from "@/components/shared/query-states/CardSkeleton"
 import { EmptyState } from "@/components/shared/query-states/EmptyState"
 import { ErrorAlert } from "@/components/shared/query-states/ErrorAlert"
 import { fdString } from "@/utils/formData"
+import { formatDateTime } from "@/utils/dateUtils"
 import { useIsMobile } from "@/hooks/useIsMobile"
 import {
   ALL_SECTIONS,
@@ -57,7 +58,7 @@ export function InventoryList({
   // otherwise the same rows would be managed from two places.
   showOtherGroup: boolean
 }) {
-  const { t } = useTranslation("inventory")
+  const { t, i18n } = useTranslation("inventory")
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
@@ -78,6 +79,13 @@ export function InventoryList({
         // Concurrent users see each other's stock updates near-live.
         refetchInterval: 15_000,
       },
+    ),
+  )
+  const { data: me } = useQuery(trpc.user.me.queryOptions())
+  const { data: users } = useQuery(
+    trpc.user.listForProperty.queryOptions(
+      { property_id: selectedPropertyId ?? 0 },
+      { enabled: selectedPropertyId != null },
     ),
   )
   const { data: structures } = useQuery(
@@ -116,7 +124,9 @@ export function InventoryList({
               structure_id: vars.structure_id ?? null,
               room_id: vars.room_id ?? null,
               created_at: Temporal.Now.instant(),
-              created_by: null,
+              created_by: me?.id ?? null,
+              updated_at: null,
+              updated_by: null,
             },
           ]
         })
@@ -152,6 +162,8 @@ export function InventoryList({
                     structure_id: vars.structure_id ?? null,
                   }),
                   ...("room_id" in vars && { room_id: vars.room_id ?? null }),
+                  updated_at: Temporal.Now.instant(),
+                  updated_by: me?.id ?? null,
                 }
               : i,
           ),
@@ -211,6 +223,7 @@ export function InventoryList({
   const roomRows = rooms ?? []
   const structureById = new Map(structureRows.map(s => [s.id, s.name]))
   const roomById = new Map(roomRows.map(r => [r.id, r.name]))
+  const userById = new Map((users ?? []).map(u => [u.id, u.name]))
 
   const handleAdd = (category: InventorySection) => async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
@@ -285,6 +298,25 @@ export function InventoryList({
   if (otherItems.length > 0) {
     sections.push({ key: null, label: t("Other"), items: otherItems })
   }
+
+  // Most recently touched item across THIS list's sections (an edit counts,
+  // and so does adding: a never-edited item's stamp is its creation).
+  const touchedAt = (item: (typeof items)[number]) =>
+    item.updated_at ?? item.created_at
+  const lastTouched = sections
+    .flatMap(s => s.items)
+    .reduce<(typeof items)[number] | null>(
+      (latest, item) =>
+        latest == null ||
+        Temporal.Instant.compare(touchedAt(item), touchedAt(latest)) > 0
+          ? item
+          : latest,
+      null,
+    )
+  const lastTouchedByName =
+    lastTouched == null
+      ? undefined
+      : userById.get(lastTouched.updated_by ?? lastTouched.created_by ?? -1)
 
   const renderItem = (item: (typeof items)[number]) => {
     const meta = [
@@ -390,6 +422,20 @@ export function InventoryList({
       <ErrorAlert error={error} />
       <Card>
         <Card.Block className={styles.body}>
+          {lastTouched != null && (
+            <Paragraph className={styles.lastUpdated} data-size="xs">
+              {lastTouchedByName != null
+                ? t("Last updated {{time}} by {{user}} – {{item}}", {
+                    time: formatDateTime(touchedAt(lastTouched), i18n.language),
+                    user: lastTouchedByName,
+                    item: lastTouched.name,
+                  })
+                : t("Last updated {{time}} – {{item}}", {
+                    time: formatDateTime(touchedAt(lastTouched), i18n.language),
+                    item: lastTouched.name,
+                  })}
+            </Paragraph>
+          )}
           {sections.map(({ key, label, items: sectionItems }) => (
             <section key={key ?? "other"} className={styles.section}>
               <Heading level={3} data-size="2xs">

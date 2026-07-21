@@ -3,6 +3,8 @@
   "Add or select a property to keep an inventory.": "Legg til eller velg en eiendom for å føre inventar.",
   "Inventory": "Inventar",
   "Keep track of what you already have at the cabin — with an optional quantity and where it is stored.": "Hold oversikt over hva dere allerede har på hytta — med valgfritt antall og hvor det er lagret.",
+  "Last updated {{time}} by {{user}} – {{item}}": "Sist oppdatert {{time}} av {{user}} – {{item}}",
+  "Last updated {{time}} – {{item}}": "Sist oppdatert {{time}} – {{item}}",
   "New item in {{section}}": "Ny vare i {{section}}",
   "Add item...": "Legg til vare...",
   "Add": "Legg til",

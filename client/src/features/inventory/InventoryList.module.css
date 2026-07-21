@@ -4,6 +4,12 @@
   gap: 1.25rem;
 }
 
+.lastUpdated {
+  color: var(--ds-color-neutral-text-subtle);
+  /* Reads as a subtitle for the list, not a block of its own. */
+  margin: 0 0 -0.75rem;
+}
+
 .section {
   display: flex;
   flex-direction: column;

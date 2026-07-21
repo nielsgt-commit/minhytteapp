@@ -3,6 +3,8 @@
   "Add or select a property to keep an inventory.": "Add or select a property to keep an inventory.",
   "Inventory": "Inventory",
   "Keep track of what you already have at the cabin — with an optional quantity and where it is stored.": "Keep track of what you already have at the cabin — with an optional quantity and where it is stored.",
+  "Last updated {{time}} by {{user}} – {{item}}": "Last updated {{time}} by {{user}} – {{item}}",
+  "Last updated {{time}} – {{item}}": "Last updated {{time}} – {{item}}",
   "New item in {{section}}": "New item in {{section}}",
   "Add item...": "Add item...",
   "Add": "Add",

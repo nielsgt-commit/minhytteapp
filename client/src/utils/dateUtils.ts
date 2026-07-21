@@ -27,6 +27,22 @@ export function formatDate(value: DateLike, locale: string): string {
   return toPlainDate(value).toLocaleString(locale)
 }
 
+// Locale-aware "date, hh:mm" display of an instant in Oslo time, for
+// "last updated" style stamps where the clock time matters.
+export function formatDateTime(
+  value: Temporal.Instant | null | undefined,
+  locale: string,
+): string {
+  if (value == null) return ""
+  return value.toZonedDateTimeISO(OSLO).toLocaleString(locale, {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
 export function formatDateRange(
   start: DateLike,
   end: DateLike,

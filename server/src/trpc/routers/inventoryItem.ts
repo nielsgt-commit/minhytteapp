@@ -23,8 +23,11 @@ import { ALL_SECTIONS } from "../../shared/inventorySections.ts"
 
 type Db = typeof dbClient
 
-// Wire mapping: created_at (timestamp) → Temporal.Instant.
-const toWireInventoryItem = wireMap({ created_at: "instant" })
+// Wire mapping: created_at/updated_at (timestamp) → Temporal.Instant.
+const toWireInventoryItem = wireMap({
+  created_at: "instant",
+  updated_at: "instantOrNull",
+})
 
 // Sections exist as per-property category rows; a property gets each lazily on
 // first write rather than via a creation-hook, so every creation path
@@ -155,6 +158,8 @@ const wireColumns = {
   room_id: inventoryItemsTable.room_id,
   created_at: inventoryItemsTable.created_at,
   created_by: inventoryItemsTable.created_by,
+  updated_at: inventoryItemsTable.updated_at,
+  updated_by: inventoryItemsTable.updated_by,
 }
 
 export const inventoryItemRouter = router({
@@ -208,7 +213,10 @@ export const inventoryItemRouter = router({
           message: "cannot reassign inventory item to another property",
         })
       }
-      const patch: Partial<typeof inventoryItemsTable.$inferInsert> = {}
+      const patch: Partial<typeof inventoryItemsTable.$inferInsert> = {
+        updated_at: new Date(),
+        updated_by: ctx.user.id,
+      }
       if (input.name !== undefined) patch.name = input.name
       if (input.category !== undefined) {
         patch.category_id = await ensureCategoryId(
