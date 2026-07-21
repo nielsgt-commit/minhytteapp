@@ -17,6 +17,7 @@ export const GENERAL_SECTIONS = [
   "Outdoor & fishing",
   "Tools",
   "Sports equipment",
+  "Water sports",
   "Games & books",
   "Cleaning supplies",
   "Consumables & spares",
