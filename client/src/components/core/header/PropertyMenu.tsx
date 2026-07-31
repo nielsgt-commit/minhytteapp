@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
@@ -41,6 +41,29 @@ export function PropertyMenu() {
   const dismissToast = useCallback(() => {
     setToast(null)
   }, [])
+
+  // Announce the active property on app open and whenever the app returns to
+  // the foreground — but only for users with more than one property, where
+  // "which property am I looking at?" is a real question.
+  const currentName =
+    list.length > 1 ? list.find(p => p.id === selectedId)?.name : undefined
+  const hasAnnouncedRef = useRef(false)
+  useEffect(() => {
+    if (currentName === undefined) return
+    if (!hasAnnouncedRef.current) {
+      hasAnnouncedRef.current = true
+      setToast(t("You are viewing {{name}}", { name: currentName }))
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        setToast(t("You are viewing {{name}}", { name: currentName }))
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+    }
+  }, [currentName, t])
 
   const createProperty = useMutationWithInvalidation(
     trpc.property.create.mutationOptions({
