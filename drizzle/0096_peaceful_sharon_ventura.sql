@@ -1,0 +1,1 @@
+ALTER TABLE "inventory_categories" ADD COLUMN "kind" varchar(7) DEFAULT 'food' NOT NULL;

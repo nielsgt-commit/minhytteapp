@@ -27,6 +27,7 @@ export const LOCALIZED_PATHS: readonly (readonly [nb: string, en: string])[] = [
   ["/administrer/fordelingspolicy", "/manageproperty/split-policy"],
   ["/administrer/sesonger", "/manageproperty/seasons"],
   ["/administrer/utgiftskategorier", "/manageproperty/expensecategories"],
+  ["/administrer/inventarkategorier", "/manageproperty/inventorycategories"],
   // Top-level pages.
   ["/administrer", "/manageproperty"],
   ["/oppgaver", "/todos"],

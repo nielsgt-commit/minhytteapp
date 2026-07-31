@@ -12,6 +12,10 @@ function makeHandlers() {
   return {
     "shoppingItem.listForProperty": vi.fn(() => []),
     "inventoryItem.listForProperty": vi.fn(() => []),
+    "inventoryCategory.list": vi.fn(() => [
+      { id: 100, name: "Dry goods", kind: "food" },
+      { id: 101, name: "Canned goods", kind: "food" },
+    ]),
     "structure.listForProperty": vi.fn(() => []),
     "room.listForProperty": vi.fn(() => []),
     "user.me": vi.fn(() => ({ id: 7, name: "Kari" })),
@@ -39,9 +43,11 @@ describe("ShoppingPage", () => {
     ).toBeInTheDocument()
     // The shopping sections are gone; the inventory sections are present.
     expect(screen.queryByText("Food")).not.toBeInTheDocument()
-    expect(screen.getByLabelText("New item in Dry goods")).toBeInTheDocument()
+    // The inventory list is empty, so no group headings — the quick-add
+    // input is the inventory view's marker.
+    expect(await screen.findByLabelText("New item")).toBeInTheDocument()
     expect(
-      screen.getByRole("heading", { name: "Canned goods" }),
-    ).toBeInTheDocument()
+      screen.queryByRole("heading", { name: "Dry goods" }),
+    ).not.toBeInTheDocument()
   })
 })

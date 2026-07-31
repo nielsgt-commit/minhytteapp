@@ -116,6 +116,14 @@ const BANNERS = new Map<string, { title: string; description: string }>([
     },
   ],
   [
+    "/administrer/inventarkategorier",
+    {
+      title: "Inventory categories",
+      description:
+        "Sections of the food and general inventory lists. Add your own or remove ones you don't need — a category with items in it can't be removed.",
+    },
+  ],
+  [
     "/administrer/innstillinger",
     {
       title: "Settings",
@@ -166,6 +174,7 @@ const NAV_GROUPS = [
       { to: "/administrer/sesonger", label: "Seasons" },
       { to: "/administrer/prioritet", label: "Priority weeks" },
       { to: "/administrer/utgiftskategorier", label: "Expense categories" },
+      { to: "/administrer/inventarkategorier", label: "Inventory categories" },
       { to: "/administrer/innstillinger", label: "Settings" },
     ],
   },

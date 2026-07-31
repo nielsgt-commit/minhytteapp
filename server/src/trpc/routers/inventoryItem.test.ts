@@ -1,15 +1,11 @@
-// Authz + location-ref seams for the inventory router: membership gates on
-// every procedure, cross-property structure/room refs are refused, a room
-// derives its structure server-side, and section categories are lazily
-// ensured exactly once per property+name.
+// Authz + location-ref seams for the inventory item router: membership gates
+// on every procedure, cross-property structure/room refs are refused, a room
+// derives its structure server-side, and category_id must be an active
+// category of the caller's property.
 
 import { afterAll, describe, expect, it } from "vitest"
-import { eq } from "drizzle-orm"
 import { pool } from "../../db/client.ts"
-import {
-  inventoryCategoriesTable,
-  inventoryItemsTable,
-} from "../../db/schema/inventory.schema.ts"
+import { inventoryCategoriesTable } from "../../db/schema/inventory.schema.ts"
 import {
   propertyTable,
   roomTable,
@@ -28,8 +24,9 @@ import { appRouter } from "./_app.ts"
 const createCaller = createCallerFactory(appRouter)
 
 // One property with a member and an outsider; a structure with a room, plus a
-// second structure, and a foreign property whose structure/room must be
-// unreachable across the boundary.
+// second structure, and a foreign property whose structure/room/category must
+// be unreachable across the boundary. Categories are inserted directly: the
+// item router only consumes them (the category router manages them).
 async function seed(tx: Tx) {
   const [prop, otherProp] = await tx
     .insert(propertyTable)
@@ -67,6 +64,21 @@ async function seed(tx: Tx) {
       { name: "Foreign Room", structure_id: foreignCabin.id },
     ])
     .returning()
+  const [dryGoods, cannedGoods, tools, archived, foreignCat] = await tx
+    .insert(inventoryCategoriesTable)
+    .values([
+      { property_id: prop.id, name: "Dry goods", kind: "food" },
+      { property_id: prop.id, name: "Canned goods", kind: "food" },
+      { property_id: prop.id, name: "Tools", kind: "general" },
+      {
+        property_id: prop.id,
+        name: "Retired",
+        kind: "food",
+        archived_at: new Date(),
+      },
+      { property_id: otherProp.id, name: "Dry goods", kind: "food" },
+    ])
+    .returning()
   return {
     prop,
     otherProp,
@@ -77,14 +89,12 @@ async function seed(tx: Tx) {
     foreignCabin,
     kitchen,
     foreignRoom,
+    dryGoods,
+    cannedGoods,
+    tools,
+    archived,
+    foreignCat,
   }
-}
-
-async function categoryRows(tx: Tx, propertyId: number) {
-  return tx
-    .select()
-    .from(inventoryCategoriesTable)
-    .where(eq(inventoryCategoriesTable.property_id, propertyId))
 }
 
 afterAll(async () => {
@@ -94,12 +104,12 @@ afterAll(async () => {
 describe("membership gates", () => {
   it("refuses a non-member on list/create/update and delete", async () => {
     await withRollback(async tx => {
-      const { prop, member, outsider } = await seed(tx)
+      const { prop, member, outsider, dryGoods } = await seed(tx)
       const memberCaller = createCaller(ctxFor(tx, authUser(member)))
       const item = await memberCaller.inventoryItem.create({
         property_id: prop.id,
         name: "Flour",
-        category: "Dry goods",
+        category_id: dryGoods.id,
       })
 
       const outsiderCaller = createCaller(ctxFor(tx, authUser(outsider)))
@@ -110,7 +120,7 @@ describe("membership gates", () => {
         outsiderCaller.inventoryItem.create({
           property_id: prop.id,
           name: "Sneaky",
-          category: "Dry goods",
+          category_id: dryGoods.id,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" })
       await expect(
@@ -128,12 +138,12 @@ describe("membership gates", () => {
 
   it("refuses reassigning an item to another property via update", async () => {
     await withRollback(async tx => {
-      const { prop, otherProp, member } = await seed(tx)
+      const { prop, otherProp, member, dryGoods } = await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
       const item = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Flour",
-        category: "Dry goods",
+        category_id: dryGoods.id,
       })
 
       await expect(
@@ -150,14 +160,15 @@ describe("membership gates", () => {
 describe("location refs", () => {
   it("refuses a structure or room from another property", async () => {
     await withRollback(async tx => {
-      const { prop, member, foreignCabin, foreignRoom } = await seed(tx)
+      const { prop, member, foreignCabin, foreignRoom, dryGoods } =
+        await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
 
       await expect(
         caller.inventoryItem.create({
           property_id: prop.id,
           name: "Sheets",
-          category: "Dry goods",
+          category_id: dryGoods.id,
           structure_id: foreignCabin.id,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" })
@@ -165,7 +176,7 @@ describe("location refs", () => {
         caller.inventoryItem.create({
           property_id: prop.id,
           name: "Sheets",
-          category: "Dry goods",
+          category_id: dryGoods.id,
           room_id: foreignRoom.id,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" })
@@ -174,13 +185,13 @@ describe("location refs", () => {
 
   it("derives the structure from the room and rejects a mismatching pair", async () => {
     await withRollback(async tx => {
-      const { prop, member, cabin, annex, kitchen } = await seed(tx)
+      const { prop, member, cabin, annex, kitchen, dryGoods } = await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
 
       const derived = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Coffee",
-        category: "Dry goods",
+        category_id: dryGoods.id,
         room_id: kitchen.id,
       })
       expect(derived.structure_id).toBe(cabin.id)
@@ -190,7 +201,7 @@ describe("location refs", () => {
         caller.inventoryItem.create({
           property_id: prop.id,
           name: "Coffee",
-          category: "Dry goods",
+          category_id: dryGoods.id,
           structure_id: annex.id,
           room_id: kitchen.id,
         }),
@@ -200,12 +211,12 @@ describe("location refs", () => {
 
   it("keeps location refs on a rename and clears fields set to null", async () => {
     await withRollback(async tx => {
-      const { prop, member, cabin, kitchen } = await seed(tx)
+      const { prop, member, cabin, kitchen, dryGoods } = await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
       const item = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Coffee",
-        category: "Dry goods",
+        category_id: dryGoods.id,
         quantity: 2,
         location: "Top shelf",
         room_id: kitchen.id,
@@ -243,111 +254,112 @@ describe("location refs", () => {
   })
 })
 
-describe("section category ensure", () => {
-  it("creates each section category once and reuses it", async () => {
+describe("category validation", () => {
+  it("refuses a foreign, unknown, or archived category on create", async () => {
     await withRollback(async tx => {
-      const { prop, member } = await seed(tx)
+      const { prop, member, foreignCat, archived } = await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
-      // Freshly seeded property inside the tx: no categories yet (the 0093
-      // seed only covers properties that existed when the migration ran).
-      expect(await categoryRows(tx, prop.id)).toHaveLength(0)
-
-      await caller.inventoryItem.create({
-        property_id: prop.id,
-        name: "Salt",
-        category: "Spices",
-      })
-      const afterFirst = await categoryRows(tx, prop.id)
-      expect(afterFirst).toHaveLength(1)
-      expect(afterFirst[0].name).toBe("Spices")
-
-      await caller.inventoryItem.create({
-        property_id: prop.id,
-        name: "Pepper",
-        category: "Spices",
-      })
-      expect(await categoryRows(tx, prop.id)).toHaveLength(1)
-
-      const canned = await caller.inventoryItem.create({
-        property_id: prop.id,
-        name: "Beans",
-        category: "Canned goods",
-      })
-      expect(canned.category).toBe("Canned goods")
-      const afterSecond = await categoryRows(tx, prop.id)
-      expect(afterSecond.map(c => c.name).sort()).toEqual([
-        "Canned goods",
-        "Spices",
-      ])
-
-      const items = await tx
-        .select()
-        .from(inventoryItemsTable)
-        .where(eq(inventoryItemsTable.property_id, prop.id))
-      expect(items.map(i => i.category_id)).toEqual([
-        afterFirst[0].id,
-        afterFirst[0].id,
-        afterSecond.find(c => c.name === "Canned goods")?.id,
-      ])
-    })
-  })
-
-  it("accepts general sections and rejects an unknown category", async () => {
-    await withRollback(async tx => {
-      const { prop, member } = await seed(tx)
-      const caller = createCaller(ctxFor(tx, authUser(member)))
-
-      const rod = await caller.inventoryItem.create({
-        property_id: prop.id,
-        name: "Fishing rod",
-        category: "Outdoor & fishing",
-      })
-      expect(rod.category).toBe("Outdoor & fishing")
-      const grater = await caller.inventoryItem.create({
-        property_id: prop.id,
-        name: "Cheese grater",
-        category: "Kitchen equipment",
-      })
-      expect(grater.category).toBe("Kitchen equipment")
-      expect((await categoryRows(tx, prop.id)).map(c => c.name).sort()).toEqual(
-        ["Kitchen equipment", "Outdoor & fishing"],
-      )
 
       await expect(
         caller.inventoryItem.create({
           property_id: prop.id,
-          name: "Mystery",
-          // @ts-expect-error - not a section; zod must refuse it
-          category: "Miscellaneous",
+          name: "Sneaky",
+          category_id: foreignCat.id,
+        }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" })
+      await expect(
+        caller.inventoryItem.create({
+          property_id: prop.id,
+          name: "Nowhere",
+          category_id: 999_999,
+        }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" })
+      await expect(
+        caller.inventoryItem.create({
+          property_id: prop.id,
+          name: "Stale",
+          category_id: archived.id,
         }),
       ).rejects.toMatchObject({ code: "BAD_REQUEST" })
     })
   })
 
-  it("moves an item to another section via update and reports it on list", async () => {
+  it("puts the category id, name, and kind on the wire", async () => {
     await withRollback(async tx => {
-      const { prop, member } = await seed(tx)
+      const { prop, member, tools } = await seed(tx)
+      const caller = createCaller(ctxFor(tx, authUser(member)))
+
+      const created = await caller.inventoryItem.create({
+        property_id: prop.id,
+        name: "Hammer",
+        category_id: tools.id,
+      })
+      expect(created).toMatchObject({
+        category_id: tools.id,
+        category: "Tools",
+        kind: "general",
+      })
+
+      const listed = await caller.inventoryItem.listForProperty({
+        property_id: prop.id,
+      })
+      expect(listed).toHaveLength(1)
+      expect(listed[0]).toMatchObject({
+        category_id: tools.id,
+        category: "Tools",
+        kind: "general",
+      })
+    })
+  })
+
+  it("moves an item to another category via update and reports it on list", async () => {
+    await withRollback(async tx => {
+      const { prop, member, dryGoods, cannedGoods, archived, foreignCat } =
+        await seed(tx)
       const caller = createCaller(ctxFor(tx, authUser(member)))
       const item = await caller.inventoryItem.create({
         property_id: prop.id,
         name: "Tomatoes",
-        category: "Dry goods",
+        category_id: dryGoods.id,
       })
 
       const moved = await caller.inventoryItem.update({
         property_id: prop.id,
         id: item.id,
-        category: "Canned goods",
+        category_id: cannedGoods.id,
       })
-      expect(moved.category).toBe("Canned goods")
+      expect(moved).toMatchObject({
+        category_id: cannedGoods.id,
+        category: "Canned goods",
+        kind: "food",
+      })
 
-      // A category-less update still reports the current section.
+      // A category-less update still reports the current category.
       const renamed = await caller.inventoryItem.update({
         property_id: prop.id,
         id: item.id,
         name: "Crushed tomatoes",
       })
-      expect(renamed.category).toBe("Canned goods")
+      expect(renamed).toMatchObject({
+        category_id: cannedGoods.id,
+        category: "Canned goods",
+      })
+
+      // Moving to an archived or foreign category is refused.
+      await expect(
+        caller.inventoryItem.update({
+          property_id: prop.id,
+          id: item.id,
+          category_id: archived.id,
+        }),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+      await expect(
+        caller.inventoryItem.update({
+          property_id: prop.id,
+          id: item.id,
+          category_id: foreignCat.id,
+        }),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" })
 
       const listed = await caller.inventoryItem.listForProperty({
         property_id: prop.id,

@@ -12,6 +12,12 @@ export const Route = createFileRoute("/_authed/handleliste")({
         property_id: selectedPropertyId,
       }),
     )
+    void context.queryClient.prefetchQuery(
+      trpc.inventoryCategory.list.queryOptions({
+        property_id: selectedPropertyId,
+        kind: "food",
+      }),
+    )
     return context.queryClient.ensureQueryData(
       trpc.shoppingItem.listForProperty.queryOptions({
         property_id: selectedPropertyId,

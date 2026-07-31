@@ -10,10 +10,13 @@ import {
 import { propertyTable, roomTable, structuresTable } from "./property.schema.ts"
 import { usersTable } from "./users.schema.ts"
 
-// Category labels for inventory lists (food, linens, appliances, ...). v1 has
-// a single seeded "Food" category per property and no management UI; removing
-// a category archives it (archived_at) rather than deleting, so items keep
-// their reference. Mirrors equipment_categories.
+// Per-property, head-managed category labels for inventory lists. `kind`
+// splits them between the food inventory (/handleliste) and the general one
+// (/inventar). Every property is seeded with a default set; removing a
+// category archives it (archived_at) rather than deleting, so the name stays
+// reusable while historical rows keep their reference. The partial unique
+// index makes names unique per property across kinds. Mirrors
+// equipment_categories.
 export const inventoryCategoriesTable = pgTable(
   "inventory_categories",
   {
@@ -22,6 +25,12 @@ export const inventoryCategoriesTable = pgTable(
       .notNull()
       .references(() => propertyTable.id),
     name: varchar("name", { length: 32 }).notNull(),
+    // The DB default matches the migration backfill rule: legacy categories
+    // outside the known general sections read as food. The server always sets
+    // kind explicitly.
+    kind: varchar("kind", { length: 7, enum: ["food", "general"] })
+      .notNull()
+      .default("food"),
     archived_at: timestamp("archived_at"),
   },
   t => [

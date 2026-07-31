@@ -20,21 +20,16 @@
   margin: 0;
 }
 
-.addRow {
+.quickAdd {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
-  flex-wrap: nowrap;
 }
 
-.addRow > :first-child {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.addRow button {
-  flex: 0 0 auto;
-  white-space: nowrap;
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
 }
 
 .list {

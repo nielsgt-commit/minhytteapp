@@ -17,6 +17,12 @@ export const Route = createFileRoute("/_authed/inventar")({
         property_id: selectedPropertyId,
       }),
     )
+    void context.queryClient.prefetchQuery(
+      trpc.inventoryCategory.list.queryOptions({
+        property_id: selectedPropertyId,
+        kind: "general",
+      }),
+    )
     return context.queryClient.ensureQueryData(
       trpc.inventoryItem.listForProperty.queryOptions({
         property_id: selectedPropertyId,

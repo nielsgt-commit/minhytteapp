@@ -32,6 +32,7 @@ import {
   userGroupMembersTable,
   userGroupsTable,
 } from "../../db/schema/users.schema.ts"
+import { seedDefaultInventoryCategories } from "../../db/seedInventoryCategories.ts"
 import { geocodeNorwayAddress } from "../../services/geocode.ts"
 import { assertPropertyMember, protectedProcedure, router } from "../init.ts"
 
@@ -140,6 +141,7 @@ export const propertyRouter = router({
           user_group_id: group.id,
           ownership_pct: "100.00",
         })
+        await seedDefaultInventoryCategories(tx, created.id)
         return created
       })
     }),

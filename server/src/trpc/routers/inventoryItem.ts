@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
 import type { db as dbClient } from "../../db/client.ts"
@@ -19,7 +19,6 @@ import {
   resolvePropertyIdFromRoom,
   resolvePropertyIdFromStructure,
 } from "../util/propertyAccess.ts"
-import { ALL_SECTIONS } from "../../shared/inventorySections.ts"
 
 type Db = typeof dbClient
 
@@ -29,45 +28,36 @@ const toWireInventoryItem = wireMap({
   updated_at: "instantOrNull",
 })
 
-// Sections exist as per-property category rows; a property gets each lazily on
-// first write rather than via a creation-hook, so every creation path
-// (property router, seed scripts) is covered. Race-safe: the partial unique
-// index absorbs a concurrent insert and the re-select picks up the winner's
-// row.
-async function ensureCategoryId(
+// An item's category must be an active category of the caller's property.
+// NOT_FOUND for missing/foreign ids (no existence leak, like the location
+// refs); BAD_REQUEST for archived ones. Returns what the wire needs.
+async function resolveActiveCategory(
   db: Db,
   propertyId: number,
-  name: string,
-): Promise<number> {
-  const find = async () =>
-    (
-      await db
-        .select({ id: inventoryCategoriesTable.id })
-        .from(inventoryCategoriesTable)
-        .where(
-          and(
-            eq(inventoryCategoriesTable.property_id, propertyId),
-            eq(inventoryCategoriesTable.name, name),
-            isNull(inventoryCategoriesTable.archived_at),
-          ),
-        )
-        .limit(1)
-    ).at(0)
-  const existing = await find()
-  if (existing) return existing.id
-  const created = (
+  categoryId: number,
+): Promise<{ name: string; kind: string }> {
+  const category = (
     await db
-      .insert(inventoryCategoriesTable)
-      .values({ property_id: propertyId, name })
-      .onConflictDoNothing()
-      .returning()
+      .select({
+        property_id: inventoryCategoriesTable.property_id,
+        name: inventoryCategoriesTable.name,
+        kind: inventoryCategoriesTable.kind,
+        archived_at: inventoryCategoriesTable.archived_at,
+      })
+      .from(inventoryCategoriesTable)
+      .where(eq(inventoryCategoriesTable.id, categoryId))
+      .limit(1)
   ).at(0)
-  if (created) return created.id
-  const winner = await find()
-  if (!winner) {
-    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" })
+  if (category?.property_id !== propertyId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "category not found" })
   }
-  return winner.id
+  if (category.archived_at != null) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "category is archived",
+    })
+  }
+  return { name: category.name, kind: category.kind }
 }
 
 // Server-authoritative location refs: a room implies its structure, so the
@@ -130,10 +120,12 @@ const optionalFields = {
   room_id: z.number().int().positive().nullable().optional(),
 }
 
+// category_id is never nullable: an item always has a category (absent on
+// update = leave alone).
 const createInput = z.object({
   property_id: z.number().int().positive(),
   name: z.string().min(1, { error: "name is required" }).max(255),
-  category: z.enum(ALL_SECTIONS),
+  category_id: z.number().int().positive(),
   ...optionalFields,
 })
 
@@ -141,16 +133,16 @@ const updateInput = z.object({
   property_id: z.number().int().positive(),
   id: z.number().int().positive(),
   name: z.string().min(1, { error: "name is required" }).max(255).optional(),
-  category: z.enum(ALL_SECTIONS).optional(),
+  category_id: z.number().int().positive().optional(),
   ...optionalFields,
 })
 
-// The wire carries the category NAME (the section), not category_id: the
-// name is what the client groups by, and it keeps optimistic cache rows
-// constructible without inventing a category id.
+// The wire carries category_id plus the joined category name and kind: the
+// client groups by id but still needs the name for labels/optimistic rows.
 const wireColumns = {
   id: inventoryItemsTable.id,
   property_id: inventoryItemsTable.property_id,
+  category_id: inventoryItemsTable.category_id,
   name: inventoryItemsTable.name,
   quantity: inventoryItemsTable.quantity,
   location: inventoryItemsTable.location,
@@ -165,7 +157,11 @@ const wireColumns = {
 export const inventoryItemRouter = router({
   listForProperty: propertyAdminProcedure.query(async ({ ctx, input }) => {
     const rows = await ctx.db
-      .select({ ...wireColumns, category: inventoryCategoriesTable.name })
+      .select({
+        ...wireColumns,
+        category: inventoryCategoriesTable.name,
+        kind: inventoryCategoriesTable.kind,
+      })
       .from(inventoryItemsTable)
       .innerJoin(
         inventoryCategoriesTable,
@@ -180,16 +176,16 @@ export const inventoryItemRouter = router({
     .input(createInput)
     .mutation(async ({ ctx, input }) => {
       const refs = await resolveLocationRefs(ctx.db, input.property_id, input)
-      const categoryId = await ensureCategoryId(
+      const category = await resolveActiveCategory(
         ctx.db,
         input.property_id,
-        input.category,
+        input.category_id,
       )
       const [created] = await ctx.db
         .insert(inventoryItemsTable)
         .values({
           property_id: input.property_id,
-          category_id: categoryId,
+          category_id: input.category_id,
           name: input.name,
           quantity: input.quantity ?? null,
           location: emptyToNull(input.location),
@@ -197,7 +193,11 @@ export const inventoryItemRouter = router({
           created_by: ctx.user.id,
         })
         .returning(wireColumns)
-      return { ...toWireInventoryItem(created), category: input.category }
+      return {
+        ...toWireInventoryItem(created),
+        category: category.name,
+        kind: category.kind,
+      }
     }),
 
   update: propertyAdminProcedure
@@ -218,12 +218,14 @@ export const inventoryItemRouter = router({
         updated_by: ctx.user.id,
       }
       if (input.name !== undefined) patch.name = input.name
-      if (input.category !== undefined) {
-        patch.category_id = await ensureCategoryId(
+      let movedTo: { name: string; kind: string } | undefined
+      if (input.category_id !== undefined) {
+        movedTo = await resolveActiveCategory(
           ctx.db,
           input.property_id,
-          input.category,
+          input.category_id,
         )
+        patch.category_id = input.category_id
       }
       if ("quantity" in input) patch.quantity = input.quantity ?? null
       if ("location" in input) patch.location = emptyToNull(input.location)
@@ -238,21 +240,24 @@ export const inventoryItemRouter = router({
         .update(inventoryItemsTable)
         .set(patch)
         .where(eq(inventoryItemsTable.id, input.id))
-        .returning({
-          ...wireColumns,
-          category_id: inventoryItemsTable.category_id,
-        })
+        .returning(wireColumns)
       const category =
-        input.category ??
+        movedTo ??
         (
           await ctx.db
-            .select({ name: inventoryCategoriesTable.name })
+            .select({
+              name: inventoryCategoriesTable.name,
+              kind: inventoryCategoriesTable.kind,
+            })
             .from(inventoryCategoriesTable)
             .where(eq(inventoryCategoriesTable.id, updated.category_id))
             .limit(1)
-        )[0].name
-      const { category_id: _categoryId, ...row } = updated
-      return { ...toWireInventoryItem(row), category }
+        )[0]
+      return {
+        ...toWireInventoryItem(updated),
+        category: category.name,
+        kind: category.kind,
+      }
     }),
 
   delete: protectedProcedure

@@ -32,6 +32,7 @@ import { Route as AuthedAdministrerSesongerRouteImport } from './routes/_authed/
 import { Route as AuthedAdministrerPrioritetRouteImport } from './routes/_authed/administrer/prioritet'
 import { Route as AuthedAdministrerKontakterRouteImport } from './routes/_authed/administrer/kontakter'
 import { Route as AuthedAdministrerInvitasjonerRouteImport } from './routes/_authed/administrer/invitasjoner'
+import { Route as AuthedAdministrerInventarkategorierRouteImport } from './routes/_authed/administrer/inventarkategorier'
 import { Route as AuthedAdministrerInnstillingerRouteImport } from './routes/_authed/administrer/innstillinger'
 import { Route as AuthedAdministrerInfrastrukturRouteImport } from './routes/_authed/administrer/infrastruktur'
 import { Route as AuthedAdministrerInfoRouteImport } from './routes/_authed/administrer/info'
@@ -160,6 +161,12 @@ const AuthedAdministrerInvitasjonerRoute =
     path: '/invitasjoner',
     getParentRoute: () => AuthedAdministrerRoute,
   } as any)
+const AuthedAdministrerInventarkategorierRoute =
+  AuthedAdministrerInventarkategorierRouteImport.update({
+    id: '/inventarkategorier',
+    path: '/inventarkategorier',
+    getParentRoute: () => AuthedAdministrerRoute,
+  } as any)
 const AuthedAdministrerInnstillingerRoute =
   AuthedAdministrerInnstillingerRouteImport.update({
     id: '/innstillinger',
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/administrer/info': typeof AuthedAdministrerInfoRoute
   '/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
   '/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
+  '/administrer/inventarkategorier': typeof AuthedAdministrerInventarkategorierRoute
   '/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
   '/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
   '/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
@@ -272,6 +280,7 @@ export interface FileRoutesByTo {
   '/administrer/info': typeof AuthedAdministrerInfoRoute
   '/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
   '/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
+  '/administrer/inventarkategorier': typeof AuthedAdministrerInventarkategorierRoute
   '/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
   '/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
   '/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
@@ -308,6 +317,7 @@ export interface FileRoutesById {
   '/_authed/administrer/info': typeof AuthedAdministrerInfoRoute
   '/_authed/administrer/infrastruktur': typeof AuthedAdministrerInfrastrukturRoute
   '/_authed/administrer/innstillinger': typeof AuthedAdministrerInnstillingerRoute
+  '/_authed/administrer/inventarkategorier': typeof AuthedAdministrerInventarkategorierRoute
   '/_authed/administrer/invitasjoner': typeof AuthedAdministrerInvitasjonerRoute
   '/_authed/administrer/kontakter': typeof AuthedAdministrerKontakterRoute
   '/_authed/administrer/prioritet': typeof AuthedAdministrerPrioritetRoute
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/administrer/info'
     | '/administrer/infrastruktur'
     | '/administrer/innstillinger'
+    | '/administrer/inventarkategorier'
     | '/administrer/invitasjoner'
     | '/administrer/kontakter'
     | '/administrer/prioritet'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/administrer/info'
     | '/administrer/infrastruktur'
     | '/administrer/innstillinger'
+    | '/administrer/inventarkategorier'
     | '/administrer/invitasjoner'
     | '/administrer/kontakter'
     | '/administrer/prioritet'
@@ -407,6 +419,7 @@ export interface FileRouteTypes {
     | '/_authed/administrer/info'
     | '/_authed/administrer/infrastruktur'
     | '/_authed/administrer/innstillinger'
+    | '/_authed/administrer/inventarkategorier'
     | '/_authed/administrer/invitasjoner'
     | '/_authed/administrer/kontakter'
     | '/_authed/administrer/prioritet'
@@ -587,6 +600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdministrerInvitasjonerRouteImport
       parentRoute: typeof AuthedAdministrerRoute
     }
+    '/_authed/administrer/inventarkategorier': {
+      id: '/_authed/administrer/inventarkategorier'
+      path: '/inventarkategorier'
+      fullPath: '/administrer/inventarkategorier'
+      preLoaderRoute: typeof AuthedAdministrerInventarkategorierRouteImport
+      parentRoute: typeof AuthedAdministrerRoute
+    }
     '/_authed/administrer/innstillinger': {
       id: '/_authed/administrer/innstillinger'
       path: '/innstillinger'
@@ -687,6 +707,7 @@ interface AuthedAdministrerRouteChildren {
   AuthedAdministrerInfoRoute: typeof AuthedAdministrerInfoRoute
   AuthedAdministrerInfrastrukturRoute: typeof AuthedAdministrerInfrastrukturRoute
   AuthedAdministrerInnstillingerRoute: typeof AuthedAdministrerInnstillingerRoute
+  AuthedAdministrerInventarkategorierRoute: typeof AuthedAdministrerInventarkategorierRoute
   AuthedAdministrerInvitasjonerRoute: typeof AuthedAdministrerInvitasjonerRoute
   AuthedAdministrerKontakterRoute: typeof AuthedAdministrerKontakterRoute
   AuthedAdministrerPrioritetRoute: typeof AuthedAdministrerPrioritetRoute
@@ -706,6 +727,8 @@ const AuthedAdministrerRouteChildren: AuthedAdministrerRouteChildren = {
   AuthedAdministrerInfoRoute: AuthedAdministrerInfoRoute,
   AuthedAdministrerInfrastrukturRoute: AuthedAdministrerInfrastrukturRoute,
   AuthedAdministrerInnstillingerRoute: AuthedAdministrerInnstillingerRoute,
+  AuthedAdministrerInventarkategorierRoute:
+    AuthedAdministrerInventarkategorierRoute,
   AuthedAdministrerInvitasjonerRoute: AuthedAdministrerInvitasjonerRoute,
   AuthedAdministrerKontakterRoute: AuthedAdministrerKontakterRoute,
   AuthedAdministrerPrioritetRoute: AuthedAdministrerPrioritetRoute,

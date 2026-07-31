@@ -1,10 +1,11 @@
 import { useSelectedPropertyId } from "@/selection/useSelection"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Temporal } from "temporal-polyfill"
 import {
   Button,
   Card,
+  Chip,
   Dialog,
   Dropdown,
   Field,
@@ -29,9 +30,9 @@ import { fdString } from "@/utils/formData"
 import { formatDateTime } from "@/utils/dateUtils"
 import { useIsMobile } from "@/hooks/useIsMobile"
 import {
-  ALL_SECTIONS,
-  type InventorySection,
-} from "@server/shared/inventorySections.ts"
+  sortInventoryCategories,
+  type InventoryCategoryKind,
+} from "@server/shared/inventoryCategoryDefaults.ts"
 
 // A number input's raw value → optional positive quantity (empty/invalid → null).
 function parseQuantity(raw: string): number | null {
@@ -39,33 +40,24 @@ function parseQuantity(raw: string): number | null {
   return Number.isNaN(n) || n < 1 ? null : n
 }
 
-// The list endpoint returns every inventory item on the property, so each list
-// shows only its own sections' items; the "Other" fallback must exclude the
-// sections of ALL lists or items would leak across the food/general boundary.
-function isKnownSection(value: string): value is InventorySection {
-  return (ALL_SECTIONS as readonly string[]).includes(value)
-}
-
 export function InventoryList({
-  sections: ownSections,
+  kind,
   emptyStateTitle,
-  showOtherGroup,
 }: {
-  sections: readonly InventorySection[]
+  // Which lists' categories (and thus items) this list shows: the food
+  // inventory on /handleliste or the general one on /inventar.
+  kind: InventoryCategoryKind
   // Pre-translated by the wrapper.
   emptyStateTitle: string
-  // Only one list may show the unknown-legacy-category group (the food list),
-  // otherwise the same rows would be managed from two places.
-  showOtherGroup: boolean
 }) {
   const { t, i18n } = useTranslation("inventory")
+  // Category names are dynamic keys: the seeded defaults have translations,
+  // user-created names render verbatim via defaultValue.
+  const tName = t as (key: string, options?: { defaultValue: string }) => string
   const trpc = useTRPC()
   const qc = useQueryClient()
   const selectedPropertyId = useSelectedPropertyId()
   const isMobile = useIsMobile()
-
-  const isOwnSection = (value: string): value is InventorySection =>
-    (ownSections as readonly string[]).includes(value)
 
   const listKey = trpc.inventoryItem.listForProperty.queryKey({
     property_id: selectedPropertyId ?? 0,
@@ -79,6 +71,12 @@ export function InventoryList({
         // Concurrent users see each other's stock updates near-live.
         refetchInterval: 15_000,
       },
+    ),
+  )
+  const { data: categories } = useQuery(
+    trpc.inventoryCategory.list.queryOptions(
+      { property_id: selectedPropertyId ?? 0, kind },
+      { enabled: selectedPropertyId != null },
     ),
   )
   const { data: me } = useQuery(trpc.user.me.queryOptions())
@@ -118,7 +116,12 @@ export function InventoryList({
               id: nextId,
               property_id: vars.property_id,
               name: vars.name,
-              category: vars.category,
+              category_id: vars.category_id,
+              // The categories query is necessarily loaded — the add row the
+              // user submitted was rendered from it.
+              category:
+                categories?.find(c => c.id === vars.category_id)?.name ?? "",
+              kind,
               quantity: vars.quantity ?? null,
               location: vars.location ?? null,
               structure_id: vars.structure_id ?? null,
@@ -149,8 +152,13 @@ export function InventoryList({
               ? {
                   ...i,
                   ...(vars.name !== undefined && { name: vars.name }),
-                  ...(vars.category !== undefined && {
-                    category: vars.category,
+                  // kind can't change from this page (only same-kind
+                  // categories are offered), so it stays as-is.
+                  ...(vars.category_id !== undefined && {
+                    category_id: vars.category_id,
+                    category:
+                      categories?.find(c => c.id === vars.category_id)?.name ??
+                      i.category,
                   }),
                   ...("quantity" in vars && {
                     quantity: vars.quantity ?? null,
@@ -201,6 +209,28 @@ export function InventoryList({
   )
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
 
+  // Quick-add: one input for the whole list; typing reveals the category
+  // chips and tapping one saves to that category. The last-used category is
+  // remembered so Enter repeats it for same-category streaks.
+  const [draft, setDraft] = useState("")
+  const [lastCategoryId, setLastCategoryId] = useState<number | null>(null)
+  const quickAddInputRef = useRef<HTMLInputElement>(null)
+
+  // After a save the draft clears, which would hide the chips instantly —
+  // too fast to see which chip got checked. A short linger keeps them (and
+  // the checked state) visible as confirmation. Counter, not boolean, so a
+  // rapid next save restarts the timer.
+  const [chipLinger, setChipLinger] = useState(0)
+  useEffect(() => {
+    if (chipLinger === 0) return
+    const timer = setTimeout(() => {
+      setChipLinger(0)
+    }, 400)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [chipLinger])
+
   useEffect(() => {
     if (confirmingDeleteId == null) return
     const timer = setTimeout(() => {
@@ -215,7 +245,7 @@ export function InventoryList({
     return <EmptyState title={emptyStateTitle} />
   }
 
-  if (isLoading || !items) {
+  if (isLoading || !items || !categories) {
     return <CardSkeleton />
   }
 
@@ -225,17 +255,33 @@ export function InventoryList({
   const roomById = new Map(roomRows.map(r => [r.id, r.name]))
   const userById = new Map((users ?? []).map(u => [u.id, u.name]))
 
-  const handleAdd = (category: InventorySection) => async (fd: FormData) => {
-    const name = fdString(fd, "name").trim()
+  // Fire-and-forget so the input is immediately ready for the next item; the
+  // optimistic cache row shows the item and a failure rolls back + surfaces
+  // via the aggregated ErrorAlert.
+  const quickAdd = (categoryId: number) => {
+    const name = draft.trim()
     if (!name) return
-    try {
-      await createMutation.mutateAsync({
+    setDraft("")
+    setLastCategoryId(categoryId)
+    setChipLinger(n => n + 1)
+    quickAddInputRef.current?.focus()
+    createMutation
+      .mutateAsync({
         property_id: selectedPropertyId,
         name,
-        category,
+        category_id: categoryId,
       })
-    } catch {
-      // Surfaced via the aggregated ErrorAlert below.
+      .catch(() => undefined)
+  }
+
+  // Enter repeats the last-used category; before any chip has been tapped
+  // there is no target, so Enter keeps the draft and does nothing.
+  const submitToLastCategory = () => {
+    if (
+      lastCategoryId != null &&
+      categories.some(c => c.id === lastCategoryId)
+    ) {
+      quickAdd(lastCategoryId)
     }
   }
 
@@ -259,14 +305,14 @@ export function InventoryList({
 
   const handleSave = (item: (typeof items)[number]) => async (fd: FormData) => {
     const name = fdString(fd, "name").trim()
-    const category = fdString(fd, "category")
-    if (!name || !isOwnSection(category)) return
+    const categoryId = Number(fdString(fd, "category_id"))
+    if (!name || !Number.isInteger(categoryId) || categoryId < 1) return
     try {
       await updateMutation.mutateAsync({
         property_id: selectedPropertyId,
         id: item.id,
         name,
-        category,
+        category_id: categoryId,
         quantity: parseQuantity(fdString(fd, "quantity")),
         location: fdString(fd, "location").trim() || null,
         structure_id: editBuildingId,
@@ -281,23 +327,15 @@ export function InventoryList({
   const editingItem =
     editingId == null ? undefined : items.find(i => i.id === editingId)
 
-  // One group per fixed section, plus a trailing read-only group for any item
-  // whose category predates the sections (or was edited outside the app).
-  const sections: {
-    key: InventorySection | null
-    label: string
-    items: typeof items
-  }[] = ownSections.map(section => ({
-    key: section,
-    label: t(section),
-    items: items.filter(i => i.category === section),
+  // One group per category of this list's kind, defaults first in canonical
+  // order (server orders by id, which drifts for properties whose rows were
+  // created lazily pre-seed), then custom categories by creation.
+  const orderedCategories = sortInventoryCategories(categories)
+  const sections = orderedCategories.map(category => ({
+    id: category.id,
+    label: tName(category.name, { defaultValue: category.name }),
+    items: items.filter(i => i.category_id === category.id),
   }))
-  const otherItems = showOtherGroup
-    ? items.filter(i => !isKnownSection(i.category))
-    : []
-  if (otherItems.length > 0) {
-    sections.push({ key: null, label: t("Other"), items: otherItems })
-  }
 
   // Most recently touched item across THIS list's sections (an edit counts,
   // and so does adding: a never-edited item's stamp is its creation).
@@ -305,14 +343,9 @@ export function InventoryList({
     item.updated_at ?? item.created_at
   const lastTouched = sections
     .flatMap(s => s.items)
-    .reduce<(typeof items)[number] | null>(
-      (latest, item) =>
-        latest == null ||
-        Temporal.Instant.compare(touchedAt(item), touchedAt(latest)) > 0
-          ? item
-          : latest,
-      null,
-    )
+    .reduce<
+      (typeof items)[number] | null
+    >((latest, item) => (latest == null || Temporal.Instant.compare(touchedAt(item), touchedAt(latest)) > 0 ? item : latest), null)
   const lastTouchedByName =
     lastTouched == null
       ? undefined
@@ -422,6 +455,58 @@ export function InventoryList({
       <ErrorAlert error={error} />
       <Card>
         <Card.Block className={styles.body}>
+          <form
+            className={styles.quickAdd}
+            onSubmit={e => {
+              // Fallback for submit paths that skip the keydown (e.g. a
+              // virtual keyboard's Go button).
+              e.preventDefault()
+              submitToLastCategory()
+            }}
+          >
+            <Textfield
+              ref={quickAddInputRef}
+              aria-label={t("New item")}
+              placeholder={t("Add item...")}
+              value={draft}
+              onChange={e => {
+                setDraft(e.target.value)
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  submitToLastCategory()
+                }
+              }}
+            />
+            {(draft.trim() !== "" || chipLinger > 0) && (
+              <div
+                className={styles.chipRow}
+                role="radiogroup"
+                aria-label={t("Save to category")}
+              >
+                {/* Chip.Radio so the remembered (Enter-repeat) category gets
+                    the design system's checked styling. Saving happens in
+                    onClick, which — unlike onChange — also fires when tapping
+                    the already-checked chip again. */}
+                {sections.map(({ id, label }) => (
+                  <Chip.Radio
+                    key={id}
+                    name="quickadd-category"
+                    value={String(id)}
+                    data-size="sm"
+                    checked={lastCategoryId === id}
+                    onChange={() => undefined}
+                    onClick={() => {
+                      quickAdd(id)
+                    }}
+                  >
+                    {label}
+                  </Chip.Radio>
+                ))}
+              </div>
+            )}
+          </form>
           {lastTouched != null && (
             <Paragraph className={styles.lastUpdated} data-size="xs">
               {lastTouchedByName != null
@@ -436,30 +521,20 @@ export function InventoryList({
                   })}
             </Paragraph>
           )}
-          {sections.map(({ key, label, items: sectionItems }) => (
-            <section key={key ?? "other"} className={styles.section}>
-              <Heading level={3} data-size="2xs">
-                {label}
-              </Heading>
-              {key != null && (
-                <form action={handleAdd(key)} className={styles.addRow}>
-                  <Textfield
-                    aria-label={t("New item in {{section}}", {
-                      section: label,
-                    })}
-                    name="name"
-                    placeholder={t("Add item...")}
-                  />
-                  <SubmitButton>{t("Add")}</SubmitButton>
-                </form>
-              )}
-              {sectionItems.length > 0 && (
+          {/* Empty categories stay reachable through the chips; a bare
+              heading with nothing under it is just clutter. */}
+          {sections
+            .filter(({ items: sectionItems }) => sectionItems.length > 0)
+            .map(({ id, label, items: sectionItems }) => (
+              <section key={id} className={styles.section}>
+                <Heading level={3} data-size="2xs">
+                  {label}
+                </Heading>
                 <List.Unordered className={styles.list}>
                   {sectionItems.map(renderItem)}
                 </List.Unordered>
-              )}
-            </section>
-          ))}
+              </section>
+            ))}
         </Card.Block>
       </Card>
       <Dialog
@@ -489,24 +564,16 @@ export function InventoryList({
               <Field>
                 <Label>{t("Category")}</Label>
                 <Select
-                  name="category"
-                  defaultValue={
-                    isOwnSection(editingItem.category)
-                      ? editingItem.category
-                      : ""
-                  }
+                  name="category_id"
+                  defaultValue={String(editingItem.category_id)}
                   required
                 >
-                  {/* A legacy category shows as a disabled placeholder so
-                      saving forces a pick of a real section. */}
-                  {!isOwnSection(editingItem.category) && (
-                    <Select.Option value="" disabled>
-                      {editingItem.category}
-                    </Select.Option>
-                  )}
-                  {ownSections.map(section => (
-                    <Select.Option key={section} value={section}>
-                      {t(section)}
+                  {orderedCategories.map(category => (
+                    <Select.Option
+                      key={category.id}
+                      value={String(category.id)}
+                    >
+                      {tName(category.name, { defaultValue: category.name })}
                     </Select.Option>
                   ))}
                 </Select>

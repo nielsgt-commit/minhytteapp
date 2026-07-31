@@ -673,6 +673,20 @@
       "when": 1784595506808,
       "tag": "0095_noisy_susan_delgado",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1785408396416,
+      "tag": "0096_peaceful_sharon_ventura",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1785408398356,
+      "tag": "0097_backfill_inventory_kind_and_seed_defaults",
+      "breakpoints": true
     }
   ]
 }

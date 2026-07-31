@@ -10,6 +10,7 @@ import {
   loadSplitInput,
 } from "../services/settlementSplit.ts"
 import { db, pool } from "./client.ts"
+import { seedDefaultInventoryCategories } from "./seedInventoryCategories.ts"
 import {
   bookingOccupantsTable,
   bookingRoomsTable,
@@ -745,6 +746,8 @@ async function main() {
       })
       .returning({ id: propertyTable.id })
   )[0].id
+  // Prod properties get their default inventory categories at creation.
+  await seedDefaultInventoryCategories(db, propertyId)
 
   // --- expense categories -------------------------------------------------
   const categoryRows = await db

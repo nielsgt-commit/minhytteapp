@@ -28,11 +28,26 @@ beforeAll(() => {
   })
 })
 
+type CategoryRow = { id: number; name: string; kind: "food" | "general" }
+
+// "Food" is a pre-section legacy category: since the managed-categories
+// migration it is a normal food-kind category with its own group and add row.
+const CATEGORIES: CategoryRow[] = [
+  { id: 100, name: "Dry goods", kind: "food" },
+  { id: 101, name: "Canned goods", kind: "food" },
+  { id: 102, name: "Spices", kind: "food" },
+  { id: 103, name: "Condiments", kind: "food" },
+  { id: 104, name: "Food", kind: "food" },
+  { id: 201, name: "Tools", kind: "general" },
+]
+
 type ItemRow = {
   id: number
   property_id: number
   name: string
+  category_id: number
   category: string
+  kind: "food" | "general"
   quantity: number | null
   location: string | null
   structure_id: number | null
@@ -46,7 +61,9 @@ function itemRow(
 ): ItemRow {
   return {
     property_id: 1,
+    category_id: 100,
     category: "Dry goods",
+    kind: "food",
     quantity: null,
     location: null,
     structure_id: null,
@@ -60,6 +77,10 @@ function itemRow(
 function makeHandlers(items: ItemRow[]): FakeHandlers {
   return {
     "inventoryItem.listForProperty": vi.fn(() => items),
+    "inventoryCategory.list": vi.fn((input: unknown) => {
+      const { kind } = input as { kind?: "food" | "general" }
+      return CATEGORIES.filter(c => kind == null || c.kind === kind)
+    }),
     "structure.listForProperty": vi.fn(() => [
       { id: 10, name: "Cabin" },
       { id: 11, name: "Annex" },
@@ -114,34 +135,40 @@ describe("FoodInventory", () => {
     ).toBeInTheDocument()
   })
 
-  test("groups items under their section headings", async () => {
+  test("groups items under the food categories' headings", async () => {
     await renderList(
       makeHandlers([
-        itemRow({ id: 1, name: "Flour", category: "Dry goods" }),
-        itemRow({ id: 2, name: "Beans", category: "Canned goods" }),
-        itemRow({ id: 3, name: "Old thing", category: "Food" }),
-        itemRow({ id: 4, name: "Hammer", category: "Tools" }),
+        itemRow({ id: 1, name: "Flour" }),
+        itemRow({ id: 2, name: "Beans", category_id: 101 }),
+        itemRow({ id: 3, name: "Old thing", category_id: 104 }),
+        itemRow({
+          id: 4,
+          name: "Hammer",
+          category_id: 201,
+          category: "Tools",
+          kind: "general",
+        }),
       ]),
     )
     await screen.findByText("Flour")
-    // All four fixed sections render a heading with their own add input; the
-    // legacy category lands in a trailing read-only "Other" group.
-    for (const section of [
-      "Dry goods",
-      "Canned goods",
-      "Spices",
-      "Condiments",
-    ]) {
+    // Non-empty food categories render a heading — including the legacy
+    // "Food" category, which is a real (manageable) category since the
+    // migration; there is no read-only "Other" group.
+    for (const section of ["Dry goods", "Canned goods", "Food"]) {
       expect(screen.getByRole("heading", { name: section })).toBeInTheDocument()
-      expect(
-        screen.getByLabelText(`New item in ${section}`),
-      ).toBeInTheDocument()
     }
-    expect(screen.getByRole("heading", { name: "Other" })).toBeInTheDocument()
-    expect(screen.queryByLabelText("New item in Other")).not.toBeInTheDocument()
     expect(screen.getByText("Old thing")).toBeInTheDocument()
-    // A general-inventory item belongs to /inventar: it must not surface here,
-    // neither as its own section nor under "Other".
+    // Empty categories show no heading (they stay reachable via the chips).
+    expect(
+      screen.queryByRole("heading", { name: "Spices" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("heading", { name: "Condiments" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("heading", { name: "Other" }),
+    ).not.toBeInTheDocument()
+    // A general-inventory item belongs to /inventar: it must not surface here.
     expect(
       screen.queryByRole("heading", { name: "Tools" }),
     ).not.toBeInTheDocument()
@@ -156,11 +183,8 @@ describe("FoodInventory", () => {
     await renderList(handlers)
 
     await screen.findByText("Salt")
-    await user.type(
-      screen.getByLabelText("New item in Dry goods"),
-      "Doomed beans",
-    )
-    await user.click(screen.getAllByRole("button", { name: "Add" })[0])
+    await user.type(screen.getByLabelText("New item"), "Doomed beans")
+    await user.click(screen.getByRole("radio", { name: "Dry goods" }))
 
     expect(await screen.findByRole("alert")).toBeInTheDocument()
     await waitFor(() => {
@@ -229,7 +253,7 @@ describe("FoodInventory", () => {
         property_id: 1,
         id: 1,
         name: "Dark roast",
-        category: "Dry goods",
+        category_id: 100,
         quantity: 3,
         location: "Top shelf",
         structure_id: 10,

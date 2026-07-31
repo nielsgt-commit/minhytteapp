@@ -40,6 +40,7 @@ const PROBES: Record<RouterName, string> = {
   expenseCategory: "list",
   infrastructure: "listForProperty",
   inspection: "listForProperty",
+  inventoryCategory: "list",
   inventoryItem: "listForProperty",
   maintenance: "listForProperty",
   parking: "listForProperty",
